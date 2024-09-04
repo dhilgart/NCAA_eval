@@ -1,0 +1,27 @@
+{
+  "template": "https://github.com/Lee-W/cookiecutter-python-template",
+  "commit": "4fb59c3296583aee222138e9a757742cb10ce660",
+  "checkout": null,
+  "context": {
+    "cookiecutter": {
+      "project_name": "NCAA_Eval",
+      "project_slug": "ncaa_eval",
+      "project_description": "Evaluator for self-evaluation of NCAA March Mania Kaggle Competition models",
+      "github_username": "dhilgart",
+      "github_url": "https://github.com/dhilgart/NCAA_eval",
+      "author_name": "Dan Hilgart",
+      "author_email": "dhilgart@gmail.com",
+      "python_version": "3.10",
+      "dependency_management_tool": "pipenv",
+      "default_branch": "main",
+      "use_strict_mypy_config": "n",
+      "build_pypi_package": "n",
+      "build_docker_image": "n",
+      "open_source_license": "GNU General Public License v3",
+      "auto_detect_update_from_cruft_template": "n",
+      "_template_version": "1.11.0",
+      "_template": "https://github.com/Lee-W/cookiecutter-python-template"
+    }
+  },
+  "directory": null
+}

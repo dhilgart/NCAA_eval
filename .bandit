@@ -1,0 +1,3 @@
+[bandit]
+targets: ncaa_eval
+exclude: tests
