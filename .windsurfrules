@@ -1,0 +1,7 @@
+No function should have more than 7 logical statements. If a function exceeds this limit, it should be refactored into smaller, more manageable functions.
+Each function should have a docstring that describes what the function does, what parameters it takes, and what it returns.
+Anywhere that dataframes are used, the docstring should include the names of the required and optional columns and their data types.
+Code should be as DRY (Don't Repeat Yourself) as practical.
+Boilerplate should be minimized.
+Docstrings should follow google style.
+Max line length = 88.
