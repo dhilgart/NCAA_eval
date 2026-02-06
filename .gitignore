@@ -143,8 +143,8 @@ dmypy.json
 cython_debug/
 
 # Project-specific files
-spec.md
-evaluation_approaches.md
-modeling_approaches.md
+# spec.md
+# evaluation_approaches.md
+# modeling_approaches.md
 
 # End of https://www.toptal.com/developers/gitignore/api/python
