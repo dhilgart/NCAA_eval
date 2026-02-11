@@ -1,57 +1,68 @@
 # Project Brief
 
-**Project Name:** NCAA Tournament Prediction Evaluation System
+**Project Name:** NCAA Tournament Data & Evaluation Platform
 **Date:** February 11, 2026
-**Status:** Ready for PRD
+**Status:** FINAL
 
 ## 1. Project Background & Opportunity
-The current landscape of NCAA tournament prediction focuses heavily on "bracket" outcomes, often ignoring the probabilistic nature of modern modeling. There is a lack of standardized tooling to evaluate models based on their full probability matrices (`N*(N-1)/2` matchups) rather than just realized tournament paths. This project aims to build a rigorous, scientifically valid, and highly performant evaluation repository that supports both probabilistic metrics and traditional bracket scoring scenarios.
+NCAA tournament modeling requires more than just static regression; it demands support for sequential systems (Elo), graph theory (PageRank), and opponent-adjusted metrics. However, current tools lack both the data infrastructure to support these complex models and the rigorous evaluation standards to judge them. This project will create a **unified platform** that serves as both the **canonical data warehouse** and the **rigorous evaluation engine** for all model types.
 
 ## 2. Goals & Objectives
-* **Standardize Input:** Define a strict Python interface for model submission to ensure consistent evaluation across all model types.
-* **Rigorous Validation:** Provide "Leave-One-Tournament-Out" and time-series cross-validation to prevent overfitting and look-ahead bias.
-* **Multi-Dimensional Evaluation:** Evaluate models not just on "winning," but on calibration, probabilistic accuracy, ranking ability, and game-theory performance.
-* **High Performance:** Architecture designed for speed (vectorization, parallelization) to handle expensive cross-validation tasks and simulations.
-* **Extensibility:** A plugin-first architecture allowing users to inject custom metrics, scoring systems, and evaluation methods.
+* **Unified Data Platform:** Provide a single, standardized repository for raw and processed NCAA data, serving as the source of truth for both training and evaluation.
+* **Support Advanced Modeling:** Native support for **Sequential** (Elo-style) and **Graph-based** (PageRank-style) models, alongside traditional "row-based" machine learning.
+* **Hybrid Evaluation:** Assess models on both "Hard Science" (Calibration, Log Loss) and "Game Theory" (Bracket Scoring, Expected Points).
+* **High Performance:** Architecture designed for speed (vectorization, parallelization, caching) to handle expensive cross-validation tasks.
+* **Extensible Design:** A plugin-first architecture allowing users to inject custom metrics, scoring systems, and pre-processors.
 
 ## 3. Core Functional Requirements
 
-### A. Model Interface
-* **Abstract Base Class:** Models must inherit from a standard class and implement a `predict(year)` method.
-* **Output Format:** Strict return of a **Full Probability Matrix** (dictionary or dataframe) covering every possible matchup, not just the bracket path.
+### A. Data Platform (The "Feed")
+* **Unified Data Ingestion:** Pipelines to fetch, clean, and store data from multiple sources (Kaggle, public APIs).
+* **Advanced Feature Engineering Library:**
+    * **Sequential transformers:** Generators for rolling averages, streaks, and "last N games" momentum features.
+    * **Opponent Adjustment Engine:** Linear algebra solvers to calculate adjusted efficiency stats.
+    * **Graph Builders:** Utilities to convert schedules into NetworkX graph objects.
+* **Data Serving API:**
+    * `get_chronological_season(year)`: Stream games in strict time order.
+    * `get_training_data(years)`: Bulk fetch for vector models.
+* **Caching:** Intelligent caching of expensive data fetches and pre-processing steps.
 
-### B. Evaluation Engine
-* **Probabilistic Metrics (The "Hard Science"):**
-    * **Log Loss:** Standard probabilistic penalty metric.
-    * **Brier Score:** Mean squared error of probabilities.
-    * **ROC-AUC:** Ranking quality metric.
+### B. Model Interface (The "Contract")
+* **Abstract Base Class:** `Model` class with a flexible lifecycle:
+    * **`train(data)`:** Receives standardized training data (sequential or batch).
+    * **`predict(year, context)`:** Generates a full probability matrix ($N \times N$) for all matchups.
+* **State Management:** Support for models that maintain internal state (e.g., Elo ratings) across the training sequence.
+
+### C. Evaluation Engine (The "Referee")
+* **Probabilistic Metrics:** Log Loss, Brier Score, ROC-AUC.
 * **Calibration Analysis:**
     * **Metrics:** ECE (Expected Calibration Error).
-    * **Visualizations:** Reliability Diagrams (scatter plot of Predicted vs. Actual probability) to identify over/under-confident models.
-* **Tournament-Specific Scoring (The "Game Theory"):**
-    * **User-Defined Point Schedules:** Configurable scoring (e.g., default $2^{n-1}$, Fibonacci, etc.) for correct picks.
-    * **Bracket Conversion:** Functionality to convert probability matrices into discrete brackets (e.g., "Max Likelihood" or "Chalk" conversion) to calculate realized points.
+    * **Visualizations:** Reliability Diagrams (Predicted vs. Actual probability scatter plots).
+* **Tournament-Specific Scoring:**
+    * **User-Defined Point Schedules:** Configurable scoring (e.g., default $2^{n-1}$, Fibonacci) for correct picks.
+    * **Bracket Conversion:** Functionality to convert probability matrices into discrete brackets (e.g., "Max Likelihood") to calculate realized points.
     * **Expected Points:** Calculation of expected point totals based on raw probabilities.
 
-### C. Validation & Workflow
-* **Advanced Cross-Validation:** Native `LeaveOneTournamentOut` and time-series splits to ensure scientific validity.
-* **Data Pipeline:** A normalization layer to map diverse data sources (Kaggle, KenPom, etc.) to a single canonical team ID system.
+### D. Validation & Workflow
+* **Advanced Cross-Validation:**
+    * **Sequential Splits:** Strict "walk-forward" validation for time-series models.
+    * **Leave-One-Tournament-Out:** Native iterator for tournament-level backtesting.
 * **Performance Optimization:**
-    * **Vectorization:** Use `numpy`/`pandas` for all core metric calculations.
+    * **Vectorization:** Use `numpy` for all core metric calculations.
     * **Parallel Processing:** Multi-processing support for running Cross-Validation folds.
-    * **Caching:** Intelligent caching of expensive model predictions and data fetches.
+* **Leakage Prevention:** APIs designed to strictly prevent access to future games during training.
 
-### D. Extensibility & UX
-* **Plugin Architecture:** Allow users to register custom metrics, scoring functions, and weighting schemes without modifying core code.
+### E. Extensibility & UX
+* **Plugin Architecture:** Registry system for custom metrics, scoring functions, and feature generators.
 * **Visualization Suite:** Auto-generation of Reliability Diagrams, Year-by-Year accuracy plots, and Metric Correlation Heatmaps.
-* **Reporting:** Clear CLI summary tables and exportable reports (HTML/Markdown).
-* **Fail-Fast Debugging:** Deep logging, error traces, and data assertions to help users debug historical crashes.
+* **Reporting:** Clear CLI summary tables (`rich`/`tabulate`) and exportable HTML reports.
+* **Fail-Fast Debugging:** Deep logging, error traces, and data assertions.
 
 ## 4. Technical Constraints
-* **Language:** Python 3.10+.
-* **Interface:** Code-based submission (no CSV uploads).
-* **Core Libraries:** `numpy`, `pandas`, `scikit-learn`, `joblib` (for parallelization), `matplotlib`/`seaborn` (for viz).
+* **Language:** Python 3.12+.
+* **Core Libraries:** `numpy`, `pandas`, `scikit-learn`, `networkx`, `joblib` (parallelism), `matplotlib`.
+* **Interface:** Code-based submission (Python classes only).
 
 ## 5. Success Metrics
-* A user can define a custom scoring system, plug it into the config, and backtest a model across 10 years in under 60 seconds.
-* The system produces a "Calibration Report" that clearly distinguishes between a model that is "lucky" (high points, bad physics) and one that is "good" (high points, good physics).
+* A user can implement a custom "Momentum-Elo" model using the platform's base classes and data feed, then run a parallelized 10-year backtest using "Fibonacci Scoring" in under 60 seconds.
+* The system produces a "Calibration Report" that clearly distinguishes between "lucky" high-scoring models and "well-calibrated" probabilistic models.
