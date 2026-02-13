@@ -275,6 +275,8 @@ ncaa-eval-platform/
 │   │   ├── 1_Lab.py
 │   │   └── 2_Presentation.py
 │   └── components/             # Reusable UI widgets
+├── docs/                       # Documentation
+│   └── specs/                  # Specification documents
 ├── tests/                      # Test Suite
 ├── data/                       # Local Data Store (ignored)
 ├── pyproject.toml              # Poetry Config
