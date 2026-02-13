@@ -1,7 +1,7 @@
 # Project Brief
 
 **Project Name:** NCAA Tournament Data & Evaluation Platform
-**Date:** February 11, 2026
+**Date:** February 13, 2026
 **Status:** FINAL
 
 ## 1. Project Background & Opportunity
@@ -54,13 +54,13 @@ NCAA tournament modeling requires more than just static regression; it demands s
 
 ### E. Extensibility & UX
 * **Plugin Architecture:** Registry system for custom metrics, scoring functions, and feature generators.
-* **Visualization Suite:** Auto-generation of Reliability Diagrams, Year-by-Year accuracy plots, and Metric Correlation Heatmaps.
-* **Reporting:** Clear CLI summary tables (`rich`/`tabulate`) and exportable HTML reports.
-* **Fail-Fast Debugging:** Deep logging, error traces, and data assertions.
+* **Visualization Suite:** Interactive dashboards for Reliability Diagrams, Year-by-Year accuracy plots, and Bracket Visualization.
+* **Reporting:** Web-based (Streamlit) presentation layer for Model Leaderboards and deep-dive analysis.
+* **Fail-Fast Debugging:** Deep logging, error traces, and data assertions. Custom verbosity levels.
 
 ## 4. Technical Constraints
 * **Language:** Python 3.12+.
-* **Core Libraries:** `numpy`, `pandas`, `scikit-learn`, `networkx`, `joblib` (parallelism), `matplotlib`.
+* **Core Libraries:** `numpy`, `pandas`, `scikit-learn`, `networkx`, `plotly`, `streamlit`.
 * **Interface:** Code-based submission (Python classes only).
 
 ## 5. Success Metrics
