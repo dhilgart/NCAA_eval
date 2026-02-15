@@ -1,95 +1,71 @@
-[project]
-dynamic = ["readme", "version"]
-name = "ncaa_eval"
-authors = [
-    { name = "Dan Hilgart", email = "dhilgart@gmail.com"}
-]
+[tool.poetry]
+name = "ncaa-eval"
+version = "0.1.0"
 description = "Evaluator for self-evaluation of NCAA March Mania Kaggle Competition models"
-requires-python = ">=3.9"
-dependencies = []
+authors = ["Dan Hilgart <dhilgart@gmail.com>"]
+readme = "README.md"
+packages = [{include = "ncaa_eval", from = "src"}]
+
+[tool.poetry.dependencies]
+python = ">=3.12,<4.0"
+pandas = "*"
+numpy = "*"
+xgboost = "*"
+scikit-learn = "*"
+networkx = "*"
+joblib = "*"
+plotly = "*"
+streamlit = "*"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "*"
+hypothesis = "*"
+mutmut = "*"
+ruff = "*"
+mypy = "*"
+pre-commit = "*"
+nox = "*"
+commitizen = "*"
+check-manifest = "*"
+edgetest = "*"
+sphinx = "*"
+furo = "*"
 
 [build-system]
-requires = ["setuptools", "setuptools-scm"]
-build-backend = "setuptools.build_meta"
-
-[tool.setuptools.dynamic]
-version = {attr = "ncaa_eval.version.__version__"}
-readme = {file = ["README.md", "CHANGELOG.md"]}
-
-[tool.setuptools.packages]
-find = { where = ["src"] }
-
-[project.optional-dependencies]
-docs = [
-    "mkdocs>=1.5.3",
-    "mkdocs-material>=9.5.32",
-]
-
-tests = [
-    "coverage>=7.6.1",
-    "mypy>=1.11.1",
-    "pytest>=8.3.2",
-    "pytest-cov>=5.0.0",
-    "pytest-mock>=3.6.1",
-]
-
-qa = [
-    "invoke>=2.2.0",
-    "ruff>=0.6.2",
-    "bandit>=1.7.9",
-    "pip-audit>=2.3.3",
-    "commitizen>=3.29.0",
-    "pre-commit>=3.8.0",
-]
-
-dev = [
-    "ncaa_eval[docs]",
-    "ncaa_eval[tests]",
-    "ncaa_eval[qa]",
-]
-
-[tool.commitizen]
-name = "cz_conventional_commits"
-version = "0.0.1"
-tag_format = "$version"
-version_files = ["pyproject.toml:version"]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
 
 [tool.mypy]
-files = ["ncaa_eval", "tests"]
-ignore_missing_imports = true
+strict = true
+files = ["src/ncaa_eval", "tests"]
 follow_imports = "silent"
 warn_redundant_casts = true
 warn_unused_ignores = true
 warn_unused_configs = true
 
-
-
-
 [tool.ruff]
 line-length = 110
 
-    [tool.ruff.lint]
-    extend-select = [
-        "I",     # Missing required import (auto-fixable)
-        "UP",    # Pyupgrade
-        "PT",    # flake8-pytest-style rules
-        "TID25", # flake8-tidy-imports rules
-    ]
+[tool.ruff.lint]
+extend-select = [
+    "I",     # Missing required import (auto-fixable)
+    "UP",    # Pyupgrade
+    "PT",    # flake8-pytest-style rules
+    "TID25", # flake8-tidy-imports rules
+]
+ignore = ["E501", "D1", "D415"]
 
-    ignore = ["E501", "D1", "D415"]
+[tool.ruff.lint.isort]
+required-imports = ["from __future__ import annotations"]
+combine-as-imports = true
+known-first-party = ["tests"]
 
-    [tool.ruff.lint.isort]
-    required-imports = ["from __future__ import annotations"]
-    combine-as-imports = true
-    known-first-party = ["tests"]
-
-    [tool.ruff.lint.pydocstyle]
-    convention = "google"
-
+[tool.ruff.lint.pydocstyle]
+convention = "google"
 
 [tool.pytest.ini_options]
 minversion = "8.0.0"
-testpaths = "tests"
+testpaths = ["tests"]
 addopts = "--strict-markers"
 norecursedirs = [
     ".*",
@@ -104,27 +80,21 @@ norecursedirs = [
     "virtualenv",
 ]
 
+[tool.coverage.report]
+show_missing = true
+exclude_lines = [
+    'pragma: no cover',
+    'def __repr__',
+    'if self\.debug',
+    'raise AssertionError',
+    'raise NotImplementedError',
+    'if 0:',
+    'if __name__ == .__main__.:',
+]
+omit = ['env/*', 'venv/*', '*/virtualenv/*', '*/virtualenvs/*', '*/tests/*']
 
-[tool.coverage]
-    [tool.coverage.report]
-    show_missing = true
-    exclude_lines = [
-        # Have to re-enable the standard pragma
-        'pragma: no cover',
-
-        # Don't complain about missing debug-only code:
-        'def __repr__',
-        'if self\.debug',
-
-        # Don't complain if tests don't hit defensive assertion code:
-        'raise AssertionError',
-        'raise NotImplementedError',
-
-        # Don't complain if non-runnable code isn't run:
-        'if 0:',
-        'if __name__ == .__main__.:',
-    ]
-    omit = ['env/*', 'venv/*', '*/virtualenv/*', '*/virtualenvs/*', '*/tests/*']
-
-
-
+[tool.commitizen]
+name = "cz_conventional_commits"
+version = "0.1.0"
+tag_format = "$version"
+version_files = ["pyproject.toml:version"]

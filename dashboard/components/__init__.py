@@ -1,3 +1,3 @@
-"""Test suite for ncaa_eval."""
+"""Reusable UI widgets."""
 
 from __future__ import annotations

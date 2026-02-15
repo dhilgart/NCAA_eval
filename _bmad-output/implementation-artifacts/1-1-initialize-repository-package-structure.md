@@ -1,6 +1,6 @@
 # Story 1.1: Initialize Repository & Package Structure
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -20,29 +20,29 @@ so that I can `poetry install` into a working virtualenv with the correct packag
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `pyproject.toml` with Poetry configuration (AC: 1, 4)
-  - [ ] 1.1: Set project name `ncaa-eval`, version `0.1.0`, Python `>=3.12`
-  - [ ] 1.2: Add all core dependencies: pandas, numpy, xgboost, scikit-learn, networkx, joblib, plotly, streamlit
-  - [ ] 1.3: Add dev dependencies: pytest, hypothesis, mutmut, ruff, mypy, pre-commit, nox, commitizen, check-manifest, edgetest, sphinx, furo, sphinx-apidoc
-  - [ ] 1.4: Configure src layout: `packages = [{include = "ncaa_eval", from = "src"}]`
-- [ ] Task 2: Create directory scaffolding (AC: 2, 3)
-  - [ ] 2.1: Create `src/ncaa_eval/__init__.py`
-  - [ ] 2.2: Create `src/ncaa_eval/ingest/__init__.py`
-  - [ ] 2.3: Create `src/ncaa_eval/transform/__init__.py`
-  - [ ] 2.4: Create `src/ncaa_eval/model/__init__.py`
-  - [ ] 2.5: Create `src/ncaa_eval/evaluation/__init__.py`
-  - [ ] 2.6: Create `src/ncaa_eval/utils/__init__.py`
-  - [ ] 2.7: Create `dashboard/app.py` (empty Streamlit entry point)
-  - [ ] 2.8: Create `dashboard/pages/` directory with placeholder
-  - [ ] 2.9: Create `dashboard/components/` directory with placeholder
-  - [ ] 2.10: Create `tests/__init__.py`
-  - [ ] 2.11: Create `data/` directory with `.gitkeep`
-- [ ] Task 3: Create `.gitignore` (AC: 5)
-  - [ ] 3.1: Exclude `data/` (except `.gitkeep`), virtualenvs (`.venv/`, `venv/`), common Python artifacts (`__pycache__/`, `*.pyc`, `*.egg-info/`, `dist/`, `build/`, `.mypy_cache/`, `.pytest_cache/`, `.ruff_cache/`)
-- [ ] Task 4: Run `poetry install` and verify (AC: 1, 2)
-  - [ ] 4.1: Run `poetry install` and confirm no errors
-  - [ ] 4.2: Run `poetry run python -c "import ncaa_eval"` and confirm success
-  - [ ] 4.3: Verify virtualenv was created
+- [x] Task 1: Create `pyproject.toml` with Poetry configuration (AC: 1, 4)
+  - [x] 1.1: Set project name `ncaa-eval`, version `0.1.0`, Python `>=3.12`
+  - [x] 1.2: Add all core dependencies: pandas, numpy, xgboost, scikit-learn, networkx, joblib, plotly, streamlit
+  - [x] 1.3: Add dev dependencies: pytest, hypothesis, mutmut, ruff, mypy, pre-commit, nox, commitizen, check-manifest, edgetest, sphinx, furo (note: sphinx-apidoc is bundled with sphinx, not a separate package)
+  - [x] 1.4: Configure src layout: `packages = [{include = "ncaa_eval", from = "src"}]`
+- [x] Task 2: Create directory scaffolding (AC: 2, 3)
+  - [x] 2.1: Create `src/ncaa_eval/__init__.py`
+  - [x] 2.2: Create `src/ncaa_eval/ingest/__init__.py`
+  - [x] 2.3: Create `src/ncaa_eval/transform/__init__.py`
+  - [x] 2.4: Create `src/ncaa_eval/model/__init__.py`
+  - [x] 2.5: Create `src/ncaa_eval/evaluation/__init__.py`
+  - [x] 2.6: Create `src/ncaa_eval/utils/__init__.py`
+  - [x] 2.7: Create `dashboard/app.py` (empty Streamlit entry point)
+  - [x] 2.8: Create `dashboard/pages/` directory with placeholder (1_Lab.py, 2_Presentation.py)
+  - [x] 2.9: Create `dashboard/components/` directory with placeholder (__init__.py)
+  - [x] 2.10: Create `tests/__init__.py` (pre-existing)
+  - [x] 2.11: Create `data/` directory with `.gitkeep`
+- [x] Task 3: Create `.gitignore` (AC: 5)
+  - [x] 3.1: Exclude `data/` (except `.gitkeep`), virtualenvs (`.venv/`, `venv/`), common Python artifacts (`__pycache__/`, `*.pyc`, `*.egg-info/`, `dist/`, `build/`, `.mypy_cache/`, `.pytest_cache/`, `.ruff_cache/`)
+- [x] Task 4: Run `poetry install` and verify (AC: 1, 2)
+  - [x] 4.1: Run `poetry install` and confirm no errors (118 packages installed)
+  - [x] 4.2: Run `poetry run python -c "import ncaa_eval"` and confirm success
+  - [x] 4.3: Verify virtualenv was created (ncaa-eval-Mo2VJmcB-py3.14)
 
 ## Dev Notes
 
@@ -158,10 +158,53 @@ All dependencies from PRD Section 4 and Architecture Section 3:
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6 (claude-opus-4-6)
 
 ### Debug Log References
 
+- `sphinx-apidoc` is not a standalone PyPI package; it is bundled with `sphinx`. Removed from dev dependencies.
+- System Python was 3.10.14 (conda default); switched Poetry to use system Python 3.14.2 via `poetry env use python`.
+- Removed legacy setuptools artifacts: `setup.py`, `src/ncaa_eval/version.py`, `src/ncaa_eval/ncaa_eval.py`, `ncaa_eval.egg-info/`, `src/ncaa_eval.egg-info/`.
+- **Code Review Fixes (AI-Review):** Fixed mypy strict mode configuration, added py.typed marker, updated tests/__init__.py, added .claude/ to .gitignore, updated File List to document all changes including sprint-status.yaml and story file.
+
 ### Completion Notes List
 
+- Converted project from setuptools to Poetry with src layout
+- All 8 core dependencies and 12 dev dependencies installed (sphinx-apidoc excluded as it's part of sphinx)
+- Created full directory scaffolding matching Architecture Section 9
+- All subpackages importable: ncaa_eval.{ingest, transform, model, evaluation, utils}
+- Dashboard scaffolding with Streamlit multipage convention (1_Lab.py, 2_Presentation.py)
+- Extended existing .gitignore with data/, .ruff_cache/, and .claude/ exclusions
+- Preserved existing tool configurations (ruff, mypy, pytest, coverage, commitizen) during pyproject.toml rewrite
+- **Code Review Fixes:** Configured mypy in strict mode per Architecture Section 12, added py.typed marker for PEP 561 compliance, updated tests/__init__.py with proper content, comprehensive File List documentation
+
 ### File List
+
+- pyproject.toml (modified — rewritten from setuptools to Poetry, configured mypy strict mode)
+- poetry.lock (new — generated by poetry install)
+- .gitignore (modified — added data/, .ruff_cache/, and .claude/ exclusions)
+- src/ncaa_eval/__init__.py (modified — added docstring and future annotations)
+- src/ncaa_eval/py.typed (new — PEP 561 type marker for mypy strict compliance)
+- src/ncaa_eval/ingest/__init__.py (new)
+- src/ncaa_eval/transform/__init__.py (new)
+- src/ncaa_eval/model/__init__.py (new)
+- src/ncaa_eval/evaluation/__init__.py (new)
+- src/ncaa_eval/utils/__init__.py (new)
+- dashboard/app.py (new)
+- dashboard/pages/1_Lab.py (new)
+- dashboard/pages/2_Presentation.py (new)
+- dashboard/components/__init__.py (new)
+- tests/__init__.py (modified — added docstring and future annotations)
+- data/.gitkeep (new)
+- _bmad-output/implementation-artifacts/1-1-initialize-repository-package-structure.md (modified — added Dev Agent Record)
+- _bmad-output/implementation-artifacts/sprint-status.yaml (modified — set story status to 'review')
+- .claude/settings.local.json (new — IDE config, git-ignored)
+- setup.py (deleted — replaced by Poetry)
+- src/ncaa_eval/version.py (deleted — no longer needed)
+- src/ncaa_eval/ncaa_eval.py (deleted — empty placeholder)
+- ncaa_eval.egg-info/ (deleted — setuptools artifact)
+- src/ncaa_eval.egg-info/ (deleted — setuptools artifact)
+
+## Change Log
+
+- 2026-02-15: Story 1.1 implemented — Poetry-managed project with src layout, full directory scaffolding, all dependencies installed

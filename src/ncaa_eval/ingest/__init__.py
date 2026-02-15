@@ -1,3 +1,3 @@
-"""Test suite for ncaa_eval."""
+"""Data ingestion module."""
 
 from __future__ import annotations
