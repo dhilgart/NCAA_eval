@@ -56,7 +56,7 @@ NFR5 (Reliability - Fail-Fast Debugging): The system must provide deep logging, 
 
 **From UX Spec:**
 - Dark Mode enforced by default to reduce eye strain during long analysis sessions
-- Desktop Wide Mode as primary target; mobile "View Only" simplified mode
+- Desktop Only (Wide Mode) — mobile is not supported
 - Interaction response must be under 500ms for diagnostic plots and bracket updates
 - Heavy use of `@st.cache_data` for historical datasets and model artifacts
 - Monospace fonts (IBM Plex Mono or system default) for all data tables and code snippets
@@ -84,13 +84,16 @@ NFR5 (Reliability - Fail-Fast Debugging): The system must provide deep logging, 
 | NFR2 | Epic 6 | Parallel cross-validation execution |
 | NFR3 | Epic 5 | Plugin-registry extensibility |
 | NFR4 | Epic 4 | Temporal boundary enforcement |
-| NFR5 | Epic 1 | Fail-fast debugging toolchain |
+| NFR5 | Epic 1 | Fail-fast debugging toolchain + runtime logging & assertions |
+| UI-3 | Epic 7 | Jupyter progress bars (Story 7.1) |
+| UI-10 | Epic 7 | Comprehensive user guide (Story 7.8) |
+| UI-11 | Epic 7 | Step-by-step tutorials (Story 7.9) |
 
 ## Epic List
 
 ### Epic 1: Project Foundation & Developer Toolchain
-Developer can clone, install, lint, type-check, test, and commit against a fully configured Python project with enforced quality gates.
-**FRs covered:** NFR5 (Fail-Fast Debugging via toolchain)
+Developer can clone, install, lint, type-check, test, and commit against a fully configured Python project with enforced quality gates and runtime debugging infrastructure.
+**FRs covered:** NFR5 (Fail-Fast Debugging via toolchain + runtime logging & assertions)
 
 ### Epic 2: Data Ingestion & Local Warehouse
 User can fetch NCAA data from external sources, persist it locally, and access it with smart caching -- the "Source of Truth" is operational.
@@ -113,8 +116,8 @@ User can evaluate models with probabilistic metrics, calibration analysis, walk-
 **FRs covered:** FR7, FR8, FR9 | NFR1 (Vectorization), NFR2 (Parallelism)
 
 ### Epic 7: Lab & Presentation Dashboard
-User can visualize model performance via interactive Streamlit dashboards including leaderboards, reliability diagrams, bracket visualizer, and pool ROI simulations.
-**FRs covered:** UI requirements from PRD Section 3 + UX Spec
+User can visualize model performance via interactive Streamlit dashboards including leaderboards, reliability diagrams, bracket visualizer, point outcome analysis, and comprehensive documentation.
+**FRs covered:** UI requirements from PRD Section 3 + UX Spec + UI-10 (User Guide) + UI-11 (Tutorials)
 
 ## Epic 1: Project Foundation & Developer Toolchain
 
@@ -236,6 +239,24 @@ So that the project has automated versioning, package integrity checks, dependen
 **And** `sphinx-build` generates HTML documentation from the `docs/` directory using the Furo theme
 **And** `sphinx-apidoc` can auto-generate API docs from module docstrings
 **And** a Nox session exists for documentation generation (`nox -s docs`)
+
+### Story 1.8: Implement Runtime Logging & Data Assertions Framework
+
+As a developer,
+I want a structured logging system with configurable verbosity levels and a data assertions framework,
+So that I can diagnose runtime issues efficiently and validate data integrity throughout the pipeline.
+
+**Acceptance Criteria:**
+
+**Given** the project toolchain (Stories 1.4-1.6) is configured
+**When** the developer uses the logging and assertions modules
+**Then** a structured logging system is available using Python's `logging` module with project-specific configuration
+**And** custom verbosity levels are supported (e.g., QUIET, NORMAL, VERBOSE, DEBUG) controllable via CLI flag or environment variable
+**And** log output includes timestamps, module names, and configurable formatting
+**And** a data assertions module provides helper functions for validating DataFrame shapes, column types, value ranges, and null checks
+**And** assertion failures produce clear error messages with the specific validation that failed and the actual vs. expected values
+**And** the logging and assertions framework is covered by unit tests
+**And** usage examples are documented in the module docstrings
 
 ## Epic 2: Data Ingestion & Local Warehouse
 
@@ -536,9 +557,9 @@ So that I have a proven baseline for tournament prediction and a template for bu
 
 **Acceptance Criteria:**
 
-**Given** the Model ABC (Story 5.2) is defined
+**Given** the Model ABC (Story 5.2) is defined and the chronological serving API (Epic 4, Story 4.2) is available
 **When** the developer trains the Elo model on historical game data
-**Then** the Elo model processes games chronologically, updating team ratings after each game
+**Then** the Elo model consumes games via `get_chronological_season(year)` from the chronological serving API, updating team ratings after each game
 **And** the K-factor and initial rating are configurable hyperparameters
 **And** home-court advantage adjustment is supported
 **And** season-to-season state persistence is implemented (ratings carry forward with optional regression to mean)
@@ -671,7 +692,7 @@ So that I can compute Expected Points and Bracket Distribution metrics for tourn
 **When** the developer runs `simulate_tournament(probs, n=10000)`
 **Then** N complete bracket realizations are generated by sampling game outcomes from the probability matrix
 **And** the number of simulations N is configurable (default 10,000)
-**And** each simulation respects the tournament bracket structure (64-team single elimination)
+**And** each simulation respects the tournament bracket structure (64-team single elimination, post-First Four — play-in games are excluded)
 **And** results include: per-team advancement frequencies by round, most likely bracket (max likelihood), and bracket distribution statistics
 **And** simulation leverages numpy vectorization for batch sampling (not Python loops per game)
 **And** simulation progress is reported for long runs
@@ -714,6 +735,7 @@ So that I can visualize calibration, metrics, and results directly in Jupyter no
 **And** all figures use the project's functional color palette (Green/Red/Neutral)
 **And** figures are interactive (hover tooltips, zoom, pan)
 **And** evaluation metrics and logs are also available as Pandas DataFrames for ad-hoc analysis
+**And** real-time progress bars are provided for long-running training loops and evaluations when executed in Jupyter cells (e.g., via `tqdm.notebook` or `tqdm.auto`)
 **And** adapters are covered by unit tests validating figure object structure and data content
 
 ### Story 7.2: Build Streamlit App Shell & Navigation
@@ -779,26 +801,75 @@ So that I can visually inspect specific predictions and explore "what-if" scenar
 
 **Given** a model's probability matrix and simulated bracket results are available
 **When** the user navigates to the Bracket Visualizer page
-**Then** a 64-team single-elimination bracket tree is rendered (custom Streamlit component using D3.js or Mermaid.js)
+**Then** a 64-team single-elimination bracket tree is rendered (post-First Four — play-in games are excluded) using a custom Streamlit component (technology determined by Story 7.7 spike)
 **And** the bracket requires Wide Mode and displays all four regions simultaneously without horizontal scrolling
 **And** clicking a game node opens a detail panel showing matchup features (efficiency stats, graph centrality, head-to-head)
-**And** Game Theory sliders in the sidebar (Upset Aggression, Chalk Bias, Seed-Weight) perturb the model's base probabilities in real-time
+**And** Game Theory sliders in the sidebar (Upset Aggression, Chalk Bias, Seed-Weight) perturb the model's base probabilities in real-time using the mechanism defined in Story 7.7 spike
 **And** slider adjustments update the bracket visualization without altering the underlying model data
 **And** the user can flag a specific bracket configuration as a "Candidate Entry"
 
-### Story 7.6: Build Presentation Page -- Pool Scorer & ROI Simulations
+### Story 7.7 (Spike): Research Game Theory Slider Mechanism
 
 As a data scientist,
-I want to configure pool-specific scoring rules, run ROI simulations, and export a final entry,
-So that I can tailor my bracket to maximize expected value in a specific pool.
+I want a documented analysis of how Game Theory sliders (Upset Aggression, Chalk Bias, Seed-Weight) should mathematically transform a model's base win probabilities,
+So that the Bracket Visualizer (Story 7.5) can implement real-time probability perturbation with a sound mathematical foundation.
+
+**Acceptance Criteria:**
+
+**Given** the UX spec defines sliders that "perturb the model's base probabilities" without specifying the mechanism
+**When** the data scientist reviews the spike findings document
+**Then** candidate mathematical transformations are evaluated (e.g., logit-space additive adjustments, multiplicative scaling, Bayesian prior blending)
+**And** each approach is assessed for: intuitive user behavior (slider up = more upsets), numerical stability (probabilities remain valid 0-1), and reversibility (slider at neutral = original probabilities)
+**And** the recommended approach is documented with formula, examples, and edge case analysis
+**And** slider parameter ranges and default values are specified
+**And** the findings are committed as a project document
+
+### Story 7.6: Build Presentation Page -- Pool Scorer & Point Outcome Analysis
+
+As a data scientist,
+I want to configure pool-specific scoring rules and analyze the range of possible point outcomes,
+So that I can understand my bracket's scoring potential under different pool formats.
 
 **Acceptance Criteria:**
 
 **Given** a model's probability matrix and the tournament simulator (Epic 6) are available
 **When** the user navigates to the Pool Scorer page
 **Then** the user can input pool scoring rules (Standard, Fibonacci, Seed-Difference Bonus, or custom)
-**And** clicking "Run ROI Sim" simulates the selected model against generated "public" brackets based on historical pick rates
+**And** clicking "Analyze Outcomes" runs the Monte Carlo simulator with the selected scoring rules to produce a distribution of possible point totals
 **And** simulation progress is displayed via `st.progress` to prevent UI freezing during 10k+ iterations
-**And** results display a distribution graph of expected finishes (e.g., "Top 10% Probability: 15%")
+**And** results display the point outcome distribution (min, max, median, percentiles) and a histogram of simulated scores
 **And** the user can click "Generate Submission" to export the Final Entry as CSV/JSON formatted for the target pool
-**And** ROI simulation results are cached to avoid re-running on page navigation
+**And** simulation results are cached to avoid re-running on page navigation
+
+### Story 7.8: Write Comprehensive User Guide
+
+As a data scientist,
+I want a comprehensive guide explaining the evaluation metrics, model types, and how to interpret the results,
+So that I can understand what the platform measures and make informed decisions based on its outputs.
+
+**Acceptance Criteria:**
+
+**Given** the core platform (Epics 1-6) and dashboard (Epic 7) are functional
+**When** the user reads the user guide
+**Then** all evaluation metrics are explained (Log Loss, Brier Score, ROC-AUC, ECE) with intuitive descriptions and examples
+**And** model types are documented (Stateful vs. Stateless) with guidance on when to use each
+**And** result interpretation is covered: how to read reliability diagrams, what calibration means, and how to use bracket simulations
+**And** the tournament scoring systems are explained (Standard, Fibonacci, Seed-Difference Bonus)
+**And** the guide is written in Sphinx-compatible RST or Markdown and integrated into the auto-generated documentation
+**And** the guide is accessible from the project's documentation site
+
+### Story 7.9: Create Step-by-Step Tutorials
+
+As a data scientist,
+I want step-by-step tutorials for common tasks,
+So that I can quickly learn how to use the platform's key workflows.
+
+**Acceptance Criteria:**
+
+**Given** the platform is functional and the user guide (Story 7.8) is available
+**When** the user follows a tutorial
+**Then** a "Getting Started" tutorial covers the full pipeline: sync data, train a model, evaluate, and view results in the dashboard
+**And** a "How to Create a Custom Model" tutorial walks through subclassing the Model ABC, registering via the plugin registry, and running evaluation
+**And** a "How to Add a Custom Metric" tutorial demonstrates extending the evaluation engine via the plugin registry
+**And** each tutorial includes runnable code examples and expected outputs
+**And** tutorials are written in Sphinx-compatible RST or Markdown and integrated into the auto-generated documentation

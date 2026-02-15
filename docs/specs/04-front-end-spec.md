@@ -108,11 +108,9 @@ graph TD
 
 ### 5.1 Responsiveness Strategy
 
-* **Primary Target**: **Desktop (Wide Mode)**.
+* **Target**: **Desktop Only (Wide Mode)**.
 * **Layout Constraint**: The 64-team bracket visualization requires Streamlit's "Wide Mode" configuration (`layout="wide"`) to prevent horizontal scrolling and ensure all four regions are visible simultaneously.
-* **Mobile Strategy**: Simplified "View Only" mode.
-    * *Capabilities:* View Leaderboard, check simulation status.
-    * *Limitations:* No interactive bracket manipulation or simulation runs on mobile devices.
+* **Mobile**: Not supported. This is a desktop-only application.
 
 ### 5.2 Performance Considerations
 
