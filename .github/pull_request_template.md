@@ -81,6 +81,6 @@ Steps to reproduce the behavior:
 
 ---
 
-**Reference:** [`docs/QUALITY_GATES.md`](../docs/QUALITY_GATES.md) for the philosophy
-behind these checks | [`docs/STYLE_GUIDE.md`](../docs/STYLE_GUIDE.md) for full
+**Reference:** [`docs/TESTING_STRATEGY.md`](../docs/TESTING_STRATEGY.md) for the testing strategy
+and quality gates | [`docs/STYLE_GUIDE.md`](../docs/STYLE_GUIDE.md) for full
 coding standards

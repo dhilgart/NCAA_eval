@@ -238,7 +238,7 @@ In these cases, add a brief comment explaining why the loop is necessary.
 Every pull request must pass the following gates. The actual PR template is at
 [`.github/pull_request_template.md`](../.github/pull_request_template.md). For
 the philosophy behind this two-tier approach, see
-[`docs/QUALITY_GATES.md`](QUALITY_GATES.md).
+[`docs/TESTING_STRATEGY.md`](TESTING_STRATEGY.md) (Section: Quality Gates and Execution Tiers).
 
 | Gate | Tool | Timing |
 |---|---|---|
