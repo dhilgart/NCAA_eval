@@ -244,6 +244,19 @@ default_context:
 
 **Template Pattern:** PR checklist includes "Visual-first" requirement for user-facing docs
 
+### PR Template Enforcement in Code Review ⭐
+Code review workflow generates PRs following .github/pull_request_template.md structure:
+- All template sections included (PR Type, Description, Checklists)
+- Appropriate items marked [x] or N/A based on story type
+- Code review notes appended at bottom
+- Ensures consistency between manual and automated PRs
+
+**Rationale:** Standardized PR format improves review process, ensures all checklist items are considered, maintains project quality standards.
+
+**Template Pattern:** Code review workflow instructions.xml generates template-formatted PR bodies
+
+**Discovered in Story 1.3 (2026-02-16):** PR #3 initially bypassed template, required manual reformatting and workflow update.
+
 ### Style Guide
 **Reference:** [STYLE_GUIDE.md](./STYLE_GUIDE.md)
 
