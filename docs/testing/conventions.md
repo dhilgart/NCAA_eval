@@ -113,17 +113,16 @@ Pytest markers enable selective test execution for pre-commit vs. PR-time distin
 
 ### Marker Definitions
 
-| Marker | Dimension | Purpose | Pre-Commit | PR-Time | Command |
-|---|---|---|---|---|---|
-| `@pytest.mark.smoke` | Speed | Fast smoke tests (< 1s each, < 5s total) | ✅ YES | ✅ YES | `pytest -m smoke` |
-| `@pytest.mark.slow` | Speed | Slow tests (> 5 seconds each) | ❌ NO | ✅ YES | `pytest -m "not slow"` |
-| `@pytest.mark.integration` | Scope | Integration tests (I/O, database) | ❌ NO | ✅ YES | `pytest -m integration` |
-| `@pytest.mark.property` | Approach | Property-based tests (Hypothesis) | ❌ NO | ✅ YES | `pytest -m property` |
-| `@pytest.mark.performance` | Purpose | Performance/benchmark tests | ❌ NO | ✅ YES | `pytest -m performance` |
-| `@pytest.mark.regression` | Purpose | Regression tests (prevent bug recurrence) | ✅ YES* | ✅ YES | `pytest -m regression` |
-| `@pytest.mark.mutation` | Quality | Tests for mutation testing coverage | ❌ NO | ✅ YES | `pytest -m mutation` |
-
-*Regression tests are pre-commit eligible if fast (also marked with `@pytest.mark.smoke`)
+| Marker | Dimension | Purpose | Command |
+|---|---|---|---|
+| `@pytest.mark.smoke` | Speed | Fast smoke tests for pre-commit (< 1s each, < 5s total) | `pytest -m smoke` |
+| `@pytest.mark.slow` | Speed | Slow tests excluded from pre-commit (> 5 seconds each) | `pytest -m "not slow"` |
+| `@pytest.mark.integration` | Scope | Integration tests (I/O, database) | `pytest -m integration` |
+| `@pytest.mark.property` | Approach | Property-based tests (Hypothesis) | `pytest -m property` |
+| `@pytest.mark.fuzz` | Approach | Fuzz-based tests (Hypothesis) | `pytest -m fuzz` |
+| `@pytest.mark.performance` | Purpose | Performance/benchmark tests | `pytest -m performance` |
+| `@pytest.mark.regression` | Purpose | Regression tests (prevent bug recurrence) | `pytest -m regression` |
+| `@pytest.mark.mutation` | Quality | Tests for mutation testing coverage | `pytest -m mutation` |
 
 ### Marker Configuration
 
@@ -136,6 +135,7 @@ markers = [
     "slow: Slow tests excluded from pre-commit (> 5 seconds each)",
     "integration: Integration tests with I/O or external dependencies",
     "property: Hypothesis property-based tests",
+    "fuzz: Hypothesis fuzz-based tests for crash resilience",
     "performance: Performance and benchmark tests",
     "regression: Regression tests to prevent bug recurrence",
     "mutation: Tests specifically for mutation testing coverage",

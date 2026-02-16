@@ -100,6 +100,16 @@ norecursedirs = [
     "env",
     "virtualenv",
 ]
+markers = [
+    "smoke: Fast smoke tests for pre-commit (< 5 seconds total)",
+    "slow: Slow tests excluded from pre-commit (> 5 seconds each)",
+    "integration: Integration tests with I/O or external dependencies",
+    "property: Hypothesis property-based tests",
+    "fuzz: Hypothesis fuzz-based tests for crash resilience",
+    "performance: Performance and benchmark tests",
+    "regression: Regression tests to prevent bug recurrence",
+    "mutation: Tests specifically for mutation testing coverage",
+]
 
 [tool.coverage.report]
 show_missing = true
