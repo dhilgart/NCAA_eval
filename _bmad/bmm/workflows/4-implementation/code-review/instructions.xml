@@ -351,25 +351,68 @@
             - Example: "Add testing strategy documentation"
           </action>
 
-          <action>Generate PR body from story:
-            ## Summary
-            - Bullet points summarizing key changes from Change Log and File List
-            - Link to story file if applicable
+          <action>Generate PR body following .github/pull_request_template.md format:
 
-            ## Acceptance Criteria Status
-            - List each AC with [x] or [ ] based on implementation status
+            ## PR Type
+            - Identify type from story: Documentation update, New feature, Bugfix, etc.
 
-            ## Test Coverage
-            - Summary of tests added/modified from Dev Agent Record
+            ## Description
+            - Summary of what PR does and why (from story description)
+            - Link to story file: [story-file.md](_bmad-output/implementation-artifacts/story-file.md)
+            - Bullet points of key deliverables from File List
 
-            ## Review Notes
+            ## Expected behavior
+            - Describe what should work after this change (from Acceptance Criteria)
+
+            ## Steps to reproduce the behavior
+            - For features/bugs: steps to verify the change works
+            - For docs: how to use the new documentation
+
+            ## Supporting Evidence
+            - **Acceptance Criteria Coverage:**
+              - List each AC with [x] or [ ] based on implementation
+            - **Files Created/Modified:** List from story File List
+
+            ## Pre-Commit Checks
+            - [x] All applicable pre-commit checks with status
+            - Mark N/A for documentation-only or non-applicable checks
+
+            ## Test Suite
+            - [x] Test suite status
+            - Mark N/A for documentation-only changes
+
+            ## Code Quality
+            - [x] Code quality checks with status
+            - Mark N/A for documentation-only changes
+
+            ## Architecture Compliance
+            - [x] Architecture compliance checks
+            - Note any new dependencies added
+
+            ## Documentation
+            - [x] Documentation update status
+            - Note visual-first compliance for user-facing docs
+
+            ## Template Learning Capture
+            - [x] If template learnings captured, mark as done
+            - [ ] N/A if no template patterns
+
+            ## Related Issue
+            - Reference to Epic/Story
+
+            ---
+
+            **Code Review Notes:**
             - {{fixed_count}} issues fixed during code review
             - {{action_count}} action items created (if any)
+            - List key fixes applied
 
             🤖 Generated with [Claude Code](https://claude.com/claude-code)
           </action>
 
-          <action>Create PR using: gh pr create --title "{{pr_title}}" --body "{{pr_body}}"</action>
+          <action>Create PR WITHOUT custom body to use template: gh pr create --title "{{pr_title}}"</action>
+          <action>NOTE: This will open editor with template - agent should fill it programmatically using gh pr edit instead</action>
+          <action>ALTERNATIVE: Use gh pr create --title "{{pr_title}}" --body "{{pr_body_formatted}}" with template-formatted body</action>
           <action>Capture PR URL from command output</action>
           <action>Store as {{pr_url}}</action>
 
