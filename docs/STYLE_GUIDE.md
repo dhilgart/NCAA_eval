@@ -383,6 +383,7 @@ the philosophy behind this two-tier approach, see
 | No vectorization violations | Manual review | PR review |
 | Conventional commit messages | Commitizen | Pre-commit |
 | PEP 20 compliance | Manual review | PR review |
+| SOLID principles | Manual review | PR review |
 
 ### Review Criteria
 
@@ -392,6 +393,7 @@ the philosophy behind this two-tier approach, see
 - No `for` loops over DataFrames for calculations (Section 5).
 - Type annotations are complete (Section 4).
 - PEP 20 design principles respected (Section 6).
+- SOLID principles applied for testability (Section 10).
 - Data structures shared between Logic and UI use Pydantic models or TypedDicts.
 - Dashboard code never reads files directly — it calls `ncaa_eval` functions.
 
@@ -446,6 +448,205 @@ These rules come from the project architecture and apply across all code:
 | **No direct IO in UI** | The Streamlit dashboard must call `ncaa_eval` library functions — never read files directly. |
 | **Commit messages** | Use conventional commits format (`feat:`, `fix:`, `docs:`, etc.) enforced by Commitizen. |
 | **Python version** | `>=3.12,<4.0`. Use modern syntax (`match`, `type` statement, `X \| None`). |
+
+---
+
+## 10. SOLID Principles for Testability
+
+> **SOLID principles make code testable.** Violating SOLID = hard-to-test code.
+
+These five object-oriented design principles improve maintainability and testability. While not automatically enforced, they're checked during code review.
+
+### S - Single Responsibility Principle (SRP)
+
+> "A class should have only one reason to change."
+
+**What it means:** Each class/function does ONE thing well.
+
+**Already enforced by:** PEP 20 complexity checks (Section 6)
+
+```python
+# GOOD: Single responsibility
+class GameLoader:
+    """Loads games from CSV files."""
+    def load(self, path: Path) -> pd.DataFrame:
+        return pd.read_csv(path)
+
+class GameValidator:
+    """Validates game data."""
+    def validate(self, games: pd.DataFrame) -> None:
+        if games["home_score"].min() < 0:
+            raise ValueError("Scores cannot be negative")
+
+# BAD: Multiple responsibilities
+class GameManager:
+    """Does everything - loading, validating, processing, saving."""
+    def do_everything(self, path: Path) -> None:
+        # Too many reasons to change!
+        pass
+```
+
+**Testing impact:** Easy to test (one thing = one test class)
+
+---
+
+### O - Open/Closed Principle (OCP)
+
+> "Open for extension, closed for modification."
+
+**What it means:** Add new features without changing existing code.
+
+```python
+# GOOD: Open for extension via inheritance
+class RatingModel(ABC):
+    @abstractmethod
+    def predict(self, game: Game) -> float:
+        pass
+
+class EloModel(RatingModel):
+    def predict(self, game: Game) -> float:
+        return self._calculate_elo(game)
+
+class GlickoModel(RatingModel):  # New model, no changes to existing code
+    def predict(self, game: Game) -> float:
+        return self._calculate_glicko(game)
+
+# BAD: Must modify existing code for each new model
+def predict(game: Game, model_type: str) -> float:
+    if model_type == "elo":
+        return calculate_elo(game)
+    elif model_type == "glicko":  # Must modify this function
+        return calculate_glicko(game)
+```
+
+**Testing impact:** Easy to mock/stub new implementations
+
+---
+
+### L - Liskov Substitution Principle (LSP)
+
+> "Subtypes must be substitutable for their base types."
+
+**What it means:** If `Dog` inherits from `Animal`, you can use `Dog` anywhere you use `Animal` without breaking things.
+
+**Already enforced by:** Property-based tests verify contracts (Section: Test Purpose Guide)
+
+```python
+# GOOD: Subclass honors parent contract
+class RatingModel(ABC):
+    @abstractmethod
+    def predict(self, game: Game) -> float:
+        """Return probability in [0, 1]."""
+        pass
+
+class EloModel(RatingModel):
+    def predict(self, game: Game) -> float:
+        # Always returns [0, 1] as promised
+        return 1 / (1 + 10 ** ((opp_rating - rating) / 400))
+
+# BAD: Subclass violates parent contract
+class BrokenModel(RatingModel):
+    def predict(self, game: Game) -> float:
+        # Returns values > 1.0, breaking the contract!
+        return rating_difference * 100
+```
+
+**Testing impact:** Property tests verify contracts hold across all implementations
+
+---
+
+### I - Interface Segregation Principle (ISP)
+
+> "Many specific interfaces are better than one general-purpose interface."
+
+**What it means:** Don't force classes to implement methods they don't need.
+
+**Already enforced by:** MyPy strict mode with Protocols (Section 4)
+
+```python
+# GOOD: Small, focused interfaces
+class Predictable(Protocol):
+    def predict(self, game: Game) -> float: ...
+
+class Trainable(Protocol):
+    def fit(self, games: pd.DataFrame) -> None: ...
+
+class EloModel:
+    # Only implements what it needs
+    def predict(self, game: Game) -> float: ...
+
+# BAD: Fat interface forces unused methods
+class Model(ABC):
+    @abstractmethod
+    def predict(self, game: Game) -> float: ...
+
+    @abstractmethod
+    def fit(self, games: pd.DataFrame) -> None: ...
+
+    @abstractmethod
+    def cross_validate(self, games: pd.DataFrame) -> dict: ...
+
+    # Simple models forced to implement methods they don't need!
+```
+
+**Testing impact:** Less mocking needed (small interfaces)
+
+---
+
+### D - Dependency Inversion Principle (DIP)
+
+> "Depend on abstractions, not concretions."
+
+**What it means:** High-level code shouldn't depend on low-level details.
+
+**Already enforced by:** Architecture rule "Type sharing: use Pydantic models or TypedDicts" (Section 9)
+
+```python
+# GOOD: Depends on abstraction (Protocol)
+class Simulator:
+    def __init__(self, model: Predictable):  # Any model works
+        self.model = model
+
+    def simulate_tournament(self, games: list[Game]) -> pd.DataFrame:
+        for game in games:
+            pred = self.model.predict(game)  # Works with any Predictable
+            ...
+
+# BAD: Depends on concrete implementation
+class Simulator:
+    def __init__(self, elo_model: EloModel):  # Locked to EloModel
+        self.model = elo_model
+
+    def simulate_tournament(self, games: list[Game]) -> pd.DataFrame:
+        # Can only use EloModel, not flexible
+        pass
+```
+
+**Testing impact:** Easy to inject test doubles
+
+---
+
+### SOLID Review Checklist
+
+During code review, verify:
+
+- [ ] **SRP:** Classes/functions have single, clear responsibility (covered by PEP 20 complexity)
+- [ ] **OCP:** New features added via extension (inheritance, composition), not modification
+- [ ] **LSP:** Subtypes honor parent contracts (property tests verify this)
+- [ ] **ISP:** Interfaces are small and focused (use Protocols, not fat abstract classes)
+- [ ] **DIP:** Depends on abstractions (Protocols, TypedDicts), not concrete classes
+
+### Summary: What's Already Covered
+
+| SOLID Principle | Already Enforced By |
+|-----------------|---------------------|
+| **SRP** | PEP 20: "Simple is better than complex" (complexity ≤ 10) |
+| **OCP** | Manual review (can't automate) |
+| **LSP** | Property tests: "probabilities in [0, 1]" invariants |
+| **ISP** | MyPy strict mode: Protocols preferred over abstract classes |
+| **DIP** | Architecture: "Type sharing via Pydantic/TypedDicts" |
+
+**Result:** SOLID compliance is mostly automated or already covered by existing standards. Code review adds a final check for OCP and overall SOLID adherence.
 
 ---
 

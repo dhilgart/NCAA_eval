@@ -98,6 +98,12 @@
          - Readability: Domain concepts use full words, not abbreviations
          - Flatness: Nesting depth ≤ 3, early returns preferred
          - Consistency: Follows project patterns (vectorization, type sharing)
+      7. **SOLID Principles** (STYLE_GUIDE.md Section 10):
+         - SRP: Classes/functions have single responsibility (overlap with PEP 20)
+         - OCP: New features via extension (inheritance), not modification
+         - LSP: Subtypes honor parent contracts (check return types, behavior)
+         - ISP: Interfaces are small (Protocols preferred over fat abstract classes)
+         - DIP: Depends on abstractions (Protocols), not concrete implementations
     </action>
 
     <check if="total_issues_found lt 3">
@@ -110,6 +116,7 @@
         - Dependency problems
         - Git commit message quality (if applicable)
         - PEP 20 violations (complex functions, implicit behavior, poor naming, deep nesting)
+        - SOLID violations (multiple responsibilities, modification instead of extension, fat interfaces, concrete dependencies)
       </action>
       <action>Find at least 3 more specific, actionable issues</action>
     </check>
