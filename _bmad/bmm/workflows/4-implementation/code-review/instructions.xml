@@ -308,11 +308,75 @@
       <output>ℹ️ Story status updated (no sprint tracking configured)</output>
     </check>
 
+    <!-- CREATE PULL REQUEST -->
+    <action tag="git-workflow">Create pull request for the story branch</action>
+
+    <action>Check if current branch follows story branch pattern: story/{{epic}}-{{story}}-{{slug}}</action>
+    <action>Get current branch name using: git branch --show-current</action>
+    <action>Store as {{current_branch}}</action>
+
+    <check if="{{current_branch}} matches story/* pattern">
+      <action>Check if gh CLI is available: gh --version</action>
+
+      <check if="gh CLI available">
+        <action>Get commits on the story branch not in main using: git log main..{{current_branch}} --oneline</action>
+        <action>Store commit count and list</action>
+
+        <check if="commits exist on story branch">
+          <action>Push branch to remote if not already pushed: git push -u origin {{current_branch}}</action>
+
+          <action>Generate PR title from story (max 70 chars):
+            - Format: Brief summary of story goal
+            - Example: "Add testing strategy documentation"
+          </action>
+
+          <action>Generate PR body from story:
+            ## Summary
+            - Bullet points summarizing key changes from Change Log and File List
+            - Link to story file if applicable
+
+            ## Acceptance Criteria Status
+            - List each AC with [x] or [ ] based on implementation status
+
+            ## Test Coverage
+            - Summary of tests added/modified from Dev Agent Record
+
+            ## Review Notes
+            - {{fixed_count}} issues fixed during code review
+            - {{action_count}} action items created (if any)
+
+            🤖 Generated with [Claude Code](https://claude.com/claude-code)
+          </action>
+
+          <action>Create PR using: gh pr create --title "{{pr_title}}" --body "{{pr_body}}"</action>
+          <action>Capture PR URL from command output</action>
+          <action>Store as {{pr_url}}</action>
+
+          <output>🎉 Pull request created: {{pr_url}}</output>
+        </check>
+
+        <check if="no commits on story branch">
+          <output>ℹ️ No commits found on story branch - PR creation skipped</output>
+        </check>
+      </check>
+
+      <check if="gh CLI not available">
+        <output>⚠️ GitHub CLI (gh) not installed - PR creation skipped
+          To install: https://cli.github.com/
+        </output>
+      </check>
+    </check>
+
+    <check if="{{current_branch}} does NOT match story/* pattern">
+      <output>ℹ️ Not on a story branch ({{current_branch}}) - PR creation skipped</output>
+    </check>
+
     <output>**✅ Review Complete!**
 
       **Story Status:** {{new_status}}
       **Issues Fixed:** {{fixed_count}}
       **Action Items Created:** {{action_count}}
+      {{#if pr_url}}**Pull Request:** {{pr_url}}{{/if}}
 
       {{#if new_status == "done"}}Code review complete!{{else}}Address the action items and continue development.{{/if}}
     </output>
