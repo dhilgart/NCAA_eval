@@ -143,3 +143,13 @@ dmypy.json
 cython_debug/
 
 # End of https://www.toptal.com/developers/gitignore/api/python
+
+# Project-specific
+data/*
+!data/.gitkeep
+
+# Ruff
+.ruff_cache/
+
+# Claude Code CLI
+.claude/settings.local.json

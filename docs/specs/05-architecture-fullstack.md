@@ -1,0 +1,379 @@
+# Fullstack Architecture Document
+
+| **Project** | NCAA Tournament Data & Evaluation Platform |
+| :--- | :--- |
+| **Date** | February 13, 2026 |
+| **Status** | **APPROVED** |
+| **Author** | Architect (Winston) |
+| **Version** | 1.0 |
+
+---
+
+## 1. Introduction
+
+This document outlines the complete fullstack architecture for the **NCAA Tournament Data & Evaluation Platform**. Unlike traditional web applications with distinct JavaScript frontends and HTTP backends, this platform utilizes a **Python-native monolithic architecture**.
+
+The "Backend" consists of a robust Python package (`ncaa_eval`) handling data ingestion, modeling, and evaluation logic. The "Frontend" is a **Streamlit** application that imports and consumes this package directly to render interactive dashboards. This unified architecture streamlines development for the target persona (Solo Data Scientist) by keeping the entire stack in a single language (Python).
+
+### 1.1 Starter Template or Existing Project
+
+**N/A - Greenfield Project**
+
+* **Decision:** The project will be initialized from scratch using a standard Python package structure managed by **Poetry**.
+* **Rationale:** No specific "starter template" is required, but the structure will adhere to modern Python packaging standards (src layout) to ensure the core logic is installable and separable from the dashboard interface.
+
+### 1.2 Change Log
+
+| Date | Version | Description | Author |
+| :--- | :--- | :--- | :--- |
+| 2026-02-13 | 1.0 | Initial Fullstack Architecture for v1.1 PRD | Winston |
+
+---
+
+## 2. High Level Architecture
+
+### 2.1 Technical Summary
+
+The system is architected as a **local-first, single-user Data Science Workbench**. It is built as a monolithic Python application where the core business logic resides in the `ncaa_eval` library.
+
+* **Data Layer:** A local SQLite database (or Parquet store) serves as the Single Source of Truth, populated by an Ingestion Engine that fetches data from external sources (Kaggle, KenPom, etc.).
+* **Logic Layer:** A vectorized, parallelized Python engine handles feature engineering, model training (XGBoost/Elo), and cross-validation.
+* **Presentation Layer:** A Streamlit dashboard serves as the UI, communicating with the Logic Layer via direct Python function calls rather than HTTP APIs.
+* **Infrastructure:** The application is designed primarily for local execution or simple containerized deployment, leveraging the user's local compute for expensive parallel processing tasks.
+
+### 2.2 Platform and Infrastructure Choice
+
+**Platform:** Local Execution / Simple VM / Streamlit Community Cloud
+**Key Services:** Local Disk (SQLite/Parquet), Multi-core CPU (Parallelization)
+
+* **Decision:** Local-First Architecture.
+* **Rationale:** The PRD explicitly targets a "Single-User Data Warehouse" and "Solo Data Scientist" persona. Cloud complexity is unnecessary overhead. High-performance vectorization and parallelization (NFR1, NFR2) are best optimized on local hardware without network latency.
+
+### 2.3 Repository Structure
+
+**Structure:** Monorepo (Python Package)
+**Tool:** Poetry
+
+* **Strategy:** Standard "Src Layout".
+    * `src/ncaa_eval/`: The core library (Backend logic).
+    * `dashboard/`: The Streamlit application (Frontend UI).
+    * `tests/`: Comprehensive test suite.
+    * `data/`: Local storage location (git-ignored).
+
+### 2.4 High Level Architecture Diagram
+
+```mermaid
+graph TD
+    User((User))
+    
+    subgraph "Presentation Layer (Streamlit)"
+        UI[Dashboard / Lab]
+        Viz[Bracket Visualizer]
+    end
+    
+    subgraph "Logic Layer (ncaa_eval Package)"
+        API[Public Interface]
+        Model["Modeling Engine (Elo / XGBoost)"]
+        Eval["Evaluation Engine (LogLoss / Calibration)"]
+        Feat["Feature Engineering"]
+    end
+    
+    subgraph "Data Layer"
+        Ingest[Ingestion Engine]
+        Cache[Smart Cache]
+        Store["Local SQLite/Parquet"]
+    end
+    
+    subgraph "External World"
+        Ext["External Sources (Kaggle, KenPom, etc.)"]
+    end
+
+    User <--> UI
+    UI -- Function Calls --> API
+    API --> Model
+    API --> Eval
+    Model --> Feat
+    Eval --> Feat
+    Feat --> Store
+    Ingest --> Ext
+    Ingest -- Write --> Store
+    Store -- Read --> Cache
+    Cache --> Feat
+```
+
+### **2.5 Architectural Patterns**
+* **Monolithic Package:** All logic encapsulated in a single installable library. Rationale: Simplifies dependency management and allows the logic to be used in both the Dashboard and Jupyter Notebooks seamlessly.
+
+* **Repository Pattern:** Abstracts data access (SQL/Parquet) behind a consistent API. Rationale: Decouples business logic from the underlying storage mechanism (FR2).
+
+* **Vectorized Operations:** Usage of Numpy/Pandas for bulk calculations. Rationale: Critical for meeting the 60-second backtest performance metric (NFR1).
+
+* **Strategy Pattern:** Used for the Model Abstract Base Class. Rationale: Allows swapping between State/Stateless models (Elo vs XGBoost) without changing the evaluation pipeline (FR6).
+
+## 3. Tech Stack
+
+| Category | Technology | Version | Purpose | Rationale |
+| :--- | :--- | :--- | :--- | :--- |
+| **Language** | Python | 3.12+ | Core Language | Required by PRD; dominant language for Data Science. |
+| **Frontend** | Streamlit | Latest | UI Framework | Rapid prototyping, Python-native, supports "Thin Client" requirement. |
+| **Data Engine** | Pandas / Numpy | Latest | Data Manipulation | Vectorization performance (NFR1) and rich data structures. |
+| **Modeling** | XGBoost / Scikit-learn | Latest | ML Algorithms | Industry standard for tabular data; supports required stateless models. |
+| **Graph** | NetworkX | Latest | Feature Engineering | Required for PageRank/Centrality metrics (FR5). |
+| **Database** | SQLite / Parquet | N/A | Local Storage | SQLite for relational metadata; Parquet for high-performance columnar game data. |
+| **Parallelism** | Joblib | Latest | Concurrency | Parallel execution of cross-validation folds (NFR2). |
+| **Visualization** | Plotly | Latest | Charts | Interactive plots for both Jupyter and Streamlit. |
+| **Package Mgr** | Poetry | Latest | Dependency Mgmt | Standard for modern Python projects; handles virtualenvs and locking. |
+| **Testing** | Pytest / Hypothesis | Latest | Testing | Powerful fixtures and property-based testing support. |
+| **Linting** | Ruff / Mypy | Latest | Quality Control | High-performance linting and strict type checking (NFR5). |
+
+---
+
+## 4. Data Models
+
+These conceptual models will be implemented as Python Data Classes and persisted via SQLite tables or Parquet files.
+
+### 4.1 Core Entities
+
+#### **Team**
+* **Purpose:** Represents a canonical NCAA team.
+* **Attributes:** `TeamID` (int), `Name` (str), `CanonicalName` (str).
+* **Relationships:** Has many Games, has many SeasonStats.
+
+#### **Game**
+* **Purpose:** A single match between two teams.
+* **Attributes:** `GameID`, `Season`, `Date`, `WTeamID`, `LTeamID`, `WScore`, `LScore`, `Loc` (Home/Away/Neutral).
+* **Relationships:** Belongs to Season, links two Teams.
+
+#### **Season**
+* **Purpose:** Context for a specific tournament year.
+* **Attributes:** `Year` (int).
+
+#### **ModelRun**
+* **Purpose:** Metadata about a specific training/evaluation execution.
+* **Attributes:** `RunID`, `ModelType` (Elo/XGB), `Hyperparameters` (JSON), `Timestamp`, `GitHash`.
+* **Relationships:** Has many Predictions.
+
+#### **Prediction**
+* **Purpose:** The output of a model for a specific matchup.
+* **Attributes:** `RunID`, `GameID` (or MatchupID), `PredWinProb` (float).
+
+#### **TournamentBracket**
+* **Purpose:** A realization of a tournament simulation.
+* **Attributes:** `SimulationID`, `BracketStructure` (JSON/Graph), `TotalScore`.
+
+---
+
+## 5. Components
+
+### 5.1 Logic Layer (ncaa_eval)
+
+* **Ingestion Engine:**
+    * **Responsibility:** Fetch data from external APIs, clean it, and store it locally.
+    * **Interfaces:** `sync(source)`, `update_cache()`.
+    * **Dependencies:** `pandas`, `requests`.
+
+* **Feature Store:**
+    * **Responsibility:** Transform raw game data into ML-ready features (e.g., Rolling Averages, Graph Centrality).
+    * **Interfaces:** `get_features(season, team)`, `build_graph(schedule)`.
+    * **Dependencies:** `networkx`, `numpy`.
+
+* **Modeling Engine:**
+    * **Responsibility:** Abstract interface for training and inference.
+    * **Interfaces:** `train(X, y)`, `predict(X)`, `save()`.
+    * **Dependencies:** `xgboost`, `scikit-learn`.
+
+* **Evaluation Engine:**
+    * **Responsibility:** Calculate metrics (LogLoss, Brier) and run simulations.
+    * **Interfaces:** `evaluate(predictions, actuals)`, `simulate_tournament(probs)`.
+    * **Dependencies:** `numpy` (Vectorized).
+
+### 5.2 Presentation Layer (Dashboard)
+
+* **Lab Page:**
+    * **Responsibility:** Model diagnostics and leaderboard.
+    * **Interfaces:** `render_reliability_diagram()`, `render_leaderboard()`.
+
+* **Presentation Page:**
+    * **Responsibility:** Bracket visualization and pool simulation.
+    * **Interfaces:** `render_bracket()`, `run_roi_sim()`.
+
+---
+
+## 6. Core Workflows
+
+### 6.1 Training & Evaluation Loop
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant CLI
+    participant Ingest as Ingestion Engine
+    participant Store as Local Store
+    participant Feat as Feature Engine
+    participant Model as Model Engine
+    participant Eval as Evaluation Engine
+
+    User->>CLI: python train.py --model elo
+    CLI->>Ingest: Check Data Freshness
+    Ingest->>Store: Get Raw Games
+    Store-->>Feat: Raw Data
+    Feat->>Feat: Vectorized Transform
+    Feat-->>Model: Features (X, y)
+    Model->>Model: Train (fit)
+    Model->>Model: Predict (Walk-forward)
+    Model-->>Eval: Predictions
+    Eval->>Eval: Calculate Metrics (Parallel)
+    Eval->>Store: Save Results (Parquet)
+    CLI-->>User: Training Complete (Metrics)
+```
+
+## 7. Frontend Architecture (Streamlit)
+
+### 7.1 Structure & Pattern
+* **Framework:** Streamlit Multipage App.
+* **State Management:** `st.session_state` for preserving filters (Year, Model Version) across pages.
+* **Caching:** Extensive use of `@st.cache_data` for loading heavy datasets (Model Results, Game Data) to ensure sub-500ms interaction response.
+
+### 7.2 Component Standards
+* **Diagnostic Cards:** `st.metric` for KPIs.
+* **Visuals:** `st.plotly_chart` for interactive reliability diagrams.
+* **Bracket:** Custom HTML/JS component or specialized Streamlit library for rendering the tournament tree.
+
+---
+
+## 8. Backend Architecture (Python Package)
+
+### 8.1 API Style
+* **Style:** Internal Python Library API.
+* **Design:** Functional / Object-Oriented Hybrid.
+    * Data processing pipelines are functional (input DF -> output DF).
+    * Models are Object-Oriented (inheriting from `Model` ABC) to manage state.
+
+### 8.2 Data Access Layer
+* **Primary Store:** Parquet files for immutable game data and large prediction sets (performance).
+* **Metadata Store:** SQLite for tracking Model Runs and Configurations.
+* **Pattern:** Repository pattern to hide file paths and SQL queries from the business logic.
+
+---
+
+## 9. Unified Project Structure
+
+```text
+ncaa-eval-platform/
+├── .github/                    # CI/CD workflows
+├── src/
+│   └── ncaa_eval/              # Core Logic Package
+│       ├── __init__.py
+│       ├── ingest/             # Data Ingestion logic
+│       ├── transform/          # Feature Engineering and Data Transformation
+│       ├── model/              # Model Implementations
+│       ├── evaluation/         # Metrics & Simulation
+│       └── utils/              # Shared utilities
+├── dashboard/                  # Streamlit Frontend
+│   ├── app.py                  # Entry point
+│   ├── pages/
+│   │   ├── 1_Lab.py
+│   │   └── 2_Presentation.py
+│   └── components/             # Reusable UI widgets
+├── docs/                       # Documentation
+│   └── specs/                  # Specification documents
+├── tests/                      # Test Suite
+├── data/                       # Local Data Store (ignored)
+├── pyproject.toml              # Poetry Config
+├── noxfile.py                  # Session Management
+└── README.md
+```
+
+## 10. Development Workflow
+
+This section outlines the daily routine for the Data Scientist. Because this is a **Fullstack Python Application** and not just a folder of scripts, we use specific commands to ensure stability, reproducibility, and performance.
+
+### 10.1 Phase 1: One-Time Setup (Initialization)
+* **Goal:** Create an isolated environment so your project doesn't conflict with other Python projects on your machine.
+
+* **When:** Immediately after cloning the repository.
+
+* **Command:** 
+```bash
+poetry install
+```
+
+* **Why:**
+
+  * This reads `pyproject.toml` and installs the exact versions of `pandas`, `xgboost`, and `streamlit` required.
+  * It creates a hidden "Virtual Environment" automatically. You never need to manually run `venv` or `conda create`.
+
+### 10.2 Phase 2: The "Research Loop" (Daily Logic Development)
+* **Goal:** You are writing new feature engineering code or adding a new model type (e.g., adding a "Momentum" feature in `src/ncaa_eval/features/`).
+
+* **The Problem:** How do you know you didn't break existing code? How do you know your types are correct?
+
+* **Command:**
+
+```bash
+nox
+```
+
+* **Why:**
+
+  * `nox` is a "Session Manager." When you run this single command, it automatically:
+
+    1. Runs `Ruff` to fix your formatting (linting).
+    2. Runs `Mypy` to check for type errors (e.g., passing a String to a function expecting an Integer).
+    3. Runs `Pytest` to ensure your logic actually works.
+
+  * *Note:* You should run this before every git commit.
+
+### 10.3 Phase 3: The "Deep Compute" (Model Training)
+* **Goal:** You want to run a 10-year backtest to see if your new "Momentum" model is actually better than the baseline.
+
+* **The Problem:** Doing this in a Notebook or Streamlit is slow and can crash your browser if it prints too many logs.
+
+* **Command:**
+
+```bash
+poetry run python -m ncaa_eval.cli train --model momentum_v1 --start-year 2015 --end-year 2025
+```
+
+* **Why:**
+
+  * **Performance:** This runs strictly in the terminal, utilizing all CPU cores for cross-validation without the overhead of a graphical interface.
+  * **Persistence:** This saves the results (metrics and predictions) to the local `data/` folder as Parquet files.
+  * **Workflow:** You run this in the background while you grab a coffee.
+
+### 10.4 Phase 4: The "Presentation" (Visual Analysis)
+* **Goal:** The backtest finished. You see the "Log Loss" number is lower, but you don't know *where* the model is failing. You need to see the charts.
+
+* **Command:**
+
+```bash
+poetry run streamlit run dashboard/app.py
+```
+
+* **Why:**
+
+  * This launches the Web Interface in your browser (usually `http://localhost:8501`).  
+  * **Interactive Analysis:** You can now load the specific "Model Run" you just generated in Phase 3 and inspect the **Reliability Diagrams** and **Bracket Simulations** defined in the UI Spec.
+  * *Crucial:* The Dashboard reads the Parquet files generated by the CLI. It does *not* typically retrain models itself (which would be too slow).
+
+
+## 11. Security & Performance
+
+### 11.1 Performance Optimization
+* **Vectorization:** All metric calculations (LogLoss, Brier) must utilize Numpy broadcasting to avoid Python loops.
+* **Parallelism:** Cross-validation folds will run in parallel using `joblib`.
+* **Caching:** Streamlit caching prevents reloading data on every interaction.
+
+### 11.2 Security
+* **Scope:** Single-user local application.
+* **Input Validation:** Configuration files (JSON/YAML) validated via Pydantic.
+* **Data Safety:** Temporal boundaries enforced strictly in the API to prevent data leakage (future games appearing in training data).
+
+---
+
+## 12. Coding Standards (Critical)
+
+* **Type Sharing:** All data structures passed between Logic and UI must use Pydantic models or TypedDicts.
+* **No Direct IO in UI:** The Dashboard must never read files directly; it must call `ncaa_eval` functions.
+* **Strict Typing:** `mypy --strict` compliance is mandatory.
+* **Vectorization First:** Reject PRs that use `for` loops over Pandas DataFrames for metric calculations.

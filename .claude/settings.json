@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "Read(//c/Users/dhilg/OneDrive/OneNote Notebooks/Python/git/NCAA_eval/**)"
+    ]
+  }
+}
