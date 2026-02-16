@@ -55,6 +55,7 @@ This strategy separates **four independent dimensions** of testing. Choose the a
 2. **Test Approach** - *How* you write the test → [Approach Guide](testing/test-approach-guide.md)
    - **Example-based:** Concrete inputs → expected outputs
    - **Property-based (Hypothesis):** Invariants that should hold for all inputs
+   - **Fuzz-based (Hypothesis):** Random/mutated inputs to find crashes and error handling gaps
 
 3. **Test Purpose** - *Why* you're writing the test → [Purpose Guide](testing/test-purpose-guide.md)
    - **Functional:** Correctness of behavior (default)
@@ -140,11 +141,13 @@ Does it interact with external systems (files, database, network)?
 ### Which approach?
 
 ```
-Do you have specific known scenarios to verify?
-├─ YES → Example-based (parametrize for multiple cases)
-└─ NO  → Can you state an invariant?
-          ├─ YES → Property-based (@pytest.mark.property, Hypothesis)
-          └─ NO  → Example-based (test specific examples)
+Are you testing error handling / crash resilience?
+├─ YES → Fuzz-based (@pytest.mark.fuzz, Hypothesis st.text()/st.binary())
+└─ NO  → Do you have specific known scenarios to verify?
+          ├─ YES → Example-based (parametrize for multiple cases)
+          └─ NO  → Can you state an invariant?
+                    ├─ YES → Property-based (@pytest.mark.property, Hypothesis)
+                    └─ NO  → Example-based (test specific examples)
 ```
 
 ### Which execution tier?
@@ -167,6 +170,7 @@ Is the test fast (< 1 second)?
 | `@pytest.mark.slow` | Speed |  `pytest -m "not slow"` |
 | `@pytest.mark.integration` | Scope |  `pytest -m integration` |
 | `@pytest.mark.property` | Approach |  `pytest -m property` |
+| `@pytest.mark.fuzz` | Approach |  `pytest -m fuzz` |
 | `@pytest.mark.performance` | Purpose |  `pytest -m performance` |
 | `@pytest.mark.regression` | Purpose |  `pytest -m regression` |
 | `@pytest.mark.mutation` | Quality |  `pytest -m mutation` |
@@ -242,7 +246,7 @@ See [Conventions Guide](testing/conventions.md#coverage-targets) for details.
 | Tool | Purpose | Configuration |
 |------|---------|---------------|
 | **Pytest** | Testing framework | `pyproject.toml` `[tool.pytest.ini_options]` |
-| **Hypothesis** | Property-based testing | Dev dependency |
+| **Hypothesis** | Property-based + Fuzz testing | Dev dependency |
 | **Mutmut** | Mutation testing (quality) | Dev dependency |
 | **pytest-cov** | Coverage reporting | `[tool.coverage.report]` |
 | **Nox** | Session orchestration | `noxfile.py` (Story 1.6) |
