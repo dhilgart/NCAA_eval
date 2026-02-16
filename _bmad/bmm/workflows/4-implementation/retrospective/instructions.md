@@ -800,6 +800,157 @@ Bob (Scrum Master): "{user_name}, does this preparation plan work for you?"
 
 </step>
 
+<step n="7.5" goal="Template Learning Review - Capture Epic Patterns for Future Projects">
+
+<output>
+Bob (Scrum Master): "Before we finalize action items, let's do a quick template learning review."
+
+Bob (Scrum Master): "We're building a cookie-cutter template from this project's learnings. Let me check what we've captured so far and see if we missed anything."
+</output>
+
+<action>Check if template-requirements.md exists at {planning_artifacts}/template-requirements.md</action>
+
+<check if="template-requirements.md exists">
+  <action>Read complete template-requirements.md file</action>
+
+  <action>Review Epic {{epic_number}} story records for uncaptured learnings:</action>
+
+  **Dev Stack & Tooling:**
+  - Dependencies added across stories (check pyproject.toml changes)
+  - Tool configurations refined (mypy, ruff, pytest settings)
+  - Build or deployment patterns established
+
+  **Testing Patterns:**
+  - Testing approaches that proved effective
+  - Test organization patterns discovered
+  - Coverage insights or quality gate adjustments
+
+  **Architecture Decisions:**
+  - Design patterns established across multiple stories
+  - Architecture constraints discovered
+  - Integration patterns worth preserving
+
+  **Code Quality & Style:**
+  - Style guide refinements made
+  - Conventions that emerged organically
+  - Best practices validated
+
+  **Development Workflow:**
+  - Process improvements that worked
+  - Quality gates that caught issues
+  - Collaboration patterns that were effective
+
+  **Lessons Learned:**
+  - What worked exceptionally well this epic
+  - What didn't work and should be avoided
+  - Surprising discoveries or gotchas
+  - Technical debt patterns to prevent
+
+  <action>Compare epic learnings against template-requirements.md sections</action>
+  <action>Identify gaps - patterns from epic not yet documented</action>
+
+  <check if="missing learnings identified">
+    <output>
+
+Bob (Scrum Master): "I found {{missing_count}} patterns from Epic {{epic_number}} that aren't yet captured in template-requirements.md."
+
+**Uncaptured Learnings:**
+
+{{list_missing_learnings_with_categories}}
+
+Charlie (Senior Dev): "{{reaction_to_learning_1}} - that's definitely worth preserving."
+
+Alice (Product Owner): "And {{learning_2}} saved us a lot of time. Future projects should know about that."
+
+Bob (Scrum Master): "{user_name}, should we update template-requirements.md with these epic learnings?"
+
+**Options:**
+[y] Yes, update template-requirements.md now
+[l] Let me review the details first
+[n] No, these aren't template-worthy
+[a] Add to action items for later
+</output>
+
+    <ask>Update template-requirements.md? (y/l/n/a)</ask>
+
+    <check if="user chooses 'l'">
+      <output>
+**Epic {{epic_number}} Template Learning Details:**
+
+{{detailed_learning_descriptions_with_evidence}}
+
+Bob (Scrum Master): "{user_name}, having reviewed the details, should we capture these?"
+</output>
+      <ask>Proceed with update? (y/n/a)</ask>
+    </check>
+
+    <check if="user confirms update (y)">
+      <action>Update template-requirements.md with epic learnings:</action>
+      - Add to appropriate sections (Dev Stack, Testing, Architecture, etc.)
+      - Include reference to Epic {{epic_number}} and specific stories
+      - Add date of discovery: {{date}}
+      - Mark as validated patterns (tested across multiple stories)
+      - Update "Last Updated" timestamp
+
+      <action>Save updated template-requirements.md</action>
+
+      <output>
+✅ Template learnings captured from Epic {{epic_number}}
+
+**Updated Sections:**
+{{list_updated_sections_with_details}}
+
+Dana (QA Engineer): "Good - future projects won't have to rediscover what we learned the hard way."
+
+Bob (Scrum Master): "Exactly. Continuous improvement isn't just for this project, it's for all future ones too."
+</output>
+    </check>
+
+    <check if="user chooses action items (a)">
+      <action>Create action item: "Update template-requirements.md with Epic {{epic_number}} learnings"</action>
+      <action>Assign owner (typically Scrum Master or designated documenter)</action>
+      <action>Set deadline: Before Epic {{next_epic_num}} starts</action>
+
+      <output>
+📝 Added to Action Items: Update template-requirements.md with Epic {{epic_number}} learnings
+Owner: {{assigned_owner}}
+Deadline: {{deadline}}
+
+Bob (Scrum Master): "We'll capture those learnings before starting the next epic."
+</output>
+    </check>
+
+    <check if="user declines (n)">
+      <output>
+Bob (Scrum Master): "Understood - {user_name} determined these aren't template-worthy. Moving on."
+</output>
+    </check>
+  </check>
+
+  <check if="no missing learnings">
+    <output>
+Bob (Scrum Master): "Good news - looks like we've been keeping template-requirements.md up to date throughout the epic."
+
+Alice (Product Owner): "The code review checkpoints must be working!"
+
+Bob (Scrum Master): "Exactly. Epic {{epic_number}}'s learnings are already captured."
+</output>
+  </check>
+
+</check>
+
+<check if="template-requirements.md does NOT exist">
+  <output>
+Bob (Scrum Master): "Template requirements tracking isn't configured for this project - skipping template review."
+</output>
+</check>
+
+<output>
+Bob (Scrum Master): "Template review complete. Now let's finalize our action items..."
+</output>
+
+</step>
+
 <step n="8" goal="Synthesize Action Items with Significant Change Detection">
 
 <output>

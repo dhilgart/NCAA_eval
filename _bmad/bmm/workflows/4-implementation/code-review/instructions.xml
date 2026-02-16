@@ -168,6 +168,100 @@
     </check>
   </step>
 
+  <step n="4.5" goal="Capture template learnings for future projects">
+    <critical>🎓 TEMPLATE LEARNING CAPTURE - Preserve patterns for future projects!</critical>
+
+    <action>Check if template-requirements.md exists at {implementation_artifacts}/template-requirements.md or {planning_artifacts}/template-requirements.md</action>
+
+    <check if="template-requirements.md exists">
+      <action>Review changes made in this story for template-worthy patterns:</action>
+
+      **Dev Stack & Dependencies:**
+      - New dependencies added (libraries, tools, frameworks)
+      - Tool configuration changes (linting, formatting, type checking)
+      - Build or deployment configuration updates
+
+      **Testing Patterns:**
+      - New testing approaches discovered
+      - Test fixtures or utilities created
+      - Coverage or quality gate adjustments
+
+      **Architecture Decisions:**
+      - New patterns or conventions established
+      - Architecture constraints discovered
+      - Integration patterns worth preserving
+
+      **Code Quality Standards:**
+      - Style guide refinements
+      - Naming conventions clarified
+      - Best practices discovered
+
+      **Development Workflow:**
+      - Process improvements found effective
+      - Quality gates that worked well
+      - Tooling that improved productivity
+
+      **Lessons Learned:**
+      - What worked exceptionally well
+      - What didn't work and should be avoided
+      - Surprising discoveries or gotchas
+
+      <check if="template learnings identified">
+        <output>**📝 Template Learnings Identified:**
+
+        I found {{learning_count}} patterns worth preserving for future projects:
+
+        {{list_learnings_with_categories}}
+
+        **Should I update template-requirements.md?**
+        [y] Yes, update now
+        [n] No, not applicable
+        [l] Let me review the learnings first
+        </output>
+
+        <ask>Update template-requirements.md? (y/n/l)</ask>
+
+        <check if="user chooses 'l'">
+          <output>**Template Learnings Detail:**
+
+          {{detailed_learning_descriptions}}
+
+          **Update template-requirements.md with these learnings?** (y/n)</output>
+          <ask>Proceed with update?</ask>
+        </check>
+
+        <check if="user confirms update">
+          <action>Read complete template-requirements.md file</action>
+          <action>Identify appropriate sections for each learning</action>
+          <action>Update relevant sections with new learnings:
+            - Add to existing bullet points or create new ones
+            - Include reference to this story (e.g., "Discovered in Story {{story_id}}")
+            - Add date of discovery
+            - Mark items as confirmed patterns vs. experimental
+          </action>
+          <action>Save updated template-requirements.md</action>
+          <output>✅ Template learnings captured in template-requirements.md
+
+          Updated sections:
+          {{list_updated_sections}}
+          </output>
+        </check>
+
+        <check if="user declines update">
+          <output>⏭️ Skipping template update - marked as not applicable</output>
+        </check>
+      </check>
+
+      <check if="no template learnings identified">
+        <output>ℹ️ No significant template learnings identified in this story</output>
+      </check>
+    </check>
+
+    <check if="template-requirements.md does NOT exist">
+      <output>ℹ️ Template requirements tracking not configured for this project</output>
+    </check>
+  </step>
+
   <step n="5" goal="Update story status and sync sprint tracking">
     <!-- Determine new status based on review outcome -->
     <check if="all HIGH and MEDIUM issues fixed AND all ACs implemented">

@@ -76,6 +76,18 @@ Steps to reproduce the behavior:
 - [ ] **Architecture docs** — Specs updated if system design or data flow changed
 - [ ] **CHANGELOG** — Entry added for user-visible changes
 
+## Template Learning Capture
+<!-- Help preserve patterns for future projects via cookie-cutter template -->
+
+- [ ] **Reviewed for template patterns** — Checked if changes include patterns worth preserving
+- [ ] **Updated template-requirements.md** — If applicable, documented learnings in [`_bmad-output/planning-artifacts/template-requirements.md`](../_bmad-output/planning-artifacts/template-requirements.md)
+  - New dependencies or tool configurations
+  - Testing approaches or quality standards
+  - Architecture patterns or constraints
+  - Code quality or workflow improvements
+  - Lessons learned (successes and pitfalls)
+- [ ] **N/A** — No template-worthy patterns in this PR
+
 ## Related Issue
 <!-- If applicable, reference the issue: Closes #123 -->
 

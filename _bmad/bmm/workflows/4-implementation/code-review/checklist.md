@@ -16,6 +16,7 @@
 - [ ] Outcome decided (Approve/Changes Requested/Blocked)
 - [ ] Review notes appended under "Senior Developer Review (AI)"
 - [ ] Change Log updated with review entry
+- [ ] Template learnings captured (if applicable)
 - [ ] Status updated according to settings (if enabled)
 - [ ] Sprint status synced (if sprint tracking enabled)
 - [ ] Story saved successfully

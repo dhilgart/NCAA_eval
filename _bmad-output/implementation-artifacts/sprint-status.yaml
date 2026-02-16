@@ -109,3 +109,8 @@ development_status:
   7-8-write-comprehensive-user-guide: backlog
   7-9-create-step-by-step-tutorials: backlog
   epic-7-retrospective: optional
+
+  # Epic 8: Project Templates & Maintenance
+  epic-8: backlog
+  8-1-create-cookie-cutter-template: ready-for-dev
+  epic-8-retrospective: optional
