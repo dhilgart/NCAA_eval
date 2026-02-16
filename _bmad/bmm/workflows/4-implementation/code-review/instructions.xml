@@ -92,6 +92,24 @@
       3. **Error Handling**: Missing try/catch, poor error messages
       4. **Code Quality**: Complex functions, magic numbers, poor naming
       5. **Test Quality**: Are tests real assertions or placeholders?
+      6. **PEP 20 Compliance** (STYLE_GUIDE.md Section 6):
+         - Simplicity: Functions have single purpose, cyclomatic complexity ≤ 10
+         - Explicitness: No magic numbers, clear parameter names, obvious behavior
+         - Readability: Domain concepts use full words, not abbreviations
+         - Flatness: Nesting depth ≤ 3, early returns preferred
+         - Consistency: Follows project patterns (vectorization, type sharing)
+      7. **SOLID Principles** (STYLE_GUIDE.md Section 10):
+         - SRP: Classes/functions have single responsibility (overlap with PEP 20)
+         - OCP: New features via extension (inheritance), not modification
+         - LSP: Subtypes honor parent contracts (check return types, behavior)
+         - ISP: Interfaces are small (Protocols preferred over fat abstract classes)
+         - DIP: Depends on abstractions (Protocols), not concrete implementations
+      8. **Functional Design** (STYLE_GUIDE.md Section 6.2):
+         - Business logic is pure (deterministic, no I/O, no side effects)
+         - Side effects pushed to edges (data loading, saving, orchestration)
+         - No mixing of pure logic with I/O operations
+         - Pure functions use property-based tests (Hypothesis)
+         - Pure functions are vectorized (no loops over DataFrames)
     </action>
 
     <check if="total_issues_found lt 3">
@@ -103,6 +121,9 @@
         - Integration issues
         - Dependency problems
         - Git commit message quality (if applicable)
+        - PEP 20 violations (complex functions, implicit behavior, poor naming, deep nesting)
+        - SOLID violations (multiple responsibilities, modification instead of extension, fat interfaces, concrete dependencies)
+        - Functional design violations (pure logic mixed with I/O, side effects in business logic, non-vectorized calculations)
       </action>
       <action>Find at least 3 more specific, actionable issues</action>
     </check>
@@ -308,11 +329,118 @@
       <output>ℹ️ Story status updated (no sprint tracking configured)</output>
     </check>
 
+    <!-- CREATE PULL REQUEST -->
+    <action tag="git-workflow">Create pull request for the story branch</action>
+
+    <action>Check if current branch follows story branch pattern: story/{{epic}}-{{story}}-{{slug}}</action>
+    <action>Get current branch name using: git branch --show-current</action>
+    <action>Store as {{current_branch}}</action>
+
+    <check if="{{current_branch}} matches story/* pattern">
+      <action>Check if gh CLI is available: gh --version</action>
+
+      <check if="gh CLI available">
+        <action>Get commits on the story branch not in main using: git log main..{{current_branch}} --oneline</action>
+        <action>Store commit count and list</action>
+
+        <check if="commits exist on story branch">
+          <action>Push branch to remote if not already pushed: git push -u origin {{current_branch}}</action>
+
+          <action>Generate PR title from story (max 70 chars):
+            - Format: Brief summary of story goal
+            - Example: "Add testing strategy documentation"
+          </action>
+
+          <action>Generate PR body following .github/pull_request_template.md format:
+
+            ## PR Type
+            - Identify type from story: Documentation update, New feature, Bugfix, etc.
+
+            ## Description
+            - Summary of what PR does and why (from story description)
+            - Link to story file: [story-file.md](_bmad-output/implementation-artifacts/story-file.md)
+            - Bullet points of key deliverables from File List
+
+            ## Expected behavior
+            - Describe what should work after this change (from Acceptance Criteria)
+
+            ## Steps to reproduce the behavior
+            - For features/bugs: steps to verify the change works
+            - For docs: how to use the new documentation
+
+            ## Supporting Evidence
+            - **Acceptance Criteria Coverage:**
+              - List each AC with [x] or [ ] based on implementation
+            - **Files Created/Modified:** List from story File List
+
+            ## Pre-Commit Checks
+            - [x] All applicable pre-commit checks with status
+            - Mark N/A for documentation-only or non-applicable checks
+
+            ## Test Suite
+            - [x] Test suite status
+            - Mark N/A for documentation-only changes
+
+            ## Code Quality
+            - [x] Code quality checks with status
+            - Mark N/A for documentation-only changes
+
+            ## Architecture Compliance
+            - [x] Architecture compliance checks
+            - Note any new dependencies added
+
+            ## Documentation
+            - [x] Documentation update status
+            - Note visual-first compliance for user-facing docs
+
+            ## Template Learning Capture
+            - [x] If template learnings captured, mark as done
+            - [ ] N/A if no template patterns
+
+            ## Related Issue
+            - Reference to Epic/Story
+
+            ---
+
+            **Code Review Notes:**
+            - {{fixed_count}} issues fixed during code review
+            - {{action_count}} action items created (if any)
+            - List key fixes applied
+
+            🤖 Generated with [Claude Code](https://claude.com/claude-code)
+          </action>
+
+          <action>Create PR WITHOUT custom body to use template: gh pr create --title "{{pr_title}}"</action>
+          <action>NOTE: This will open editor with template - agent should fill it programmatically using gh pr edit instead</action>
+          <action>ALTERNATIVE: Use gh pr create --title "{{pr_title}}" --body "{{pr_body_formatted}}" with template-formatted body</action>
+          <action>Capture PR URL from command output</action>
+          <action>Store as {{pr_url}}</action>
+
+          <output>🎉 Pull request created: {{pr_url}}</output>
+        </check>
+
+        <check if="no commits on story branch">
+          <output>ℹ️ No commits found on story branch - PR creation skipped</output>
+        </check>
+      </check>
+
+      <check if="gh CLI not available">
+        <output>⚠️ GitHub CLI (gh) not installed - PR creation skipped
+          To install: https://cli.github.com/
+        </output>
+      </check>
+    </check>
+
+    <check if="{{current_branch}} does NOT match story/* pattern">
+      <output>ℹ️ Not on a story branch ({{current_branch}}) - PR creation skipped</output>
+    </check>
+
     <output>**✅ Review Complete!**
 
       **Story Status:** {{new_status}}
       **Issues Fixed:** {{fixed_count}}
       **Action Items Created:** {{action_count}}
+      {{#if pr_url}}**Pull Request:** {{pr_url}}{{/if}}
 
       {{#if new_status == "done"}}Code review complete!{{else}}Address the action items and continue development.{{/if}}
     </output>

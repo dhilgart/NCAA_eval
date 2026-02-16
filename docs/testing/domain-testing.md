@@ -77,6 +77,9 @@ def test_calculate_brier_score_performance():
 
 #### 3. pytest-benchmark (Optional, for Critical Paths)
 
+> ⚠️ **NOT YET INSTALLED:** `pytest-benchmark` is optional and NOT currently in `pyproject.toml`.
+> Use timeit-based benchmarks (Option 2) for now. Story 1.5 will evaluate pytest-benchmark for installation.
+
 **Purpose:** Track performance over time with detailed statistics
 
 ```python

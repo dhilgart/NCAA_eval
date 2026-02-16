@@ -1,10 +1,15 @@
-# Test Approach Guide: Example-Based vs Property-Based Testing
+# Test Approach Guide: Example-Based vs Property-Based vs Fuzz-Based Testing
 
 This guide explains **how you write tests** - the approach used to specify test inputs and expected behavior.
 
 ## Overview
 
-**Test approach** is one of the four orthogonal dimensions of testing. It's orthogonal to test scope - you can use either approach for unit tests, integration tests, or any other test type.
+**Test approach** is one of the four orthogonal dimensions of testing. It's orthogonal to test scope - you can use any approach for unit tests, integration tests, or any other test type.
+
+The project supports three test approaches:
+- **Example-based:** Concrete input/output pairs for known scenarios
+- **Property-based:** Invariants tested across generated inputs (Hypothesis)
+- **Fuzz-based:** Random/mutated inputs for crash resilience (Hypothesis)
 
 ---
 
@@ -168,30 +173,153 @@ Mark as `@pytest.mark.property` or `@pytest.mark.slow`
 
 ---
 
-## Decision Tree: Example-Based vs. Property-Based
+## Fuzz-Based Testing (Hypothesis)
+
+### What it is
+Tests that feed **random or mutated inputs** to find crashes, unhandled exceptions, and edge cases in error handling. Unlike property-based testing (which verifies invariants), fuzz testing focuses on **resilience** - ensuring the code doesn't crash on unexpected inputs.
+
+### When to use
+- Testing **error handling** and crash resilience (e.g., "parser handles malformed CSV gracefully")
+- **Input validation** robustness (e.g., "API rejects invalid data without crashing")
+- **Security testing** for injection vulnerabilities (e.g., "SQL queries handle special characters")
+- **Data parsing** resilience (e.g., "ingestion handles encoding errors")
+
+### Strengths
+- **Finds crashes:** Discovers inputs that cause unhandled exceptions
+- **Tests error paths:** Validates that error handling code actually works
+- **Security-focused:** Can find injection vulnerabilities and edge cases
+- **Low effort:** Generate random inputs without thinking about specific cases
+
+### Weaknesses
+- **Slower:** Generates many random test cases
+- **May produce noise:** Random inputs may trigger expected errors (need to filter)
+- **Less targeted:** Not testing correctness, just resilience
+
+### When to use Fuzz vs Property-Based vs Example-Based
+
+- Use **Fuzz-based** when testing *error handling and crash resilience*
+- Use **Property-based** when testing *invariants* (e.g., "output length = input length")
+- Use **Example-based** when testing *specific scenarios* (e.g., "for input X, output is Y")
+
+### Examples
+
+**Fuzz-based unit test (data parsing):**
+
+```python
+from hypothesis import given, strategies as st
+
+@pytest.mark.fuzz
+@given(text=st.text())
+def test_parse_team_name_never_crashes(text):
+    """Verify parser handles arbitrary text without crashing."""
+    try:
+        result = parse_team_name(text)
+        # If parsing succeeds, result should be valid
+        assert isinstance(result, str)
+    except ValueError:
+        # Expected error for invalid input is acceptable
+        pass
+```
+
+**Fuzz-based integration test (CSV ingestion):**
+
+```python
+@pytest.mark.integration
+@pytest.mark.fuzz
+@given(data=st.binary())
+def test_ingest_csv_handles_malformed_data(data, tmp_path):
+    """Verify CSV ingestion handles malformed files gracefully."""
+    # Write random binary data to temp file
+    csv_file = tmp_path / "malformed.csv"
+    csv_file.write_bytes(data)
+
+    # Ingestion should either succeed or raise expected error
+    try:
+        result = ingest_game_data(csv_file)
+        assert isinstance(result, pd.DataFrame)
+    except (UnicodeDecodeError, pd.errors.ParserError):
+        # Expected errors for malformed data
+        pass
+```
+
+**Fuzz-based test (API validation):**
+
+```python
+@pytest.mark.fuzz
+@given(
+    season=st.integers(),  # Any integer, including negatives
+    game_id=st.text(),     # Any string, including empty/special chars
+)
+def test_api_validates_inputs_safely(season, game_id):
+    """Verify API validation doesn't crash on invalid inputs."""
+    api = GameDataAPI()
+
+    try:
+        # API should either return data or raise ValueError
+        result = api.get_game(season=season, game_id=game_id)
+        assert result is not None
+    except ValueError as e:
+        # Expected validation error
+        assert "invalid" in str(e).lower() or "not found" in str(e).lower()
+```
+
+### Hypothesis Strategies for Fuzzing
+
+```python
+from hypothesis import strategies as st
+
+# Basic fuzzing strategies
+st.text()                          # Any Unicode text (including empty, special chars)
+st.binary()                        # Random byte sequences
+st.integers()                      # Any integer (including negatives, zero, large values)
+st.floats(allow_nan=True)          # Floats including NaN, inf, -inf
+
+# Targeted fuzzing
+st.text(alphabet=st.characters(blacklist_categories=("Cs",)))  # Valid Unicode only
+st.text(min_size=0, max_size=1000)  # Bounded text
+st.binary(min_size=0, max_size=10000)  # Bounded binary data
+
+# Domain-specific fuzzing
+st.text().filter(lambda x: ";" in x or "'" in x)  # SQL injection patterns
+st.text().map(lambda x: x + "\x00" + x)  # Null byte injection
+```
+
+### Pre-commit eligibility
+❌ **NO** - Fuzz testing is slow (generates many random test cases)
+
+Mark as `@pytest.mark.fuzz` or `@pytest.mark.slow`
+
+---
+
+## Decision Tree: Choosing Your Test Approach
 
 ```
-Does the test verify a specific known scenario?
-├─ YES → Use Example-Based Testing
-│         - Parametrize if testing multiple similar scenarios
-│         - Examples: regression tests, boundary conditions, known edge cases
+Are you testing error handling / crash resilience?
+├─ YES → Use Fuzz-Based Testing (@pytest.mark.fuzz, Hypothesis)
+│         - Generate random/mutated inputs to find crashes
+│         - Examples: CSV parsing, API validation, input sanitization
 │
-└─ NO → Can you state an invariant that should hold for all inputs?
-         ├─ YES → Use Property-Based Testing (Hypothesis)
-         │         - State the invariant clearly
-         │         - Let Hypothesis generate test cases
-         │         - Examples: "length preserved", "result always positive", "sum = 1.0"
+└─ NO → Does the test verify a specific known scenario?
+         ├─ YES → Use Example-Based Testing
+         │         - Parametrize if testing multiple similar scenarios
+         │         - Examples: regression tests, boundary conditions, known edge cases
          │
-         └─ NO → Use Example-Based Testing
-                   - If you can't state an invariant, test specific examples
-                   - Consider if the function is too complex (may need refactoring)
+         └─ NO → Can you state an invariant that should hold for all inputs?
+                  ├─ YES → Use Property-Based Testing (Hypothesis)
+                  │         - State the invariant clearly
+                  │         - Let Hypothesis generate test cases
+                  │         - Examples: "length preserved", "result always positive", "sum = 1.0"
+                  │
+                  └─ NO → Use Example-Based Testing
+                            - If you can't state an invariant, test specific examples
+                            - Consider if the function is too complex (may need refactoring)
 ```
 
 ---
 
-## Combining Both Approaches
+## Combining Multiple Approaches
 
-Many functions benefit from **both** example-based and property-based tests:
+Many functions benefit from **multiple** test approaches - each approach tests different aspects:
 
 ```python
 # Example-based: Test specific known cases
@@ -210,7 +338,24 @@ def test_clean_team_name_never_empty(name):
     """Verify normalization never returns empty string."""
     result = clean_team_name(name)
     assert len(result) > 0  # Invariant: output is never empty
+
+# Fuzz-based: Test crash resilience
+@pytest.mark.fuzz
+@given(name=st.text())  # Including empty strings, special chars
+def test_clean_team_name_never_crashes(name):
+    """Verify normalization handles any text without crashing."""
+    try:
+        result = clean_team_name(name)
+        assert isinstance(result, str)
+    except ValueError:
+        # Expected error for invalid team names
+        pass
 ```
+
+**Why use all three?**
+- **Example-based:** Verifies correctness for known scenarios (e.g., "UNC" → "North Carolina")
+- **Property-based:** Verifies invariants hold universally (e.g., output never empty for valid input)
+- **Fuzz-based:** Verifies resilience to unexpected inputs (e.g., doesn't crash on special characters)
 
 ---
 

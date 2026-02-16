@@ -39,6 +39,12 @@ so that I know what tests to write and when they'll be executed.
 - [x] Task 3: Document test markers for pre-commit vs. PR-time distinction (AC: 3, 4)
   - [x] 3.1: Define pytest markers: `@pytest.mark.smoke`, `@pytest.mark.slow`, `@pytest.mark.integration`, `@pytest.mark.property`, `@pytest.mark.mutation`
   - [x] 3.2: Document how markers map to pre-commit vs. PR-time execution
+- [x] Task 4: Incorporate fuzz-based testing approach into strategy (AC: 1, 6)
+  - [x] 4.1: Add fuzz-based as third approach option in Test Approach dimension using Hypothesis tooling
+  - [x] 4.2: Update decision tree to include fuzz testing for error handling and crash resilience
+  - [x] 4.3: Add `@pytest.mark.fuzz` marker to Test Markers Reference table
+  - [x] 4.4: Update Testing Tools table to clarify Hypothesis supports both property-based and fuzz testing
+  - [x] 4.5: Add visual-first documentation guideline to MEMORY.md and PR template checklist
 
 ## Dev Notes
 
@@ -648,6 +654,31 @@ This represents a scope expansion from "one comprehensive document" to "multi-fi
 **Verification Methodology:**
 Alignment verification was completed against QUALITY_GATES.md content BEFORE it was deleted and merged into TESTING_STRATEGY.md. The two-tier philosophy (pre-commit vs PR-time) was preserved and expanded into a 4-tier model (Tier 1: Pre-commit, Tier 2: PR/CI, Tier 3: AI Review, Tier 4: Owner Review). All smoke test criteria, time budgets, and marker taxonomy from QUALITY_GATES.md were integrated into execution-and-quality.md.
 
+**Task 4 - Fuzz Testing Integration (2026-02-16):**
+
+Added fuzz-based testing as a third approach option in the Test Approach dimension using Hypothesis tooling. This extends the testing strategy to explicitly support crash resilience and error handling testing.
+
+**Changes Made:**
+1. Updated Test Approach dimension (docs/TESTING_STRATEGY.md:56) to include "Fuzz-based (Hypothesis): Random/mutated inputs to find crashes and error handling gaps"
+2. Updated "Which approach?" decision tree (docs/TESTING_STRATEGY.md:142-150) to prioritize fuzz testing for error handling/crash resilience scenarios
+3. Added `@pytest.mark.fuzz` marker to Test Markers Reference table (docs/TESTING_STRATEGY.md:173)
+4. Updated Testing Tools table (docs/TESTING_STRATEGY.md:249) to clarify Hypothesis supports both "Property-based + Fuzz testing"
+5. Updated test-approach-guide.md with comprehensive fuzz-based testing section:
+   - Added overview of all three approaches (example/property/fuzz)
+   - New "Fuzz-Based Testing" section with when-to-use guidance, strengths/weaknesses, examples
+   - Updated decision tree to include fuzz testing as first check
+   - Updated "Combining Multiple Approaches" section to show all three approaches working together
+6. Updated MEMORY.md to reflect new fuzz testing decision with implementation details and target areas
+7. Added visual-first documentation guideline to MEMORY.md and PR template:
+   - New "Documentation Standards" section in MEMORY.md with visual-first principle
+   - Added PR checklist item for visual-first documentation (diagrams/flowcharts in user-facing docs)
+
+**Rationale:**
+- Fuzz testing fills gap between example-based (known scenarios) and property-based (invariants) by focusing on crash resilience
+- Uses existing Hypothesis tooling (no new dependencies) via `st.text()` and `st.binary()` strategies
+- Target areas: data ingestion (malformed CSV), feature APIs (invalid inputs), metrics (edge cases)
+- Aligns with pragmatic approach: reuse existing tools, prioritize based on risk
+
 **Next Story (1.4):**
 Will configure pre-commit hooks and tooling to implement the testing strategy documented here.
 
@@ -657,17 +688,22 @@ Will configure pre-commit hooks and tooling to implement the testing strategy do
 - docs/TESTING_STRATEGY.md (NEW - hub document with quick reference and links to detailed guides)
 
 **Supporting Documentation (docs/testing/ directory):**
-- docs/testing/test-scope-guide.md (Unit vs Integration test guide)
-- docs/testing/test-approach-guide.md (Example-based vs Property-based guide)
-- docs/testing/test-purpose-guide.md (Functional/Performance/Regression guide)
+- docs/testing/test-scope-guide.md (NEW - Unit vs Integration test guide)
+- docs/testing/test-approach-guide.md (NEW - Example-based vs Property-based vs Fuzz-based guide)
+- docs/testing/test-purpose-guide.md (NEW - Functional/Performance/Regression guide)
 - docs/testing/execution.md (NEW - 4-tier execution model, split from execution-and-quality.md)
 - docs/testing/quality.md (NEW - Quality assurance: mutation testing, coverage, split from execution-and-quality.md)
-- docs/testing/conventions.md (Fixtures, markers, coverage targets)
-- docs/testing/domain-testing.md (Performance and data leakage testing)
+- docs/testing/conventions.md (NEW - Fixtures, markers, coverage targets)
+- docs/testing/domain-testing.md (NEW - Performance and data leakage testing)
 
 **Modified Files (Reference Updates):**
-- .github/pull_request_template.md (MODIFIED - Updated line 84 to reference TESTING_STRATEGY.md instead of QUALITY_GATES.md)
+- .github/pull_request_template.md (MODIFIED - Updated line 84 to reference TESTING_STRATEGY.md instead of QUALITY_GATES.md; Added visual-first documentation checklist item)
 - docs/STYLE_GUIDE.md (MODIFIED - Updated references to point to TESTING_STRATEGY.md)
+- docs/TESTING_STRATEGY.md (MODIFIED - Added fuzz-based testing approach, updated decision tree to Mermaid flowcharts, added @pytest.mark.fuzz marker, updated Hypothesis tool description)
+- pyproject.toml (MODIFIED - Added 8 test markers configuration lines 103-112; Added pytest-cov dev dependency; Fixed smoke marker timing to "< 10 seconds total")
+- docs/testing/domain-testing.md (MODIFIED - Added pytest-benchmark warning note)
+- _bmad-output/implementation-artifacts/1-3-define-testing-strategy.md (MODIFIED - Added Task 4 for fuzz testing integration; Updated File List)
+- ~/.claude/projects/.../memory/MEMORY.md (MODIFIED - Updated fuzz testing decision from "not implemented" to "implemented"; Added Documentation Standards section with visual-first guideline)
 
 **Deleted Files:**
 - docs/QUALITY_GATES.md (DELETED - Content merged into TESTING_STRATEGY.md and execution-and-quality.md)
@@ -716,3 +752,30 @@ Will configure pre-commit hooks and tooling to implement the testing strategy do
   - Updated all cross-references in test guides (test-scope-guide.md, test-approach-guide.md, test-purpose-guide.md, conventions.md, domain-testing.md)
   - Updated TESTING_STRATEGY.md to reference both new guides
   - Deleted execution-and-quality.md (replaced by execution.md + quality.md)
+
+- **2026-02-16 (Enhancement 5 - Fuzz Testing Integration):** Added fuzz-based testing as third approach option in Test Approach dimension:
+  - **docs/TESTING_STRATEGY.md** - Added "Fuzz-based (Hypothesis): Random/mutated inputs to find crashes and error handling gaps" to Test Approach section
+  - **Decision Tree Update** - Modified "Which approach?" tree to prioritize fuzz testing for error handling/crash resilience scenarios
+  - **Marker Addition** - Added `@pytest.mark.fuzz` to Test Markers Reference table (Approach dimension)
+  - **Tool Clarification** - Updated Testing Tools table to show Hypothesis supports "Property-based + Fuzz testing"
+  - **docs/testing/test-approach-guide.md** - Comprehensive update to include fuzz-based testing:
+    - Updated title and overview to include fuzz-based approach
+    - Added complete "Fuzz-Based Testing" section with when-to-use, strengths/weaknesses, examples, and Hypothesis fuzzing strategies
+    - Updated decision tree to check for error handling/crash resilience first
+    - Updated "Combining Multiple Approaches" section to demonstrate all three approaches working together
+  - **Memory Update** - Updated MEMORY.md from "not implemented" to "implemented" with target areas (ingest/, transform/, evaluation/)
+  - **Rationale:** Fills gap between example-based (known scenarios) and property-based (invariants) by focusing on crash resilience. Uses existing Hypothesis tooling via `st.text()` and `st.binary()` strategies. No new dependencies required.
+
+- **2026-02-16 (Enhancement 6 - Visual-First Documentation Standard):** Added visual-first documentation guideline to enforce diagram usage in human-facing docs:
+  - **MEMORY.md** - New "Documentation Standards" section with visual-first principle: "Pictures > Words for human-facing documentation"
+  - **.github/pull_request_template.md** - Added "Visual-first" checklist item to Documentation section
+  - **Rationale:** Diagrams and flowcharts are easier for users to understand than text. Decision trees in TESTING_STRATEGY.md exemplify this approach. Future agents will prefer visuals (Mermaid diagrams, ASCII art, flowcharts, sequence diagrams) for user guides and conceptual docs.
+
+- **2026-02-16 (Code Review Fixes):** Adversarial code review identified 8 issues (2 CRITICAL, 4 MEDIUM, 2 LOW). Applied 6 fixes:
+  - **Fix #1 (CRITICAL):** Added `pytest-cov = "*"` to pyproject.toml dev dependencies (missing dependency for coverage commands)
+  - **Fix #2 (CRITICAL):** Updated File List to document all pyproject.toml modifications (test markers, pytest-cov, timing fix)
+  - **Fix #3 (MEDIUM):** Fixed timing inconsistency - updated pyproject.toml smoke marker description from "< 5 seconds" to "< 10 seconds total" to align with TESTING_STRATEGY.md Tier 1 specification
+  - **Fix #4 (MEDIUM):** Added pytest-benchmark warning in domain-testing.md clarifying it's optional and not yet installed (use timeit benchmarks for now)
+  - **Fix #5 (MEDIUM):** Updated File List to explicitly mark all 7 supporting docs as NEW (were ambiguous)
+  - **Fix #6 (MEDIUM):** Converted text-based decision trees to Mermaid flowchart diagrams in TESTING_STRATEGY.md (visual-first principle)
+  - **Result:** 6 of 8 issues fixed (2 LOW issues remain: story status will be updated by workflow, relative path inconsistency is informational)

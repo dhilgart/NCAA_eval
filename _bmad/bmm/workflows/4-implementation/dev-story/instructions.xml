@@ -128,7 +128,7 @@
     <action>Identify first incomplete task (unchecked [ ]) in Tasks/Subtasks</action>
 
     <action if="no incomplete tasks">
-      <goto step="6">Completion sequence</goto>
+      <goto step="10">Completion sequence</goto>
     </action>
     <action if="story file inaccessible">HALT: "Cannot develop story without access to story file"</action>
     <action if="incomplete task or subtask requirements ambiguous">ASK user to clarify or HALT</action>
@@ -187,7 +187,29 @@
     </check>
   </step>
 
-  <step n="4" goal="Mark story in-progress" tag="sprint-status">
+  <step n="4" goal="Create or verify story branch" tag="git-workflow">
+    <critical>Each story gets its own branch following pattern: story/{epic}-{story}-{slug}</critical>
+
+    <action>Extract epic and story numbers from {{story_key}} (e.g., "1-3-define-testing-strategy" → epic=1, story=3)</action>
+    <action>Extract slug from {{story_key}} (e.g., "1-3-define-testing-strategy" → slug="define-testing-strategy")</action>
+    <action>Construct branch name: story/{{epic}}-{{story}}-{{slug}}</action>
+
+    <action>Check if branch already exists using: git rev-parse --verify story/{{epic}}-{{story}}-{{slug}}</action>
+
+    <check if="branch exists">
+      <action>Switch to existing branch: git checkout story/{{epic}}-{{story}}-{{slug}}</action>
+      <output>⏯️ Switched to existing story branch: story/{{epic}}-{{story}}-{{slug}}</output>
+    </check>
+
+    <check if="branch does NOT exist">
+      <action>Create and switch to new branch: git checkout -b story/{{epic}}-{{story}}-{{slug}}</action>
+      <output>🌿 Created new story branch: story/{{epic}}-{{story}}-{{slug}}</output>
+    </check>
+
+    <action>Store branch name as {{story_branch}} for later use</action>
+  </step>
+
+  <step n="5" goal="Mark story in-progress" tag="sprint-status">
     <check if="{{sprint_status}} file exists">
       <action>Load the FULL file: {{sprint_status}}</action>
       <action>Read all development_status entries to find {{story_key}}</action>
@@ -221,7 +243,7 @@
     </check>
   </step>
 
-  <step n="5" goal="Implement task following red-green-refactor cycle">
+  <step n="6" goal="Implement task following red-green-refactor cycle">
     <critical>FOLLOW THE STORY FILE TASKS/SUBTASKS SEQUENCE EXACTLY AS WRITTEN - NO DEVIATION</critical>
 
     <action>Review the current task/subtask from the story file - this is your authoritative implementation guide</action>
@@ -249,17 +271,17 @@
     <critical>NEVER implement anything not mapped to a specific task/subtask in the story file</critical>
     <critical>NEVER proceed to next task until current task/subtask is complete AND tests pass</critical>
     <critical>Execute continuously without pausing until all tasks/subtasks are complete or explicit HALT condition</critical>
-    <critical>Do NOT propose to pause for review until Step 9 completion gates are satisfied</critical>
+    <critical>Do NOT propose to pause for review until Step 10 completion gates are satisfied</critical>
   </step>
 
-  <step n="6" goal="Author comprehensive tests">
+  <step n="7" goal="Author comprehensive tests">
     <action>Create unit tests for business logic and core functionality introduced/changed by the task</action>
     <action>Add integration tests for component interactions specified in story requirements</action>
     <action>Include end-to-end tests for critical user flows when story requirements demand them</action>
     <action>Cover edge cases and error handling scenarios identified in story Dev Notes</action>
   </step>
 
-  <step n="7" goal="Run validations and tests">
+  <step n="8" goal="Run validations and tests">
     <action>Determine how to run tests for this repo (infer test framework from project structure)</action>
     <action>Run all existing tests to ensure no regressions</action>
     <action>Run the new tests to verify implementation correctness</action>
@@ -269,7 +291,7 @@
     <action if="new tests fail">STOP and fix before continuing - ensure implementation correctness</action>
   </step>
 
-  <step n="8" goal="Validate and mark task complete ONLY when fully done">
+  <step n="9" goal="Validate and mark task complete ONLY when fully done">
     <critical>NEVER mark a task complete unless ALL conditions are met - NO LYING OR CHEATING</critical>
 
     <!-- VALIDATION GATES -->
@@ -311,16 +333,38 @@
     </check>
 
     <action>Save the story file</action>
+
+    <!-- ATOMIC COMMIT: Create a commit for this completed task -->
+    <action tag="git-workflow">Create atomic commit for the completed task/subtask</action>
+    <action>Stage all changes related to this task: git add [modified files]</action>
+    <action>Craft commit message following conventional commits format:
+      - Type: feat (new feature), fix (bug fix), test (test-only), refactor, docs, chore
+      - Scope: optional component/module name
+      - Description: Brief summary of what changed (imperative mood)
+      - Body: Optional detailed explanation
+      - Footer: Co-Authored-By: Claude Sonnet 4.5 &lt;noreply@anthropic.com&gt;
+    </action>
+    <action>Example commit message format:
+      feat(evaluation): add Brier score calculation
+
+      Implements vectorized Brier score metric for probabilistic predictions.
+      Includes unit tests and property-based tests for invariant validation.
+
+      Co-Authored-By: Claude Sonnet 4.5 &lt;noreply@anthropic.com&gt;
+    </action>
+    <action>Create commit using: git commit -m "message"</action>
+    <output>✅ Created atomic commit for task: {{task_description}}</output>
+
     <action>Determine if more incomplete tasks remain</action>
     <action if="more tasks remain">
-      <goto step="5">Next task</goto>
+      <goto step="6">Next task</goto>
     </action>
     <action if="no tasks remain">
-      <goto step="9">Completion</goto>
+      <goto step="10">Completion</goto>
     </action>
   </step>
 
-  <step n="9" goal="Story completion and mark for review" tag="sprint-status">
+  <step n="10" goal="Story completion and mark for review" tag="sprint-status">
     <action>Verify ALL tasks and subtasks are marked [x] (re-scan the story document now)</action>
     <action>Run the full regression suite (do not skip)</action>
     <action>Confirm File List includes every changed file</action>
@@ -370,7 +414,7 @@
     <action if="definition-of-done validation fails">HALT - Address DoD failures before completing</action>
   </step>
 
-  <step n="10" goal="Completion communication and user support">
+  <step n="11" goal="Completion communication and user support">
     <action>Execute the enhanced definition-of-done checklist using the validation framework</action>
     <action>Prepare a concise summary in Dev Agent Record → Completion Notes</action>
 

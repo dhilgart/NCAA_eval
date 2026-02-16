@@ -55,6 +55,7 @@ This strategy separates **four independent dimensions** of testing. Choose the a
 2. **Test Approach** - *How* you write the test → [Approach Guide](testing/test-approach-guide.md)
    - **Example-based:** Concrete inputs → expected outputs
    - **Property-based (Hypothesis):** Invariants that should hold for all inputs
+   - **Fuzz-based (Hypothesis):** Random/mutated inputs to find crashes and error handling gaps
 
 3. **Test Purpose** - *Why* you're writing the test → [Purpose Guide](testing/test-purpose-guide.md)
    - **Functional:** Correctness of behavior (default)
@@ -131,30 +132,35 @@ For comprehensive explanations, examples, and best practices:
 
 ### Which test scope?
 
-```
-Does it interact with external systems (files, database, network)?
-├─ YES → Integration test (@pytest.mark.integration, PR-time only)
-└─ NO  → Unit test (fast, pre-commit eligible if smoke)
+```mermaid
+flowchart TD
+    Start{Does it interact with<br/>external systems?<br/>files, DB, network}
+    Start -->|YES| Integration[Integration test<br/>@pytest.mark.integration<br/>PR-time only]
+    Start -->|NO| Unit[Unit test<br/>fast, pre-commit eligible if smoke]
 ```
 
 ### Which approach?
 
-```
-Do you have specific known scenarios to verify?
-├─ YES → Example-based (parametrize for multiple cases)
-└─ NO  → Can you state an invariant?
-          ├─ YES → Property-based (@pytest.mark.property, Hypothesis)
-          └─ NO  → Example-based (test specific examples)
+```mermaid
+flowchart TD
+    Start{Testing error handling<br/>or crash resilience?}
+    Start -->|YES| Fuzz[Fuzz-based<br/>@pytest.mark.fuzz<br/>Hypothesis st.text/st.binary]
+    Start -->|NO| Known{Have specific<br/>known scenarios?}
+    Known -->|YES| Example[Example-based<br/>parametrize for multiple cases]
+    Known -->|NO| Invariant{Can you state<br/>an invariant?}
+    Invariant -->|YES| Property[Property-based<br/>@pytest.mark.property<br/>Hypothesis]
+    Invariant -->|NO| ExampleAlt[Example-based<br/>test specific examples]
 ```
 
 ### Which execution tier?
 
-```
-Is the test fast (< 1 second)?
-├─ NO  → Tier 2 only (@pytest.mark.slow, @pytest.mark.integration, etc.)
-└─ YES → Is it an import/sanity/schema check OR critical regression?
-          ├─ YES → Tier 1 eligible (@pytest.mark.smoke)
-          └─ NO  → Tier 2 only (save pre-commit budget)
+```mermaid
+flowchart TD
+    Start{Is test fast?<br/>under 1 second}
+    Start -->|NO| Tier2Slow[Tier 2 only<br/>@pytest.mark.slow]
+    Start -->|YES| Critical{Import/sanity/schema check<br/>OR critical regression?}
+    Critical -->|YES| Tier1[Tier 1 eligible<br/>@pytest.mark.smoke]
+    Critical -->|NO| Tier2Fast[Tier 2 only<br/>save pre-commit budget]
 ```
 
 ---
@@ -167,6 +173,7 @@ Is the test fast (< 1 second)?
 | `@pytest.mark.slow` | Speed |  `pytest -m "not slow"` |
 | `@pytest.mark.integration` | Scope |  `pytest -m integration` |
 | `@pytest.mark.property` | Approach |  `pytest -m property` |
+| `@pytest.mark.fuzz` | Approach |  `pytest -m fuzz` |
 | `@pytest.mark.performance` | Purpose |  `pytest -m performance` |
 | `@pytest.mark.regression` | Purpose |  `pytest -m regression` |
 | `@pytest.mark.mutation` | Quality |  `pytest -m mutation` |
@@ -242,7 +249,7 @@ See [Conventions Guide](testing/conventions.md#coverage-targets) for details.
 | Tool | Purpose | Configuration |
 |------|---------|---------------|
 | **Pytest** | Testing framework | `pyproject.toml` `[tool.pytest.ini_options]` |
-| **Hypothesis** | Property-based testing | Dev dependency |
+| **Hypothesis** | Property-based + Fuzz testing | Dev dependency |
 | **Mutmut** | Mutation testing (quality) | Dev dependency |
 | **pytest-cov** | Coverage reporting | `[tool.coverage.report]` |
 | **Nox** | Session orchestration | `noxfile.py` (Story 1.6) |

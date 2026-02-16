@@ -19,6 +19,7 @@ streamlit = "*"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "*"
+pytest-cov = "*"
 hypothesis = "*"
 mutmut = "*"
 ruff = "*"
@@ -48,12 +49,19 @@ line-length = 110
 
 [tool.ruff.lint]
 extend-select = [
-    "I",     # Missing required import (auto-fixable)
-    "UP",    # Pyupgrade
-    "PT",    # flake8-pytest-style rules
-    "TID25", # flake8-tidy-imports rules
+    "I",      # Missing required import (auto-fixable)
+    "UP",     # Pyupgrade
+    "PT",     # flake8-pytest-style rules
+    "TID25",  # flake8-tidy-imports rules
+    "C90",    # McCabe complexity
+    "PLR09",  # Pylint refactor rules (complexity, too many args, etc.)
 ]
-ignore = ["E501", "D1", "D415"]
+ignore = [
+    "E501",      # Line too long (handled by formatter)
+    "D1",        # Missing docstrings (not yet enforced)
+    "D415",      # First line punctuation (not yet enforced)
+    "PLR2004",   # Magic value comparison (too aggressive for data science)
+]
 
 [tool.ruff.lint.isort]
 required-imports = ["from __future__ import annotations"]
@@ -62,6 +70,20 @@ known-first-party = ["tests"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
+
+[tool.ruff.lint.mccabe]
+# PEP 20: "Simple is better than complex"
+# Max cyclomatic complexity per function
+max-complexity = 10
+
+[tool.ruff.lint.pylint]
+# PEP 20: "Explicit is better than implicit"
+# Max arguments per function
+max-args = 5
+# Max branches in a function
+max-branches = 12
+# Max return statements in a function
+max-returns = 6
 
 [tool.pytest.ini_options]
 minversion = "8.0.0"
@@ -78,6 +100,16 @@ norecursedirs = [
     "venv",
     "env",
     "virtualenv",
+]
+markers = [
+    "smoke: Fast smoke tests for pre-commit (< 10 seconds total)",
+    "slow: Slow tests excluded from pre-commit (> 5 seconds each)",
+    "integration: Integration tests with I/O or external dependencies",
+    "property: Hypothesis property-based tests",
+    "fuzz: Hypothesis fuzz-based tests for crash resilience",
+    "performance: Performance and benchmark tests",
+    "regression: Regression tests to prevent bug recurrence",
+    "mutation: Tests specifically for mutation testing coverage",
 ]
 
 [tool.coverage.report]
