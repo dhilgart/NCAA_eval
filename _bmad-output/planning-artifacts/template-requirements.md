@@ -289,7 +289,13 @@ Code review workflow generates PRs following .github/pull_request_template.md st
 - ⚠️ **Timing inconsistency across docs** - pyproject.toml said "< 5 seconds" while main doc said "< 10 seconds". Template should establish single source of truth for constraints.
 
 ### Process Improvements
-- [Capture workflow or process refinements]
+
+**Story 1.4 - Create Story Workflow (2026-02-16):**
+- ✅ **Commit SM updates before dev-story** - Always commit story files and sprint-status.yaml updates immediately after create-story completes. This ensures dev-story starts with clean git status, enabling accurate tracking of implementation changes and preventing commit conflicts.
+  - **Pattern:** `feat(sm): create Story X.Y and update sprint tracking`
+  - **Files:** Story markdown file + sprint-status.yaml
+  - **Timing:** After story creation, before invoking dev-story
+  - **Rationale:** Clean separation between SM work (story planning) and Dev work (implementation). Git status becomes accurate indicator of actual code changes.
 
 ---
 
