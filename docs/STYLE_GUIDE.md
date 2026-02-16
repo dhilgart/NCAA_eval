@@ -233,7 +233,141 @@ In these cases, add a brief comment explaining why the loop is necessary.
 
 ---
 
-## 6. PR Checklist (Summary)
+## 6. Design Philosophy (PEP 20 - The Zen of Python)
+
+> "Beautiful is better than ugly. Explicit is better than implicit. Simple is better than complex."
+>
+> — PEP 20
+
+While PEP 20 can't be fully automated, we enforce its core principles through code review and tooling where possible.
+
+### Enforced Principles
+
+#### Simple is Better Than Complex
+- **Tooling:** Ruff complexity checks (see Section 6.1)
+- **Review:** Max cyclomatic complexity = 10, max function length = 50 lines
+- **Guideline:** If a function is hard to name, it's doing too much — split it
+
+```python
+# GOOD: Simple, single-purpose function
+def calculate_margin(home_score: int, away_score: int) -> int:
+    """Calculate point margin (positive = home win)."""
+    return home_score - away_score
+
+# BAD: Too complex, doing multiple things
+def process_game(game_data: dict) -> dict:
+    """Process game... but what does this actually do?"""
+    # 80 lines of nested logic with unclear responsibilities
+    ...
+```
+
+#### Explicit is Better Than Implicit
+- **Tooling:** Mypy strict mode enforces explicit types
+- **Review:** No magic numbers, no implicit state changes, clear function names
+- **Guideline:** Code should read like prose — the reader shouldn't have to guess
+
+```python
+# GOOD: Explicit parameters and behavior
+def calculate_elo_change(
+    rating: int,
+    opponent_rating: int,
+    won: bool,
+    k_factor: int = 32,
+) -> int:
+    """Calculate Elo rating change after a game."""
+    expected = 1 / (1 + 10 ** ((opponent_rating - rating) / 400))
+    actual = 1 if won else 0
+    return int(k_factor * (actual - expected))
+
+# BAD: Implicit behavior, magic numbers
+def adjust_rating(r: int, o: int, w: bool) -> int:
+    return int(32 * (w - 1 / (1 + 10 ** ((o - r) / 400))))
+```
+
+#### Readability Counts
+- **Tooling:** Ruff formatting (110 char lines), naming conventions
+- **Review:** Variable names reflect domain concepts, not abbreviations
+- **Guideline:** Write for humans first, computers second
+
+```python
+# GOOD: Clear domain language
+team_offensive_efficiency = total_points / total_possessions
+
+# BAD: Abbreviations require mental translation
+off_eff = pts / poss
+```
+
+#### Flat is Better Than Nested
+- **Tooling:** Ruff detects excessive nesting
+- **Review:** Max nesting depth = 3
+- **Guideline:** Use early returns to reduce nesting
+
+```python
+# GOOD: Flat structure with early returns
+def validate_game(game: Game) -> None:
+    """Validate game data."""
+    if game.home_score < 0:
+        raise ValueError("Home score cannot be negative")
+    if game.away_score < 0:
+        raise ValueError("Away score cannot be negative")
+    if game.date > datetime.now():
+        raise ValueError("Game cannot be in the future")
+
+# BAD: Nested structure
+def validate_game(game: Game) -> None:
+    if game.home_score >= 0:
+        if game.away_score >= 0:
+            if game.date <= datetime.now():
+                return
+            else:
+                raise ValueError("Game cannot be in the future")
+        else:
+            raise ValueError("Away score cannot be negative")
+    else:
+        raise ValueError("Home score cannot be negative")
+```
+
+#### There Should Be One Obvious Way to Do It
+- **Review:** Follow established project patterns (e.g., vectorization for calculations)
+- **Guideline:** Check existing code before inventing new approaches
+
+```python
+# GOOD: Follows project pattern (vectorized operations)
+game_df["margin"] = game_df["home_score"] - game_df["away_score"]
+
+# BAD: Invents custom approach (loops)
+for idx in range(len(game_df)):
+    game_df.loc[idx, "margin"] = game_df.loc[idx, "home_score"] - game_df.loc[idx, "away_score"]
+```
+
+### Code Review Checklist for PEP 20
+
+During code review, verify:
+
+- [ ] **Simplicity:** Functions have single, clear responsibilities (McCabe complexity ≤ 10)
+- [ ] **Explicitness:** No magic numbers, parameters have clear names, behavior is obvious
+- [ ] **Readability:** Domain concepts use full words, not abbreviations
+- [ ] **Flatness:** Nesting depth ≤ 3, early returns preferred
+- [ ] **Consistency:** Follows existing project patterns (vectorization, type sharing, etc.)
+
+---
+
+### 6.1 Complexity Gates (Ruff Configuration)
+
+**Configured in:** `pyproject.toml` → `[tool.ruff.lint.mccabe]`
+
+| Metric | Limit | Enforced By |
+|---|---|---|
+| **McCabe Cyclomatic Complexity** | 10 | Ruff `C901` (pre-commit) |
+| **Max Function Length** | 50 lines | Manual review |
+| **Max Nesting Depth** | 3 | Manual review |
+| **Max Arguments** | 5 | Ruff `PLR0913` (pre-commit) |
+
+See `pyproject.toml` for exact configuration.
+
+---
+
+## 7. PR Checklist (Summary)
 
 Every pull request must pass the following gates. The actual PR template is at
 [`.github/pull_request_template.md`](../.github/pull_request_template.md). For
@@ -248,6 +382,7 @@ the philosophy behind this two-tier approach, see
 | Docstring coverage | Manual review | PR review |
 | No vectorization violations | Manual review | PR review |
 | Conventional commit messages | Commitizen | Pre-commit |
+| PEP 20 compliance | Manual review | PR review |
 
 ### Review Criteria
 
@@ -256,12 +391,13 @@ the philosophy behind this two-tier approach, see
 - New public APIs have docstrings (Section 1).
 - No `for` loops over DataFrames for calculations (Section 5).
 - Type annotations are complete (Section 4).
+- PEP 20 design principles respected (Section 6).
 - Data structures shared between Logic and UI use Pydantic models or TypedDicts.
 - Dashboard code never reads files directly — it calls `ncaa_eval` functions.
 
 ---
 
-## 7. File & Module Organization
+## 8. File & Module Organization
 
 ### Project Layout
 
@@ -300,7 +436,7 @@ data/                    # Local data store (git-ignored)
 
 ---
 
-## 8. Additional Architecture Rules
+## 9. Additional Architecture Rules
 
 These rules come from the project architecture and apply across all code:
 

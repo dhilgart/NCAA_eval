@@ -92,6 +92,12 @@
       3. **Error Handling**: Missing try/catch, poor error messages
       4. **Code Quality**: Complex functions, magic numbers, poor naming
       5. **Test Quality**: Are tests real assertions or placeholders?
+      6. **PEP 20 Compliance** (STYLE_GUIDE.md Section 6):
+         - Simplicity: Functions have single purpose, cyclomatic complexity ≤ 10
+         - Explicitness: No magic numbers, clear parameter names, obvious behavior
+         - Readability: Domain concepts use full words, not abbreviations
+         - Flatness: Nesting depth ≤ 3, early returns preferred
+         - Consistency: Follows project patterns (vectorization, type sharing)
     </action>
 
     <check if="total_issues_found lt 3">
@@ -103,6 +109,7 @@
         - Integration issues
         - Dependency problems
         - Git commit message quality (if applicable)
+        - PEP 20 violations (complex functions, implicit behavior, poor naming, deep nesting)
       </action>
       <action>Find at least 3 more specific, actionable issues</action>
     </check>
