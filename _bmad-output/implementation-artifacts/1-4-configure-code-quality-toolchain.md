@@ -20,34 +20,34 @@ so that every commit is automatically checked for style, formatting, and type co
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Update `.pre-commit-config.yaml` to use Poetry/Ruff/Mypy pattern (AC: 3, 5)
-  - [ ] 1.1: Remove outdated Pipenv/invoke hooks from existing config
-  - [ ] 1.2: Add Ruff hook for linting and formatting (pre-commit stage)
-  - [ ] 1.3: Add Mypy hook for type checking (pre-commit stage)
-  - [ ] 1.4: Configure hook to run smoke tests (`pytest -m smoke`)
-  - [ ] 1.5: Ensure hooks run automatically on `git commit` (not just push)
+- [x] Task 1: Update `.pre-commit-config.yaml` to use Poetry/Ruff/Mypy pattern (AC: 3, 5)
+  - [x] 1.1: Remove outdated Pipenv/invoke hooks from existing config
+  - [x] 1.2: Add Ruff hook for linting and formatting (pre-commit stage)
+  - [x] 1.3: Add Mypy hook for type checking (pre-commit stage)
+  - [x] 1.4: Configure hook to run smoke tests (`pytest -m smoke`)
+  - [x] 1.5: Ensure hooks run automatically on `git commit` (not just push)
 
-- [ ] Task 2: Verify Ruff configuration in `pyproject.toml` (AC: 1, 4)
-  - [ ] 2.1: Confirm `[tool.ruff.lint.pydocstyle] convention = "google"` is set
-  - [ ] 2.2: Confirm `[tool.ruff.lint.isort]` enforces import ordering per STYLE_GUIDE.md
-  - [ ] 2.3: Verify complexity gates (C90, PLR09) are active
-  - [ ] 2.4: Test Ruff auto-fix behavior on sample violation
+- [x] Task 2: Verify Ruff configuration in `pyproject.toml` (AC: 1, 4)
+  - [x] 2.1: Confirm `[tool.ruff.lint.pydocstyle] convention = "google"` is set
+  - [x] 2.2: Confirm `[tool.ruff.lint.isort]` enforces import ordering per STYLE_GUIDE.md
+  - [x] 2.3: Verify complexity gates (C90, PLR09) are active
+  - [x] 2.4: Test Ruff auto-fix behavior on sample violation
 
-- [ ] Task 3: Verify Mypy configuration in `pyproject.toml` (AC: 2, 5)
-  - [ ] 3.1: Confirm `strict = true` is enabled
-  - [ ] 3.2: Confirm `files = ["src/ncaa_eval", "tests"]` covers all code
-  - [ ] 3.3: Test Mypy strict mode on sample type violation
+- [x] Task 3: Verify Mypy configuration in `pyproject.toml` (AC: 2, 5)
+  - [x] 3.1: Confirm `strict = true` is enabled
+  - [x] 3.2: Confirm `files = ["src/ncaa_eval", "tests"]` covers all code
+  - [x] 3.3: Test Mypy strict mode on sample type violation
 
-- [ ] Task 4: Create smoke test to validate pre-commit workflow (AC: 5)
-  - [ ] 4.1: Create `tests/unit/test_imports.py` with basic import smoke test
-  - [ ] 4.2: Mark test with `@pytest.mark.smoke`
-  - [ ] 4.3: Verify test runs in < 1 second and passes
+- [x] Task 4: Create smoke test to validate pre-commit workflow (AC: 5)
+  - [x] 4.1: Create `tests/unit/test_imports.py` with basic import smoke test
+  - [x] 4.2: Mark test with `@pytest.mark.smoke`
+  - [x] 4.3: Verify test runs in < 1 second and passes
 
-- [ ] Task 5: Test end-to-end pre-commit workflow (AC: 1-5)
-  - [ ] 5.1: Run `pre-commit install` to activate hooks
-  - [ ] 5.2: Introduce intentional style violation, verify Ruff auto-fixes on commit
-  - [ ] 5.3: Introduce intentional type error, verify commit is blocked by Mypy
-  - [ ] 5.4: Run `pre-commit run --all-files` to validate all hooks pass on clean codebase
+- [x] Task 5: Test end-to-end pre-commit workflow (AC: 1-5)
+  - [x] 5.1: Run `pre-commit install` to activate hooks
+  - [x] 5.2: Introduce intentional style violation, verify Ruff auto-fixes on commit
+  - [x] 5.3: Introduce intentional type error, verify commit is blocked by Mypy
+  - [x] 5.4: Run `pre-commit run --all-files` to validate all hooks pass on clean codebase
 
 ## Dev Notes
 
@@ -166,10 +166,12 @@ The `.pre-commit-config.yaml` must use official hooks from these repositories:
   ```python
   import pytest
 
+
   @pytest.mark.smoke
   def test_can_import_ncaa_eval():
       """Smoke test: Verify package is importable."""
       import ncaa_eval
+
       assert ncaa_eval is not None
   ```
 - **Purpose:** Provides a fast smoke test for pre-commit hook. Catches import errors or circular dependencies before commit.
@@ -433,6 +435,7 @@ The existing `.pre-commit-config.yaml` has useful general-purpose hooks that sho
      # Missing imports, wrong order, trailing whitespace
      import sys
      import os
+
      x = 1  # trailing spaces here
      ```
    - Run `git add temp.py && git commit -m "test"`
@@ -443,6 +446,7 @@ The existing `.pre-commit-config.yaml` has useful general-purpose hooks that sho
    - Create a temporary Python file with a type error:
      ```python
      from __future__ import annotations
+
 
      def foo(x: int) -> str:
          return x  # Error: incompatible return type
@@ -507,22 +511,40 @@ claude-sonnet-4-5-20250929
 
 ### Debug Log References
 
-N/A (Story not yet implemented)
+None - implementation completed without issues
 
 ### Completion Notes List
 
-(To be filled during implementation)
+✅ **Task 1:** Updated `.pre-commit-config.yaml` by replacing outdated Pipenv/invoke hooks with modern Ruff/Mypy/Pytest hooks. Configured Ruff for linting and formatting, Mypy for strict type checking, and pytest for smoke tests.
+
+✅ **Task 2:** Verified Ruff configuration in `pyproject.toml` - Google docstrings, import ordering, and complexity gates are properly configured. Tested auto-fix behavior successfully.
+
+✅ **Task 3:** Verified Mypy configuration in `pyproject.toml` - strict mode enabled and correctly scoped to src/ and tests/ directories. Tested type error detection successfully.
+
+✅ **Task 4:** Created smoke test at `tests/unit/test_imports.py` with `@pytest.mark.smoke` marker. Test validates package importability and runs in < 1 second.
+
+✅ **Task 5:** Tested end-to-end pre-commit workflow. All hooks (Ruff, Mypy, pytest-smoke) pass successfully. Pre-commit auto-fixed 40+ files (trailing whitespace, EOF issues, typos).
+
+**Acceptance Criteria Validation:**
+- AC1: ✅ Ruff checks and auto-fixes formatting/linting per style guide
+- AC2: ✅ Mypy runs in strict mode and reports type errors
+- AC3: ✅ Pre-commit hooks run automatically on git commit
+- AC4: ✅ Ruff enforces Google docstrings and import ordering
+- AC5: ✅ Type errors and style violations block commits
 
 ### File List
 
 **Modified Files:**
-- .pre-commit-config.yaml (MODIFIED - replace Pipenv/invoke hooks with Ruff/Mypy/Pytest)
+- .pre-commit-config.yaml (MODIFIED - replaced Pipenv/invoke hooks with Ruff/Mypy/Pytest)
+- _bmad-output/implementation-artifacts/sprint-status.yaml (MODIFIED - story status tracking)
 
 **New Files:**
+- tests/unit/__init__.py (NEW - unit tests package)
 - tests/unit/test_imports.py (NEW - smoke test for pre-commit validation)
 
 **Verified Files (No Changes):**
 - pyproject.toml (VERIFIED - already has complete Ruff/Mypy/Pytest config from Story 1.1)
 - docs/STYLE_GUIDE.md (REFERENCE - defines style standards that Ruff enforces)
 - docs/TESTING_STRATEGY.md (REFERENCE - defines smoke test requirements)
-
+- docs/STYLE_GUIDE.md (REFERENCE - defines style standards that Ruff enforces)
+- docs/TESTING_STRATEGY.md (REFERENCE - defines smoke test requirements)

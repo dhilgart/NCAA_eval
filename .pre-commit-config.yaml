@@ -58,36 +58,36 @@ repos:
     hooks:
       - id: actionlint
 
+  # Code Quality: Ruff (linting + formatting)
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.4
+    hooks:
+      - id: ruff
+        name: ruff-lint
+        args: [--fix]
+        types: [python]
+      - id: ruff-format
+        name: ruff-format
+        types: [python]
+
+  # Type Checking: Mypy
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.14.1
+    hooks:
+      - id: mypy
+        name: mypy-strict
+        args: [--strict, --show-error-codes, --namespace-packages]
+        types: [python]
+        files: ^src/
+        additional_dependencies: [pytest, pandas-stubs, types-requests]
+
+  # Fast Tests: Pytest smoke tests
   - repo: local
     hooks:
-      - id: style-reformat
-        name: style-reformat
+      - id: pytest-smoke
+        name: pytest-smoke
+        entry: poetry run pytest -m smoke --tb=short -q
+        language: system
+        types: [python]
+        pass_filenames: false
         stages: [commit]
-        language: system
-        pass_filenames: false
-        entry: pipenv run inv style.format
-        types: [python]
-
-      - id: style-check
-        name: style-check
-        stages: [push]
-        language: system
-        pass_filenames: false
-        entry: pipenv run inv style
-        types: [python]
-
-      - id: security-check
-        name: security-check
-        stages: [push]
-        language: system
-        pass_filenames: false
-        entry: pipenv run inv secure
-        types: [python]
-
-      - id: test
-        name: test
-        stages: [push]
-        language: system
-        pass_filenames: false
-        entry: pipenv run inv test -a
-        types: [python]
