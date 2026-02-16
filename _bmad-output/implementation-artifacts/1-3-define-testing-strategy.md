@@ -44,6 +44,7 @@ so that I know what tests to write and when they'll be executed.
   - [x] 4.2: Update decision tree to include fuzz testing for error handling and crash resilience
   - [x] 4.3: Add `@pytest.mark.fuzz` marker to Test Markers Reference table
   - [x] 4.4: Update Testing Tools table to clarify Hypothesis supports both property-based and fuzz testing
+  - [x] 4.5: Add visual-first documentation guideline to MEMORY.md and PR template checklist
 
 ## Dev Notes
 
@@ -668,6 +669,9 @@ Added fuzz-based testing as a third approach option in the Test Approach dimensi
    - Updated decision tree to include fuzz testing as first check
    - Updated "Combining Multiple Approaches" section to show all three approaches working together
 6. Updated MEMORY.md to reflect new fuzz testing decision with implementation details and target areas
+7. Added visual-first documentation guideline to MEMORY.md and PR template:
+   - New "Documentation Standards" section in MEMORY.md with visual-first principle
+   - Added PR checklist item for visual-first documentation (diagrams/flowcharts in user-facing docs)
 
 **Rationale:**
 - Fuzz testing fills gap between example-based (known scenarios) and property-based (invariants) by focusing on crash resilience
@@ -693,11 +697,11 @@ Will configure pre-commit hooks and tooling to implement the testing strategy do
 - docs/testing/domain-testing.md (Performance and data leakage testing)
 
 **Modified Files (Reference Updates):**
-- .github/pull_request_template.md (MODIFIED - Updated line 84 to reference TESTING_STRATEGY.md instead of QUALITY_GATES.md)
+- .github/pull_request_template.md (MODIFIED - Updated line 84 to reference TESTING_STRATEGY.md instead of QUALITY_GATES.md; Added visual-first documentation checklist item)
 - docs/STYLE_GUIDE.md (MODIFIED - Updated references to point to TESTING_STRATEGY.md)
 - docs/TESTING_STRATEGY.md (MODIFIED - Added fuzz-based testing approach, updated decision tree, added @pytest.mark.fuzz marker, updated Hypothesis tool description)
 - _bmad-output/implementation-artifacts/1-3-define-testing-strategy.md (MODIFIED - Added Task 4 for fuzz testing integration)
-- ~/.claude/projects/.../memory/MEMORY.md (MODIFIED - Updated fuzz testing decision from "not implemented" to "implemented")
+- ~/.claude/projects/.../memory/MEMORY.md (MODIFIED - Updated fuzz testing decision from "not implemented" to "implemented"; Added Documentation Standards section with visual-first guideline)
 
 **Deleted Files:**
 - docs/QUALITY_GATES.md (DELETED - Content merged into TESTING_STRATEGY.md and execution-and-quality.md)
@@ -759,3 +763,8 @@ Will configure pre-commit hooks and tooling to implement the testing strategy do
     - Updated "Combining Multiple Approaches" section to demonstrate all three approaches working together
   - **Memory Update** - Updated MEMORY.md from "not implemented" to "implemented" with target areas (ingest/, transform/, evaluation/)
   - **Rationale:** Fills gap between example-based (known scenarios) and property-based (invariants) by focusing on crash resilience. Uses existing Hypothesis tooling via `st.text()` and `st.binary()` strategies. No new dependencies required.
+
+- **2026-02-16 (Enhancement 6 - Visual-First Documentation Standard):** Added visual-first documentation guideline to enforce diagram usage in human-facing docs:
+  - **MEMORY.md** - New "Documentation Standards" section with visual-first principle: "Pictures > Words for human-facing documentation"
+  - **.github/pull_request_template.md** - Added "Visual-first" checklist item to Documentation section
+  - **Rationale:** Diagrams and flowcharts are easier for users to understand than text. Decision trees in TESTING_STRATEGY.md exemplify this approach. Future agents will prefer visuals (Mermaid diagrams, ASCII art, flowcharts, sequence diagrams) for user guides and conceptual docs.

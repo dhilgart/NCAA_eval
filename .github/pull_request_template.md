@@ -72,6 +72,7 @@ Steps to reproduce the behavior:
 - [ ] **README** — Updated if project setup, usage, or public-facing behavior changed
 - [ ] **User guide** — Updated if end-user workflows or features changed (see `docs/`)
 - [ ] **Tutorials** — Updated or added if new features need step-by-step walkthroughs
+- [ ] **Visual-first** — User-facing docs include diagrams/flowcharts where appropriate (decision trees, architecture diagrams, sequence diagrams, etc.)
 - [ ] **Sphinx API docs** — Rebuilt and verified (`sphinx-build` succeeds with no warnings)
 - [ ] **Architecture docs** — Specs updated if system design or data flow changed
 - [ ] **CHANGELOG** — Entry added for user-visible changes
