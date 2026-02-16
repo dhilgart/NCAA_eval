@@ -688,19 +688,21 @@ Will configure pre-commit hooks and tooling to implement the testing strategy do
 - docs/TESTING_STRATEGY.md (NEW - hub document with quick reference and links to detailed guides)
 
 **Supporting Documentation (docs/testing/ directory):**
-- docs/testing/test-scope-guide.md (Unit vs Integration test guide)
-- docs/testing/test-approach-guide.md (Example-based vs Property-based vs Fuzz-based guide - MODIFIED for fuzz testing)
-- docs/testing/test-purpose-guide.md (Functional/Performance/Regression guide)
+- docs/testing/test-scope-guide.md (NEW - Unit vs Integration test guide)
+- docs/testing/test-approach-guide.md (NEW - Example-based vs Property-based vs Fuzz-based guide)
+- docs/testing/test-purpose-guide.md (NEW - Functional/Performance/Regression guide)
 - docs/testing/execution.md (NEW - 4-tier execution model, split from execution-and-quality.md)
 - docs/testing/quality.md (NEW - Quality assurance: mutation testing, coverage, split from execution-and-quality.md)
-- docs/testing/conventions.md (Fixtures, markers, coverage targets)
-- docs/testing/domain-testing.md (Performance and data leakage testing)
+- docs/testing/conventions.md (NEW - Fixtures, markers, coverage targets)
+- docs/testing/domain-testing.md (NEW - Performance and data leakage testing)
 
 **Modified Files (Reference Updates):**
 - .github/pull_request_template.md (MODIFIED - Updated line 84 to reference TESTING_STRATEGY.md instead of QUALITY_GATES.md; Added visual-first documentation checklist item)
 - docs/STYLE_GUIDE.md (MODIFIED - Updated references to point to TESTING_STRATEGY.md)
-- docs/TESTING_STRATEGY.md (MODIFIED - Added fuzz-based testing approach, updated decision tree, added @pytest.mark.fuzz marker, updated Hypothesis tool description)
-- _bmad-output/implementation-artifacts/1-3-define-testing-strategy.md (MODIFIED - Added Task 4 for fuzz testing integration)
+- docs/TESTING_STRATEGY.md (MODIFIED - Added fuzz-based testing approach, updated decision tree to Mermaid flowcharts, added @pytest.mark.fuzz marker, updated Hypothesis tool description)
+- pyproject.toml (MODIFIED - Added 8 test markers configuration lines 103-112; Added pytest-cov dev dependency; Fixed smoke marker timing to "< 10 seconds total")
+- docs/testing/domain-testing.md (MODIFIED - Added pytest-benchmark warning note)
+- _bmad-output/implementation-artifacts/1-3-define-testing-strategy.md (MODIFIED - Added Task 4 for fuzz testing integration; Updated File List)
 - ~/.claude/projects/.../memory/MEMORY.md (MODIFIED - Updated fuzz testing decision from "not implemented" to "implemented"; Added Documentation Standards section with visual-first guideline)
 
 **Deleted Files:**
@@ -768,3 +770,12 @@ Will configure pre-commit hooks and tooling to implement the testing strategy do
   - **MEMORY.md** - New "Documentation Standards" section with visual-first principle: "Pictures > Words for human-facing documentation"
   - **.github/pull_request_template.md** - Added "Visual-first" checklist item to Documentation section
   - **Rationale:** Diagrams and flowcharts are easier for users to understand than text. Decision trees in TESTING_STRATEGY.md exemplify this approach. Future agents will prefer visuals (Mermaid diagrams, ASCII art, flowcharts, sequence diagrams) for user guides and conceptual docs.
+
+- **2026-02-16 (Code Review Fixes):** Adversarial code review identified 8 issues (2 CRITICAL, 4 MEDIUM, 2 LOW). Applied 6 fixes:
+  - **Fix #1 (CRITICAL):** Added `pytest-cov = "*"` to pyproject.toml dev dependencies (missing dependency for coverage commands)
+  - **Fix #2 (CRITICAL):** Updated File List to document all pyproject.toml modifications (test markers, pytest-cov, timing fix)
+  - **Fix #3 (MEDIUM):** Fixed timing inconsistency - updated pyproject.toml smoke marker description from "< 5 seconds" to "< 10 seconds total" to align with TESTING_STRATEGY.md Tier 1 specification
+  - **Fix #4 (MEDIUM):** Added pytest-benchmark warning in domain-testing.md clarifying it's optional and not yet installed (use timeit benchmarks for now)
+  - **Fix #5 (MEDIUM):** Updated File List to explicitly mark all 7 supporting docs as NEW (were ambiguous)
+  - **Fix #6 (MEDIUM):** Converted text-based decision trees to Mermaid flowchart diagrams in TESTING_STRATEGY.md (visual-first principle)
+  - **Result:** 6 of 8 issues fixed (2 LOW issues remain: story status will be updated by workflow, relative path inconsistency is informational)

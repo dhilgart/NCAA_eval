@@ -19,6 +19,7 @@ streamlit = "*"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "*"
+pytest-cov = "*"
 hypothesis = "*"
 mutmut = "*"
 ruff = "*"
@@ -101,7 +102,7 @@ norecursedirs = [
     "virtualenv",
 ]
 markers = [
-    "smoke: Fast smoke tests for pre-commit (< 5 seconds total)",
+    "smoke: Fast smoke tests for pre-commit (< 10 seconds total)",
     "slow: Slow tests excluded from pre-commit (> 5 seconds each)",
     "integration: Integration tests with I/O or external dependencies",
     "property: Hypothesis property-based tests",

@@ -22,8 +22,16 @@ production:
   - [dependency]: [version] # [reason for inclusion]
 
 development:
-  - [dependency]: [version] # [reason for inclusion]
+  - pytest: "*" # Testing framework
+  - pytest-cov: "*" # Coverage reporting (Discovered: Story 1.3)
+  - hypothesis: "*" # Property-based and fuzz testing
+  - mutmut: "*" # Mutation testing for test quality
+  - [other dependencies]: [version] # [reason for inclusion]
 ```
+
+**Discovered in Story 1.3 (2026-02-16):**
+- pytest-cov is essential for coverage commands referenced in testing strategy
+- Test marker taxonomy in pyproject.toml enables multi-dimensional test organization
 
 ### Configuration Management
 - Type checking: mypy with strict settings (see pyproject.toml)
@@ -42,25 +50,60 @@ development:
 **Reference:** [TESTING_STRATEGY.md](./TESTING_STRATEGY.md)
 
 ### Testing Framework
-- Framework: [Pytest/unittest/other - document choice]
-- Coverage Target: [Document target %]
-- Coverage Tool: [Document tool]
+- Framework: Pytest (confirmed - Story 1.3)
+- Coverage Target: 80% overall (module-specific: 75-95%, Story 1.3)
+- Coverage Tool: pytest-cov (confirmed - Story 1.3)
+- Coverage Philosophy: Signal, not gate - identify gaps, don't block PRs (Story 1.3)
 
 ### Test Organization
 ```
 tests/
-  ├── unit/          # [Document structure decisions]
-  ├── integration/   # [Document structure decisions]
-  └── e2e/          # [Document structure decisions]
+  ├── conftest.py     # Shared fixtures
+  ├── unit/           # Unit tests (fast, isolated)
+  ├── integration/    # Integration tests (I/O, external deps)
+  └── fixtures/       # Test data files
 ```
 
-### Key Testing Patterns
-- [Pattern 1]: [When to use, example]
-- [Pattern 2]: [When to use, example]
+**Discovered in Story 1.3 (2026-02-16):**
+
+### 4-Dimensional Testing Model ⭐
+Tests are organized across four **orthogonal dimensions**:
+1. **Scope** (What): Unit vs Integration
+2. **Approach** (How): Example-based vs Property-based vs Fuzz-based
+3. **Purpose** (Why): Functional vs Performance vs Regression
+4. **Execution** (When): Tier 1 (pre-commit < 10s) vs Tier 2 (PR/CI full suite)
+
+**Rationale:** Traditional "unit/integration only" taxonomy is insufficient. Orthogonal dimensions clarify test type selection and enable precise test filtering via markers.
+
+### Test Marker Taxonomy ⭐
+8 pytest markers defined in pyproject.toml:
+- `smoke` - Pre-commit tests (< 10s total)
+- `slow` - Excluded from pre-commit (> 5s each)
+- `integration` - I/O or external dependencies
+- `property` - Hypothesis property-based tests
+- `fuzz` - Hypothesis fuzz-based tests for crash resilience
+- `performance` - Speed/efficiency compliance
+- `regression` - Prevent bug recurrence
+- `mutation` - Mutation testing coverage
+
+**Template Pattern:** Define markers in [tool.pytest.ini_options] with clear descriptions
+
+### Hub-and-Spoke Documentation Architecture ⭐
+Testing strategy uses 1 main document (TESTING_STRATEGY.md) + 7 focused guides:
+- test-scope-guide.md (Unit vs Integration)
+- test-approach-guide.md (Example/Property/Fuzz)
+- test-purpose-guide.md (Functional/Performance/Regression)
+- execution.md (4-tier execution model)
+- quality.md (Mutation testing, coverage)
+- conventions.md (Fixtures, markers, organization)
+- domain-testing.md (Performance, data leakage)
+
+**Rationale:** Improves navigability, reduces cognitive load, better GitHub UX vs single comprehensive document (60KB+)
 
 ### CI/CD Integration
-- [Document test automation approach]
-- [Document quality gates]
+- 4-tier quality gates: Pre-commit (< 10s) → PR/CI (full) → AI review → Owner review
+- Pre-commit: lint, format, type-check, smoke tests
+- PR/CI: full test suite, coverage report, selective mutation testing
 
 **Template Action Items:**
 - [ ] Create test structure skeleton
@@ -173,12 +216,33 @@ default_context:
 ## 6. Quality Standards
 
 ### Code Quality Gates
-**Reference:** [QUALITY_GATES.md](./QUALITY_GATES.md) (if exists)
+**Reference:** [TESTING_STRATEGY.md](./TESTING_STRATEGY.md) (QUALITY_GATES.md merged into testing strategy - Story 1.3)
 
-- Type checking: [Document requirements]
-- Test coverage: [Document thresholds]
-- Linting: [Document rules]
-- Documentation: [Document requirements]
+- Type checking: mypy --strict (mandatory)
+- Test coverage: 80% overall (75-95% module-specific, informational not blocking)
+- Linting: ruff (configured in pyproject.toml)
+- Documentation: Google-style docstrings, visual-first principle
+
+**Discovered in Story 1.3 (2026-02-16):**
+
+### 4-Tier Quality Gates ⭐
+1. **Tier 1: Pre-commit** (< 10s total) - Lint, format, type-check, smoke tests
+2. **Tier 2: PR/CI** (minutes) - Full test suite, coverage, mutation testing
+3. **Tier 3: AI Review** - Docstring quality, architecture alignment, test quality
+4. **Tier 4: Owner Review** - Functional correctness, strategic alignment
+
+**Rationale:** Clear separation of concerns, fast feedback loop, comprehensive validation
+
+### Visual-First Documentation Principle ⭐
+"Pictures > Words" for human-facing documentation:
+- Decision trees → Mermaid flowcharts
+- Architecture docs → Diagrams
+- Workflows → Sequence diagrams
+- State machines → State diagrams
+
+**Rationale:** Visuals improve comprehension vs text. Text acceptable for agent-facing docs and super-user technical documentation.
+
+**Template Pattern:** PR checklist includes "Visual-first" requirement for user-facing docs
 
 ### Style Guide
 **Reference:** [STYLE_GUIDE.md](./STYLE_GUIDE.md)
@@ -193,13 +257,23 @@ default_context:
 ## 7. Lessons Learned
 
 ### What Worked Well
-- [Capture positive patterns as you discover them]
+
+**Story 1.3 - Testing Strategy (2026-02-16):**
+- ✅ **4-dimensional testing model** - Orthogonal dimensions (Scope/Approach/Purpose/Execution) clarify test type selection better than traditional taxonomy
+- ✅ **Hub-and-spoke documentation** - 1 main doc + 7 focused guides improves navigability and reduces cognitive load vs single comprehensive document
+- ✅ **Visual-first principle** - Mermaid flowcharts for decision trees significantly improve comprehension vs text-based trees
+- ✅ **Coverage as signal, not gate** - Informational coverage targets avoid counterproductive test-padding while still identifying gaps
+- ✅ **Documentation-first approach** - Defining testing strategy (Story 1.3) before implementation (Story 1.5) ensures alignment and prevents rework
+- ✅ **Adversarial code review workflow** - Finding 3-10 specific issues per review ensures thorough validation and catches gaps
 
 ### What Didn't Work
 - [Capture anti-patterns and pitfalls]
 
 ### Would Do Differently
-- [Capture hindsight insights]
+
+**Story 1.3 - Testing Strategy (2026-02-16):**
+- ⚠️ **Missing dependency caught in review** - pytest-cov was referenced extensively but not added to pyproject.toml until code review. Template should include essential test dependencies upfront.
+- ⚠️ **Timing inconsistency across docs** - pyproject.toml said "< 5 seconds" while main doc said "< 10 seconds". Template should establish single source of truth for constraints.
 
 ### Process Improvements
 - [Capture workflow or process refinements]
@@ -267,5 +341,5 @@ python_version_min: "[Minimum Python version]"
 
 ---
 
-*Last Updated: 2026-02-16*
+*Last Updated: 2026-02-16 (Story 1.3 - Testing Strategy learnings captured)*
 *Next Review: [Set cadence - weekly? sprint boundaries?]*
