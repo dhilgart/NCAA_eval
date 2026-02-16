@@ -107,7 +107,7 @@ Accuracy = (Number of correct predictions) / (Total number of predictions)
 
 **Rounds**:
 - Round 1 (64 teams → 32 teams)
-- Round 2 (32 teams → 16 teams) 
+- Round 2 (32 teams → 16 teams)
 - Sweet 16 (16 teams → 8 teams)
 - Elite 8 (8 teams → 4 teams)
 - Final 4 (4 teams → 2 teams)

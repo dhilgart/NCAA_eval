@@ -424,6 +424,7 @@ The Architecture mandates "Vectorization First" (Section 12): "Reject PRs that u
    def test_calculate_brier_score_is_vectorized():
        """Verify that Brier score calculation uses numpy operations."""
        import inspect
+
        source = inspect.getsource(calculate_brier_score)
        assert "for " not in source, "Brier score must use vectorized operations"
    ```
@@ -434,6 +435,7 @@ The Architecture mandates "Vectorization First" (Section 12): "Reject PRs that u
    ```python
    import timeit
 
+
    @pytest.mark.slow
    def test_calculate_brier_score_performance():
        """Verify that Brier score meets performance target."""
@@ -441,8 +443,7 @@ The Architecture mandates "Vectorization First" (Section 12): "Reject PRs that u
        actuals = np.random.randint(0, 2, 10000)
 
        time_taken = timeit.timeit(
-           lambda: calculate_brier_score(predictions, actuals),
-           number=100
+           lambda: calculate_brier_score(predictions, actuals), number=100
        )
 
        assert time_taken < 0.1, f"Brier score too slow: {time_taken}s for 100 iterations"
@@ -496,14 +497,16 @@ The Architecture mandates "Data Safety: Temporal boundaries enforced strictly in
 
        for train_data, test_data, year in splitter.split():
            # Verify that all training games are before test games
-           assert train_data['date'].max() < test_data['date'].min(), \
-               f"Data leakage detected in {year} fold"
+           assert (
+               train_data["date"].max() < test_data["date"].min()
+           ), f"Data leakage detected in {year} fold"
    ```
    **Tests:** Cross-validation splitter never leaks future data into training.
 
 3. **Property-Based Test (Invariant):**
    ```python
    from hypothesis import given, strategies as st
+
 
    @pytest.mark.property
    @given(cutoff_year=st.integers(2015, 2025))
@@ -512,8 +515,9 @@ The Architecture mandates "Data Safety: Temporal boundaries enforced strictly in
        api = ChronologicalDataAPI()
        games = api.get_games_before(cutoff_year=cutoff_year)
 
-       assert all(game.season <= cutoff_year for game in games), \
-           "API returned games beyond cutoff year"
+       assert all(
+           game.season <= cutoff_year for game in games
+       ), "API returned games beyond cutoff year"
    ```
    **Tests:** Temporal boundary holds across all possible cutoff years.
 

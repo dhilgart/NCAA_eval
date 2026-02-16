@@ -111,7 +111,7 @@ Note: `test-review` is optional and only audits existing tests; it does not gene
 
 #### Isolation (if `check_isolation: true`)
 
-- [ ] Cleanup hooks (afterEach/afterAll) validated
+- [ ] Cleanup hooks (afterEach/after all) validated
 - [ ] Shared state detected
 - [ ] Global variable mutations detected
 - [ ] Resource cleanup verified

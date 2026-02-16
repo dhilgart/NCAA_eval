@@ -38,6 +38,7 @@ enforcement is handled by separate stories (1.4-1.6); this document captures the
 ```python
 from __future__ import annotations
 
+
 def rolling_efficiency(
     scores: pd.Series,
     window: int,
@@ -254,6 +255,7 @@ def calculate_margin(home_score: int, away_score: int) -> int:
     """Calculate point margin (positive = home win)."""
     return home_score - away_score
 
+
 # BAD: Too complex, doing multiple things
 def process_game(game_data: dict) -> dict:
     """Process game... but what does this actually do?"""
@@ -278,6 +280,7 @@ def calculate_elo_change(
     expected = 1 / (1 + 10 ** ((opponent_rating - rating) / 400))
     actual = 1 if won else 0
     return int(k_factor * (actual - expected))
+
 
 # BAD: Implicit behavior, magic numbers
 def adjust_rating(r: int, o: int, w: bool) -> int:
@@ -313,6 +316,7 @@ def validate_game(game: Game) -> None:
     if game.date > datetime.now():
         raise ValueError("Game cannot be in the future")
 
+
 # BAD: Nested structure
 def validate_game(game: Game) -> None:
     if game.home_score >= 0:
@@ -337,7 +341,9 @@ game_df["margin"] = game_df["home_score"] - game_df["away_score"]
 
 # BAD: Invents custom approach (loops)
 for idx in range(len(game_df)):
-    game_df.loc[idx, "margin"] = game_df.loc[idx, "home_score"] - game_df.loc[idx, "away_score"]
+    game_df.loc[idx, "margin"] = (
+        game_df.loc[idx, "home_score"] - game_df.loc[idx, "away_score"]
+    )
 ```
 
 ### Code Review Checklist for PEP 20
@@ -391,10 +397,12 @@ def calculate_win_probability(rating_diff: int, k_factor: float = 32.0) -> float
     """Calculate win probability from rating difference."""
     return 1 / (1 + 10 ** (-rating_diff / 400))
 
+
 # PURE: Data transformation, no side effects
 def normalize_team_names(names: pd.Series) -> pd.Series:
     """Normalize team names to standard format (vectorized)."""
     return names.str.strip().str.title().str.replace("St.", "Saint")
+
 
 # PURE: Mathematical calculation (vectorized)
 def calculate_margins(home_scores: np.ndarray, away_scores: np.ndarray) -> np.ndarray:
@@ -409,6 +417,7 @@ def calculate_margins(home_scores: np.ndarray, away_scores: np.ndarray) -> np.nd
 def test_win_probability_equal_ratings():
     """Verify win probability is 50% for equal ratings."""
     assert calculate_win_probability(rating_diff=0) == 0.5
+
 
 # Property test: Perfect for pure functions
 @pytest.mark.property
@@ -438,10 +447,12 @@ def load_games(path: Path) -> pd.DataFrame:
     """Load games from CSV file (I/O operation)."""
     return pd.read_csv(path)
 
+
 # SIDE-EFFECT: Depends on current time (non-deterministic)
 def is_game_started(game_start: datetime) -> bool:
     """Check if game has started."""
     return datetime.now() > game_start  # Changes over time
+
 
 # SIDE-EFFECT: Mutates external state
 def update_team_rating(team_id: int, new_rating: int) -> None:
@@ -484,6 +495,7 @@ def calculate_win_probabilities(
     rating_diff = home_ratings - away_ratings
     return 1 / (1 + 10 ** (-rating_diff / 400))
 
+
 # SIDE-EFFECT: Orchestration at the edge
 def simulate_tournament(games_path: Path, ratings_path: Path) -> pd.DataFrame:
     """Simulate tournament (orchestrates pure logic + I/O)."""
@@ -493,8 +505,9 @@ def simulate_tournament(games_path: Path, ratings_path: Path) -> pd.DataFrame:
 
     # Side effects: Data prep
     games = games.merge(ratings, left_on="home_team", right_index=True)
-    games = games.merge(ratings, left_on="away_team", right_index=True,
-                       suffixes=("_home", "_away"))
+    games = games.merge(
+        ratings, left_on="away_team", right_index=True, suffixes=("_home", "_away")
+    )
 
     # PURE: Core calculation (vectorized, easy to test separately)
     games["win_prob"] = calculate_win_probabilities(
@@ -679,18 +692,23 @@ These five object-oriented design principles improve maintainability and testabi
 # GOOD: Single responsibility
 class GameLoader:
     """Loads games from CSV files."""
+
     def load(self, path: Path) -> pd.DataFrame:
         return pd.read_csv(path)
 
+
 class GameValidator:
     """Validates game data."""
+
     def validate(self, games: pd.DataFrame) -> None:
         if games["home_score"].min() < 0:
             raise ValueError("Scores cannot be negative")
 
+
 # BAD: Multiple responsibilities
 class GameManager:
     """Does everything - loading, validating, processing, saving."""
+
     def do_everything(self, path: Path) -> None:
         # Too many reasons to change!
         pass
@@ -713,13 +731,16 @@ class RatingModel(ABC):
     def predict(self, game: Game) -> float:
         pass
 
+
 class EloModel(RatingModel):
     def predict(self, game: Game) -> float:
         return self._calculate_elo(game)
 
+
 class GlickoModel(RatingModel):  # New model, no changes to existing code
     def predict(self, game: Game) -> float:
         return self._calculate_glicko(game)
+
 
 # BAD: Must modify existing code for each new model
 def predict(game: Game, model_type: str) -> float:
@@ -749,10 +770,12 @@ class RatingModel(ABC):
         """Return probability in [0, 1]."""
         pass
 
+
 class EloModel(RatingModel):
     def predict(self, game: Game) -> float:
         # Always returns [0, 1] as promised
         return 1 / (1 + 10 ** ((opp_rating - rating) / 400))
+
 
 # BAD: Subclass violates parent contract
 class BrokenModel(RatingModel):
@@ -778,12 +801,15 @@ class BrokenModel(RatingModel):
 class Predictable(Protocol):
     def predict(self, game: Game) -> float: ...
 
+
 class Trainable(Protocol):
     def fit(self, games: pd.DataFrame) -> None: ...
+
 
 class EloModel:
     # Only implements what it needs
     def predict(self, game: Game) -> float: ...
+
 
 # BAD: Fat interface forces unused methods
 class Model(ABC):
@@ -821,6 +847,7 @@ class Simulator:
         for game in games:
             pred = self.model.predict(game)  # Works with any Predictable
             ...
+
 
 # BAD: Depends on concrete implementation
 class Simulator:

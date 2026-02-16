@@ -79,9 +79,11 @@ mutmut run --paths-to-mutate=src/ncaa_eval/evaluation/metrics.py --runner="pytes
 def calculate_margin(home_score, away_score):
     return home_score - away_score
 
+
 # Mutant (changed - to +)
 def calculate_margin(home_score, away_score):
     return home_score + away_score  # Mutmut changed this
+
 
 # If this mutant survives, it means no test verifies the margin calculation is correct!
 # Solution: Add a test with known inputs/outputs

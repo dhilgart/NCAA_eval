@@ -467,7 +467,7 @@ test.describe('Orders with Data Setup', () => {
     }
   });
 
-  test.afterAll(async ({ request }) => {
+  test.after all(async ({ request }) => {
     // Cleanup via API
     if (testUser?.id) {
       await request.delete(`/api/users/${testUser.id}`);
@@ -523,7 +523,7 @@ test.describe('Orders with Data Setup', () => {
 
 **Key Points**:
 
-- `beforeAll`/`afterAll` for test data setup/cleanup
+- `beforeAll`/`after all` for test data setup/cleanup
 - API-based seeding (no direct DB access needed)
 - Unique emails to prevent conflicts in parallel runs
 - Cleanup after all tests complete

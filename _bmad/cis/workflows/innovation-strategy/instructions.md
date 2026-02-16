@@ -51,7 +51,7 @@ Review market analysis frameworks from {innovation_frameworks} (category: market
 
 Offer selected frameworks with guidance on what each reveals. Common options:
 
-- **TAM SAM SOM Analysis** - For sizing opportunity
+- **TAM SAM SOME Analysis** - For sizing opportunity
 - **Five Forces Analysis** - For industry structure
 - **Competitive Positioning Map** - For differentiation analysis
 - **Market Timing Assessment** - For innovation timing

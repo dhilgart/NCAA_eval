@@ -35,6 +35,7 @@ def test_clean_team_name_normalizes_abbreviations():
     assert clean_team_name("St. Mary's") == "Saint Mary's"
     assert clean_team_name("UNC-Chapel Hill") == "North Carolina"
 
+
 def test_calculate_brier_score_perfect_prediction():
     """Verify Brier score is 0 for perfect predictions."""
     predictions = np.array([1.0, 0.0, 1.0])
@@ -46,6 +47,7 @@ def test_calculate_brier_score_perfect_prediction():
 
 ```python
 from hypothesis import given, strategies as st
+
 
 @pytest.mark.property
 @given(prob=st.floats(0, 1))
@@ -91,6 +93,7 @@ def test_sync_command_fetches_and_stores_games(temp_data_dir):
     assert len(games_df) > 0
     assert "game_id" in games_df.columns
 
+
 @pytest.mark.integration
 def test_end_to_end_training_pipeline(sample_games_fixture):
     """Verify complete pipeline from data to trained model."""
@@ -107,6 +110,7 @@ def test_end_to_end_training_pipeline(sample_games_fixture):
 
 ```python
 from hypothesis import given, strategies as st
+
 
 @pytest.mark.integration
 @pytest.mark.property
@@ -156,6 +160,7 @@ def test_clean_team_name_basic():
     """Verify team name normalization (fast sanity check)."""
     assert clean_team_name("St. Mary's") == "Saint Mary's"
 
+
 # Unit + Property-based + Functional + Complete
 @pytest.mark.property
 @given(data=st.lists(st.integers(), min_size=1, max_size=100))
@@ -164,6 +169,7 @@ def test_rolling_average_length_invariant(data):
     series = pd.Series(data)
     result = calculate_rolling_average(series, window=5)
     assert len(result) == len(series)
+
 
 # Integration + Example-based + Performance + Complete
 @pytest.mark.integration
@@ -180,6 +186,7 @@ def test_full_backtest_meets_60_second_target():
     elapsed = timeit.default_timer() - start_time
 
     assert elapsed < 60.0, f"Backtest too slow: {elapsed:.2f}s (target: < 60s)"
+
 
 # Integration + Property-based + Functional + Complete
 @pytest.mark.integration

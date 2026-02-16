@@ -35,11 +35,11 @@ The IA is designed for a non-linear workflow, allowing rapid movement between da
 graph TD
     A[Workbench Home] --> B[Lab: Model Diagnostics]
     A --> C[Presentation: Selection Engine]
-    
+
     B --> B1[Backtest Leaderboard]
     B --> B2[Reliability Diagrams]
     B --> B3[Metric Explorer - LogLoss/Brier]
-    
+
     C --> C1[Streamlit Bracket Visualizer]
     C --> C2[Pool Scorer - ROI Simulations]
     C --> C3[Final Entry Generator]
@@ -80,16 +80,16 @@ graph TD
 
 ### 4.1 Core Components
 
-* **Diagnostic Cards**: 
+* **Diagnostic Cards**:
     * *Type:* `st.metric` containers.
     * *Usage:* Display key performance deltas (e.g., "Brier Score: 0.18 (-0.02 vs baseline)").
-* **The "Heatmap" Dataframe**: 
+* **The "Heatmap" Dataframe**:
     * *Type:* `st.dataframe` with Pandas styling.
     * *Usage:* Conditional formatting (Green-to-Red gradients) applied to LogLoss columns to instantly highlight model outliers.
-* **Interactive Bracket Tree**: 
+* **Interactive Bracket Tree**:
     * *Type:* Custom Streamlit Component (D3.js or Mermaid.js wrapper).
     * *Interactivity:* Clickable nodes. Clicking a game node opens a modal showing "Tale of the Tape" features (KenPom eff, Graph Centrality, Head-to-Head).
-* **Simulation Sliders**: 
+* **Simulation Sliders**:
     * *Type:* `st.sidebar.slider`.
     * *Usage:* "Game Theory" inputs (Upset Aggression, Chalk Bias, Seed-Weight) used to perturb the model's base probabilities.
 
@@ -115,7 +115,7 @@ graph TD
 ### 5.2 Performance Considerations
 
 * **Interaction Response**: Diagnostic plots and bracket updates must render in under **500ms** to maintain a "flow state" during research.
-* **Caching Strategy**: 
-    * Heavily utilize `@st.cache_data` for historical datasets and model artifacts. 
+* **Caching Strategy**:
+    * Heavily utilize `@st.cache_data` for historical datasets and model artifacts.
     * Switching "Tournament Year" filters should not trigger a full CSV re-parse from the file system.
 * **Compute Offloading**: ROI Simulations (10k+ iterations) should run asynchronously or provide a progress bar (`st.progress`) to prevent UI freezing.

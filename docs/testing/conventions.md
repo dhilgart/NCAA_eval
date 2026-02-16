@@ -73,6 +73,7 @@ from __future__ import annotations
 import pytest
 from ncaa_eval.types import Game
 
+
 @pytest.fixture
 def sample_game() -> Game:
     """Provide a sample game for testing."""
@@ -94,6 +95,7 @@ def elo_rating(request: pytest.FixtureRequest) -> int:
 from typing import Iterator
 from pathlib import Path
 import shutil
+
 
 @pytest.fixture
 def temp_data_dir() -> Iterator[Path]:
@@ -148,12 +150,15 @@ markers = [
 import pytest
 from hypothesis import given, strategies as st
 
+
 # Speed marker only (fast unit test)
 @pytest.mark.smoke
 def test_import_package():
     """Verify package can be imported without errors."""
     import ncaa_eval
+
     assert ncaa_eval.__version__
+
 
 # Scope + Speed markers (slow integration test, example-based)
 @pytest.mark.integration
@@ -163,6 +168,7 @@ def test_full_season_processing(large_dataset_fixture):
     result = process_season(large_dataset_fixture, season=2023)
     assert len(result) > 1000
 
+
 # Approach marker only (property-based unit test)
 @pytest.mark.property
 @given(scores=st.lists(st.floats(0, 150), min_size=1))
@@ -170,6 +176,7 @@ def test_average_is_bounded(scores):
     """Verify average is always between min and max (invariant)."""
     avg = calculate_average(scores)
     assert min(scores) <= avg <= max(scores)
+
 
 # Scope + Approach markers (property-based integration test)
 @pytest.mark.integration
@@ -181,6 +188,7 @@ def test_temporal_boundary_invariant(cutoff_year):
     games = api.get_games_before(cutoff_year=cutoff_year)
     assert all(game.season <= cutoff_year for game in games)
 
+
 # Purpose markers (regression test)
 @pytest.mark.regression
 def test_elo_never_negative():
@@ -189,6 +197,7 @@ def test_elo_never_negative():
     for _ in range(100):
         rating = update_elo_rating(rating, opponent_rating=2400, won=False, k_factor=32)
     assert rating >= 0
+
 
 # All dimensions combined (integration + property + performance)
 @pytest.mark.integration
@@ -199,6 +208,7 @@ def test_elo_never_negative():
 def test_game_loading_fast_and_correct(season):
     """Verify game loading is correct AND performant (all dimensions)."""
     import timeit
+
     start = timeit.default_timer()
     games = load_games_for_season(season)
     elapsed = timeit.default_timer() - start
