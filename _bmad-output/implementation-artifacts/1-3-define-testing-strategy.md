@@ -662,7 +662,12 @@ Added fuzz-based testing as a third approach option in the Test Approach dimensi
 2. Updated "Which approach?" decision tree (docs/TESTING_STRATEGY.md:142-150) to prioritize fuzz testing for error handling/crash resilience scenarios
 3. Added `@pytest.mark.fuzz` marker to Test Markers Reference table (docs/TESTING_STRATEGY.md:173)
 4. Updated Testing Tools table (docs/TESTING_STRATEGY.md:249) to clarify Hypothesis supports both "Property-based + Fuzz testing"
-5. Updated MEMORY.md to reflect new fuzz testing decision with implementation details and target areas
+5. Updated test-approach-guide.md with comprehensive fuzz-based testing section:
+   - Added overview of all three approaches (example/property/fuzz)
+   - New "Fuzz-Based Testing" section with when-to-use guidance, strengths/weaknesses, examples
+   - Updated decision tree to include fuzz testing as first check
+   - Updated "Combining Multiple Approaches" section to show all three approaches working together
+6. Updated MEMORY.md to reflect new fuzz testing decision with implementation details and target areas
 
 **Rationale:**
 - Fuzz testing fills gap between example-based (known scenarios) and property-based (invariants) by focusing on crash resilience
@@ -680,7 +685,7 @@ Will configure pre-commit hooks and tooling to implement the testing strategy do
 
 **Supporting Documentation (docs/testing/ directory):**
 - docs/testing/test-scope-guide.md (Unit vs Integration test guide)
-- docs/testing/test-approach-guide.md (Example-based vs Property-based guide)
+- docs/testing/test-approach-guide.md (Example-based vs Property-based vs Fuzz-based guide - MODIFIED for fuzz testing)
 - docs/testing/test-purpose-guide.md (Functional/Performance/Regression guide)
 - docs/testing/execution.md (NEW - 4-tier execution model, split from execution-and-quality.md)
 - docs/testing/quality.md (NEW - Quality assurance: mutation testing, coverage, split from execution-and-quality.md)
@@ -747,5 +752,10 @@ Will configure pre-commit hooks and tooling to implement the testing strategy do
   - **Decision Tree Update** - Modified "Which approach?" tree to prioritize fuzz testing for error handling/crash resilience scenarios
   - **Marker Addition** - Added `@pytest.mark.fuzz` to Test Markers Reference table (Approach dimension)
   - **Tool Clarification** - Updated Testing Tools table to show Hypothesis supports "Property-based + Fuzz testing"
+  - **docs/testing/test-approach-guide.md** - Comprehensive update to include fuzz-based testing:
+    - Updated title and overview to include fuzz-based approach
+    - Added complete "Fuzz-Based Testing" section with when-to-use, strengths/weaknesses, examples, and Hypothesis fuzzing strategies
+    - Updated decision tree to check for error handling/crash resilience first
+    - Updated "Combining Multiple Approaches" section to demonstrate all three approaches working together
   - **Memory Update** - Updated MEMORY.md from "not implemented" to "implemented" with target areas (ingest/, transform/, evaluation/)
   - **Rationale:** Fills gap between example-based (known scenarios) and property-based (invariants) by focusing on crash resilience. Uses existing Hypothesis tooling via `st.text()` and `st.binary()` strategies. No new dependencies required.
