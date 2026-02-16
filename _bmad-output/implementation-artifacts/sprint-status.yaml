@@ -1,4 +1,4 @@
-# generated: 2026-02-15
+# generated: 2026-02-16
 # project: NCAA_eval
 # project_key: NOKEY
 # tracking_system: file-system
@@ -33,7 +33,7 @@
 # - SM typically creates next story after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
-generated: 2026-02-15
+generated: 2026-02-16
 project: NCAA_eval
 project_key: NOKEY
 tracking_system: file-system
@@ -45,7 +45,7 @@ development_status:
   1-1-initialize-repository-package-structure: done
   1-2-define-code-quality-standards-style-guide: done
   1-3-define-testing-strategy: done
-  1-4-configure-code-quality-toolchain: backlog
+  1-4-configure-code-quality-toolchain: ready-for-dev
   1-5-configure-testing-framework: backlog
   1-6-configure-session-management-automation: backlog
   1-7-configure-versioning-packaging-documentation: backlog
@@ -89,7 +89,7 @@ development_status:
 
   # Epic 6: Evaluation & Validation Engine
   epic-6: backlog
-  6-1-implement-metric-library: backlog
+  6-1-implement-metric-library-scikit-learn-numpy: backlog
   6-2-implement-walk-forward-cross-validation-splitter: backlog
   6-3-implement-parallel-cross-validation-execution: backlog
   6-4-research-tournament-simulation-confidence: backlog
@@ -110,7 +110,7 @@ development_status:
   7-9-create-step-by-step-tutorials: backlog
   epic-7-retrospective: optional
 
-  # Epic 8: Project Templates & Maintenance
+  # Epic 8: Template & Knowledge Transfer
   epic-8: backlog
   8-1-create-cookie-cutter-template: ready-for-dev
   epic-8-retrospective: optional
