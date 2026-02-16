@@ -367,6 +367,214 @@ See `pyproject.toml` for exact configuration.
 
 ---
 
+### 6.2 Pure Functions vs Side Effects
+
+> **Pure functions are easier to test, faster to run, and easier to reason about.**
+
+**Design guideline:** Keep business logic pure, push side effects to edges.
+
+#### Pure Functions (Preferred)
+
+**Definition:** Same input always produces same output, no side effects.
+
+**Characteristics:**
+- Deterministic (predictable)
+- No external dependencies (no I/O, no database, no network, no time/randomness)
+- No state mutation
+- Easy to test (just input → output, no mocking)
+- Perfect for property-based testing (Hypothesis)
+- Fast (no I/O)
+
+```python
+# PURE: Always deterministic, easy to test
+def calculate_win_probability(rating_diff: int, k_factor: float = 32.0) -> float:
+    """Calculate win probability from rating difference."""
+    return 1 / (1 + 10 ** (-rating_diff / 400))
+
+# PURE: Data transformation, no side effects
+def normalize_team_names(names: pd.Series) -> pd.Series:
+    """Normalize team names to standard format (vectorized)."""
+    return names.str.strip().str.title().str.replace("St.", "Saint")
+
+# PURE: Mathematical calculation (vectorized)
+def calculate_margins(home_scores: np.ndarray, away_scores: np.ndarray) -> np.ndarray:
+    """Calculate point margins (vectorized, pure)."""
+    return home_scores - away_scores
+```
+
+**Testing pure functions:**
+
+```python
+# Unit test: Simple input → output
+def test_win_probability_equal_ratings():
+    """Verify win probability is 50% for equal ratings."""
+    assert calculate_win_probability(rating_diff=0) == 0.5
+
+# Property test: Perfect for pure functions
+@pytest.mark.property
+@given(rating_diff=st.integers(-1000, 1000))
+def test_win_probability_always_bounded(rating_diff):
+    """Verify win probability always in [0, 1] (invariant)."""
+    prob = calculate_win_probability(rating_diff)
+    assert 0 <= prob <= 1
+```
+
+---
+
+#### Side-Effect Functions (Push to Edges)
+
+**Definition:** Functions that interact with the outside world or modify state.
+
+**Characteristics:**
+- Non-deterministic (may vary based on external state)
+- External dependencies (files, database, network, time, randomness)
+- Modifies state (mutates objects, writes files, updates database)
+- Harder to test (requires mocks, stubs, fixtures)
+- Requires integration tests
+
+```python
+# SIDE-EFFECT: Reads from file system
+def load_games(path: Path) -> pd.DataFrame:
+    """Load games from CSV file (I/O operation)."""
+    return pd.read_csv(path)
+
+# SIDE-EFFECT: Depends on current time (non-deterministic)
+def is_game_started(game_start: datetime) -> bool:
+    """Check if game has started."""
+    return datetime.now() > game_start  # Changes over time
+
+# SIDE-EFFECT: Mutates external state
+def update_team_rating(team_id: int, new_rating: int) -> None:
+    """Update team rating in database."""
+    db.execute("UPDATE teams SET rating = ? WHERE id = ?", new_rating, team_id)
+```
+
+**Testing side-effect functions:**
+
+```python
+# Integration test: Requires fixtures
+@pytest.mark.integration
+def test_load_games_returns_valid_dataframe(temp_data_dir):
+    """Verify games can be loaded from CSV."""
+    # Setup: Create test file
+    test_file = temp_data_dir / "games.csv"
+    test_file.write_text("game_id,home_team,away_team\n1,Duke,UNC\n")
+
+    # Execute
+    games = load_games(test_file)
+
+    # Assert
+    assert len(games) == 1
+    assert "game_id" in games.columns
+```
+
+---
+
+#### Good Separation: Pure Core + Side-Effect Shell
+
+**Pattern:** Keep calculations pure, orchestrate I/O at edges.
+
+```python
+# PURE: Core business logic (easy to test, vectorized)
+def calculate_win_probabilities(
+    home_ratings: np.ndarray,
+    away_ratings: np.ndarray,
+) -> np.ndarray:
+    """Calculate win probabilities (pure, vectorized)."""
+    rating_diff = home_ratings - away_ratings
+    return 1 / (1 + 10 ** (-rating_diff / 400))
+
+# SIDE-EFFECT: Orchestration at the edge
+def simulate_tournament(games_path: Path, ratings_path: Path) -> pd.DataFrame:
+    """Simulate tournament (orchestrates pure logic + I/O)."""
+    # Side effects: Load data
+    games = pd.read_csv(games_path)
+    ratings = pd.read_csv(ratings_path, index_col="team")
+
+    # Side effects: Data prep
+    games = games.merge(ratings, left_on="home_team", right_index=True)
+    games = games.merge(ratings, left_on="away_team", right_index=True,
+                       suffixes=("_home", "_away"))
+
+    # PURE: Core calculation (vectorized, easy to test separately)
+    games["win_prob"] = calculate_win_probabilities(
+        games["rating_home"].values,
+        games["rating_away"].values,
+    )
+
+    return games
+```
+
+**Why this is better:**
+
+1. **Pure function (`calculate_win_probabilities`):**
+   - Fast unit tests (no I/O)
+   - Property-based tests (invariants)
+   - Reusable in different contexts
+   - Vectorized (meets NFR1)
+
+2. **Side-effect function (`simulate_tournament`):**
+   - Thin orchestration layer
+   - Easy to see where I/O happens
+   - Core logic testable independently
+
+---
+
+#### Bad: Mixing Pure Logic with Side Effects
+
+```python
+# BAD: Pure logic buried inside side effects
+def simulate_tournament_bad() -> pd.DataFrame:
+    """Simulate tournament (mixed design - hard to test)."""
+    games = pd.read_csv("data/games.csv")  # Side effect
+
+    results = []
+    for _, game in games.iterrows():  # Side effect + non-vectorized!
+        # Side effects: Database calls
+        home_rating = db.query("SELECT rating FROM teams WHERE id = ?", game.home_team)
+        away_rating = db.query("SELECT rating FROM teams WHERE id = ?", game.away_team)
+
+        # Pure logic buried inside (can't test without database!)
+        rating_diff = home_rating - away_rating
+        prob = 1 / (1 + 10 ** (-rating_diff / 400))
+
+        results.append(prob)
+
+    return pd.DataFrame(results)
+```
+
+**Problems:**
+- Can't test calculation logic without database
+- Can't use property-based tests
+- Slow (I/O in loop)
+- Violates vectorization requirement
+- Hard to debug (mixed concerns)
+
+---
+
+#### Testing Strategy by Function Type
+
+| Function Type | Test Type | Characteristics | Example |
+|---------------|-----------|-----------------|---------|
+| **Pure** | Unit test, Property-based | Fast, no mocking, deterministic | `calculate_win_probability()` |
+| **Side-effect** | Integration test | Slower, requires fixtures/mocks | `load_games()`, `update_team_rating()` |
+| **Mixed** | ❌ AVOID | Hard to test, refactor! | `simulate_tournament_bad()` |
+
+---
+
+#### Code Review Checklist for Pure vs Side-Effect
+
+During code review, verify:
+
+- [ ] **Pure logic separated:** Business calculations are pure functions
+- [ ] **Side effects at edges:** I/O, database, network calls in orchestration layer
+- [ ] **No mixing:** Pure functions don't contain I/O operations
+- [ ] **Vectorization:** Pure functions use numpy/pandas operations (not loops)
+- [ ] **Property tests:** Pure functions have property-based tests for invariants
+- [ ] **Integration tests:** Side-effect functions have integration tests with fixtures
+
+---
+
 ## 7. PR Checklist (Summary)
 
 Every pull request must pass the following gates. The actual PR template is at
@@ -384,6 +592,7 @@ the philosophy behind this two-tier approach, see
 | Conventional commit messages | Commitizen | Pre-commit |
 | PEP 20 compliance | Manual review | PR review |
 | SOLID principles | Manual review | PR review |
+| Pure functions / functional design | Manual review | PR review |
 
 ### Review Criteria
 
@@ -393,6 +602,7 @@ the philosophy behind this two-tier approach, see
 - No `for` loops over DataFrames for calculations (Section 5).
 - Type annotations are complete (Section 4).
 - PEP 20 design principles respected (Section 6).
+- Pure functions used for business logic, side effects at edges (Section 6.2).
 - SOLID principles applied for testability (Section 10).
 - Data structures shared between Logic and UI use Pydantic models or TypedDicts.
 - Dashboard code never reads files directly — it calls `ncaa_eval` functions.
