@@ -114,7 +114,7 @@ Allow natural back-and-forth within the same response round for dynamic interact
 
 ### 6. Response Round Completion
 
-After generating all agent responses for the round, let the user know he can speak naturally with the agents, an then show this menu opion"
+After generating all agent responses for the round, let the user know he can speak naturally with the agents, an then show this menu option"
 
 `[E] Exit Party Mode - End the collaborative session`
 

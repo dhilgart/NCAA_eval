@@ -101,7 +101,7 @@ Example: "To analyze user requirements and document functional specifications th
 ### N. Title (as many as needed)
 
 <!-- not ever step will include advanced elicitation or party mode, in which case generally will just have the C option -->
-<!-- for example an init step 1 that loads data, or step 1b continues a workflow would not need advanced elicitation or party mode - but any step where the user and the llm work together on content, thats where it makes sense to include them -->
+<!-- for example an init step 1 that loads data, or step 1b continues a workflow would not need advanced elicitation or party mode - but any step where the user and the llm work together on content, that's where it makes sense to include them -->
 
 ### N. Present MENU OPTIONS
 

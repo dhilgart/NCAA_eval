@@ -35,13 +35,152 @@ development:
 
 ### Configuration Management
 - Type checking: mypy with strict settings (see pyproject.toml)
-- Linting: [Document chosen tools]
-- Formatting: [Document chosen tools]
+- Linting: Ruff (confirmed - Story 1.4)
+- Formatting: Ruff (confirmed - Story 1.4)
+
+### Pre-Commit Hooks ⭐ (Discovered Story 1.4)
+
+#### Critical Pattern: Local mypy hook required for src-layout projects
+
+**DO NOT use `mirrors-mypy`** for projects with a local package. Use a local hook instead:
+
+```yaml
+# ❌ Wrong: mirrors-mypy cannot type-check tests that import local package
+- repo: https://github.com/pre-commit/mirrors-mypy
+  rev: v1.14.1
+  hooks:
+    - id: mypy
+      files: ^(src/|tests/)
+      additional_dependencies: [...]  # Can't add local packages!
+
+# ✅ Correct: local hook uses Poetry virtualenv where package is installed
+- repo: local
+  hooks:
+    - id: mypy
+      name: mypy-strict
+      entry: poetry run mypy
+      args: [--strict, --show-error-codes, --namespace-packages]
+      language: system
+      types: [python]
+      files: ^(src/|tests/)
+      pass_filenames: false
+```
+
+**Rationale:** `mirrors-mypy` creates an isolated virtualenv. Local packages (not on PyPI) cannot be added as `additional_dependencies`. Test files that import the local package will fail with `[import-not-found]`. The `language: system` local hook uses the Poetry virtualenv where the local package is installed.
+
+#### Hook Configuration Template
+
+```yaml
+default_install_hook_types: [pre-commit, commit-msg, pre-push]
+default_stages: [commit, push]
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: debug-statements
+      - id: no-commit-to-branch
+      - id: check-merge-conflict
+      - id: check-toml
+      - id: check-yaml
+      - id: detect-private-key
+
+  - repo: https://github.com/commitizen-tools/commitizen
+    hooks:
+      - id: commitizen
+      - id: commitizen-branch
+        stages: [post-commit, push]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    hooks:
+      - id: ruff
+        args: [--fix]
+        types: [python]
+      - id: ruff-format
+        types: [python]
+
+  - repo: local
+    hooks:
+      - id: mypy  # Use local hook (see pattern above)
+        ...
+      - id: pytest-smoke
+        entry: poetry run pytest -m smoke --tb=short -q
+        language: system
+        types: [python]
+        pass_filenames: false
+        stages: [commit]
+```
+
+#### GitHub Actions CI Must Match the Toolchain ⭐ (Discovered Story 1.4 Code Review Round 2)
+
+When migrating pre-commit hooks from one toolchain to another (e.g., Pipenv/invoke → Poetry), **update CI workflows at the same time**. The CI runs the same hooks; if the CI setup script doesn't match the new toolchain, it breaks silently or noisily on every PR.
+
+**Pattern for GitHub Actions with Poetry:**
+```yaml
+- name: Set up Python 3.12          # Must match pyproject.toml python version!
+  uses: actions/setup-python@v5
+  with:
+    python-version: "3.12"
+
+- name: Install Poetry
+  run: pip install poetry
+
+- name: Install dependencies
+  run: poetry install --with dev
+
+- name: Run pre-commit hooks
+  run: SKIP=no-commit-to-branch,commitizen-branch poetry run pre-commit run --all-files
+```
+
+**CI Python version MUST match pyproject.toml** — using Python 3.10 in CI when the project requires `>=3.12` causes subtle breakage (mypy strict mode, syntax errors, f-string features).
+
+#### Ruff Rule Selection: Use Explicit Codes, Not Prefixes ⭐ (Discovered Story 1.4 Code Review Round 2)
+
+`extend-select = ["PLR09"]` in Ruff selects the ENTIRE PLR09xx family, including rules with Ruff defaults that were never configured or documented:
+- PLR0914 (too-many-locals, default: 15) — data science functions routinely hit this
+- PLR0916 (too-many-boolean-expressions, default: 6) — pandas filter chains hit this
+
+**Always use explicit rule codes** for rules with configurable thresholds:
+```toml
+# ❌ Selects 7+ rules, some with undocumented defaults
+extend-select = ["PLR09"]
+
+# ✅ Selects exactly the 3 rules with configured thresholds
+extend-select = [
+    "PLR0911",  # Too many return statements (configured: max-returns = 6)
+    "PLR0912",  # Too many branches (configured: max-branches = 12)
+    "PLR0913",  # Too many arguments (configured: max-args = 5)
+]
+```
+
+#### Hooks to EXCLUDE from template ⚠️ (Discovered Story 1.4 Human Review)
+
+**DO NOT include `codespell`** — false positive rate is too high with `--write-changes`:
+- Corrupts BMAD bracket-notation syntax: `[M]ake` → `[M]ache`, `[M]ore` → `[M]or`
+- Flags valid English/domain words: "wit" → "with", "ser" → "set"
+- The `--write-changes` flag applies every "fix" silently without human review
+- **Genuine typos are better caught by editor spell-check or human review**
+
+**DO NOT include `blacken-docs`** — removes intentional formatting in documentation:
+- Black provides no configuration option to preserve aligned inline comments
+- Documentation code examples serve a pedagogical purpose; they should be formatted for human comprehension, not compiler compliance
+- **Code examples in `.md` files are illustrative, not compiled — Black formatting is inappropriate**
+
+#### "Style Sweep" Commit Pattern
+
+When first activating pre-commit on an established repo, expect a large auto-fix commit:
+- Run `pre-commit run --all-files` to apply all formatting fixes at once
+- **Always `git diff` the result and review before staging** — treat auto-fix output like AI-generated code
+- Commit separately as `style: auto-fix trailing whitespace, EOF, and newlines via pre-commit`
+- Document all affected files in the story File List (may be 80+ files)
+- ⚠️ Only trailing-whitespace, end-of-file-fixer, and similar non-semantic hooks are safe to apply in bulk without review
 
 **Template Action Items:**
 - [ ] Export final pyproject.toml as template base
 - [ ] Document rationale for each major dependency
 - [ ] Create default configurations for all tooling
+- [ ] Include .pre-commit-config.yaml with local mypy hook pattern
 
 ---
 
@@ -280,7 +419,16 @@ Code review workflow generates PRs following .github/pull_request_template.md st
 - ✅ **Adversarial code review workflow** - Finding 3-10 specific issues per review ensures thorough validation and catches gaps
 
 ### What Didn't Work
-- [Capture anti-patterns and pitfalls]
+
+**Story 1.4 - Code Quality Toolchain (2026-02-17 Human Review):**
+- ❌ **`codespell` with `--write-changes`** — auto-applied incorrect "corrections" that corrupted BMAD template syntax and valid English/domain words. 11 corruptions across 7 files required manual revert. Removed from pre-commit config entirely.
+- ❌ **`blacken-docs`** — reformatted Python code examples in all markdown docs, removing intentionally aligned inline comments (e.g., `st.integers(...)        # Integers in range`). Black provides no option to preserve alignment. Removed from pre-commit config entirely.
+- ❌ **"Style Sweep" without diff review** — running `pre-commit run --all-files` and committing without reviewing the diff. Auto-fix hooks with write flags require human review before staging — treat like AI-generated code.
+
+**Story 1.4 - Code Quality Toolchain (2026-02-17 Code Review Round 2):**
+- ❌ **CI workflows not updated with pre-commit hook migration** — When `.pre-commit-config.yaml` was migrated from Pipenv/invoke to Poetry, the two GitHub Actions CI workflows that run those hooks were not updated. CI was left broken (Pipenv/Python-3.10 setup against a Poetry/Python-3.12 project). Always update CI when changing the toolchain.
+- ❌ **PLR09 prefix over-selected Ruff rules** — `"PLR09"` in extend-select selects the entire PLR09xx family including PLR0914 (too-many-locals) and PLR0916 (too-many-boolean-expressions) which are not documented in STYLE_GUIDE.md and use Ruff defaults that will block legitimate data science code. Use explicit codes.
+- ❌ **Library Requirements table not updated to match implementation** — The Dev Notes table still referenced `mirrors-mypy` after the implementation correctly switched to a local hook. Story documentation must be updated atomically with implementation changes.
 
 ### Would Do Differently
 
@@ -289,7 +437,13 @@ Code review workflow generates PRs following .github/pull_request_template.md st
 - ⚠️ **Timing inconsistency across docs** - pyproject.toml said "< 5 seconds" while main doc said "< 10 seconds". Template should establish single source of truth for constraints.
 
 ### Process Improvements
-- [Capture workflow or process refinements]
+
+**Story 1.4 - Create Story Workflow (2026-02-16):**
+- ✅ **Commit SM updates before dev-story** - Always commit story files and sprint-status.yaml updates immediately after create-story completes. This ensures dev-story starts with clean git status, enabling accurate tracking of implementation changes and preventing commit conflicts.
+  - **Pattern:** `feat(sm): create Story X.Y and update sprint tracking`
+  - **Files:** Story markdown file + sprint-status.yaml
+  - **Timing:** After story creation, before invoking dev-story
+  - **Rationale:** Clean separation between SM work (story planning) and Dev work (implementation). Git status becomes accurate indicator of actual code changes.
 
 ---
 
@@ -354,5 +508,5 @@ python_version_min: "[Minimum Python version]"
 
 ---
 
-*Last Updated: 2026-02-16 (Story 1.3 - Testing Strategy learnings captured)*
+*Last Updated: 2026-02-17 (Story 1.4 Code Review Round 2 - CI toolchain migration and Ruff rule selection patterns captured)*
 *Next Review: [Set cadence - weekly? sprint boundaries?]*

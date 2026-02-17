@@ -54,7 +54,9 @@ extend-select = [
     "PT",     # flake8-pytest-style rules
     "TID25",  # flake8-tidy-imports rules
     "C90",    # McCabe complexity
-    "PLR09",  # Pylint refactor rules (complexity, too many args, etc.)
+    "PLR0911",  # Too many return statements (configured: max-returns = 6)
+    "PLR0912",  # Too many branches (configured: max-branches = 12)
+    "PLR0913",  # Too many arguments (configured: max-args = 5)
 ]
 ignore = [
     "E501",      # Line too long (handled by formatter)

@@ -65,25 +65,25 @@ The system is architected as a **local-first, single-user Data Science Workbench
 ```mermaid
 graph TD
     User((User))
-    
+
     subgraph "Presentation Layer (Streamlit)"
         UI[Dashboard / Lab]
         Viz[Bracket Visualizer]
     end
-    
+
     subgraph "Logic Layer (ncaa_eval Package)"
         API[Public Interface]
         Model["Modeling Engine (Elo / XGBoost)"]
         Eval["Evaluation Engine (LogLoss / Calibration)"]
         Feat["Feature Engineering"]
     end
-    
+
     subgraph "Data Layer"
         Ingest[Ingestion Engine]
         Cache[Smart Cache]
         Store["Local SQLite/Parquet"]
     end
-    
+
     subgraph "External World"
         Ext["External Sources (Kaggle, KenPom, etc.)"]
     end
@@ -293,7 +293,7 @@ This section outlines the daily routine for the Data Scientist. Because this is 
 
 * **When:** Immediately after cloning the repository.
 
-* **Command:** 
+* **Command:**
 ```bash
 poetry install
 ```

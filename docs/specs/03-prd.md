@@ -150,7 +150,7 @@ Current tooling for NCAA tournament modeling is often fragmented. Data cleaning 
 * **Story 3.7:** Implement techniques identified in Story 3.1.
 
 ### Epic 4: Core Modeling Framework
-* **Story 4.1 (Spike):** Research types of models that have been used for this task by other people. Especially from kaggle march machine learning mania discussion boards from the various years. Document requirements to enable the `Model` Abstract Base Class (ABC) to support all of those modeling approaches.   
+* **Story 4.1 (Spike):** Research types of models that have been used for this task by other people. Especially from kaggle march machine learning mania discussion boards from the various years. Document requirements to enable the `Model` Abstract Base Class (ABC) to support all of those modeling approaches.  
 * **Story 4.2:** Create the `Model` Abstract Base Class (ABC) enforcing `train`, `predict`, and `save`.
 * **Story 4.3:** Implement Reference **Stateful Model** (Elo) handling season-to-season state persistence.
 * **Story 4.4:** Implement Reference **Stateless Model** (XGBoost wrapper).
