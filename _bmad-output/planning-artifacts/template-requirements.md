@@ -35,13 +35,96 @@ development:
 
 ### Configuration Management
 - Type checking: mypy with strict settings (see pyproject.toml)
-- Linting: [Document chosen tools]
-- Formatting: [Document chosen tools]
+- Linting: Ruff (confirmed - Story 1.4)
+- Formatting: Ruff (confirmed - Story 1.4)
+
+### Pre-Commit Hooks ⭐ (Discovered Story 1.4)
+
+#### Critical Pattern: Local mypy hook required for src-layout projects
+
+**DO NOT use `mirrors-mypy`** for projects with a local package. Use a local hook instead:
+
+```yaml
+# ❌ Wrong: mirrors-mypy cannot type-check tests that import local package
+- repo: https://github.com/pre-commit/mirrors-mypy
+  rev: v1.14.1
+  hooks:
+    - id: mypy
+      files: ^(src/|tests/)
+      additional_dependencies: [...]  # Can't add local packages!
+
+# ✅ Correct: local hook uses Poetry virtualenv where package is installed
+- repo: local
+  hooks:
+    - id: mypy
+      name: mypy-strict
+      entry: poetry run mypy
+      args: [--strict, --show-error-codes, --namespace-packages]
+      language: system
+      types: [python]
+      files: ^(src/|tests/)
+      pass_filenames: false
+```
+
+**Rationale:** `mirrors-mypy` creates an isolated virtualenv. Local packages (not on PyPI) cannot be added as `additional_dependencies`. Test files that import the local package will fail with `[import-not-found]`. The `language: system` local hook uses the Poetry virtualenv where the local package is installed.
+
+#### Hook Configuration Template
+
+```yaml
+default_install_hook_types: [pre-commit, commit-msg, pre-push]
+default_stages: [commit, push]
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: debug-statements
+      - id: no-commit-to-branch
+      - id: check-merge-conflict
+      - id: check-toml
+      - id: check-yaml
+      - id: detect-private-key
+
+  - repo: https://github.com/commitizen-tools/commitizen
+    hooks:
+      - id: commitizen
+      - id: commitizen-branch
+        stages: [post-commit, push]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    hooks:
+      - id: ruff
+        args: [--fix]
+        types: [python]
+      - id: ruff-format
+        types: [python]
+
+  - repo: local
+    hooks:
+      - id: mypy  # Use local hook (see pattern above)
+        ...
+      - id: pytest-smoke
+        entry: poetry run pytest -m smoke --tb=short -q
+        language: system
+        types: [python]
+        pass_filenames: false
+        stages: [commit]
+```
+
+#### "Style Sweep" Commit Pattern
+
+When first activating pre-commit on an established repo, expect a large auto-fix commit:
+- Run `pre-commit run --all-files` to apply all formatting fixes at once
+- Commit separately as `style: auto-fix trailing whitespace, EOF, and typos via pre-commit`
+- Document all affected files in the story File List (may be 80+ files)
+- These are non-functional whitespace/formatting changes, safe to apply in bulk
 
 **Template Action Items:**
 - [ ] Export final pyproject.toml as template base
 - [ ] Document rationale for each major dependency
 - [ ] Create default configurations for all tooling
+- [ ] Include .pre-commit-config.yaml with local mypy hook pattern
 
 ---
 
