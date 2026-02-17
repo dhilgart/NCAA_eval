@@ -112,6 +112,48 @@ repos:
         stages: [commit]
 ```
 
+#### GitHub Actions CI Must Match the Toolchain ⭐ (Discovered Story 1.4 Code Review Round 2)
+
+When migrating pre-commit hooks from one toolchain to another (e.g., Pipenv/invoke → Poetry), **update CI workflows at the same time**. The CI runs the same hooks; if the CI setup script doesn't match the new toolchain, it breaks silently or noisily on every PR.
+
+**Pattern for GitHub Actions with Poetry:**
+```yaml
+- name: Set up Python 3.12          # Must match pyproject.toml python version!
+  uses: actions/setup-python@v5
+  with:
+    python-version: "3.12"
+
+- name: Install Poetry
+  run: pip install poetry
+
+- name: Install dependencies
+  run: poetry install --with dev
+
+- name: Run pre-commit hooks
+  run: SKIP=no-commit-to-branch,commitizen-branch poetry run pre-commit run --all-files
+```
+
+**CI Python version MUST match pyproject.toml** — using Python 3.10 in CI when the project requires `>=3.12` causes subtle breakage (mypy strict mode, syntax errors, f-string features).
+
+#### Ruff Rule Selection: Use Explicit Codes, Not Prefixes ⭐ (Discovered Story 1.4 Code Review Round 2)
+
+`extend-select = ["PLR09"]` in Ruff selects the ENTIRE PLR09xx family, including rules with Ruff defaults that were never configured or documented:
+- PLR0914 (too-many-locals, default: 15) — data science functions routinely hit this
+- PLR0916 (too-many-boolean-expressions, default: 6) — pandas filter chains hit this
+
+**Always use explicit rule codes** for rules with configurable thresholds:
+```toml
+# ❌ Selects 7+ rules, some with undocumented defaults
+extend-select = ["PLR09"]
+
+# ✅ Selects exactly the 3 rules with configured thresholds
+extend-select = [
+    "PLR0911",  # Too many return statements (configured: max-returns = 6)
+    "PLR0912",  # Too many branches (configured: max-branches = 12)
+    "PLR0913",  # Too many arguments (configured: max-args = 5)
+]
+```
+
 #### Hooks to EXCLUDE from template ⚠️ (Discovered Story 1.4 Human Review)
 
 **DO NOT include `codespell`** — false positive rate is too high with `--write-changes`:
@@ -383,6 +425,11 @@ Code review workflow generates PRs following .github/pull_request_template.md st
 - ❌ **`blacken-docs`** — reformatted Python code examples in all markdown docs, removing intentionally aligned inline comments (e.g., `st.integers(...)        # Integers in range`). Black provides no option to preserve alignment. Removed from pre-commit config entirely.
 - ❌ **"Style Sweep" without diff review** — running `pre-commit run --all-files` and committing without reviewing the diff. Auto-fix hooks with write flags require human review before staging — treat like AI-generated code.
 
+**Story 1.4 - Code Quality Toolchain (2026-02-17 Code Review Round 2):**
+- ❌ **CI workflows not updated with pre-commit hook migration** — When `.pre-commit-config.yaml` was migrated from Pipenv/invoke to Poetry, the two GitHub Actions CI workflows that run those hooks were not updated. CI was left broken (Pipenv/Python-3.10 setup against a Poetry/Python-3.12 project). Always update CI when changing the toolchain.
+- ❌ **PLR09 prefix over-selected Ruff rules** — `"PLR09"` in extend-select selects the entire PLR09xx family including PLR0914 (too-many-locals) and PLR0916 (too-many-boolean-expressions) which are not documented in STYLE_GUIDE.md and use Ruff defaults that will block legitimate data science code. Use explicit codes.
+- ❌ **Library Requirements table not updated to match implementation** — The Dev Notes table still referenced `mirrors-mypy` after the implementation correctly switched to a local hook. Story documentation must be updated atomically with implementation changes.
+
 ### Would Do Differently
 
 **Story 1.3 - Testing Strategy (2026-02-16):**
@@ -461,5 +508,5 @@ python_version_min: "[Minimum Python version]"
 
 ---
 
-*Last Updated: 2026-02-17 (Story 1.4 Human Review - pre-commit hook dangers captured)*
+*Last Updated: 2026-02-17 (Story 1.4 Code Review Round 2 - CI toolchain migration and Ruff rule selection patterns captured)*
 *Next Review: [Set cadence - weekly? sprint boundaries?]*

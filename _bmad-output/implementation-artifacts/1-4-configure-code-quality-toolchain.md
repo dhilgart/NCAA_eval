@@ -100,8 +100,10 @@ The `.pre-commit-config.yaml` must use official hooks from these repositories:
 |---|---|---|---|---|
 | astral-sh/ruff-pre-commit | ruff | latest | Lint + auto-fix | `[tool.ruff.lint]` in pyproject.toml |
 | astral-sh/ruff-pre-commit | ruff-format | latest | Format code | `[tool.ruff]` line-length |
-| pre-commit/mirrors-mypy | mypy | latest | Type check (strict) | `[tool.mypy]` in pyproject.toml |
+| local (`language: system`) | mypy | N/A | Type check (strict) via `poetry run mypy` | `[tool.mypy]` in pyproject.toml |
 | local | pytest-smoke | N/A | Run smoke tests | `pytest -m smoke` |
+
+**Note on Mypy Hook:** `pre-commit/mirrors-mypy` (the external repo hook) was NOT used. It runs in an isolated virtualenv that cannot find the local `ncaa_eval` package, causing `[import-not-found]` errors in test files. A `local` hook with `language: system` is required so mypy runs inside the Poetry virtualenv where `ncaa_eval` is installed. See Code Review Fixes #1 for details.
 
 **Critical Dependencies (already installed from Story 1.1):**
 - `ruff = "*"` - Linter and formatter
@@ -569,6 +571,27 @@ Human review of the auto-fix commit (`00b83e7`) identified two categories of inc
 
 **Human Review Issues Fixed:** 4 (all resolved)
 
+**Code Review — Round 2 Fixes (2026-02-17):**
+
+Adversarial code review (Round 2) identified 8 issues (2 HIGH, 3 MEDIUM, 3 LOW). Applied 5 fixes (all HIGH and MEDIUM):
+
+**HIGH Fixes:**
+1. ✅ **Fixed `.github/workflows/python-check.yaml`** — Replaced broken Pipenv/invoke/Python-3.10 setup with Poetry/Python-3.12. Replaced `inv run-pre-commit-hooks` with `poetry run pre-commit run --all-files`. CI (Tier 2 quality gate) was non-functional after the pre-commit hook migration in this story.
+2. ✅ **Fixed `.github/workflows/main-updated.yaml`** — Updated `publish-github-page` job to use Poetry/Python-3.12. Stubbed doc build step with TODO pending Story 1.7 (Sphinx not yet configured). Disabled the gh-pages deploy step to prevent failure on missing `./site` directory.
+
+**MEDIUM Fixes:**
+3. ✅ **Fixed `pyproject.toml` PLR09 over-selection** — Changed `"PLR09"` prefix to explicit `"PLR0911"`, `"PLR0912"`, `"PLR0913"` codes. Prevents PLR0914 (too-many-locals, default 15) and PLR0916 (too-many-boolean-expressions, default 6) from blocking legitimate data science code in future epics.
+4. ✅ **Updated Library Requirements table** — Corrected mypy hook entry from `pre-commit/mirrors-mypy` to `local (language: system)` with explanatory note. Prevents future agents from reproducing the isolation bug.
+5. ✅ **Clarified Auto-Fixed Files section** — Added note distinguishing trailing-whitespace/EOF fixes (retained) from codespell/blacken-docs mutations (reverted). File List is now auditable.
+
+**LOW Issues (Not Fixed):**
+6. ⏭️ **Vacuous assert** in test_imports.py:23 — Deferred. Removing `assert ncaa_eval is not None` would not change test behavior; keeping it is harmless and consistent with the story's original intent.
+7. ⏭️ **`--namespace-packages` inconsistency** — Deferred. Behavior difference between pre-commit and manual mypy runs is minor; no practical impact at current project stage.
+8. ⏭️ **Fragile path resolution** in test_package_structure.py:37 — Deferred. Low risk while tests/unit/ location is stable.
+
+**Round 2 Issues Fixed:** 5 of 8 (all HIGH and MEDIUM issues resolved)
+**Action Items Created:** 0
+
 ### File List
 
 **Primary Implementation Files (Commit c5f8ba4):**
@@ -578,11 +601,16 @@ Human review of the auto-fix commit (`00b83e7`) identified two categories of inc
 
 **Auto-Fixed Files (Commit 00b83e7 - Pre-commit Formatting):**
 
+> **Note:** Not all auto-fixes in this commit were kept. The codespell and blacken-docs changes were subsequently
+> reverted (see Human Review Fixes below). The trailing-whitespace and end-of-file-fixer changes were retained.
+> Files that appear in BOTH this list and the "Human Review Fixes" section were only partially changed — the
+> trailing-whitespace/EOF fixes are in place; the bad codespell/blacken-docs mutations were reverted.
+
 Pre-commit hooks automatically fixed 84 files for code consistency:
-- Fixed trailing whitespace (trailing-whitespace hook)
-- Fixed missing end-of-file newlines (end-of-file-fixer hook)
-- Fixed typos (codespell hook)
-- Reformatted code blocks in markdown (blacken-docs hook)
+- Fixed trailing whitespace (trailing-whitespace hook) — **retained**
+- Fixed missing end-of-file newlines (end-of-file-fixer hook) — **retained**
+- Fixed typos (codespell hook) — **reverted** (false positives; hook removed)
+- Reformatted code blocks in markdown (blacken-docs hook) — **reverted** (broke pedagogical formatting; hook removed)
 
 Files auto-fixed:
 - _bmad-output/implementation-artifacts/1-3-define-testing-strategy.md
@@ -694,7 +722,12 @@ Files auto-fixed:
 - docs/testing/test-purpose-guide.md (REVERTED - blacken-docs reformatting removed)
 - docs/testing/test-scope-guide.md (REVERTED - blacken-docs reformatting removed)
 
+**Code Review Round 2 Fixes:**
+- .github/workflows/python-check.yaml (MODIFIED - replaced Pipenv/invoke/Python-3.10 with Poetry/Python-3.12)
+- .github/workflows/main-updated.yaml (MODIFIED - updated Python/Poetry setup; stubbed doc build pending Story 1.7)
+- pyproject.toml (MODIFIED - replaced `"PLR09"` prefix with `"PLR0911"`, `"PLR0912"`, `"PLR0913"` explicit codes)
+- _bmad-output/implementation-artifacts/1-4-configure-code-quality-toolchain.md (MODIFIED - updated Library Requirements table, clarified Auto-Fixed Files section)
+
 **Verified Files (No Changes):**
-- pyproject.toml (VERIFIED - already has complete Ruff/Mypy/Pytest config from Story 1.1)
 - docs/STYLE_GUIDE.md (REFERENCE - defines style standards that Ruff enforces)
 - docs/TESTING_STRATEGY.md (REFERENCE - defines smoke test requirements)
