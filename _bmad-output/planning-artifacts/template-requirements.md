@@ -112,13 +112,27 @@ repos:
         stages: [commit]
 ```
 
+#### Hooks to EXCLUDE from template ⚠️ (Discovered Story 1.4 Human Review)
+
+**DO NOT include `codespell`** — false positive rate is too high with `--write-changes`:
+- Corrupts BMAD bracket-notation syntax: `[M]ake` → `[M]ache`, `[M]ore` → `[M]or`
+- Flags valid English/domain words: "wit" → "with", "ser" → "set"
+- The `--write-changes` flag applies every "fix" silently without human review
+- **Genuine typos are better caught by editor spell-check or human review**
+
+**DO NOT include `blacken-docs`** — removes intentional formatting in documentation:
+- Black provides no configuration option to preserve aligned inline comments
+- Documentation code examples serve a pedagogical purpose; they should be formatted for human comprehension, not compiler compliance
+- **Code examples in `.md` files are illustrative, not compiled — Black formatting is inappropriate**
+
 #### "Style Sweep" Commit Pattern
 
 When first activating pre-commit on an established repo, expect a large auto-fix commit:
 - Run `pre-commit run --all-files` to apply all formatting fixes at once
-- Commit separately as `style: auto-fix trailing whitespace, EOF, and typos via pre-commit`
+- **Always `git diff` the result and review before staging** — treat auto-fix output like AI-generated code
+- Commit separately as `style: auto-fix trailing whitespace, EOF, and newlines via pre-commit`
 - Document all affected files in the story File List (may be 80+ files)
-- These are non-functional whitespace/formatting changes, safe to apply in bulk
+- ⚠️ Only trailing-whitespace, end-of-file-fixer, and similar non-semantic hooks are safe to apply in bulk without review
 
 **Template Action Items:**
 - [ ] Export final pyproject.toml as template base
@@ -363,7 +377,11 @@ Code review workflow generates PRs following .github/pull_request_template.md st
 - ✅ **Adversarial code review workflow** - Finding 3-10 specific issues per review ensures thorough validation and catches gaps
 
 ### What Didn't Work
-- [Capture anti-patterns and pitfalls]
+
+**Story 1.4 - Code Quality Toolchain (2026-02-17 Human Review):**
+- ❌ **`codespell` with `--write-changes`** — auto-applied incorrect "corrections" that corrupted BMAD template syntax and valid English/domain words. 11 corruptions across 7 files required manual revert. Removed from pre-commit config entirely.
+- ❌ **`blacken-docs`** — reformatted Python code examples in all markdown docs, removing intentionally aligned inline comments (e.g., `st.integers(...)        # Integers in range`). Black provides no option to preserve alignment. Removed from pre-commit config entirely.
+- ❌ **"Style Sweep" without diff review** — running `pre-commit run --all-files` and committing without reviewing the diff. Auto-fix hooks with write flags require human review before staging — treat like AI-generated code.
 
 ### Would Do Differently
 
@@ -443,5 +461,5 @@ python_version_min: "[Minimum Python version]"
 
 ---
 
-*Last Updated: 2026-02-16 (Story 1.3 - Testing Strategy learnings captured)*
+*Last Updated: 2026-02-17 (Story 1.4 Human Review - pre-commit hook dangers captured)*
 *Next Review: [Set cadence - weekly? sprint boundaries?]*
