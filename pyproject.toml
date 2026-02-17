@@ -132,3 +132,18 @@ name = "cz_conventional_commits"
 version = "0.1.0"
 tag_format = "$version"
 version_files = ["pyproject.toml:version"]
+
+[tool.mutmut]
+# Mutation testing targets — Tier 1 priority: evaluation module
+# Extend as modules are implemented:
+# paths_to_mutate = ["src/ncaa_eval/evaluation/", "src/ncaa_eval/model/"]
+paths_to_mutate = ["src/ncaa_eval/evaluation/"]
+pytest_add_cli_args_test_selection = ["tests/"]
+# Optional: only mutate lines covered by tests (faster runs):
+# mutate_only_covered_lines = true
+#
+# Workflow commands:
+#   poetry run mutmut run                      # Run mutation testing
+#   poetry run mutmut results                  # Review results summary
+#   poetry run mutmut show <mutant-id>         # Inspect a surviving mutant
+#   poetry run mutmut run --paths-to-mutate=src/ncaa_eval/evaluation/metrics.py  # Target a file
