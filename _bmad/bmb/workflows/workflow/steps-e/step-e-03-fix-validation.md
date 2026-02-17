@@ -206,7 +206,7 @@ Then route to {nextStepFile} for direct edits.
 
 1. **[R]e-run validation** - Verify all fixes are working
 2. **[C]omplete** - Finish editing with these fixes
-3. **[M]ache additional changes** - Add more edits"
+3. **[M]ake additional changes** - Add more edits"
 
 #### Menu Handling Logic:
 

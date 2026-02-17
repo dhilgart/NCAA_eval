@@ -38,7 +38,7 @@ def test_calculate_brier_score_correct_formula():
     actuals = np.array([1, 0, 1])
 
     # Brier = mean((prediction - actual)^2)
-    expected = ((0.8 - 1) ** 2 + (0.3 - 0) ** 2 + (0.6 - 1) ** 2) / 3
+    expected = ((0.8-1)**2 + (0.3-0)**2 + (0.6-1)**2) / 3
     result = calculate_brier_score(predictions, actuals)
 
     assert abs(result - expected) < 1e-10
@@ -54,14 +54,7 @@ def test_games_loaded_have_required_fields(season):
     """Verify all loaded games contain required fields (functional correctness)."""
     games = load_games_for_season(season)
 
-    required_fields = [
-        "game_id",
-        "date",
-        "home_team",
-        "away_team",
-        "home_score",
-        "away_score",
-    ]
+    required_fields = ["game_id", "date", "home_team", "away_team", "home_score", "away_score"]
     for game in games:
         for field in required_fields:
             assert hasattr(game, field), f"Game missing required field: {field}"
@@ -100,7 +93,6 @@ Ensure code executes within acceptable time/resource bounds, especially for perf
 import timeit
 import pytest
 
-
 @pytest.mark.slow
 @pytest.mark.performance
 def test_calculate_brier_score_vectorized_performance():
@@ -109,14 +101,12 @@ def test_calculate_brier_score_vectorized_performance():
     actuals = np.random.randint(0, 2, 100_000)
 
     # Should complete in < 10ms for 100k predictions (vectorized)
-    time_taken = (
-        timeit.timeit(lambda: calculate_brier_score(predictions, actuals), number=10)
-        / 10
-    )  # Average per iteration
+    time_taken = timeit.timeit(
+        lambda: calculate_brier_score(predictions, actuals),
+        number=10
+    ) / 10  # Average per iteration
 
-    assert (
-        time_taken < 0.01
-    ), f"Brier score too slow: {time_taken:.4f}s (target: < 0.01s)"
+    assert time_taken < 0.01, f"Brier score too slow: {time_taken:.4f}s (target: < 0.01s)"
 ```
 
 **Performance integration test (benchmark-based):**
@@ -143,7 +133,6 @@ def test_full_backtest_meets_60_second_target():
 ```python
 import inspect
 
-
 @pytest.mark.smoke
 @pytest.mark.performance
 def test_metric_calculations_are_vectorized():
@@ -162,9 +151,8 @@ def test_metric_calculations_are_vectorized():
     ]
 
     for pattern in forbidden_patterns:
-        assert (
-            pattern not in source
-        ), f"Metrics module contains non-vectorized pattern: {pattern}"
+        assert pattern not in source, \
+            f"Metrics module contains non-vectorized pattern: {pattern}"
 ```
 
 ### Marker
@@ -238,14 +226,12 @@ def test_chronological_api_rejects_exact_cutoff_date():
 
     # NO game should have date >= cutoff (strict less-than)
     from datetime import datetime
-
     cutoff_dt = datetime.fromisoformat(cutoff)
 
     for game in games:
         game_date = datetime.fromisoformat(game.date)
-        assert (
-            game_date < cutoff_dt
-        ), f"Game on/after cutoff leaked through: {game.date} (cutoff: {cutoff})"
+        assert game_date < cutoff_dt, \
+            f"Game on/after cutoff leaked through: {game.date} (cutoff: {cutoff})"
 ```
 
 **Regression test with property-based approach:**
@@ -261,9 +247,7 @@ def test_elo_update_stable_for_all_k_factors(k_factor):
     Fixed: 2026-01-20 - Clamped rating changes to reasonable bounds.
     """
     rating = 1500
-    result = update_elo_rating(
-        rating, opponent_rating=1500, won=True, k_factor=k_factor
-    )
+    result = update_elo_rating(rating, opponent_rating=1500, won=True, k_factor=k_factor)
 
     # Rating should stay within reasonable bounds
     assert 0 <= result <= 3000, f"Rating exploded with k_factor={k_factor}: {result}"
@@ -310,7 +294,7 @@ def test_brier_score_correct_and_fast():
     actuals = np.array([1, 0])
 
     # Functional: Verify correctness
-    expected = ((0.8 - 1) ** 2 + (0.3 - 0) ** 2) / 2
+    expected = ((0.8-1)**2 + (0.3-0)**2) / 2
     result = calculate_brier_score(predictions, actuals)
     assert abs(result - expected) < 1e-10
 
@@ -319,13 +303,10 @@ def test_brier_score_correct_and_fast():
     large_actuals = np.random.randint(0, 2, 100_000)
 
     import timeit
-
-    time_taken = (
-        timeit.timeit(
-            lambda: calculate_brier_score(large_preds, large_actuals), number=10
-        )
-        / 10
-    )
+    time_taken = timeit.timeit(
+        lambda: calculate_brier_score(large_preds, large_actuals),
+        number=10
+    ) / 10
 
     assert time_taken < 0.01  # < 10ms for 100k predictions
 ```
@@ -345,8 +326,8 @@ def test_walk_forward_cv_prevents_leakage_bug():
     games = load_games_for_years(range(2015, 2020))
 
     for train_data, test_data, year in splitter.split(games):
-        train_max_date = train_data["date"].max()
-        test_min_date = test_data["date"].min()
+        train_max_date = train_data['date'].max()
+        test_min_date = test_data['date'].min()
 
         # Functional: Verify no overlap
         assert train_max_date < test_min_date
@@ -392,7 +373,6 @@ def test_game_loading_comprehensive(season):
     # Regression: 2019 season specifically caused issues
     if season == 2019:
         import sys
-
         memory_mb = sys.getsizeof(games) / (1024 * 1024)
         assert memory_mb < 100  # Should stay under 100MB
 ```

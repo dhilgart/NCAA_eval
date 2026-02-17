@@ -67,9 +67,7 @@ Smoke tests are a **curated subset** of tests designed for speed. Individual smo
 def test_import_package():
     """Verify package can be imported without errors."""
     import ncaa_eval
-
     assert ncaa_eval.__version__
-
 
 # Smoke-eligible: Fast unit test (sanity check)
 @pytest.mark.smoke
@@ -79,7 +77,6 @@ def test_calculate_brier_score_accepts_valid_input():
     actuals = np.array([1, 0])
     result = calculate_brier_score(predictions, actuals)
     assert result is not None  # Just verify it doesn't crash
-
 
 # Smoke-eligible: Schema contract test
 @pytest.mark.smoke
@@ -96,7 +93,6 @@ def test_game_schema_validates():
     # If this compiles with mypy --strict, schema is correct
     assert game["game_id"] == 1
 
-
 # Smoke-eligible: Fast regression test
 @pytest.mark.smoke
 @pytest.mark.regression
@@ -105,14 +101,12 @@ def test_elo_rating_never_negative_quick():
     rating = update_elo_rating(1200, opponent_rating=2400, won=False, k_factor=32)
     assert rating >= 0
 
-
 # NOT smoke-eligible: Integration test with I/O
 @pytest.mark.integration
 def test_load_games_from_disk(temp_data_dir):
     """Verify games can be loaded from disk (too slow for smoke)."""
     games = load_games(temp_data_dir)
     assert len(games) > 0
-
 
 # NOT smoke-eligible: Property-based test (Hypothesis is slow)
 @pytest.mark.property
@@ -188,7 +182,6 @@ def test_sync_command_fetches_and_stores_games(temp_data_dir):
     assert len(games_df) > 0
     assert "game_id" in games_df.columns
 
-
 # Complete-only: Property-based test (Hypothesis is slow)
 @pytest.mark.property
 @given(data=st.lists(st.integers(), min_size=1, max_size=100))
@@ -198,7 +191,6 @@ def test_rolling_average_length_invariant(data):
     result = calculate_rolling_average(series, window=5)
     assert len(result) == len(series)
 
-
 # Complete-only: Performance test
 @pytest.mark.slow
 @pytest.mark.performance
@@ -207,24 +199,20 @@ def test_calculate_brier_score_vectorized_performance():
     predictions = np.random.rand(100_000)
     actuals = np.random.randint(0, 2, 100_000)
 
-    time_taken = (
-        timeit.timeit(lambda: calculate_brier_score(predictions, actuals), number=10)
-        / 10
-    )
+    time_taken = timeit.timeit(
+        lambda: calculate_brier_score(predictions, actuals),
+        number=10
+    ) / 10
 
     assert time_taken < 0.01, f"Too slow: {time_taken:.4f}s"
 
-
 # Complete-only: Comprehensive edge-case test
-@pytest.mark.parametrize(
-    "predictions,actuals,expected",
-    [
-        ([1.0, 0.0, 1.0], [1, 0, 1], 0.0),  # Perfect
-        ([0.9, 0.1, 0.9], [1, 0, 1], 0.03),  # Near-perfect
-        ([0.5, 0.5, 0.5], [1, 0, 1], 0.25),  # Random
-        ([0.0, 1.0, 0.0], [1, 0, 1], 1.0),  # Worst case
-    ],
-)
+@pytest.mark.parametrize("predictions,actuals,expected", [
+    ([1.0, 0.0, 1.0], [1, 0, 1], 0.0),       # Perfect
+    ([0.9, 0.1, 0.9], [1, 0, 1], 0.03),      # Near-perfect
+    ([0.5, 0.5, 0.5], [1, 0, 1], 0.25),      # Random
+    ([0.0, 1.0, 0.0], [1, 0, 1], 1.0),       # Worst case
+])
 def test_calculate_brier_score_edge_cases(predictions, actuals, expected):
     """Verify Brier score for known edge cases (comprehensive)."""
     result = calculate_brier_score(np.array(predictions), np.array(actuals))

@@ -72,7 +72,7 @@ Read `{editPlan}` to understand what edits were applied.
 **What would you like to do next?**
 
 **[V]alidate** - Run comprehensive validation to verify all changes
-**[M]or edits** - Make additional changes
+**[M]ore edits** - Make additional changes
 **[C]omplete** - Finish editing (without validation)
 **[R]eview changes** - See detailed change log"
 
@@ -119,7 +119,7 @@ Load and review validation report. Present findings:
 **Would you like to:**
 
 1. **[F]ix new issues** - Return to fix-validation step
-2. **[M]or edits** - Make additional changes
+2. **[M]ore edits** - Make additional changes
 3. **[C]omplete** - Finish with current validation status"
 
 #### Menu Handling Logic:

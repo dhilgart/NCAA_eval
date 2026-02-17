@@ -553,6 +553,22 @@ Adversarial code review identified 8 issues (2 CRITICAL, 4 MEDIUM, 2 LOW). Appli
 **Issues Fixed:** 6 of 8 (all CRITICAL and MEDIUM issues resolved)
 **Action Items Created:** 0 (all issues resolved automatically)
 
+**Human Review Fixes (2026-02-17):**
+
+Human review of the auto-fix commit (`00b83e7`) identified two categories of incorrect automated corrections.
+
+**Root Causes Found:**
+1. **codespell false positives** — `--write-changes` flag auto-applied incorrect "spell corrections" without human review. codespell does not understand BMAD bracket-notation syntax (`[M]word`) or valid domain words (`wit`, `ser`).
+2. **blacken-docs** — Black formatting of code examples in markdown removed intentionally aligned inline comments, which serve a pedagogical purpose in documentation.
+
+**Fixes Applied:**
+1. ✅ **Removed `codespell` hook** from `.pre-commit-config.yaml` — false positive rate too high; `--write-changes` makes it destructive. Risk/benefit is poor compared to human review catching genuine typos.
+2. ✅ **Removed `blacken-docs` hook** from `.pre-commit-config.yaml` — Black provides no configuration option to preserve aligned comments; removing the hook is the only way to protect intentional documentation formatting choices.
+3. ✅ **Reverted 11 codespell corruptions** in 7 `_bmad/` files: `[M]ache`→`[M]ake`, `[M]or`→`[M]ore` (×4), `sarcastic with`→`sarcastic wit` (×4), `di set Piero`→`di ser Piero` (×2).
+4. ✅ **Reverted blacken-docs reformatting** in 8 `docs/` files (STYLE_GUIDE.md, testing/*.md) — restored pre-auto-fix content to preserve aligned comment style in code examples.
+
+**Human Review Issues Fixed:** 4 (all resolved)
+
 ### File List
 
 **Primary Implementation Files (Commit c5f8ba4):**
@@ -659,6 +675,24 @@ Files auto-fixed:
 **Code Review Fixes (Added during review):**
 - .pre-commit-config.yaml (MODIFIED - fixed Mypy files pattern from `^src/` to `^(src/|tests/)`)
 - tests/unit/test_package_structure.py (NEW - additional smoke tests for package structure)
+
+**Human Review Fixes (2026-02-17):**
+- .pre-commit-config.yaml (MODIFIED - removed codespell and blacken-docs hooks)
+- _bmad/_config/agent-manifest.csv (REVERTED - codespell false positive: sarcastic wit)
+- _bmad/bmb/workflows/workflow/steps-e/step-e-03-fix-validation.md (REVERTED - codespell false positive: [M]ake)
+- _bmad/bmb/workflows/workflow/steps-e/step-e-05-apply-edit.md (REVERTED - codespell false positive: [M]ore ×2)
+- _bmad/bmb/workflows/workflow/steps-e/step-e-06-validate-after.md (REVERTED - codespell false positive: [M]ore ×2)
+- _bmad/bmm/teams/default-party.csv (REVERTED - codespell false positives: sarcastic wit, ser Piero)
+- _bmad/cis/agents/presentation-master.md (REVERTED - codespell false positive: sarcastic wit)
+- _bmad/cis/teams/default-party.csv (REVERTED - codespell false positives: sarcastic wit, ser Piero)
+- docs/STYLE_GUIDE.md (REVERTED - blacken-docs reformatting removed)
+- docs/testing/conventions.md (REVERTED - blacken-docs reformatting removed)
+- docs/testing/domain-testing.md (REVERTED - blacken-docs reformatting removed)
+- docs/testing/execution.md (REVERTED - blacken-docs reformatting removed)
+- docs/testing/quality.md (REVERTED - blacken-docs reformatting removed)
+- docs/testing/test-approach-guide.md (REVERTED - blacken-docs reformatting removed)
+- docs/testing/test-purpose-guide.md (REVERTED - blacken-docs reformatting removed)
+- docs/testing/test-scope-guide.md (REVERTED - blacken-docs reformatting removed)
 
 **Verified Files (No Changes):**
 - pyproject.toml (VERIFIED - already has complete Ruff/Mypy/Pytest config from Story 1.1)

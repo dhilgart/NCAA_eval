@@ -32,9 +32,8 @@ def test_calculate_brier_score_is_vectorized():
 
     # Check that implementation doesn't contain for loops over data
     # (Allow for loops in fixture setup, just not in calculation logic)
-    assert (
-        "for " not in source or "# vectorized" in source
-    ), "Brier score must use vectorized numpy/pandas operations"
+    assert "for " not in source or "# vectorized" in source, \
+        "Brier score must use vectorized numpy/pandas operations"
 ```
 
 **Pros:** Fast, catches obvious violations
@@ -52,7 +51,6 @@ def test_calculate_brier_score_is_vectorized():
 import timeit
 import pytest
 
-
 @pytest.mark.slow
 @pytest.mark.integration
 def test_calculate_brier_score_performance():
@@ -61,13 +59,12 @@ def test_calculate_brier_score_performance():
     actuals = np.random.randint(0, 2, 10_000)
 
     time_taken = timeit.timeit(
-        lambda: calculate_brier_score(predictions, actuals), number=100
+        lambda: calculate_brier_score(predictions, actuals),
+        number=100
     )
 
     # Should complete 100 iterations in < 100ms (1ms per call for 10k predictions)
-    assert (
-        time_taken < 0.1
-    ), f"Brier score too slow: {time_taken:.3f}s for 100 iterations"
+    assert time_taken < 0.1, f"Brier score too slow: {time_taken:.3f}s for 100 iterations"
 ```
 
 **Pros:** Verifies actual performance, catches regressions
@@ -131,7 +128,6 @@ def test_full_backtest_meets_60_second_target():
 ```python
 import inspect
 
-
 @pytest.mark.smoke
 @pytest.mark.performance
 def test_metric_calculations_are_vectorized():
@@ -150,9 +146,8 @@ def test_metric_calculations_are_vectorized():
     ]
 
     for pattern in forbidden_patterns:
-        assert (
-            pattern not in source
-        ), f"Metrics module contains non-vectorized pattern: {pattern}"
+        assert pattern not in source, \
+            f"Metrics module contains non-vectorized pattern: {pattern}"
 ```
 
 ---
@@ -208,12 +203,11 @@ def test_walk_forward_validation_prevents_leakage(sample_games_fixture):
 
     for train_data, test_data, year in splitter.split(sample_games_fixture):
         # Verify all training games occur before test games
-        train_max_date = train_data["date"].max()
-        test_min_date = test_data["date"].min()
+        train_max_date = train_data['date'].max()
+        test_min_date = test_data['date'].min()
 
-        assert (
-            train_max_date < test_min_date
-        ), f"Data leakage detected in {year} fold: train_max={train_max_date}, test_min={test_min_date}"
+        assert train_max_date < test_min_date, \
+            f"Data leakage detected in {year} fold: train_max={train_max_date}, test_min={test_min_date}"
 ```
 
 **Tests:** Cross-validation splitter never leaks future data into training
@@ -230,7 +224,6 @@ def test_walk_forward_validation_prevents_leakage(sample_games_fixture):
 ```python
 from hypothesis import given, strategies as st
 
-
 @pytest.mark.property
 @given(cutoff_year=st.integers(2015, 2025))
 def test_temporal_boundary_invariant(cutoff_year):
@@ -239,9 +232,8 @@ def test_temporal_boundary_invariant(cutoff_year):
     games = api.get_games_before(cutoff_year=cutoff_year)
 
     # Invariant: ALL games must be from or before cutoff year
-    assert all(
-        game.season <= cutoff_year for game in games
-    ), f"API returned games beyond cutoff year {cutoff_year}"
+    assert all(game.season <= cutoff_year for game in games), \
+        f"API returned games beyond cutoff year {cutoff_year}"
 ```
 
 **Tests:** Temporal boundary holds across all possible cutoff years
@@ -270,14 +262,12 @@ def test_chronological_api_rejects_exact_cutoff_date():
 
     # NO game should have date >= cutoff (strict less-than)
     from datetime import datetime
-
     cutoff_dt = datetime.fromisoformat(cutoff)
 
     for game in games:
         game_date = datetime.fromisoformat(game.date)
-        assert (
-            game_date < cutoff_dt
-        ), f"Game on/after cutoff leaked through: {game.date} (cutoff: {cutoff})"
+        assert game_date < cutoff_dt, \
+            f"Game on/after cutoff leaked through: {game.date} (cutoff: {cutoff})"
 ```
 
 ---

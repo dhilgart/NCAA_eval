@@ -42,23 +42,18 @@ Tests that specify concrete input examples and their expected outputs.
 def test_elo_update_increases_winner_rating():
     """Verify Elo rating increases for the winning team."""
     initial_rating = 1500
-    result = update_elo_rating(
-        initial_rating, opponent_rating=1500, won=True, k_factor=32
-    )
+    result = update_elo_rating(initial_rating, opponent_rating=1500, won=True, k_factor=32)
     assert result > initial_rating
 ```
 
 **Parametrized tests:** `@pytest.mark.parametrize` to test multiple scenarios with same logic
 
 ```python
-@pytest.mark.parametrize(
-    "predictions,actuals,expected",
-    [
-        ([1.0, 0.0, 1.0], [1, 0, 1], 0.0),  # Perfect predictions
-        ([0.9, 0.1, 0.9], [1, 0, 1], 0.03),  # Near-perfect predictions
-        ([0.5, 0.5, 0.5], [1, 0, 1], 0.25),  # Random guessing
-    ],
-)
+@pytest.mark.parametrize("predictions,actuals,expected", [
+    ([1.0, 0.0, 1.0], [1, 0, 1], 0.0),       # Perfect predictions
+    ([0.9, 0.1, 0.9], [1, 0, 1], 0.03),      # Near-perfect predictions
+    ([0.5, 0.5, 0.5], [1, 0, 1], 0.25),      # Random guessing
+])
 def test_calculate_brier_score_known_cases(predictions, actuals, expected):
     """Verify Brier score for known prediction scenarios."""
     result = calculate_brier_score(np.array(predictions), np.array(actuals))
@@ -103,7 +98,6 @@ Tests that specify **invariants** (properties that should always hold) and let H
 
 ```python
 from hypothesis import given, strategies as st
-
 
 @pytest.mark.property
 @given(data=st.lists(st.integers(), min_size=1, max_size=100))
@@ -154,19 +148,19 @@ def test_brier_score_always_non_negative(predictions, actuals):
 from hypothesis import strategies as st
 
 # Basic strategies
-st.integers(min_value=0, max_value=100)  # Integers in range
-st.floats(min_value=0.0, max_value=1.0)  # Floats in range
-st.text(min_size=1, max_size=50)  # Random strings
-st.booleans()  # True or False
+st.integers(min_value=0, max_value=100)        # Integers in range
+st.floats(min_value=0.0, max_value=1.0)        # Floats in range
+st.text(min_size=1, max_size=50)               # Random strings
+st.booleans()                                   # True or False
 
 # Collection strategies
 st.lists(st.integers(), min_size=1, max_size=100)  # Lists of integers
-st.sets(st.text(), min_size=0, max_size=10)  # Sets of strings
-st.dictionaries(keys=st.text(), values=st.floats())  # Dictionaries
+st.sets(st.text(), min_size=0, max_size=10)         # Sets of strings
+st.dictionaries(keys=st.text(), values=st.floats()) # Dictionaries
 
 # Composite strategies
-st.tuples(st.integers(), st.floats())  # Tuples with mixed types
-st.one_of(st.integers(), st.none())  # Either int or None
+st.tuples(st.integers(), st.floats())           # Tuples with mixed types
+st.one_of(st.integers(), st.none())             # Either int or None
 
 # Data-driven strategies (most powerful)
 st.data()  # Draw values dynamically within test
@@ -214,7 +208,6 @@ Tests that feed **random or mutated inputs** to find crashes, unhandled exceptio
 ```python
 from hypothesis import given, strategies as st
 
-
 @pytest.mark.fuzz
 @given(text=st.text())
 def test_parse_team_name_never_crashes(text):
@@ -255,7 +248,7 @@ def test_ingest_csv_handles_malformed_data(data, tmp_path):
 @pytest.mark.fuzz
 @given(
     season=st.integers(),  # Any integer, including negatives
-    game_id=st.text(),  # Any string, including empty/special chars
+    game_id=st.text(),     # Any string, including empty/special chars
 )
 def test_api_validates_inputs_safely(season, game_id):
     """Verify API validation doesn't crash on invalid inputs."""
@@ -276,10 +269,10 @@ def test_api_validates_inputs_safely(season, game_id):
 from hypothesis import strategies as st
 
 # Basic fuzzing strategies
-st.text()  # Any Unicode text (including empty, special chars)
-st.binary()  # Random byte sequences
-st.integers()  # Any integer (including negatives, zero, large values)
-st.floats(allow_nan=True)  # Floats including NaN, inf, -inf
+st.text()                          # Any Unicode text (including empty, special chars)
+st.binary()                        # Random byte sequences
+st.integers()                      # Any integer (including negatives, zero, large values)
+st.floats(allow_nan=True)          # Floats including NaN, inf, -inf
 
 # Targeted fuzzing
 st.text(alphabet=st.characters(blacklist_categories=("Cs",)))  # Valid Unicode only
@@ -330,17 +323,13 @@ Many functions benefit from **multiple** test approaches - each approach tests d
 
 ```python
 # Example-based: Test specific known cases
-@pytest.mark.parametrize(
-    "input,expected",
-    [
-        ("St. Mary's", "Saint Mary's"),
-        ("UNC", "North Carolina"),
-    ],
-)
+@pytest.mark.parametrize("input,expected", [
+    ("St. Mary's", "Saint Mary's"),
+    ("UNC", "North Carolina"),
+])
 def test_clean_team_name_known_cases(input, expected):
     """Verify normalization for known abbreviations."""
     assert clean_team_name(input) == expected
-
 
 # Property-based: Test invariants
 @pytest.mark.property
@@ -349,7 +338,6 @@ def test_clean_team_name_never_empty(name):
     """Verify normalization never returns empty string."""
     result = clean_team_name(name)
     assert len(result) > 0  # Invariant: output is never empty
-
 
 # Fuzz-based: Test crash resilience
 @pytest.mark.fuzz

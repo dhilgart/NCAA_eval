@@ -115,7 +115,7 @@ Read `{validationReport}` and extract:
 
 "**[R]eview report** - See detailed validation findings
 **[C]omplete** - Finish editing - workflow looks good!
-**[M]or edits** - Make additional changes"
+**[M]ore edits** - Make additional changes"
 
 #### Menu Handling Logic (Issues Found):
 
@@ -130,7 +130,7 @@ Read `{validationReport}` and extract:
 
 **[C]omplete** - Finish editing
 **[R]eview report** - See validation details
-**[M]or edits** - Make additional changes"
+**[M]ore edits** - Make additional changes"
 
 #### Menu Handling Logic (Full Pass):
 
