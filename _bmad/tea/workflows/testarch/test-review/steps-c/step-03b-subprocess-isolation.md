@@ -35,7 +35,7 @@ This is an **isolated subprocess** running in parallel with other quality dimens
 - Global state mutations (global variables modified)
 - Test order dependencies (test B depends on test A running first)
 - Shared database records without cleanup
-- beforeAll/after all with side effects leaking to other tests
+- beforeAll/afterAll with side effects leaking to other tests
 
 **MEDIUM SEVERITY Violations**:
 

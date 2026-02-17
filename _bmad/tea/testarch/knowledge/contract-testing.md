@@ -208,7 +208,7 @@ describe('Pact Provider Verification', () => {
     console.log(`Provider server running on port ${PORT}`);
   });
 
-  after all(async () => {
+  afterAll(async () => {
     // Cleanup
     await serverInstance.close();
   });
