@@ -2,13 +2,6 @@
 
 from __future__ import annotations
 
-from ncaa_eval.utils.assertions import (
-    assert_columns,
-    assert_dtypes,
-    assert_no_nulls,
-    assert_shape,
-    assert_value_range,
-)
 from ncaa_eval.utils.logger import (
     DEBUG,
     NORMAL,
@@ -23,11 +16,6 @@ __all__ = [
     "NORMAL",
     "QUIET",
     "VERBOSE",
-    "assert_columns",
-    "assert_dtypes",
-    "assert_no_nulls",
-    "assert_shape",
-    "assert_value_range",
     "configure_logging",
     "get_logger",
 ]
