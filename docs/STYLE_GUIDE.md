@@ -578,7 +578,7 @@ During code review, verify:
 ## 7. PR Checklist (Summary)
 
 Every pull request must pass the following gates. The actual PR template is at
-[`.github/pull_request_template.md`](../.github/pull_request_template.md). For
+`.github/pull_request_template.md`. For
 the philosophy behind this two-tier approach, see
 [`docs/TESTING_STRATEGY.md`](TESTING_STRATEGY.md) (Section: Quality Gates and Execution Tiers).
 
