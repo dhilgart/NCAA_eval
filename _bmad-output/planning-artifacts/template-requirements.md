@@ -39,6 +39,45 @@ development:
 - `poetry.lock` can go stale even when `pyproject.toml` is correct — always run `poetry lock --no-update && poetry install --with dev` after adding deps to ensure lock file is current (pytest-cov 7.0.0 was missing despite being in pyproject.toml)
 - Always include `[tool.coverage.run]` alongside `[tool.coverage.report]` in pyproject.toml from day one — branch coverage is disabled by default and omitting this section means the coverage report never shows branch gaps
 
+### Session Management (Nox) ⭐ (Discovered Story 1.6)
+
+**Nox orchestrates the full quality pipeline** — running `nox` executes Ruff -> Mypy -> Pytest in order.
+
+#### Nox + Conda/Poetry: Use `python=False` ⭐
+
+When the project uses conda + Poetry (`POETRY_VIRTUALENVS_CREATE=false`), Nox sessions must **reuse the active environment** — not create per-session virtualenvs (which would duplicate the entire dependency tree and break conda-managed packages).
+
+```python
+# ✅ Correct: reuse active conda/Poetry environment
+@nox.session(python=False)
+def lint(session: nox.Session) -> None:
+    """Run Ruff linting and formatting checks."""
+    session.run("ruff", "check", ".", "--fix")
+    session.run("ruff", "format", "--check", ".")
+
+# ❌ Wrong: creates isolated virtualenv, must reinstall ALL deps per session
+@nox.session
+def lint(session: nox.Session) -> None:
+    session.install("ruff")  # Slow, duplicative
+    session.run("ruff", "check", ".", "--fix")
+```
+
+**Key rules for `python=False` mode:**
+- Do NOT call `session.install()` — deprecated without a virtualenv
+- Do NOT pass `external=True` to `session.run()` — not needed when `python=False`
+- Set default sessions via `nox.options.sessions = ["lint", "typecheck", "tests"]`
+
+#### Nox vs Pre-commit: Complementary, Not Redundant ⭐
+
+| Aspect | Pre-commit | Nox |
+|---|---|---|
+| **When** | Automatic on `git commit` | Manual developer command |
+| **Scope** | Only changed files (except mypy/pytest) | Entire project |
+| **Tests** | Smoke tests only (`-m smoke`) | Full test suite |
+| **Purpose** | Fast gate before commit | Comprehensive validation before PR |
+
+**Template Pattern:** Include both. Pre-commit for fast automatic checks, Nox for thorough manual validation.
+
 ### Configuration Management
 - Type checking: mypy with strict settings (see pyproject.toml)
 - Linting: Ruff (confirmed - Story 1.4)
@@ -604,5 +643,5 @@ python_version_min: "[Minimum Python version]"
 
 ---
 
-*Last Updated: 2026-02-17 (Story 1.5 Code Review - coverage branch config, Ruff PT022 fixture pattern, mutmut Windows/WSL/marker-exclusion patterns, Python 3.14 compatibility warning)*
+*Last Updated: 2026-02-18 (Story 1.6 Create-Story - Nox session management with conda/Poetry, Nox vs pre-commit coexistence pattern)*
 *Next Review: [Set cadence - weekly? sprint boundaries?]*

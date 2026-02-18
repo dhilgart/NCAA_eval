@@ -47,7 +47,7 @@ development_status:
   1-3-define-testing-strategy: done
   1-4-configure-code-quality-toolchain: done
   1-5-configure-testing-framework: done
-  1-6-configure-session-management-automation: backlog
+  1-6-configure-session-management-automation: ready-for-dev
   1-7-configure-versioning-packaging-documentation: backlog
   1-8-implement-runtime-logging-data-assertions-framework: backlog
   epic-1-retrospective: optional
