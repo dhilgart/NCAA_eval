@@ -648,5 +648,38 @@ python_version_min: "[Minimum Python version]"
 
 ---
 
-*Last Updated: 2026-02-18 (Story 1.6 Code Review - noxfile.py mypy scope gap, Google docstring backtick style)*
+### Documentation: Sphinx + Furo for src-layout Projects ⭐ (Discovered Story 1.7 SM)
+
+**`sphinx.ext.napoleon` is MANDATORY for Google-style docstrings** — without it, docstrings render as plain text. Since the project enforces Google style via `[tool.ruff.lint.pydocstyle] convention = "google"`, napoleon is always required alongside autodoc.
+
+**`sys.path.insert` must point to `src/` for src-layout** in `docs/conf.py`:
+```python
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+```
+
+**`docs/conf.py` must NOT be added to mypy scope** — it uses Sphinx implicit globals and cannot be type-checked with `mypy --strict`.
+
+**`docs` Nox session must NOT be in `nox.options.sessions`** — documentation is on-demand, not part of the Ruff → Mypy → Pytest quality pipeline.
+
+### Cookiecutter Template Artifacts (Legacy Cleanup) ⭐ (Discovered Story 1.7 SM)
+
+Projects based on `Lee-W/cookiecutter-python-template` contain stubs referencing the old `pipenv/invoke` toolchain:
+
+| File | Problem | Action |
+|---|---|---|
+| `mkdocs.yml` | MkDocs stub; conflicts with Sphinx | Delete if using Sphinx |
+| `CONTRIBUTING.md` | References `inv env.init-dev`, `inv git.commit` etc. | Rewrite to reflect Poetry/Nox/commitizen |
+| `CHANGELOG.md` | Empty stub | Leave as-is; `cz bump --changelog` will populate |
+
+**Template Action:** Include updated CONTRIBUTING.md and choose one documentation system (Sphinx or MkDocs) at project start — not both.
+
+### check-manifest for Poetry Projects ⭐ (Discovered Story 1.7 SM)
+
+check-manifest validates sdist distributions include all VCS-tracked files. Poetry projects need `[tool.check-manifest]` ignore patterns for non-distribution files (BMAD dirs, docs, config files). Include default ignore patterns in the base `pyproject.toml` template tuned for BMAD + Poetry projects.
+
+### edgetest Scaffolding ⭐ (Discovered Story 1.7 SM)
+
+For projects using `"*"` (unconstrained) versions, edgetest has limited value until dependency bounds are added. Configure scaffolding early but note the tool becomes meaningful only when bounds exist. Use `pytest tests/ -m smoke` as the edgetest command (fast, validates basic compatibility).
+
+*Last Updated: 2026-02-18 (Story 1.7 SM - Sphinx/napoleon, cookiecutter cleanup, check-manifest, edgetest)*
 *Next Review: [Set cadence - weekly? sprint boundaries?]*
