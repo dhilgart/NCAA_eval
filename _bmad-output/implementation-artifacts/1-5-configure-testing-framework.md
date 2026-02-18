@@ -408,8 +408,20 @@ claude-sonnet-4-5-20250929
 - mutmut 3.4.0 unconditionally imports `resource` (Unix-only stdlib) in `mutmut/__main__.py` line 9
 - `ModuleNotFoundError: No module named 'resource'` on Windows; any `mutmut` invocation fails at import
 - Config TOML is syntactically valid (verified via `python -c "import tomllib; ..."`)
-- **Resolution**: mutmut will execute correctly in CI (Linux/ubuntu-latest). Local Windows development requires WSL or waiting for mutmut to fix the Windows incompatibility.
+- **Original resolution**: mutmut will execute correctly in CI (Linux/ubuntu-latest). Local Windows development requires WSL.
 - **Recommendation for human reviewer**: Accept CI-only limitation, or pin `mutmut = "^2.5"` (requires different config format — setup.cfg style instead of TOML).
+
+**[2026-02-17] WSL Setup — Mutmut 3.4.0 Verified Locally (Task 3.3 / Task 6.5 re-verification)**
+- Developer WSL environment configured: Linux 6.6.87.2-microsoft-standard-WSL2
+- Conda env `ncaa_eval` created with Python 3.12.12 (matches `python = ">=3.12,<4.0"` constraint)
+- Poetry 2.3.2 + all dev deps (mutmut 3.4.0, pytest 9.0.2, hypothesis 6.151.6, etc.) installed via `pip install poetry && POETRY_VIRTUALENVS_CREATE=false poetry install --with dev`
+- `mutmut run` runs successfully in WSL — no `resource` module error ✓
+- Mutmut generates mutants, runs stats (3 passed, 1 deselected), and completes without import errors
+- **New issue discovered**: `test_src_directory_structure` fails under mutmut because it uses `Path(__file__).parent.parent.parent` to compute project root. When mutmut runs from `mutants/` directory, this path resolves to `mutants/` not the project root; `mutants/src/ncaa_eval/__init__.py` doesn't exist since mutmut only copies mutation targets.
+- **Fix applied**: Updated `[tool.mutmut]` `pytest_add_cli_args_test_selection` to add `-k "not test_src_directory_structure"`. Structural smoke tests check project layout, not evaluation module logic — exclusion is semantically correct.
+- **Additional fix**: Added `mutants/` to `.gitignore` (mutmut 3.x creates this directory; was not excluded)
+- "Stopping early, could not find any test case for any mutant" — expected: `evaluation/__init__.py` has no testable logic yet. Will work when `evaluation/metrics.py` is implemented in Epic 6.
+- Full test suite: 4 passed, 0.53s ✓ | `pytest -m smoke`: 3 passed, 0.18s ✓ | `pytest -m property`: 1 passed ✓ | ruff: all checks passed ✓ | mypy --strict: no issues ✓
 - **pytest-cov was missing** from installed packages despite being in `pyproject.toml`. Root cause: `poetry.lock` was out of date. Fixed with `poetry lock --no-update && poetry install --with dev`. pytest-cov 7.0.0 installed.
 
 **[2026-02-17] Ruff PT022 — temp_data_dir fixture `yield` → `return` (Task 2.1)**
@@ -430,9 +442,16 @@ claude-sonnet-4-5-20250929
 - All 4 tests pass: 0.84s full run, 0.69s smoke run — both within budget
 - AC1 ✅ AC2 ✅ AC3 ✅ (config valid; CI-only due to Windows mutmut bug) AC4 ✅ AC5 ✅ AC6 ✅ AC7 ✅
 
+**[2026-02-17] WSL Re-verification:**
+- Mutmut 3.4.0 verified working locally via WSL (conda env `ncaa_eval`, Python 3.12.12)
+- Fixed `[tool.mutmut]` to exclude `test_src_directory_structure` (path-resolution incompatible with mutmut's `mutants/` runner directory)
+- Added `mutants/` to `.gitignore`
+- AC3 ✅ (now verified locally via WSL, not CI-only) — All ACs remain satisfied
+
 ### Change Log
 
 - 2026-02-17: Implemented Story 1.5 — configure testing framework (Hypothesis, Mutmut, conftest, CI coverage step)
+- 2026-02-17: Re-verified with WSL — mutmut 3.4.0 runs locally; fixed `[tool.mutmut]` test exclusion and added `mutants/` to `.gitignore`
 
 ### File List
 
@@ -444,3 +463,5 @@ claude-sonnet-4-5-20250929
 - `.gitignore` — MODIFIED (added `.mutmut-cache`)
 - `.github/workflows/python-check.yaml` — MODIFIED (added full pytest + coverage step)
 - `poetry.lock` — MODIFIED (updated to install pytest-cov 7.0.0)
+- `pyproject.toml` — MODIFIED again (updated `[tool.mutmut]` `pytest_add_cli_args_test_selection` to exclude path-dependent test)
+- `.gitignore` — MODIFIED again (added `mutants/` — mutmut 3.x runner directory)
