@@ -709,10 +709,10 @@ When myst-parser processes Markdown files that contain TOC anchor links (e.g., `
 
 ```python
 # docs/conf.py — required when using myst-parser with existing Markdown docs
-suppress_warnings = ["myst.xref_missing"]
+suppress_warnings = ["myst.xref_missing", "misc.highlighting_failure"]
 ```
 
-**Template Action:** Always include `suppress_warnings = ["myst.xref_missing"]` in `docs/conf.py` when `myst_parser` is in extensions. Add an explanatory comment so future developers don't remove it.
+**Template Action:** Always include both suppressions in `docs/conf.py` when `myst_parser` is in extensions: `myst.xref_missing` (Markdown anchor links and out-of-tree refs) and `misc.highlighting_failure` (fenced code blocks with unsupported lexers like `mermaid`). Add explanatory comments so future developers don't remove them.
 
 ### Use Text References for Out-of-Tree Files in Sphinx Markdown (Discovered Story 1.9 Code Review)
 
@@ -728,5 +728,5 @@ Markdown links to files outside the Sphinx source tree (e.g., `[specs/file.md](.
 
 **Template Action:** In Markdown files processed by Sphinx, use backtick-quoted text for any reference to files outside `docs/`. Reserve Markdown links for files within the Sphinx source tree.
 
-*Last Updated: 2026-02-18 (Story 1.9 Code Review - myst.xref_missing suppression, out-of-tree references)*
+*Last Updated: 2026-02-18 (Story 1.9 Code Review #2 - added misc.highlighting_failure suppression for mermaid code blocks)*
 *Next Review: [Set cadence - weekly? sprint boundaries?]*
