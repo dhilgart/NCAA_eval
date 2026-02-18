@@ -5,6 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd  # type: ignore[import-untyped]
 import pytest
+from pandera.errors import SchemaError
 
 from ncaa_eval.utils.assertions import (
     assert_columns,
@@ -15,7 +16,7 @@ from ncaa_eval.utils.assertions import (
 )
 
 # ---------------------------------------------------------------------------
-# assert_shape
+# assert_shape  (custom implementation — raises ValueError)
 # ---------------------------------------------------------------------------
 
 
@@ -56,7 +57,7 @@ class TestAssertShape:
 
 
 # ---------------------------------------------------------------------------
-# assert_columns
+# assert_columns  (Pandera-backed — raises SchemaError)
 # ---------------------------------------------------------------------------
 
 
@@ -74,12 +75,12 @@ class TestAssertColumns:
 
     def test_missing_column_raises(self) -> None:
         df = pd.DataFrame({"TeamID": [1]})
-        with pytest.raises(ValueError, match="assert_columns failed"):
+        with pytest.raises(SchemaError):
             assert_columns(df, ["TeamID", "Score"])
 
-    def test_error_message_lists_missing(self) -> None:
+    def test_error_message_names_missing_column(self) -> None:
         df = pd.DataFrame({"a": [1]})
-        with pytest.raises(ValueError, match="Score"):
+        with pytest.raises(SchemaError, match="Score"):
             assert_columns(df, ["Score"])
 
     def test_empty_required_passes(self) -> None:
@@ -88,7 +89,7 @@ class TestAssertColumns:
 
 
 # ---------------------------------------------------------------------------
-# assert_dtypes
+# assert_dtypes  (Pandera-backed — raises SchemaError)
 # ---------------------------------------------------------------------------
 
 
@@ -106,22 +107,23 @@ class TestAssertDtypes:
 
     def test_wrong_dtype_raises(self) -> None:
         df = pd.DataFrame({"Score": [70.0, 85.0]})
-        with pytest.raises(ValueError, match="assert_dtypes failed"):
+        with pytest.raises(SchemaError):
             assert_dtypes(df, {"Score": "int64"})
 
     def test_error_message_contains_column_and_types(self) -> None:
         df = pd.DataFrame({"Score": [1.0]})
-        with pytest.raises(ValueError, match=r"column 'Score': expected int64, got float64"):
+        # Pandera: "expected series 'Score' to have type int64, got float64"
+        with pytest.raises(SchemaError, match=r"Score.*int64.*float64"):
             assert_dtypes(df, {"Score": "int64"})
 
-    def test_nonexistent_column_raises_valueerror(self) -> None:
+    def test_nonexistent_column_raises_schema_error(self) -> None:
         df = pd.DataFrame({"a": [1]})
-        with pytest.raises(ValueError, match="assert_dtypes failed"):
+        with pytest.raises(SchemaError, match="not in dataframe"):
             assert_dtypes(df, {"nonexistent": "int64"})
 
 
 # ---------------------------------------------------------------------------
-# assert_no_nulls
+# assert_no_nulls  (Pandera-backed — raises SchemaError)
 # ---------------------------------------------------------------------------
 
 
@@ -139,32 +141,33 @@ class TestAssertNoNulls:
 
     def test_nulls_in_all_columns_mode_raises(self) -> None:
         df = pd.DataFrame({"a": [1, None], "b": [3, 4]})
-        with pytest.raises(ValueError, match="assert_no_nulls failed"):
+        with pytest.raises(SchemaError):
             assert_no_nulls(df)
 
     def test_nulls_in_specific_column_raises(self) -> None:
         df = pd.DataFrame({"a": [1, None], "b": [3, 4]})
-        with pytest.raises(ValueError, match="assert_no_nulls failed"):
+        with pytest.raises(SchemaError):
             assert_no_nulls(df, columns=["a"])
 
-    def test_error_message_lists_columns_and_counts(self) -> None:
+    def test_error_message_names_column_with_nulls(self) -> None:
+        # Pandera: "non-nullable series 'TeamName' contains null values: ..."
         df = pd.DataFrame({"TeamName": [None, None, "A"]})
-        with pytest.raises(ValueError, match=r"'TeamName' \(2 nulls\)"):
+        with pytest.raises(SchemaError, match="TeamName"):
             assert_no_nulls(df)
 
     def test_nan_detected_as_null(self) -> None:
         df = pd.DataFrame({"a": [1.0, np.nan]})
-        with pytest.raises(ValueError, match="assert_no_nulls failed"):
+        with pytest.raises(SchemaError):
             assert_no_nulls(df)
 
-    def test_nonexistent_column_raises_valueerror(self) -> None:
+    def test_nonexistent_column_raises_schema_error(self) -> None:
         df = pd.DataFrame({"a": [1]})
-        with pytest.raises(ValueError, match="assert_no_nulls failed"):
+        with pytest.raises(SchemaError, match="not in dataframe"):
             assert_no_nulls(df, columns=["nonexistent"])
 
 
 # ---------------------------------------------------------------------------
-# assert_value_range
+# assert_value_range  (Pandera-backed — raises SchemaError)
 # ---------------------------------------------------------------------------
 
 
@@ -190,29 +193,31 @@ class TestAssertValueRange:
 
     def test_below_min_raises(self) -> None:
         df = pd.DataFrame({"Score": [-3, 50, 100]})
-        with pytest.raises(ValueError, match="assert_value_range failed"):
+        with pytest.raises(SchemaError):
             assert_value_range(df, "Score", min_val=0, max_val=200)
 
     def test_above_max_raises(self) -> None:
         df = pd.DataFrame({"Score": [50, 250]})
-        with pytest.raises(ValueError, match="assert_value_range failed"):
+        with pytest.raises(SchemaError):
             assert_value_range(df, "Score", min_val=0, max_val=200)
 
-    def test_error_message_contains_violation_count_and_range(self) -> None:
+    def test_error_message_names_column(self) -> None:
+        # Pandera: "Column 'Score' failed element-wise validator ..."
         df = pd.DataFrame({"Score": [-3, 50, 250]})
-        with pytest.raises(ValueError, match=r"2 values outside range \[0, 200\]"):
+        with pytest.raises(SchemaError, match="Score"):
             assert_value_range(df, "Score", min_val=0, max_val=200)
 
-    def test_error_message_contains_actual_min_max(self) -> None:
+    def test_error_message_contains_failure_case(self) -> None:
+        # Pandera reports the offending value in the failure cases
         df = pd.DataFrame({"Score": [-3, 50, 250]})
-        with pytest.raises(ValueError, match=r"min=-3.*max=250"):
+        with pytest.raises(SchemaError, match="-3"):
             assert_value_range(df, "Score", min_val=0, max_val=200)
 
     def test_no_constraints_passes(self) -> None:
         df = pd.DataFrame({"Score": [-999, 999]})
         assert_value_range(df, "Score")
 
-    def test_nonexistent_column_raises_valueerror(self) -> None:
+    def test_nonexistent_column_raises_schema_error(self) -> None:
         df = pd.DataFrame({"a": [1]})
-        with pytest.raises(ValueError, match="assert_value_range failed"):
+        with pytest.raises(SchemaError, match="not in dataframe"):
             assert_value_range(df, "nonexistent")

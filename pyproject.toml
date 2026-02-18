@@ -10,6 +10,7 @@ packages = [{include = "ncaa_eval", from = "src"}]
 python = ">=3.12,<4.0"
 pandas = "*"
 numpy = "*"
+pandera = "*"
 xgboost = "*"
 scikit-learn = "*"
 networkx = "*"
@@ -138,7 +139,7 @@ extras = []
 
 [[tool.edgetest.envs]]
 name = "latest"
-upgrade = ["pandas", "numpy", "scikit-learn", "xgboost", "networkx", "joblib"]
+upgrade = ["pandas", "numpy", "pandera", "scikit-learn", "xgboost", "networkx", "joblib"]
 command = "pytest tests/ -m smoke --tb=short -q"
 
 [tool.commitizen]

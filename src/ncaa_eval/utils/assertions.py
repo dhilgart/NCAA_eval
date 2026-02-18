@@ -1,10 +1,11 @@
-"""DataFrame validation helpers for data integrity checks.
+"""DataFrame validation helpers backed by Pandera.
 
-Provides a small set of assertion functions that validate common
-DataFrame properties — shape, column presence, dtypes, null values,
-and value ranges.  Every function raises `ValueError` (never
-`AssertionError`) so that validations cannot be silently disabled
-by ``python -O``.
+Provides a functional API for validating common DataFrame properties —
+shape, column presence, dtypes, null values, and value ranges.
+
+All functions except `assert_shape` delegate to Pandera and propagate
+`pandera.errors.SchemaError` on failure. `assert_shape` raises `ValueError`
+because Pandera does not support partial-dimension (one-sided) shape checks.
 
 Usage:
     >>> import pandas as pd
@@ -19,6 +20,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 
 import pandas as pd  # type: ignore[import-untyped]
+import pandera.pandas as pa
 
 
 def assert_shape(
@@ -67,7 +69,7 @@ def assert_columns(df: pd.DataFrame, required: Sequence[str]) -> None:
         required: Column names that must be present.
 
     Raises:
-        ValueError: If any required columns are missing.
+        pa.errors.SchemaError: If any required columns are missing.
 
     Example:
         >>> import pandas as pd
@@ -75,10 +77,12 @@ def assert_columns(df: pd.DataFrame, required: Sequence[str]) -> None:
         >>> df = pd.DataFrame({"TeamID": [1], "Score": [70]})
         >>> assert_columns(df, ["TeamID", "Score"])
     """
-    missing = set(required) - set(df.columns)
-    if missing:
-        msg = f"assert_columns failed: missing columns {missing}"
-        raise ValueError(msg)
+    if not required:
+        return
+    pa.DataFrameSchema(
+        {col: pa.Column() for col in required},
+        strict=False,
+    ).validate(df)
 
 
 def assert_dtypes(df: pd.DataFrame, expected: Mapping[str, str | type]) -> None:
@@ -90,7 +94,8 @@ def assert_dtypes(df: pd.DataFrame, expected: Mapping[str, str | type]) -> None:
             type, e.g. ``{"Score": "int64"}``).
 
     Raises:
-        ValueError: If any column's dtype does not match the expectation.
+        pa.errors.SchemaError: If any column's dtype does not match the
+            expectation, or a specified column is not present.
 
     Example:
         >>> import pandas as pd
@@ -98,16 +103,12 @@ def assert_dtypes(df: pd.DataFrame, expected: Mapping[str, str | type]) -> None:
         >>> df = pd.DataFrame({"Score": [70, 85]})
         >>> assert_dtypes(df, {"Score": "int64"})
     """
-    missing_cols = set(expected.keys()) - set(df.columns)
-    if missing_cols:
-        msg = f"assert_dtypes failed: columns not found in DataFrame: {missing_cols}"
-        raise ValueError(msg)
-    for col, dtype in expected.items():
-        actual = str(df[col].dtype)
-        expected_str = dtype if isinstance(dtype, str) else dtype.__name__
-        if actual != expected_str:
-            msg = f"assert_dtypes failed for column {col!r}: expected {expected_str}, got {actual}"
-            raise ValueError(msg)
+    if not expected:
+        return
+    pa.DataFrameSchema(
+        {col: pa.Column(dtype=dtype) for col, dtype in expected.items()},
+        strict=False,
+    ).validate(df)
 
 
 def assert_no_nulls(
@@ -121,7 +122,8 @@ def assert_no_nulls(
         columns: Specific columns to check.  ``None`` checks all columns.
 
     Raises:
-        ValueError: If null values are found.
+        pa.errors.SchemaError: If null values are found, or a specified
+            column is not present.
 
     Example:
         >>> import pandas as pd
@@ -129,18 +131,13 @@ def assert_no_nulls(
         >>> df = pd.DataFrame({"a": [1, 2], "b": [3, 4]})
         >>> assert_no_nulls(df)
     """
-    cols_to_check: Sequence[str] = list(df.columns) if columns is None else columns
-    if columns is not None:
-        missing_cols = set(columns) - set(df.columns)
-        if missing_cols:
-            msg = f"assert_no_nulls failed: columns not found in DataFrame: {missing_cols}"
-            raise ValueError(msg)
-    null_counts = df[list(cols_to_check)].isnull().sum()
-    cols_with_nulls = null_counts[null_counts > 0]
-    if not cols_with_nulls.empty:
-        detail = ", ".join(f"{col!r} ({count} nulls)" for col, count in cols_with_nulls.items())
-        msg = f"assert_no_nulls failed: null values found in columns [{detail}]"
-        raise ValueError(msg)
+    cols = list(df.columns) if columns is None else list(columns)
+    if not cols:
+        return
+    pa.DataFrameSchema(
+        {col: pa.Column(nullable=False) for col in cols},
+        strict=False,
+    ).validate(df)
 
 
 def assert_value_range(
@@ -159,7 +156,8 @@ def assert_value_range(
         max_val: Maximum allowed value (inclusive).  ``None`` to skip.
 
     Raises:
-        ValueError: If any values fall outside the specified range.
+        pa.errors.SchemaError: If any values fall outside the specified range,
+            or the column is not present.
 
     Example:
         >>> import pandas as pd
@@ -167,27 +165,13 @@ def assert_value_range(
         >>> df = pd.DataFrame({"Score": [60, 70, 80]})
         >>> assert_value_range(df, "Score", min_val=0, max_val=200)
     """
-    if column not in df.columns:
-        msg = f"assert_value_range failed: column {column!r} not found in DataFrame"
-        raise ValueError(msg)
-    series = df[column]
-    violations = pd.Series(False, index=series.index)
-
+    checks: list[pa.Check] = []
     if min_val is not None:
-        violations = violations | (series < min_val)
+        checks.append(pa.Check.ge(min_val))
     if max_val is not None:
-        violations = violations | (series > max_val)
-
-    n_violations = int(violations.sum())
-    if n_violations > 0:
-        actual_min = series.min()
-        actual_max = series.max()
-        range_str = (
-            f"[{min_val if min_val is not None else '-inf'}, {max_val if max_val is not None else 'inf'}]"
-        )
-        msg = (
-            f"assert_value_range failed for column {column!r}: "
-            f"{n_violations} values outside range {range_str}, "
-            f"min={actual_min}, max={actual_max}"
-        )
-        raise ValueError(msg)
+        checks.append(pa.Check.le(max_val))
+    # Always build the schema — validates column existence even when no bounds given.
+    pa.DataFrameSchema(
+        {column: pa.Column(checks=checks or None)},
+        strict=False,
+    ).validate(df)

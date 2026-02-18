@@ -808,5 +808,28 @@ import pandas as pd  # type: ignore[import-untyped]
 
 Add this to every file that imports pandas (or other untyped third-party libs). Do NOT install `pandas-stubs` — the project explicitly chose not to.
 
-*Last Updated: 2026-02-18 (Story 1.8 Code Review — test coupling, autouse fixtures, column validation, mypy import-untyped)*
+### Library-First: Surface Existing Libraries Before Reimplementing ⭐ (Discovered Story 1.8 Post-Review)
+
+Before writing a custom implementation for any common data engineering concern, explicitly surface whether a battle-tested library already exists — even if it adds a dependency. Custom code is only justified when no library exists, the library is too heavy, or the story explicitly prohibits new deps.
+
+**Common patterns and their preferred libraries:**
+
+| Custom code you might write | Library to consider first |
+|---|---|
+| DataFrame validation (nulls, dtypes, ranges) | **Pandera** (`pandera.pandas`) |
+| Data modeling / schema validation | **Pydantic** (`pydantic`) |
+| Retry logic / backoff | **tenacity** |
+| CLI argument parsing | **Click** or **Typer** |
+| Progress bars | **tqdm** or **rich** |
+
+**Decision rule:** If a function's docstring could be the README of a popular PyPI package, that package probably already exists.
+
+**Pandera-specific notes (Discovered Story 1.8):**
+- Import as `import pandera.pandas as pa` for pandas validation (the top-level `import pandera as pa` is deprecated in pandera ≥ 0.20)
+- Import the exception separately: `from pandera.errors import SchemaError`
+- Pandera IS fully typed — no `# type: ignore[import-untyped]` needed
+- `pa.DataFrameSchema({col: pa.Column(...)}, strict=False)` — `strict=False` allows extra columns beyond the schema; required for subset-column validation functions
+- When a validation function should always verify column existence (even with no constraints), always build the schema: use `pa.Column(checks=checks or None)` instead of early-returning
+
+*Last Updated: 2026-02-18 (Story 1.8 Post-Review — library-first rule, Pandera adoption)*
 *Next Review: [Set cadence - weekly? sprint boundaries?]*
