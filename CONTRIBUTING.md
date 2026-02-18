@@ -27,6 +27,8 @@ git checkout -b [YOUR FEATURE]
 This project uses conda + Poetry for environment management.
 
 ```sh
+# Create the conda env if you haven't already
+conda create -n ncaa_eval python=3.12 -y
 conda activate ncaa_eval
 POETRY_VIRTUALENVS_CREATE=false poetry install --with dev
 pre-commit install

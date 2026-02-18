@@ -144,7 +144,7 @@ command = "pytest tests/ -m smoke --tb=short -q"
 name = "cz_conventional_commits"
 version = "0.1.0"
 tag_format = "$version"
-version_files = ["pyproject.toml:version"]
+version_files = ["pyproject.toml:version", "docs/conf.py:release"]
 
 [tool.check-manifest]
 ignore = [
@@ -161,7 +161,6 @@ ignore = [
     # Config files not in distribution
     "*.yaml",
     "*.yml",
-    ".pre-commit-config.yaml",
     ".bandit",
     ".cruft.json",
     ".editorconfig",

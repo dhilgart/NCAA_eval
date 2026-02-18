@@ -681,5 +681,26 @@ check-manifest validates sdist distributions include all VCS-tracked files. Poet
 
 For projects using `"*"` (unconstrained) versions, edgetest has limited value until dependency bounds are added. Configure scaffolding early but note the tool becomes meaningful only when bounds exist. Use `pytest tests/ -m smoke` as the edgetest command (fast, validates basic compatibility).
 
-*Last Updated: 2026-02-18 (Story 1.7 SM - Sphinx/napoleon, cookiecutter cleanup, check-manifest, edgetest)*
+### Commitizen `version_files` Must Track All Version Strings ⭐ (Discovered Story 1.7 Code Review)
+
+When Sphinx `docs/conf.py` hardcodes `release = "0.1.0"`, it **must** be listed in commitizen's `version_files` or it drifts silently on every `cz bump`:
+
+```toml
+[tool.commitizen]
+version_files = ["pyproject.toml:version", "docs/conf.py:release"]
+```
+
+**Template Action:** Always include `docs/conf.py:release` in `version_files` when Sphinx is configured.
+
+### Sphinx `exclude_patterns` for Mixed-Content `docs/` Directories ⭐ (Discovered Story 1.7 Code Review)
+
+Projects with spec documents, testing guides, or archive folders alongside Sphinx source must set `exclude_patterns` to prevent accidental inclusion if `.rst` files are ever added to those subdirectories:
+
+```python
+exclude_patterns = ["_build", "specs", "testing", "archive"]
+```
+
+**Template Action:** Include defensive `exclude_patterns` in the default `docs/conf.py` template covering all non-Sphinx subdirectories.
+
+*Last Updated: 2026-02-18 (Story 1.7 Code Review - version_files tracking, Sphinx exclude_patterns)*
 *Next Review: [Set cadence - weekly? sprint boundaries?]*
