@@ -37,3 +37,10 @@ def typecheck(session: nox.Session) -> None:
 def tests(session: nox.Session) -> None:
     """Run the full pytest test suite."""
     session.run("pytest", "--tb=short")
+
+
+@nox.session(python=False)
+def docs(session: nox.Session) -> None:
+    """Generate Sphinx HTML documentation from source docstrings."""
+    session.run("sphinx-apidoc", "-f", "-e", "-o", "docs/api", "src/ncaa_eval")
+    session.run("sphinx-build", "-b", "html", "docs", "docs/_build/html")
