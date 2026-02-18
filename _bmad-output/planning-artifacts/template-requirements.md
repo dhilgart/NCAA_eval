@@ -39,6 +39,46 @@ development:
 - `poetry.lock` can go stale even when `pyproject.toml` is correct — always run `poetry lock --no-update && poetry install --with dev` after adding deps to ensure lock file is current (pytest-cov 7.0.0 was missing despite being in pyproject.toml)
 - Always include `[tool.coverage.run]` alongside `[tool.coverage.report]` in pyproject.toml from day one — branch coverage is disabled by default and omitting this section means the coverage report never shows branch gaps
 
+### Session Management (Nox) ⭐ (Discovered Story 1.6)
+
+**Nox orchestrates the full quality pipeline** — running `nox` executes Ruff -> Mypy -> Pytest in order.
+
+#### Nox + Conda/Poetry: Use `python=False` ⭐
+
+When the project uses conda + Poetry (`POETRY_VIRTUALENVS_CREATE=false`), Nox sessions must **reuse the active environment** — not create per-session virtualenvs (which would duplicate the entire dependency tree and break conda-managed packages).
+
+```python
+# ✅ Correct: reuse active conda/Poetry environment
+@nox.session(python=False)
+def lint(session: nox.Session) -> None:
+    """Run Ruff linting and formatting checks."""
+    session.run("ruff", "check", ".", "--fix")
+    session.run("ruff", "format", "--check", ".")
+
+# ❌ Wrong: creates isolated virtualenv, must reinstall ALL deps per session
+@nox.session
+def lint(session: nox.Session) -> None:
+    session.install("ruff")  # Slow, duplicative
+    session.run("ruff", "check", ".", "--fix")
+```
+
+**Key rules for `python=False` mode:**
+- Do NOT call `session.install()` — deprecated without a virtualenv
+- Do NOT pass `external=True` to `session.run()` — not needed when `python=False`
+- Set default sessions via `nox.options.sessions = ["lint", "typecheck", "tests"]`
+- **Include `noxfile.py` in the typecheck session's mypy invocation** — otherwise the noxfile is only type-checked manually once at implementation time, not continuously. Add it as an explicit path: `session.run("mypy", ..., "src/pkg", "tests", "noxfile.py")` (Discovered: Story 1.6 code review)
+
+#### Nox vs Pre-commit: Complementary, Not Redundant ⭐
+
+| Aspect | Pre-commit | Nox |
+|---|---|---|
+| **When** | Automatic on `git commit` | Manual developer command |
+| **Scope** | Only changed files (except mypy/pytest) | Entire project |
+| **Tests** | Smoke tests only (`-m smoke`) | Full test suite |
+| **Purpose** | Fast gate before commit | Comprehensive validation before PR |
+
+**Template Pattern:** Include both. Pre-commit for fast automatic checks, Nox for thorough manual validation.
+
 ### Configuration Management
 - Type checking: mypy with strict settings (see pyproject.toml)
 - Linting: Ruff (confirmed - Story 1.4)
@@ -516,6 +556,10 @@ Code review workflow generates PRs following .github/pull_request_template.md st
 - ❌ **PLR09 prefix over-selected Ruff rules** — `"PLR09"` in extend-select selects the entire PLR09xx family including PLR0914 (too-many-locals) and PLR0916 (too-many-boolean-expressions) which are not documented in STYLE_GUIDE.md and use Ruff defaults that will block legitimate data science code. Use explicit codes.
 - ❌ **Library Requirements table not updated to match implementation** — The Dev Notes table still referenced `mirrors-mypy` after the implementation correctly switched to a local hook. Story documentation must be updated atomically with implementation changes.
 
+**Story 1.6 - Configure Session Management (2026-02-18 Code Review):**
+- ❌ **RST double backticks in Google-style docstrings** — Module-level docstrings used RST `` ``code`` `` syntax instead of Google-style single `` `code` ``. All Python files in this project use Google docstring style; single backticks are correct for inline code. Ruff does not catch this automatically.
+- ❌ **noxfile.py excluded from automated mypy enforcement** — The typecheck session's mypy invocation scoped to `src/ncaa_eval tests`, leaving `noxfile.py` type-checked only once at implementation time. Fixed by adding `noxfile.py` as an explicit path to the mypy invocation in the typecheck session.
+
 **Story 1.5 - Configure Testing Framework (2026-02-17):**
 - ❌ **Mutmut 3.x is Windows-incompatible** — imports `resource` (Unix-only stdlib) unconditionally in `__main__.py`. Any `mutmut` invocation fails on Windows with `ModuleNotFoundError: No module named 'resource'`. Required switching to WSL for local mutation testing. **Template action: Document WSL as required for full local toolchain; note CI (ubuntu-latest) is unaffected.**
 - ❌ **Python 3.14 is too new for this toolchain** — several dev dependencies (mutmut, certain hypothesis strategies) have not yet certified compatibility with Python 3.14 alpha/beta. **Template action: Pin CI and dev environments to Python 3.12 (latest stable LTS-equivalent); use `python = ">=3.12,<3.14"` as the pyproject.toml constraint until toolchain catches up.**
@@ -604,5 +648,5 @@ python_version_min: "[Minimum Python version]"
 
 ---
 
-*Last Updated: 2026-02-17 (Story 1.5 Code Review - coverage branch config, Ruff PT022 fixture pattern, mutmut Windows/WSL/marker-exclusion patterns, Python 3.14 compatibility warning)*
+*Last Updated: 2026-02-18 (Story 1.6 Code Review - noxfile.py mypy scope gap, Google docstring backtick style)*
 *Next Review: [Set cadence - weekly? sprint boundaries?]*
