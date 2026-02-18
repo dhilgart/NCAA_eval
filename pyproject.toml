@@ -132,11 +132,52 @@ exclude_lines = [
 ]
 omit = ['env/*', 'venv/*', '*/virtualenv/*', '*/virtualenvs/*', '*/tests/*']
 
+[tool.edgetest]
+extras = []
+
+[[tool.edgetest.envs]]
+name = "latest"
+upgrade = ["pandas", "numpy", "scikit-learn", "xgboost", "networkx", "joblib"]
+command = "pytest tests/ -m smoke --tb=short -q"
+
 [tool.commitizen]
 name = "cz_conventional_commits"
 version = "0.1.0"
 tag_format = "$version"
-version_files = ["pyproject.toml:version"]
+version_files = ["pyproject.toml:version", "docs/conf.py:release"]
+
+[tool.check-manifest]
+ignore = [
+    # AI and IDE tool directories
+    ".claude/**",
+    ".windsurf/**",
+    # BMAD framework and output
+    "_bmad/**",
+    "_bmad-output/**",
+    # Documentation (non-distribution)
+    "docs/**",
+    # Task management
+    "tasks/**",
+    # Config files not in distribution
+    "*.yaml",
+    "*.yml",
+    ".bandit",
+    ".cruft.json",
+    ".editorconfig",
+    # Developer documentation
+    "CONTRIBUTING.md",
+    "STYLE_GUIDE.md",
+    "TESTING_STRATEGY.md",
+    "CHANGELOG.md",
+    # Nox / test configuration
+    "noxfile.py",
+    "tests/**",
+    # Lock files (not part of distribution)
+    "poetry.lock",
+    # Application stubs (dashboard app, data placeholders)
+    "dashboard/**",
+    "data/**",
+]
 
 [tool.mutmut]
 # Mutation testing targets — Tier 1 priority: evaluation module
