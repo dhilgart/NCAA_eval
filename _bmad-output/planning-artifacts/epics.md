@@ -4,9 +4,9 @@ stepsCompleted:
   - step-02-design-epics
   - step-03-create-stories
 inputDocuments:
-  - docs/specs/03-prd.md
-  - docs/specs/05-architecture-fullstack
-  - docs/specs/04-front-end-spec.md
+  - specs/03-prd.md
+  - specs/05-architecture-fullstack.md
+  - specs/04-front-end-spec.md
 ---
 
 # NCAA_eval - Epic Breakdown

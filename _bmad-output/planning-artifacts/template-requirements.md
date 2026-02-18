@@ -692,15 +692,16 @@ version_files = ["pyproject.toml:version", "docs/conf.py:release"]
 
 **Template Action:** Always include `docs/conf.py:release` in `version_files` when Sphinx is configured.
 
-### Sphinx `exclude_patterns` for Mixed-Content `docs/` Directories ⭐ (Discovered Story 1.7 Code Review)
+### Keep `docs/` as Pure Sphinx Source ⭐ (Updated Story 1.9)
 
-Projects with spec documents, testing guides, or archive folders alongside Sphinx source must set `exclude_patterns` to prevent accidental inclusion if `.rst` files are ever added to those subdirectories:
+Keep `docs/` as a pure Sphinx source directory. Move planning specs and archives to a top-level `specs/` directory. Use `myst-parser` to integrate Markdown developer guides (style guide, testing strategy) directly into the Sphinx toctree. This eliminates the need for defensive `exclude_patterns` beyond `_build`.
 
 ```python
-exclude_patterns = ["_build", "specs", "testing", "archive"]
+# docs/conf.py — minimal exclude_patterns when docs/ is pure source
+exclude_patterns = ["_build"]
 ```
 
-**Template Action:** Include defensive `exclude_patterns` in the default `docs/conf.py` template covering all non-Sphinx subdirectories.
+**Template Action:** Add `myst-parser` to dev dependencies alongside Sphinx and Furo. Keep `docs/` as pure Sphinx source from project start. Planning specs go in `specs/` at project root.
 
-*Last Updated: 2026-02-18 (Story 1.7 Code Review - version_files tracking, Sphinx exclude_patterns)*
+*Last Updated: 2026-02-18 (Story 1.9 - docs restructure, myst-parser integration)*
 *Next Review: [Set cadence - weekly? sprint boundaries?]*

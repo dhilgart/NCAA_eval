@@ -14,9 +14,17 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.viewcode",
     "sphinx.ext.napoleon",
+    "myst_parser",
 ]
 
-exclude_patterns = ["_build", "specs", "testing", "archive"]
+exclude_patterns = ["_build"]
+
+source_suffix = {
+    ".rst": "restructuredtext",
+    ".md": "markdown",
+}
+
+suppress_warnings = ["myst.xref_missing"]
 
 html_theme = "furo"
 

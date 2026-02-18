@@ -863,6 +863,6 @@ During code review, verify:
 ## References
 
 - `pyproject.toml` — Single source of truth for all tool configurations
-- `docs/specs/05-architecture-fullstack.md` Section 12 — Coding standards
-- `docs/specs/05-architecture-fullstack.md` Section 10 — Development workflow
-- `docs/specs/03-prd.md` Section 4 — Technical assumptions & constraints
+- `specs/05-architecture-fullstack.md` Section 12 — Coding standards
+- `specs/05-architecture-fullstack.md` Section 10 — Development workflow
+- `specs/03-prd.md` Section 4 — Technical assumptions & constraints

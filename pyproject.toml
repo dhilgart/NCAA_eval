@@ -31,6 +31,7 @@ check-manifest = "*"
 edgetest = "*"
 sphinx = "*"
 furo = "*"
+myst-parser = "*"
 
 [build-system]
 requires = ["poetry-core"]
@@ -156,6 +157,8 @@ ignore = [
     "_bmad-output/**",
     # Documentation (non-distribution)
     "docs/**",
+    # Planning specifications (non-distribution)
+    "specs/**",
     # Task management
     "tasks/**",
     # Config files not in distribution
@@ -166,8 +169,6 @@ ignore = [
     ".editorconfig",
     # Developer documentation
     "CONTRIBUTING.md",
-    "STYLE_GUIDE.md",
-    "TESTING_STRATEGY.md",
     "CHANGELOG.md",
     # Nox / test configuration
     "noxfile.py",

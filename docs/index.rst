@@ -3,7 +3,21 @@ NCAA Eval Documentation
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Developer Guides:
+
+   STYLE_GUIDE
+   TESTING_STRATEGY
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Testing Guides:
+   :glob:
+
+   testing/*
+
+.. toctree::
+   :maxdepth: 2
+   :caption: API Reference:
 
    api/modules
 
