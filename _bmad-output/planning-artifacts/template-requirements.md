@@ -66,6 +66,7 @@ def lint(session: nox.Session) -> None:
 - Do NOT call `session.install()` — deprecated without a virtualenv
 - Do NOT pass `external=True` to `session.run()` — not needed when `python=False`
 - Set default sessions via `nox.options.sessions = ["lint", "typecheck", "tests"]`
+- **Include `noxfile.py` in the typecheck session's mypy invocation** — otherwise the noxfile is only type-checked manually once at implementation time, not continuously. Add it as an explicit path: `session.run("mypy", ..., "src/pkg", "tests", "noxfile.py")` (Discovered: Story 1.6 code review)
 
 #### Nox vs Pre-commit: Complementary, Not Redundant ⭐
 
@@ -555,6 +556,10 @@ Code review workflow generates PRs following .github/pull_request_template.md st
 - ❌ **PLR09 prefix over-selected Ruff rules** — `"PLR09"` in extend-select selects the entire PLR09xx family including PLR0914 (too-many-locals) and PLR0916 (too-many-boolean-expressions) which are not documented in STYLE_GUIDE.md and use Ruff defaults that will block legitimate data science code. Use explicit codes.
 - ❌ **Library Requirements table not updated to match implementation** — The Dev Notes table still referenced `mirrors-mypy` after the implementation correctly switched to a local hook. Story documentation must be updated atomically with implementation changes.
 
+**Story 1.6 - Configure Session Management (2026-02-18 Code Review):**
+- ❌ **RST double backticks in Google-style docstrings** — Module-level docstrings used RST `` ``code`` `` syntax instead of Google-style single `` `code` ``. All Python files in this project use Google docstring style; single backticks are correct for inline code. Ruff does not catch this automatically.
+- ❌ **noxfile.py excluded from automated mypy enforcement** — The typecheck session's mypy invocation scoped to `src/ncaa_eval tests`, leaving `noxfile.py` type-checked only once at implementation time. Fixed by adding `noxfile.py` as an explicit path to the mypy invocation in the typecheck session.
+
 **Story 1.5 - Configure Testing Framework (2026-02-17):**
 - ❌ **Mutmut 3.x is Windows-incompatible** — imports `resource` (Unix-only stdlib) unconditionally in `__main__.py`. Any `mutmut` invocation fails on Windows with `ModuleNotFoundError: No module named 'resource'`. Required switching to WSL for local mutation testing. **Template action: Document WSL as required for full local toolchain; note CI (ubuntu-latest) is unaffected.**
 - ❌ **Python 3.14 is too new for this toolchain** — several dev dependencies (mutmut, certain hypothesis strategies) have not yet certified compatibility with Python 3.14 alpha/beta. **Template action: Pin CI and dev environments to Python 3.12 (latest stable LTS-equivalent); use `python = ">=3.12,<3.14"` as the pyproject.toml constraint until toolchain catches up.**
@@ -643,5 +648,5 @@ python_version_min: "[Minimum Python version]"
 
 ---
 
-*Last Updated: 2026-02-18 (Story 1.6 Create-Story - Nox session management with conda/Poetry, Nox vs pre-commit coexistence pattern)*
+*Last Updated: 2026-02-18 (Story 1.6 Code Review - noxfile.py mypy scope gap, Google docstring backtick style)*
 *Next Review: [Set cadence - weekly? sprint boundaries?]*
