@@ -1,6 +1,6 @@
 # Story 1.7: Configure Versioning, Packaging & Documentation
 
-Status: ready-for-dev
+Status: in-progress
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -21,10 +21,10 @@ so that the project has automated versioning, package integrity checks, dependen
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Verify and document Commitizen behavior (AC: 1)
-  - [ ] 1.1: Verify `cz check --rev-range HEAD~5..HEAD` validates recent commits pass conventional commits format
-  - [ ] 1.2: Verify `cz bump --dry-run` correctly reads commits and determines version bump
-  - [ ] 1.3: Update `CONTRIBUTING.md` to replace outdated pipenv/invoke workflow with Poetry/Nox/Commitizen
+- [x] Task 1: Verify and document Commitizen behavior (AC: 1)
+  - [x] 1.1: Verify `cz check --rev-range HEAD~5..HEAD` validates recent commits pass conventional commits format
+  - [x] 1.2: Verify `cz bump --dry-run` correctly reads commits and determines version bump
+  - [x] 1.3: Update `CONTRIBUTING.md` to replace outdated pipenv/invoke workflow with Poetry/Nox/Commitizen
 
 - [ ] Task 2: Configure check-manifest (AC: 2)
   - [ ] 2.1: Run `check-manifest` to discover any issues
@@ -414,4 +414,8 @@ claude-sonnet-4-6
 
 ### Completion Notes List
 
+- Task 1 (Commitizen): Verified cz check behavior — 4/5 recent commits pass; 1 GitHub squash-merge commit fails (PR title "Configure Nox session management & automation (#6)" lacks conventional commits type prefix). Documented in CONTRIBUTING.md that PR titles must also follow conventional commits format when using GitHub squash-merge. `cz bump --dry-run --yes` works (--yes required in non-interactive env when no initial tag exists); shows 0.1.0 → 0.2.0 MINOR bump.
+
 ### File List
+
+- `CONTRIBUTING.md` — modified: replaced pipenv/invoke workflow with Poetry/Nox/Commitizen
