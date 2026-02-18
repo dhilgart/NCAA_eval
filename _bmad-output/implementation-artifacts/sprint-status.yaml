@@ -49,7 +49,7 @@ development_status:
   1-5-configure-testing-framework: done
   1-6-configure-session-management-automation: done
   1-7-configure-versioning-packaging-documentation: done
-  1-8-implement-runtime-logging-data-assertions-framework: review
+  1-8-implement-runtime-logging-data-assertions-framework: done
   1-9-restructure-docs-sphinx-source: done
   epic-1-retrospective: optional
 

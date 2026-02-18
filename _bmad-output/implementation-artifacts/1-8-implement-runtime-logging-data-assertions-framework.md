@@ -1,6 +1,6 @@
 # Story 1.8: Implement Runtime Logging & Data Assertions Framework
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -308,9 +308,9 @@ Claude Opus 4.6
 
 - `src/ncaa_eval/utils/__init__.py` — MODIFIED: export logging and assertion public API
 - `src/ncaa_eval/utils/logger.py` — NEW: structured logging with verbosity levels
-- `src/ncaa_eval/utils/assertions.py` — NEW: DataFrame validation helpers
-- `tests/unit/test_logger.py` — NEW: 21 unit tests for logging module
-- `tests/unit/test_assertions.py` — NEW: 31 unit tests for assertions module
+- `src/ncaa_eval/utils/assertions.py` — NEW + MODIFIED (code review): DataFrame validation helpers; added column-existence guards to `assert_dtypes`, `assert_no_nulls`, `assert_value_range`
+- `tests/unit/test_logger.py` — NEW + MODIFIED (code review): 21 unit tests; refactored to remove private-symbol imports, consolidated teardown into shared autouse fixture, strengthened format and timestamp assertions
+- `tests/unit/test_assertions.py` — NEW + MODIFIED (code review): 34 unit tests (3 new tests for KeyError→ValueError behavior)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` — MODIFIED: story status updated
 - `_bmad-output/implementation-artifacts/1-8-implement-runtime-logging-data-assertions-framework.md` — MODIFIED: story file updated
 
@@ -319,3 +319,4 @@ Claude Opus 4.6
 - 2026-02-18: Implemented structured logging module with 4 verbosity levels (QUIET/NORMAL/VERBOSE/DEBUG), env var control, and configurable formatting
 - 2026-02-18: Implemented data assertions module with 5 DataFrame validation functions using vectorized pandas operations
 - 2026-02-18: Added 52 unit tests (21 logging + 31 assertions), all passing with zero regressions
+- 2026-02-18: Code review — fixed 5 issues (1 High, 4 Medium): added column-existence guards to `assert_dtypes`/`assert_no_nulls`/`assert_value_range` (H1); refactored test_logger.py to remove private-symbol imports, replace private stdlib attr access, add real timestamp regex assertion, and consolidate three repeated teardown_method blocks into a single autouse fixture (M1–M4); added 3 new tests covering the new ValueError behavior; total tests: 59, all passing

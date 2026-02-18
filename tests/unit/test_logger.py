@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import logging
+import re
+from collections.abc import Iterator
 
 import pytest
 
 from ncaa_eval.utils.logger import (
-    _LOG_FORMAT,
-    _ROOT_LOGGER_NAME,
     DEBUG,
     NORMAL,
     QUIET,
@@ -17,41 +17,47 @@ from ncaa_eval.utils.logger import (
     get_logger,
 )
 
+# Public-facing root logger name — part of the observable API documented in logger.py.
+_NCAA_LOGGER = "ncaa_eval"
+
+
+@pytest.fixture(autouse=True)
+def _reset_ncaa_eval_logger() -> Iterator[None]:
+    """Reset the ncaa_eval root logger between every test in this module."""
+    yield
+    root = logging.getLogger(_NCAA_LOGGER)
+    root.handlers.clear()
+    root.setLevel(logging.WARNING)
+
 
 @pytest.mark.smoke
 class TestConfigureLogging:
     """Tests for `configure_logging`."""
 
-    def teardown_method(self) -> None:
-        """Reset the ncaa_eval root logger between tests."""
-        root = logging.getLogger(_ROOT_LOGGER_NAME)
-        root.handlers.clear()
-        root.setLevel(logging.WARNING)
-
     def test_quiet_sets_warning_level(self) -> None:
         configure_logging("QUIET")
-        root = logging.getLogger(_ROOT_LOGGER_NAME)
+        root = logging.getLogger(_NCAA_LOGGER)
         assert root.level == logging.WARNING
 
     def test_normal_sets_info_level(self) -> None:
         configure_logging("NORMAL")
-        root = logging.getLogger(_ROOT_LOGGER_NAME)
+        root = logging.getLogger(_NCAA_LOGGER)
         assert root.level == logging.INFO
 
     def test_verbose_sets_custom_level(self) -> None:
         configure_logging("VERBOSE")
-        root = logging.getLogger(_ROOT_LOGGER_NAME)
+        root = logging.getLogger(_NCAA_LOGGER)
         assert root.level == VERBOSE
         assert root.level == 15
 
     def test_debug_sets_debug_level(self) -> None:
         configure_logging("DEBUG")
-        root = logging.getLogger(_ROOT_LOGGER_NAME)
+        root = logging.getLogger(_NCAA_LOGGER)
         assert root.level == logging.DEBUG
 
     def test_level_is_case_insensitive(self) -> None:
         configure_logging("verbose")
-        root = logging.getLogger(_ROOT_LOGGER_NAME)
+        root = logging.getLogger(_NCAA_LOGGER)
         assert root.level == VERBOSE
 
     def test_invalid_level_raises_valueerror(self) -> None:
@@ -62,7 +68,7 @@ class TestConfigureLogging:
         import sys
 
         configure_logging("NORMAL")
-        root = logging.getLogger(_ROOT_LOGGER_NAME)
+        root = logging.getLogger(_NCAA_LOGGER)
         assert len(root.handlers) == 1
         handler = root.handlers[0]
         assert isinstance(handler, logging.StreamHandler)
@@ -72,47 +78,45 @@ class TestConfigureLogging:
         configure_logging("NORMAL")
         configure_logging("DEBUG")
         configure_logging("QUIET")
-        root = logging.getLogger(_ROOT_LOGGER_NAME)
+        root = logging.getLogger(_NCAA_LOGGER)
         assert len(root.handlers) == 1
 
     def test_propagate_is_false(self) -> None:
         configure_logging("NORMAL")
-        root = logging.getLogger(_ROOT_LOGGER_NAME)
+        root = logging.getLogger(_NCAA_LOGGER)
         assert root.propagate is False
 
-    def test_log_format_applied(self) -> None:
+    def test_log_format_applied(self, capsys: pytest.CaptureFixture[str]) -> None:
         configure_logging("DEBUG")
-        root = logging.getLogger(_ROOT_LOGGER_NAME)
-        handler = root.handlers[0]
-        assert handler.formatter is not None
-        assert handler.formatter._fmt == _LOG_FORMAT
+        log = get_logger("fmtcheck")
+        log.info("format-test")
+        captured = capsys.readouterr()
+        # Verify pipe-delimited format: timestamp | name | level | message
+        assert " | ncaa_eval.fmtcheck | " in captured.err
+        assert "INFO" in captured.err
+        assert "format-test" in captured.err
 
 
 @pytest.mark.smoke
 class TestEnvVarOverride:
     """Tests for `NCAA_EVAL_LOG_LEVEL` environment variable."""
 
-    def teardown_method(self) -> None:
-        root = logging.getLogger(_ROOT_LOGGER_NAME)
-        root.handlers.clear()
-        root.setLevel(logging.WARNING)
-
     def test_env_var_sets_level(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setenv("NCAA_EVAL_LOG_LEVEL", "VERBOSE")
         configure_logging()
-        root = logging.getLogger(_ROOT_LOGGER_NAME)
+        root = logging.getLogger(_NCAA_LOGGER)
         assert root.level == VERBOSE
 
     def test_explicit_level_overrides_env_var(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setenv("NCAA_EVAL_LOG_LEVEL", "DEBUG")
         configure_logging("QUIET")
-        root = logging.getLogger(_ROOT_LOGGER_NAME)
+        root = logging.getLogger(_NCAA_LOGGER)
         assert root.level == QUIET
 
     def test_default_is_normal_when_env_unset(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.delenv("NCAA_EVAL_LOG_LEVEL", raising=False)
         configure_logging()
-        root = logging.getLogger(_ROOT_LOGGER_NAME)
+        root = logging.getLogger(_NCAA_LOGGER)
         assert root.level == NORMAL
 
 
@@ -137,11 +141,6 @@ class TestGetLogger:
 class TestLogOutput:
     """Tests that verify log output contains expected components."""
 
-    def teardown_method(self) -> None:
-        root = logging.getLogger(_ROOT_LOGGER_NAME)
-        root.handlers.clear()
-        root.setLevel(logging.WARNING)
-
     def test_output_contains_timestamp_module_level(self, capsys: pytest.CaptureFixture[str]) -> None:
         configure_logging("DEBUG")
         log = get_logger("mymodule")
@@ -151,8 +150,8 @@ class TestLogOutput:
         assert "mymodule" in captured.err
         assert "INFO" in captured.err
         assert "hello test" in captured.err
-        # Timestamp includes a date-like pattern
-        assert "|" in captured.err
+        # Timestamp present as ISO-like datetime prefix (e.g., "2026-02-18 12:34:56")
+        assert re.search(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}", captured.err)
 
 
 @pytest.mark.smoke

@@ -98,6 +98,10 @@ def assert_dtypes(df: pd.DataFrame, expected: Mapping[str, str | type]) -> None:
         >>> df = pd.DataFrame({"Score": [70, 85]})
         >>> assert_dtypes(df, {"Score": "int64"})
     """
+    missing_cols = set(expected.keys()) - set(df.columns)
+    if missing_cols:
+        msg = f"assert_dtypes failed: columns not found in DataFrame: {missing_cols}"
+        raise ValueError(msg)
     for col, dtype in expected.items():
         actual = str(df[col].dtype)
         expected_str = dtype if isinstance(dtype, str) else dtype.__name__
@@ -126,6 +130,11 @@ def assert_no_nulls(
         >>> assert_no_nulls(df)
     """
     cols_to_check: Sequence[str] = list(df.columns) if columns is None else columns
+    if columns is not None:
+        missing_cols = set(columns) - set(df.columns)
+        if missing_cols:
+            msg = f"assert_no_nulls failed: columns not found in DataFrame: {missing_cols}"
+            raise ValueError(msg)
     null_counts = df[list(cols_to_check)].isnull().sum()
     cols_with_nulls = null_counts[null_counts > 0]
     if not cols_with_nulls.empty:
@@ -158,6 +167,9 @@ def assert_value_range(
         >>> df = pd.DataFrame({"Score": [60, 70, 80]})
         >>> assert_value_range(df, "Score", min_val=0, max_val=200)
     """
+    if column not in df.columns:
+        msg = f"assert_value_range failed: column {column!r} not found in DataFrame"
+        raise ValueError(msg)
     series = df[column]
     violations = pd.Series(False, index=series.index)
 

@@ -114,6 +114,11 @@ class TestAssertDtypes:
         with pytest.raises(ValueError, match=r"column 'Score': expected int64, got float64"):
             assert_dtypes(df, {"Score": "int64"})
 
+    def test_nonexistent_column_raises_valueerror(self) -> None:
+        df = pd.DataFrame({"a": [1]})
+        with pytest.raises(ValueError, match="assert_dtypes failed"):
+            assert_dtypes(df, {"nonexistent": "int64"})
+
 
 # ---------------------------------------------------------------------------
 # assert_no_nulls
@@ -151,6 +156,11 @@ class TestAssertNoNulls:
         df = pd.DataFrame({"a": [1.0, np.nan]})
         with pytest.raises(ValueError, match="assert_no_nulls failed"):
             assert_no_nulls(df)
+
+    def test_nonexistent_column_raises_valueerror(self) -> None:
+        df = pd.DataFrame({"a": [1]})
+        with pytest.raises(ValueError, match="assert_no_nulls failed"):
+            assert_no_nulls(df, columns=["nonexistent"])
 
 
 # ---------------------------------------------------------------------------
@@ -201,3 +211,8 @@ class TestAssertValueRange:
     def test_no_constraints_passes(self) -> None:
         df = pd.DataFrame({"Score": [-999, 999]})
         assert_value_range(df, "Score")
+
+    def test_nonexistent_column_raises_valueerror(self) -> None:
+        df = pd.DataFrame({"a": [1]})
+        with pytest.raises(ValueError, match="assert_value_range failed"):
+            assert_value_range(df, "nonexistent")
