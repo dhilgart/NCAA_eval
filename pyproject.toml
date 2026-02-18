@@ -155,11 +155,7 @@ ignore = [
     "_bmad/**",
     "_bmad-output/**",
     # Documentation (non-distribution)
-    "docs/specs/**",
-    "docs/testing/**",
-    "docs/archive/**",
-    "docs/_build/**",
-    "docs/api/**",
+    "docs/**",
     # Task management
     "tasks/**",
     # Config files not in distribution
