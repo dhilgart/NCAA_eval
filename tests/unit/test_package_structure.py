@@ -26,6 +26,7 @@ def test_package_metadata_accessible() -> None:
 
 
 @pytest.mark.smoke
+@pytest.mark.no_mutation
 def test_src_directory_structure() -> None:
     """Verify expected src/ directory structure exists.
 
