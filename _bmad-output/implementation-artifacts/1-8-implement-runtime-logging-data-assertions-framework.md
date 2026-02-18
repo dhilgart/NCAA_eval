@@ -1,6 +1,6 @@
 # Story 1.8: Implement Runtime Logging & Data Assertions Framework
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -22,47 +22,47 @@ so that I can diagnose runtime issues efficiently and validate data integrity th
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Implement structured logging module (AC: 1, 2, 3, 7)
-  - [ ] 1.1: Create `src/ncaa_eval/utils/logger.py` with `configure_logging()` and `get_logger()` public API
-  - [ ] 1.2: Define verbosity levels: QUIET->WARNING(30), NORMAL->INFO(20), VERBOSE->custom(15), DEBUG->DEBUG(10)
-  - [ ] 1.3: Register custom VERBOSE level via `logging.addLevelName(15, "VERBOSE")`
-  - [ ] 1.4: Implement `NCAA_EVAL_LOG_LEVEL` env var reader with NORMAL default
-  - [ ] 1.5: Configure log format: `%(asctime)s | %(name)s | %(levelname)-8s | %(message)s`
-  - [ ] 1.6: Add module docstring with usage examples per AC 7
-  - [ ] 1.7: Export `configure_logging`, `get_logger`, and level constants from `utils/__init__.py`
+- [x] Task 1: Implement structured logging module (AC: 1, 2, 3, 7)
+  - [x] 1.1: Create `src/ncaa_eval/utils/logger.py` with `configure_logging()` and `get_logger()` public API
+  - [x] 1.2: Define verbosity levels: QUIET->WARNING(30), NORMAL->INFO(20), VERBOSE->custom(15), DEBUG->DEBUG(10)
+  - [x] 1.3: Register custom VERBOSE level via `logging.addLevelName(15, "VERBOSE")`
+  - [x] 1.4: Implement `NCAA_EVAL_LOG_LEVEL` env var reader with NORMAL default
+  - [x] 1.5: Configure log format: `%(asctime)s | %(name)s | %(levelname)-8s | %(message)s`
+  - [x] 1.6: Add module docstring with usage examples per AC 7
+  - [x] 1.7: Export `configure_logging`, `get_logger`, and level constants from `utils/__init__.py`
 
-- [ ] Task 2: Implement data assertions module (AC: 4, 5, 7)
-  - [ ] 2.1: Create `src/ncaa_eval/utils/assertions.py`
-  - [ ] 2.2: Implement `assert_shape(df, expected_rows, expected_cols)` — validates DataFrame dimensions
-  - [ ] 2.3: Implement `assert_columns(df, required)` — validates required column names exist
-  - [ ] 2.4: Implement `assert_dtypes(df, expected)` — validates column dtype mapping
-  - [ ] 2.5: Implement `assert_no_nulls(df, columns=None)` — validates no null values in specified or all columns
-  - [ ] 2.6: Implement `assert_value_range(df, column, min_val, max_val)` — validates values within bounds
-  - [ ] 2.7: All failures raise `ValueError` with message format: `"<function> failed: expected <X>, got <Y>"`
-  - [ ] 2.8: Add module docstring with usage examples per AC 7
-  - [ ] 2.9: Export assertion functions from `utils/__init__.py`
+- [x] Task 2: Implement data assertions module (AC: 4, 5, 7)
+  - [x] 2.1: Create `src/ncaa_eval/utils/assertions.py`
+  - [x] 2.2: Implement `assert_shape(df, expected_rows, expected_cols)` — validates DataFrame dimensions
+  - [x] 2.3: Implement `assert_columns(df, required)` — validates required column names exist
+  - [x] 2.4: Implement `assert_dtypes(df, expected)` — validates column dtype mapping
+  - [x] 2.5: Implement `assert_no_nulls(df, columns=None)` — validates no null values in specified or all columns
+  - [x] 2.6: Implement `assert_value_range(df, column, min_val, max_val)` — validates values within bounds
+  - [x] 2.7: All failures raise `ValueError` with message format: `"<function> failed: expected <X>, got <Y>"`
+  - [x] 2.8: Add module docstring with usage examples per AC 7
+  - [x] 2.9: Export assertion functions from `utils/__init__.py`
 
-- [ ] Task 3: Write unit tests for logging module (AC: 6)
-  - [ ] 3.1: Create `tests/unit/test_logger.py`
-  - [ ] 3.2: Test `configure_logging()` applies correct level for each verbosity (QUIET, NORMAL, VERBOSE, DEBUG)
-  - [ ] 3.3: Test `NCAA_EVAL_LOG_LEVEL` env var override using `monkeypatch`
-  - [ ] 3.4: Test log output format includes timestamp, module name, and level (use `caplog`)
-  - [ ] 3.5: Test `get_logger(name)` returns logger under `ncaa_eval` hierarchy
-  - [ ] 3.6: Test default level is NORMAL when env var is unset
+- [x] Task 3: Write unit tests for logging module (AC: 6)
+  - [x] 3.1: Create `tests/unit/test_logger.py`
+  - [x] 3.2: Test `configure_logging()` applies correct level for each verbosity (QUIET, NORMAL, VERBOSE, DEBUG)
+  - [x] 3.3: Test `NCAA_EVAL_LOG_LEVEL` env var override using `monkeypatch`
+  - [x] 3.4: Test log output format includes timestamp, module name, and level (use `caplog`)
+  - [x] 3.5: Test `get_logger(name)` returns logger under `ncaa_eval` hierarchy
+  - [x] 3.6: Test default level is NORMAL when env var is unset
 
-- [ ] Task 4: Write unit tests for assertions module (AC: 6)
-  - [ ] 4.1: Create `tests/unit/test_assertions.py`
-  - [ ] 4.2: Test each assertion passes with valid DataFrame data
-  - [ ] 4.3: Test each assertion raises `ValueError` with invalid data
-  - [ ] 4.4: Test error messages contain the specific validation name, expected value, and actual value
-  - [ ] 4.5: Test `assert_no_nulls` with both specific-columns and all-columns modes
-  - [ ] 4.6: Test `assert_value_range` with boundary values (min, max, out-of-range)
+- [x] Task 4: Write unit tests for assertions module (AC: 6)
+  - [x] 4.1: Create `tests/unit/test_assertions.py`
+  - [x] 4.2: Test each assertion passes with valid DataFrame data
+  - [x] 4.3: Test each assertion raises `ValueError` with invalid data
+  - [x] 4.4: Test error messages contain the specific validation name, expected value, and actual value
+  - [x] 4.5: Test `assert_no_nulls` with both specific-columns and all-columns modes
+  - [x] 4.6: Test `assert_value_range` with boundary values (min, max, out-of-range)
 
-- [ ] Task 5: End-to-end validation (all ACs)
-  - [ ] 5.1: `ruff check src/ncaa_eval/utils/ tests/unit/test_logger.py tests/unit/test_assertions.py`
-  - [ ] 5.2: `mypy --strict src/ncaa_eval tests`
-  - [ ] 5.3: `nox` (full pipeline: lint -> typecheck -> tests) — all pass, zero regressions
-  - [ ] 5.4: Verify module docstrings contain usage examples
+- [x] Task 5: End-to-end validation (all ACs)
+  - [x] 5.1: `ruff check src/ncaa_eval/utils/ tests/unit/test_logger.py tests/unit/test_assertions.py`
+  - [x] 5.2: `mypy --strict src/ncaa_eval tests`
+  - [x] 5.3: `nox` (full pipeline: lint -> typecheck -> tests) — all pass, zero regressions
+  - [x] 5.4: Verify module docstrings contain usage examples
 
 ## Dev Notes
 
@@ -287,10 +287,35 @@ b823dc6 feat(toolchain): configure Ruff/Mypy/Pytest pre-commit hooks (#4)
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+- mypy `[import-untyped]` error for pandas despite `follow_imports = "silent"` — resolved with targeted `# type: ignore[import-untyped]` on pandas import lines (story Dev Notes incorrectly stated `follow_imports = "silent"` would suppress this under `--strict`)
+- ruff format needed after initial file creation — ruff auto-formatter adjusted line lengths and import ordering
+
 ### Completion Notes List
 
+- ✅ Implemented `src/ncaa_eval/utils/logger.py` with `configure_logging()` and `get_logger()` public API, 4 verbosity levels (QUIET/NORMAL/VERBOSE/DEBUG), custom VERBOSE level registration, `NCAA_EVAL_LOG_LEVEL` env var support with precedence chain, and `StreamHandler` to stderr with pipe-delimited format
+- ✅ Implemented `src/ncaa_eval/utils/assertions.py` with 5 DataFrame validation functions: `assert_shape`, `assert_columns`, `assert_dtypes`, `assert_no_nulls`, `assert_value_range` — all using vectorized pandas operations, raising `ValueError` with descriptive messages
+- ✅ Updated `src/ncaa_eval/utils/__init__.py` to export all public API symbols
+- ✅ 21 logging tests covering all verbosity levels, env var override, level precedence, handler configuration, format validation, logger hierarchy
+- ✅ 31 assertion tests covering happy paths, error cases, error message content, boundary values, specific-column and all-column modes
+- ✅ All 56 tests pass, nox pipeline clean (lint + typecheck + tests), zero regressions
+- ✅ Both module docstrings contain comprehensive usage examples per AC 7
+
 ### File List
+
+- `src/ncaa_eval/utils/__init__.py` — MODIFIED: export logging and assertion public API
+- `src/ncaa_eval/utils/logger.py` — NEW: structured logging with verbosity levels
+- `src/ncaa_eval/utils/assertions.py` — NEW: DataFrame validation helpers
+- `tests/unit/test_logger.py` — NEW: 21 unit tests for logging module
+- `tests/unit/test_assertions.py` — NEW: 31 unit tests for assertions module
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — MODIFIED: story status updated
+- `_bmad-output/implementation-artifacts/1-8-implement-runtime-logging-data-assertions-framework.md` — MODIFIED: story file updated
+
+## Change Log
+
+- 2026-02-18: Implemented structured logging module with 4 verbosity levels (QUIET/NORMAL/VERBOSE/DEBUG), env var control, and configurable formatting
+- 2026-02-18: Implemented data assertions module with 5 DataFrame validation functions using vectorized pandas operations
+- 2026-02-18: Added 52 unit tests (21 logging + 31 assertions), all passing with zero regressions
