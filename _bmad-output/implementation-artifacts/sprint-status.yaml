@@ -48,7 +48,7 @@ development_status:
   1-4-configure-code-quality-toolchain: done
   1-5-configure-testing-framework: done
   1-6-configure-session-management-automation: done
-  1-7-configure-versioning-packaging-documentation: in-progress
+  1-7-configure-versioning-packaging-documentation: review
   1-8-implement-runtime-logging-data-assertions-framework: backlog
   epic-1-retrospective: optional
 
