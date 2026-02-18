@@ -7,10 +7,10 @@ stepsCompleted:
   - step-05-epic-quality-review
   - step-06-final-assessment
 documents:
-  prd: "docs/specs/03-prd.md"
-  architecture: "docs/specs/05-architecture-fullstack.md"
+  prd: "specs/03-prd.md"
+  architecture: "specs/05-architecture-fullstack.md"
   epics: "_bmad-output/planning-artifacts/epics.md"
-  ux: "docs/specs/04-front-end-spec.md"
+  ux: "specs/04-front-end-spec.md"
 ---
 
 # Implementation Readiness Assessment Report
@@ -24,10 +24,10 @@ documents:
 
 | Document Type | File | Location |
 |---|---|---|
-| PRD | 03-prd.md | docs/specs/ |
-| Architecture | 05-architecture-fullstack.md | docs/specs/ |
+| PRD | 03-prd.md | specs/ |
+| Architecture | 05-architecture-fullstack.md | specs/ |
 | Epics & Stories | epics.md | _bmad-output/planning-artifacts/ |
-| UX (Front-End Spec) | 04-front-end-spec.md | docs/specs/ |
+| UX (Front-End Spec) | 04-front-end-spec.md | specs/ |
 
 ### Issues
 - No duplicates found
@@ -158,7 +158,7 @@ PRD is well-structured with clearly numbered FRs (9) and NFRs (5). Section 3 add
 
 ### UX Document Status
 
-**Found:** docs/specs/04-front-end-spec.md (Approved, v1.0)
+**Found:** specs/04-front-end-spec.md (Approved, v1.0)
 
 ### UX ↔ PRD Alignment
 

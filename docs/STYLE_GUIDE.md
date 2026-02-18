@@ -578,7 +578,7 @@ During code review, verify:
 ## 7. PR Checklist (Summary)
 
 Every pull request must pass the following gates. The actual PR template is at
-[`.github/pull_request_template.md`](../.github/pull_request_template.md). For
+`.github/pull_request_template.md`. For
 the philosophy behind this two-tier approach, see
 [`docs/TESTING_STRATEGY.md`](TESTING_STRATEGY.md) (Section: Quality Gates and Execution Tiers).
 
@@ -863,6 +863,6 @@ During code review, verify:
 ## References
 
 - `pyproject.toml` — Single source of truth for all tool configurations
-- `docs/specs/05-architecture-fullstack.md` Section 12 — Coding standards
-- `docs/specs/05-architecture-fullstack.md` Section 10 — Development workflow
-- `docs/specs/03-prd.md` Section 4 — Technical assumptions & constraints
+- `specs/05-architecture-fullstack.md` Section 12 — Coding standards
+- `specs/05-architecture-fullstack.md` Section 10 — Development workflow
+- `specs/03-prd.md` Section 4 — Technical assumptions & constraints

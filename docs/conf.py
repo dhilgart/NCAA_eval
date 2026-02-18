@@ -14,9 +14,22 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.viewcode",
     "sphinx.ext.napoleon",
+    "myst_parser",
 ]
 
-exclude_patterns = ["_build", "specs", "testing", "archive"]
+exclude_patterns = ["_build"]
+
+source_suffix = {
+    ".rst": "restructuredtext",
+    ".md": "markdown",
+}
+
+# myst-parser warns on Markdown TOC anchor links (e.g. [section](#section))
+# and references to files outside the Sphinx source tree; these are valid
+# Markdown constructs that render correctly on GitHub but have no Sphinx equivalent.
+# misc.highlighting_failure suppresses "Pygments lexer name 'mermaid' is not known"
+# from mermaid code blocks in testing guides (no mermaid extension installed).
+suppress_warnings = ["myst.xref_missing", "misc.highlighting_failure"]
 
 html_theme = "furo"
 

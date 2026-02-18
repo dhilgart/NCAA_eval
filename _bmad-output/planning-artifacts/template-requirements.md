@@ -692,15 +692,41 @@ version_files = ["pyproject.toml:version", "docs/conf.py:release"]
 
 **Template Action:** Always include `docs/conf.py:release` in `version_files` when Sphinx is configured.
 
-### Sphinx `exclude_patterns` for Mixed-Content `docs/` Directories ⭐ (Discovered Story 1.7 Code Review)
+### Keep `docs/` as Pure Sphinx Source ⭐ (Updated Story 1.9)
 
-Projects with spec documents, testing guides, or archive folders alongside Sphinx source must set `exclude_patterns` to prevent accidental inclusion if `.rst` files are ever added to those subdirectories:
+Keep `docs/` as a pure Sphinx source directory. Move planning specs and archives to a top-level `specs/` directory. Use `myst-parser` to integrate Markdown developer guides (style guide, testing strategy) directly into the Sphinx toctree. This eliminates the need for defensive `exclude_patterns` beyond `_build`.
 
 ```python
-exclude_patterns = ["_build", "specs", "testing", "archive"]
+# docs/conf.py — minimal exclude_patterns when docs/ is pure source
+exclude_patterns = ["_build"]
 ```
 
-**Template Action:** Include defensive `exclude_patterns` in the default `docs/conf.py` template covering all non-Sphinx subdirectories.
+**Template Action:** Add `myst-parser` to dev dependencies alongside Sphinx and Furo. Keep `docs/` as pure Sphinx source from project start. Planning specs go in `specs/` at project root.
 
-*Last Updated: 2026-02-18 (Story 1.7 Code Review - version_files tracking, Sphinx exclude_patterns)*
+### myst-parser Requires `suppress_warnings` for Markdown TOC Links (Discovered Story 1.9 Code Review)
+
+When myst-parser processes Markdown files that contain TOC anchor links (e.g., `[section](#section)`) or references to files outside the Sphinx source tree, it generates `myst.xref_missing` warnings. These are valid Markdown constructs (they work on GitHub) but have no Sphinx equivalent. Suppression is mandatory — not a band-aid:
+
+```python
+# docs/conf.py — required when using myst-parser with existing Markdown docs
+suppress_warnings = ["myst.xref_missing", "misc.highlighting_failure"]
+```
+
+**Template Action:** Always include both suppressions in `docs/conf.py` when `myst_parser` is in extensions: `myst.xref_missing` (Markdown anchor links and out-of-tree refs) and `misc.highlighting_failure` (fenced code blocks with unsupported lexers like `mermaid`). Add explanatory comments so future developers don't remove them.
+
+### Use Text References for Out-of-Tree Files in Sphinx Markdown (Discovered Story 1.9 Code Review)
+
+Markdown links to files outside the Sphinx source tree (e.g., `[specs/file.md](../specs/file.md)` from `docs/`) render as dead `<span class="xref myst">` with no `href` in Sphinx HTML. Use plain backtick-quoted text references instead:
+
+```markdown
+# BAD — dead link in Sphinx HTML (works on GitHub only)
+- [`specs/architecture.md`](../specs/architecture.md) - Architecture docs
+
+# GOOD — renders as styled code text in both GitHub and Sphinx
+- `specs/architecture.md` - Architecture docs
+```
+
+**Template Action:** In Markdown files processed by Sphinx, use backtick-quoted text for any reference to files outside `docs/`. Reserve Markdown links for files within the Sphinx source tree.
+
+*Last Updated: 2026-02-18 (Story 1.9 Code Review #2 - added misc.highlighting_failure suppression for mermaid code blocks)*
 *Next Review: [Set cadence - weekly? sprint boundaries?]*
