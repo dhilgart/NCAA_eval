@@ -1,9 +1,0 @@
-site_name: NCAA_Eval
-nav:
-  - Home: README.md
-  - Contributing: contributing.md
-theme:
-  name: 'material'
-repo_url: https://github.com/dhilgart/NCAA_eval
-remote_branch: gh-pages
-remote_name: origin
