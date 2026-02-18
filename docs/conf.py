@@ -24,6 +24,9 @@ source_suffix = {
     ".md": "markdown",
 }
 
+# myst-parser warns on Markdown TOC anchor links (e.g. [section](#section))
+# and references to files outside the Sphinx source tree; these are valid
+# Markdown constructs that render correctly on GitHub but have no Sphinx equivalent.
 suppress_warnings = ["myst.xref_missing"]
 
 html_theme = "furo"

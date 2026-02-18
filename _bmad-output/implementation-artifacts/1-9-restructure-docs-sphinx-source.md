@@ -1,6 +1,6 @@
 # Story 1.9: Restructure docs/ as Pure Sphinx Source Directory
 
-Status: review
+Status: done
 
 ## Story
 
@@ -101,3 +101,4 @@ claude-opus-4-6
 ### Change Log
 
 - 2026-02-18: Implemented all 6 tasks, all verification passing
+- 2026-02-18: Code review fixes — converted dead Sphinx xref links in TESTING_STRATEGY.md to text references; added explanatory comment to suppress_warnings in conf.py

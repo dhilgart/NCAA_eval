@@ -290,7 +290,7 @@ See [Domain Testing Guide](testing/domain-testing.md) for comprehensive examples
 ## References
 
 - [`STYLE_GUIDE.md`](STYLE_GUIDE.md) - Coding standards, vectorization rule
-- [`specs/05-architecture-fullstack.md`](../specs/05-architecture-fullstack.md) - Architecture, nox workflow
-- [`specs/03-prd.md`](../specs/03-prd.md) - Non-functional requirements (NFR1-NFR5)
+- `specs/05-architecture-fullstack.md` - Architecture, nox workflow
+- `specs/03-prd.md` - Non-functional requirements (NFR1-NFR5)
 - `pyproject.toml` - Pytest configuration
 - `.github/pull_request_template.md` - PR checklist

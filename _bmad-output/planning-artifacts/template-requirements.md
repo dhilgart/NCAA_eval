@@ -703,5 +703,30 @@ exclude_patterns = ["_build"]
 
 **Template Action:** Add `myst-parser` to dev dependencies alongside Sphinx and Furo. Keep `docs/` as pure Sphinx source from project start. Planning specs go in `specs/` at project root.
 
-*Last Updated: 2026-02-18 (Story 1.9 - docs restructure, myst-parser integration)*
+### myst-parser Requires `suppress_warnings` for Markdown TOC Links (Discovered Story 1.9 Code Review)
+
+When myst-parser processes Markdown files that contain TOC anchor links (e.g., `[section](#section)`) or references to files outside the Sphinx source tree, it generates `myst.xref_missing` warnings. These are valid Markdown constructs (they work on GitHub) but have no Sphinx equivalent. Suppression is mandatory — not a band-aid:
+
+```python
+# docs/conf.py — required when using myst-parser with existing Markdown docs
+suppress_warnings = ["myst.xref_missing"]
+```
+
+**Template Action:** Always include `suppress_warnings = ["myst.xref_missing"]` in `docs/conf.py` when `myst_parser` is in extensions. Add an explanatory comment so future developers don't remove it.
+
+### Use Text References for Out-of-Tree Files in Sphinx Markdown (Discovered Story 1.9 Code Review)
+
+Markdown links to files outside the Sphinx source tree (e.g., `[specs/file.md](../specs/file.md)` from `docs/`) render as dead `<span class="xref myst">` with no `href` in Sphinx HTML. Use plain backtick-quoted text references instead:
+
+```markdown
+# BAD — dead link in Sphinx HTML (works on GitHub only)
+- [`specs/architecture.md`](../specs/architecture.md) - Architecture docs
+
+# GOOD — renders as styled code text in both GitHub and Sphinx
+- `specs/architecture.md` - Architecture docs
+```
+
+**Template Action:** In Markdown files processed by Sphinx, use backtick-quoted text for any reference to files outside `docs/`. Reserve Markdown links for files within the Sphinx source tree.
+
+*Last Updated: 2026-02-18 (Story 1.9 Code Review - myst.xref_missing suppression, out-of-tree references)*
 *Next Review: [Set cadence - weekly? sprint boundaries?]*
