@@ -15,10 +15,10 @@ so that I can diagnose runtime issues efficiently and validate data integrity th
 1. A structured logging system is available using Python's `logging` module with project-specific configuration.
 2. Custom verbosity levels are supported (QUIET, NORMAL, VERBOSE, DEBUG) controllable via CLI flag or environment variable.
 3. Log output includes timestamps, module names, and configurable formatting.
-4. A data assertions module provides helper functions for validating DataFrame shapes, column types, value ranges, and null checks.
-5. Assertion failures produce clear error messages with the specific validation that failed and the actual vs. expected values.
-6. The logging and assertions framework is covered by unit tests.
-7. Usage examples are documented in the module docstrings.
+4. Pandera is added as a production dependency and documented as the project's DataFrame validation library, replacing custom assertion helpers.
+5. Pandera usage patterns (schema definition, `SchemaError` handling, `strict=False` for subset validation) are documented in `template-requirements.md` for downstream story adoption.
+6. The logging framework is covered by unit tests with 100% branch coverage.
+7. Usage examples are documented in the logging module docstrings.
 
 ## Tasks / Subtasks
 
@@ -31,16 +31,12 @@ so that I can diagnose runtime issues efficiently and validate data integrity th
   - [x] 1.6: Add module docstring with usage examples per AC 7
   - [x] 1.7: Export `configure_logging`, `get_logger`, and level constants from `utils/__init__.py`
 
-- [x] Task 2: Implement data assertions module (AC: 4, 5, 7)
-  - [x] 2.1: Create `src/ncaa_eval/utils/assertions.py`
-  - [x] 2.2: Implement `assert_shape(df, expected_rows, expected_cols)` — validates DataFrame dimensions
-  - [x] 2.3: Implement `assert_columns(df, required)` — validates required column names exist
-  - [x] 2.4: Implement `assert_dtypes(df, expected)` — validates column dtype mapping
-  - [x] 2.5: Implement `assert_no_nulls(df, columns=None)` — validates no null values in specified or all columns
-  - [x] 2.6: Implement `assert_value_range(df, column, min_val, max_val)` — validates values within bounds
-  - [x] 2.7: All failures raise `ValueError` with message format: `"<function> failed: expected <X>, got <Y>"`
-  - [x] 2.8: Add module docstring with usage examples per AC 7
-  - [x] 2.9: Export assertion functions from `utils/__init__.py`
+- [x] Task 2: Adopt Pandera as DataFrame validation library (AC: 4, 5)
+  - [x] 2.1: Add `pandera` to production dependencies in `pyproject.toml`
+  - [x] 2.2: Add `pandera` to edgetest upgrade list in `pyproject.toml`
+  - [x] 2.3: Run `poetry lock --no-update && poetry install` to update lock file
+  - [x] 2.4: Document Pandera usage patterns in `template-requirements.md` (import conventions, `strict=False`, `SchemaError` handling)
+  - [x] 2.5: Remove custom `assertions.py` wrapper in favour of native Pandera API (initially implemented, then replaced per library-first rule)
 
 - [x] Task 3: Write unit tests for logging module (AC: 6)
   - [x] 3.1: Create `tests/unit/test_logger.py`
@@ -50,19 +46,11 @@ so that I can diagnose runtime issues efficiently and validate data integrity th
   - [x] 3.5: Test `get_logger(name)` returns logger under `ncaa_eval` hierarchy
   - [x] 3.6: Test default level is NORMAL when env var is unset
 
-- [x] Task 4: Write unit tests for assertions module (AC: 6)
-  - [x] 4.1: Create `tests/unit/test_assertions.py`
-  - [x] 4.2: Test each assertion passes with valid DataFrame data
-  - [x] 4.3: Test each assertion raises `ValueError` with invalid data
-  - [x] 4.4: Test error messages contain the specific validation name, expected value, and actual value
-  - [x] 4.5: Test `assert_no_nulls` with both specific-columns and all-columns modes
-  - [x] 4.6: Test `assert_value_range` with boundary values (min, max, out-of-range)
-
-- [x] Task 5: End-to-end validation (all ACs)
-  - [x] 5.1: `ruff check src/ncaa_eval/utils/ tests/unit/test_logger.py tests/unit/test_assertions.py`
-  - [x] 5.2: `mypy --strict src/ncaa_eval tests`
-  - [x] 5.3: `nox` (full pipeline: lint -> typecheck -> tests) — all pass, zero regressions
-  - [x] 5.4: Verify module docstrings contain usage examples
+- [x] Task 4: End-to-end validation (all ACs)
+  - [x] 4.1: `ruff check src/ncaa_eval/utils/ tests/unit/test_logger.py` — all checks passed
+  - [x] 4.2: `mypy --strict src/ncaa_eval tests` — no issues found
+  - [x] 4.3: `pytest tests/` — 25 tests pass, zero regressions
+  - [x] 4.4: Verify logger module docstring contains usage examples
 
 ## Dev Notes
 
@@ -75,9 +63,8 @@ so that I can diagnose runtime issues efficiently and validate data integrity th
 - **`mypy --strict` is mandatory** — all new files in `src/ncaa_eval/` and `tests/` must type-check cleanly. [Source: pyproject.toml#L40-L46]
 - **Google-style docstrings** — enforced by Ruff `pydocstyle.convention = "google"`. Use single backtick `` `code` `` in docstrings, not RST double backtick. [Source: docs/STYLE_GUIDE.md]
 - **Do NOT shadow stdlib modules** — name the logging module `logger.py` (NOT `logging.py`), which would shadow Python's `logging` and break all imports.
-- **Do NOT use `for` loops over DataFrames** in assertion implementations — use vectorized pandas operations (`.isnull().any()`, `.isin()`, etc.). [Source: specs/05-architecture-fullstack.md#Section 12]
 - **No third-party logging libraries** — use Python's standard `logging` module only. The AC explicitly specifies this. Do NOT add structlog, loguru, or similar.
-- **Do NOT modify `pyproject.toml`** — no new dependencies or tool config changes needed.
+- **Pandera added to `pyproject.toml`** — library-first rule applied: Pandera replaces custom assertion wrappers for DataFrame validation. Added as production dependency + edgetest entry.
 - **Do NOT modify `noxfile.py`** — no new Nox sessions needed for this story.
 
 ### Technical Implementation Guide
@@ -135,50 +122,9 @@ def get_logger(name: str) -> logging.Logger:
 4. Add a `StreamHandler` to stderr with the configured formatter
 5. Set `propagate = False` to prevent double-logging with Python root logger
 
-#### Data Assertions Module (`src/ncaa_eval/utils/assertions.py`)
+#### Data Assertions: Pandera (native)
 
-**Public API signatures:**
-```python
-def assert_shape(
-    df: pd.DataFrame,
-    expected_rows: int | None = None,
-    expected_cols: int | None = None,
-) -> None: ...
-
-def assert_columns(df: pd.DataFrame, required: Sequence[str]) -> None: ...
-
-def assert_dtypes(df: pd.DataFrame, expected: Mapping[str, str | type]) -> None: ...
-
-def assert_no_nulls(
-    df: pd.DataFrame, columns: Sequence[str] | None = None,
-) -> None: ...
-
-def assert_value_range(
-    df: pd.DataFrame,
-    column: str,
-    *,
-    min_val: float | None = None,
-    max_val: float | None = None,
-) -> None: ...
-```
-
-**Import types from `collections.abc`:**
-```python
-from collections.abc import Mapping, Sequence
-```
-
-**Error message examples:**
-```
-assert_shape failed: expected (100, 5), got (98, 5)
-assert_columns failed: missing columns {'TeamID', 'Score'}
-assert_dtypes failed for column 'Score': expected int64, got float64
-assert_no_nulls failed: null values found in columns ['TeamName'] (3 nulls)
-assert_value_range failed for column 'Score': 2 values outside range [0, 200], min=-3, max=250
-```
-
-All functions raise `ValueError` (NOT `AssertionError`). `assert` statements can be disabled with `python -O`, silently skipping validations. `ValueError` is unconditional and the correct choice for data validation.
-
-**Type annotations with pandas:** With `follow_imports = "silent"` in mypy config, `pd.DataFrame` resolves silently. Use `pd.DataFrame` directly — do NOT install `pandas-stubs`.
+Custom assertion helpers (`assertions.py`) were initially implemented, then replaced with Pandera per the library-first rule. Downstream stories will define `pa.DataFrameSchema` instances directly using Pandera's native API. See `template-requirements.md` for documented usage patterns (import conventions, `strict=False`, `SchemaError` handling).
 
 ### Library / Framework Requirements
 
@@ -186,30 +132,23 @@ All functions raise `ValueError` (NOT `AssertionError`). `assert` statements can
 |---|---|---|
 | `logging` (stdlib) | Built-in | Structured logging with levels, formatters, handlers |
 | `os` (stdlib) | Built-in | Read `NCAA_EVAL_LOG_LEVEL` environment variable |
-| `pandas` | Already installed | DataFrame type used in assertions API |
-
-**No new dependencies needed.** All are either stdlib or already in `pyproject.toml`.
+| `pandera` | **NEW** — added to pyproject.toml | DataFrame validation (replaces custom assertions) |
 
 ### File Structure
 
-**New files to create:**
+**Files changed:**
 
 ```
 src/ncaa_eval/utils/
-├── __init__.py                 # MODIFIED — export public API
-├── logger.py                   # NEW — structured logging with verbosity levels
-└── assertions.py               # NEW — DataFrame validation helpers
+├── __init__.py                 # MODIFIED — export logging public API
+└── logger.py                   # NEW — structured logging with verbosity levels
 
 tests/unit/
-├── test_logger.py              # NEW — logging module tests
-└── test_assertions.py          # NEW — assertions module tests
-```
+└── test_logger.py              # NEW — logging module tests (21 tests, 100% coverage)
 
-**Files NOT to touch:**
-- `pyproject.toml` — no new deps or config changes
-- `noxfile.py` — no new sessions
-- `.pre-commit-config.yaml` — already finalized
-- Any file outside `src/ncaa_eval/utils/` and `tests/unit/`
+pyproject.toml                  # MODIFIED — added pandera dependency + edgetest entry
+poetry.lock                     # MODIFIED — updated with pandera + transitive deps
+```
 
 ### Testing Requirements
 
@@ -225,11 +164,11 @@ tests/unit/
 - Use `caplog` fixture for capturing log output in tests
 - Create small test DataFrames inline — no fixture files needed
 
-**Mutation testing note:** Current `[tool.mutmut]` targets `src/ncaa_eval/evaluation/` only. The assertions module has clear logic branches ideal for mutation testing — consider adding `src/ncaa_eval/utils/` to `paths_to_mutate` in a future story.
+**Mutation testing note:** Current `[tool.mutmut]` targets `src/ncaa_eval/evaluation/` only. Consider adding `src/ncaa_eval/utils/` to `paths_to_mutate` in a future story (logger.py has branch logic in level resolution).
 
 **Validation commands (all must pass):**
 ```bash
-POETRY_VIRTUALENVS_CREATE=false conda run -n ncaa_eval ruff check src/ncaa_eval/utils/ tests/unit/test_logger.py tests/unit/test_assertions.py
+POETRY_VIRTUALENVS_CREATE=false conda run -n ncaa_eval ruff check src/ncaa_eval/utils/ tests/unit/test_logger.py
 POETRY_VIRTUALENVS_CREATE=false conda run -n ncaa_eval mypy --strict src/ncaa_eval tests
 POETRY_VIRTUALENVS_CREATE=false conda run -n ncaa_eval nox
 ```
@@ -293,30 +232,32 @@ Claude Opus 4.6
 
 - mypy `[import-untyped]` error for pandas despite `follow_imports = "silent"` — resolved with targeted `# type: ignore[import-untyped]` on pandas import lines (story Dev Notes incorrectly stated `follow_imports = "silent"` would suppress this under `--strict`)
 - ruff format needed after initial file creation — ruff auto-formatter adjusted line lengths and import ordering
+- Library-first pivot: custom `assertions.py` (5 functions, 34 tests) was implemented then replaced by Pandera dependency — wrapper removed entirely in favour of native Pandera API; see commits 957df6c and 802852d
 
 ### Completion Notes List
 
 - ✅ Implemented `src/ncaa_eval/utils/logger.py` with `configure_logging()` and `get_logger()` public API, 4 verbosity levels (QUIET/NORMAL/VERBOSE/DEBUG), custom VERBOSE level registration, `NCAA_EVAL_LOG_LEVEL` env var support with precedence chain, and `StreamHandler` to stderr with pipe-delimited format
-- ✅ Implemented `src/ncaa_eval/utils/assertions.py` with 5 DataFrame validation functions: `assert_shape`, `assert_columns`, `assert_dtypes`, `assert_no_nulls`, `assert_value_range` — all using vectorized pandas operations, raising `ValueError` with descriptive messages
-- ✅ Updated `src/ncaa_eval/utils/__init__.py` to export all public API symbols
-- ✅ 21 logging tests covering all verbosity levels, env var override, level precedence, handler configuration, format validation, logger hierarchy
-- ✅ 31 assertion tests covering happy paths, error cases, error message content, boundary values, specific-column and all-column modes
-- ✅ All 56 tests pass, nox pipeline clean (lint + typecheck + tests), zero regressions
-- ✅ Both module docstrings contain comprehensive usage examples per AC 7
+- ✅ Updated `src/ncaa_eval/utils/__init__.py` to export logging public API symbols
+- ✅ 21 logging tests (100% branch coverage) covering all verbosity levels, env var override, level precedence, handler configuration, format validation, logger hierarchy
+- ✅ Added Pandera as production dependency for DataFrame validation (library-first rule: replaces custom `assertions.py` wrapper that was initially implemented then removed)
+- ✅ Documented Pandera usage patterns in `template-requirements.md` for downstream story adoption
+- ✅ All 25 tests pass, ruff clean, mypy strict clean, zero regressions
+- ✅ Logger module docstring contains comprehensive usage examples per AC 7
 
 ### File List
 
-- `src/ncaa_eval/utils/__init__.py` — MODIFIED: export logging and assertion public API
+- `src/ncaa_eval/utils/__init__.py` — MODIFIED: export logging public API
 - `src/ncaa_eval/utils/logger.py` — NEW: structured logging with verbosity levels
-- `src/ncaa_eval/utils/assertions.py` — NEW + MODIFIED (code review): DataFrame validation helpers; added column-existence guards to `assert_dtypes`, `assert_no_nulls`, `assert_value_range`
-- `tests/unit/test_logger.py` — NEW + MODIFIED (code review): 21 unit tests; refactored to remove private-symbol imports, consolidated teardown into shared autouse fixture, strengthened format and timestamp assertions
-- `tests/unit/test_assertions.py` — NEW + MODIFIED (code review): 34 unit tests (3 new tests for KeyError→ValueError behavior)
+- `tests/unit/test_logger.py` — NEW: 21 unit tests (100% branch coverage); autouse fixture, capsys stderr capture, timestamp regex assertions
+- `pyproject.toml` — MODIFIED: added `pandera = "*"` to dependencies + edgetest upgrade list
+- `poetry.lock` — MODIFIED: updated with pandera + transitive dependencies
+- `_bmad-output/planning-artifacts/template-requirements.md` — MODIFIED: documented Pandera usage patterns and library-first rule
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` — MODIFIED: story status updated
 - `_bmad-output/implementation-artifacts/1-8-implement-runtime-logging-data-assertions-framework.md` — MODIFIED: story file updated
 
 ## Change Log
 
 - 2026-02-18: Implemented structured logging module with 4 verbosity levels (QUIET/NORMAL/VERBOSE/DEBUG), env var control, and configurable formatting
-- 2026-02-18: Implemented data assertions module with 5 DataFrame validation functions using vectorized pandas operations
-- 2026-02-18: Added 52 unit tests (21 logging + 31 assertions), all passing with zero regressions
-- 2026-02-18: Code review — fixed 5 issues (1 High, 4 Medium): added column-existence guards to `assert_dtypes`/`assert_no_nulls`/`assert_value_range` (H1); refactored test_logger.py to remove private-symbol imports, replace private stdlib attr access, add real timestamp regex assertion, and consolidate three repeated teardown_method blocks into a single autouse fixture (M1–M4); added 3 new tests covering the new ValueError behavior; total tests: 59, all passing
+- 2026-02-18: Initially implemented custom `assertions.py` with 5 DataFrame validation functions; code review hardened with column-existence guards and additional tests
+- 2026-02-18: Replaced custom assertions with Pandera (library-first rule); removed `assertions.py` wrapper and `test_assertions.py` in favour of native Pandera API for downstream stories
+- 2026-02-18: Code review (round 2) — fixed 9 issues (3C/2H/3M/1L): revised ACs 4–7 to reflect Pandera adoption; corrected stale File List, Completion Notes, and test counts; updated Dev Notes to remove obsolete constraints; documented pyproject.toml and poetry.lock changes; total: 25 tests, all passing, 100% logger coverage

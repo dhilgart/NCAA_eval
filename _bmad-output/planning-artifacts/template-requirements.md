@@ -831,5 +831,16 @@ Before writing a custom implementation for any common data engineering concern, 
 - `pa.DataFrameSchema({col: pa.Column(...)}, strict=False)` — `strict=False` allows extra columns beyond the schema; required for subset-column validation functions
 - When a validation function should always verify column existence (even with no constraints), always build the schema: use `pa.Column(checks=checks or None)` instead of early-returning
 
-*Last Updated: 2026-02-18 (Story 1.8 Post-Review — library-first rule, Pandera adoption)*
+### Keep Story File in Sync with Mid-Story Pivots (Discovered Story 1.8 Code Review Round 2)
+
+When a story changes direction mid-implementation (e.g., replacing custom code with a library), the story file must be updated **atomically** with the code change:
+- **Acceptance Criteria**: Revise to reflect the new approach
+- **Tasks/Subtasks**: Update completed/unchecked status to match reality
+- **File List**: Add/remove files to match actual git changes
+- **Completion Notes**: Update test counts, coverage numbers, and deliverables
+- **Change Log**: Document the pivot and rationale
+
+Stale story files create false audit trails — the code review found 3 Critical issues where deleted files were still claimed as deliverables with fabricated test counts.
+
+*Last Updated: 2026-02-18 (Story 1.8 Code Review Round 2 — story sync rule)*
 *Next Review: [Set cadence - weekly? sprint boundaries?]*
