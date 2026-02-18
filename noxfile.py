@@ -1,7 +1,7 @@
 """Nox session management for the NCAA_eval quality pipeline.
 
-Running ``nox`` executes Ruff (lint/format) -> Mypy (type check) -> Pytest (tests).
-Individual sessions can be invoked with ``nox -s <session>``.
+Running `nox` executes Ruff (lint/format) -> Mypy (type check) -> Pytest (tests).
+Individual sessions can be invoked with `nox -s <session>`.
 """
 
 from __future__ import annotations
@@ -29,6 +29,7 @@ def typecheck(session: nox.Session) -> None:
         "--namespace-packages",
         "src/ncaa_eval",
         "tests",
+        "noxfile.py",
     )
 
 
