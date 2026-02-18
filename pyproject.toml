@@ -112,7 +112,12 @@ markers = [
     "performance: Performance and benchmark tests",
     "regression: Regression tests to prevent bug recurrence",
     "mutation: Tests specifically for mutation testing coverage",
+    "no_mutation: Tests incompatible with mutmut runner directory (Path(__file__)-dependent structural tests)",
 ]
+
+[tool.coverage.run]
+branch = true
+source = ["src/ncaa_eval"]
 
 [tool.coverage.report]
 show_missing = true
@@ -138,10 +143,11 @@ version_files = ["pyproject.toml:version"]
 # Extend as modules are implemented:
 # paths_to_mutate = ["src/ncaa_eval/evaluation/", "src/ncaa_eval/model/"]
 paths_to_mutate = ["src/ncaa_eval/evaluation/"]
-# Exclude file-path-dependent structural smoke tests: they use Path(__file__) to navigate
-# to the project root, which resolves incorrectly when mutmut runs tests from mutants/.
+# Exclude tests marked @pytest.mark.no_mutation: these use Path(__file__) to navigate to
+# the project root, which resolves incorrectly when mutmut runs tests from mutants/.
 # Structural tests don't test evaluation module logic so are not meaningful for mutation testing.
-pytest_add_cli_args_test_selection = ["tests/", "-k", "not test_src_directory_structure"]
+# Using -m marker exclusion (not -k name match) so renaming tests doesn't silently break this.
+pytest_add_cli_args_test_selection = ["tests/", "-m", "not no_mutation"]
 # Optional: only mutate lines covered by tests (faster runs):
 # mutate_only_covered_lines = true
 #

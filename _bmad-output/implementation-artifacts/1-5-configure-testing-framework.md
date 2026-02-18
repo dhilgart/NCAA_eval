@@ -1,6 +1,6 @@
 # Story 1.5: Configure Testing Framework
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -452,6 +452,7 @@ claude-sonnet-4-5-20250929
 
 - 2026-02-17: Implemented Story 1.5 — configure testing framework (Hypothesis, Mutmut, conftest, CI coverage step)
 - 2026-02-17: Re-verified with WSL — mutmut 3.4.0 runs locally; fixed `[tool.mutmut]` test exclusion and added `mutants/` to `.gitignore`
+- 2026-02-17: Code review fixes — added `[tool.coverage.run]` with branch coverage; converted mutmut exclusion from `-k` name-match to `@pytest.mark.no_mutation` marker (self-maintaining)
 
 ### File List
 
@@ -465,3 +466,5 @@ claude-sonnet-4-5-20250929
 - `poetry.lock` — MODIFIED (updated to install pytest-cov 7.0.0)
 - `pyproject.toml` — MODIFIED again (updated `[tool.mutmut]` `pytest_add_cli_args_test_selection` to exclude path-dependent test)
 - `.gitignore` — MODIFIED again (added `mutants/` — mutmut 3.x runner directory)
+- `pyproject.toml` — MODIFIED (code review: added `[tool.coverage.run]` with `branch = true`; added `no_mutation` marker; updated mutmut exclusion from `-k` to `-m not no_mutation`)
+- `tests/unit/test_package_structure.py` — MODIFIED (code review: added `@pytest.mark.no_mutation` to `test_src_directory_structure`)

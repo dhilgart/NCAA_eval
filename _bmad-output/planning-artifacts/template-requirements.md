@@ -10,10 +10,11 @@
 ## 1. Dev Stack & Architecture
 
 ### Core Technologies
-- **Language/Runtime:** [Update as decisions solidify]
+- **Language/Runtime:** Python (confirmed)
 - **Package Manager:** Poetry (confirmed - see pyproject.toml)
-- **Python Version:** [Document chosen version and rationale]
+- **Python Version:** 3.12 — pin to 3.12.x; do NOT use 3.14 or latest (Discovered: Story 1.5 — see below)
 - **Project Layout:** src layout (confirmed - see project structure)
+- **Local Dev OS:** Linux/WSL required for full toolchain (mutmut 3.x Unix-only — see Lessons Learned)
 
 ### Key Dependencies
 ```yaml
@@ -32,6 +33,11 @@ development:
 **Discovered in Story 1.3 (2026-02-16):**
 - pytest-cov is essential for coverage commands referenced in testing strategy
 - Test marker taxonomy in pyproject.toml enables multi-dimensional test organization
+
+**Discovered in Story 1.5 (2026-02-17):**
+- `mutmut = "*"` — mutmut 3.x is **Windows-incompatible**: unconditionally imports `resource` (Unix-only stdlib). Requires Linux or WSL for local use. CI (ubuntu-latest) is unaffected.
+- `poetry.lock` can go stale even when `pyproject.toml` is correct — always run `poetry lock --no-update && poetry install --with dev` after adding deps to ensure lock file is current (pytest-cov 7.0.0 was missing despite being in pyproject.toml)
+- Always include `[tool.coverage.run]` alongside `[tool.coverage.report]` in pyproject.toml from day one — branch coverage is disabled by default and omitting this section means the coverage report never shows branch gaps
 
 ### Configuration Management
 - Type checking: mypy with strict settings (see pyproject.toml)
@@ -204,6 +210,86 @@ tests/
 ```
 
 **Discovered in Story 1.3 (2026-02-16):**
+
+**Discovered in Story 1.5 (2026-02-17):**
+
+### Coverage Configuration ⭐ (Discovered Story 1.5)
+
+Always include **both** coverage sections in `pyproject.toml`. Omitting `[tool.coverage.run]` silently disables branch coverage:
+
+```toml
+[tool.coverage.run]
+branch = true
+source = ["src/your_package"]
+
+[tool.coverage.report]
+show_missing = true
+exclude_lines = [
+    'pragma: no cover',
+    'def __repr__',
+    'raise AssertionError',
+    'raise NotImplementedError',
+    'if __name__ == .__main__.:',
+]
+```
+
+### Fixture Pattern: Ruff PT022 — `return` not `yield` ⭐ (Discovered Story 1.5)
+
+Ruff PT022 flags `yield` in fixtures when there is no teardown code. Use `return` and update the return type annotation:
+
+```python
+# ❌ Triggers Ruff PT022 when no teardown exists
+@pytest.fixture
+def temp_data_dir(tmp_path: Path) -> Iterator[Path]:
+    data_dir = tmp_path / "test_data"
+    data_dir.mkdir()
+    yield data_dir  # no teardown → PT022 violation
+
+# ✅ Correct: return + concrete type (tmp_path handles cleanup automatically)
+@pytest.fixture
+def temp_data_dir(tmp_path: Path) -> Path:
+    data_dir = tmp_path / "test_data"
+    data_dir.mkdir()
+    return data_dir
+```
+
+**Rationale:** pytest's `tmp_path` fixture handles cleanup automatically. No teardown = no need for `yield`. Using `return` also drops the `Iterator` import.
+
+### Mutmut 3.x: Marker-Based Test Exclusion ⭐ (Discovered Story 1.5)
+
+Mutmut 3.x runs pytest from a `mutants/` subdirectory. Tests that use `Path(__file__)` to navigate to the project root will fail because `Path(__file__).parent.parent.parent` resolves to `mutants/`, not the project root.
+
+**Pattern:** Exclude these tests via a pytest marker, not `-k` name matching. Name-based exclusion silently breaks if the test is renamed; marker-based exclusion is self-maintaining.
+
+```toml
+# ✅ Correct: marker-based exclusion in [tool.mutmut]
+pytest_add_cli_args_test_selection = ["tests/", "-m", "not no_mutation"]
+
+# ❌ Fragile: breaks silently if test_src_directory_structure is renamed
+pytest_add_cli_args_test_selection = ["tests/", "-k", "not test_src_directory_structure"]
+```
+
+```python
+# Apply to any Path(__file__)-dependent structural test:
+@pytest.mark.smoke
+@pytest.mark.no_mutation  # Path(__file__)-dependent; incompatible with mutmut runner dir
+def test_src_directory_structure() -> None: ...
+```
+
+```toml
+# Register the marker in [tool.pytest.ini_options]:
+markers = [
+    # ... other markers ...
+    "no_mutation: Tests incompatible with mutmut runner directory (Path(__file__)-dependent structural tests)",
+]
+```
+
+### Mutmut 3.x: Expected Behavior ⭐ (Discovered Story 1.5)
+
+- Creates `mutants/` directory AND `.mutmut-cache` file in project root — **add both to `.gitignore`**
+- "Stopping early, could not find any test case for any mutant" = **expected** when target module has no business logic yet (e.g., only `__init__.py`)
+- Exit code 1 from mutmut in this case is expected/normal
+- Runs tests WITH `--strict-markers` (inherited from `pyproject.toml` `addopts`) — unknown markers will cause errors
 
 ### 4-Dimensional Testing Model ⭐
 Tests are organized across four **orthogonal dimensions**:
@@ -430,11 +516,21 @@ Code review workflow generates PRs following .github/pull_request_template.md st
 - ❌ **PLR09 prefix over-selected Ruff rules** — `"PLR09"` in extend-select selects the entire PLR09xx family including PLR0914 (too-many-locals) and PLR0916 (too-many-boolean-expressions) which are not documented in STYLE_GUIDE.md and use Ruff defaults that will block legitimate data science code. Use explicit codes.
 - ❌ **Library Requirements table not updated to match implementation** — The Dev Notes table still referenced `mirrors-mypy` after the implementation correctly switched to a local hook. Story documentation must be updated atomically with implementation changes.
 
+**Story 1.5 - Configure Testing Framework (2026-02-17):**
+- ❌ **Mutmut 3.x is Windows-incompatible** — imports `resource` (Unix-only stdlib) unconditionally in `__main__.py`. Any `mutmut` invocation fails on Windows with `ModuleNotFoundError: No module named 'resource'`. Required switching to WSL for local mutation testing. **Template action: Document WSL as required for full local toolchain; note CI (ubuntu-latest) is unaffected.**
+- ❌ **Python 3.14 is too new for this toolchain** — several dev dependencies (mutmut, certain hypothesis strategies) have not yet certified compatibility with Python 3.14 alpha/beta. **Template action: Pin CI and dev environments to Python 3.12 (latest stable LTS-equivalent); use `python = ">=3.12,<3.14"` as the pyproject.toml constraint until toolchain catches up.**
+- ❌ **`[tool.coverage.run]` omitted** — Initial implementation only had `[tool.coverage.report]`. Branch coverage was silently disabled; the coverage report showed line coverage only. Found and fixed in code review. **Template action: Always scaffold both sections in the base pyproject.toml template.**
+- ❌ **Mutmut exclusion via `-k` name match is fragile** — Initially used `-k "not test_src_directory_structure"`. Renamed tests silently break this exclusion, making all mutants appear "killed" due to the structural test failure. Replaced with `@pytest.mark.no_mutation` + `-m "not no_mutation"`. **Template action: Show marker-based exclusion pattern in template mutmut config.**
+
 ### Would Do Differently
 
 **Story 1.3 - Testing Strategy (2026-02-16):**
 - ⚠️ **Missing dependency caught in review** - pytest-cov was referenced extensively but not added to pyproject.toml until code review. Template should include essential test dependencies upfront.
 - ⚠️ **Timing inconsistency across docs** - pyproject.toml said "< 5 seconds" while main doc said "< 10 seconds". Template should establish single source of truth for constraints.
+
+**Story 1.5 - Configure Testing Framework (2026-02-17):**
+- ⚠️ **WSL setup mid-story** — Mutmut Windows blocker required setting up WSL dev environment during story execution. Template should document WSL as a prerequisite upfront, not as a reactive fix.
+- ⚠️ **`poetry.lock` staleness** — pytest-cov was in `pyproject.toml` but not installed because `poetry.lock` was out of date. Run `poetry lock --no-update` whenever deps change; don't assume lock file is current.
 
 ### Process Improvements
 
@@ -508,5 +604,5 @@ python_version_min: "[Minimum Python version]"
 
 ---
 
-*Last Updated: 2026-02-17 (Story 1.4 Code Review Round 2 - CI toolchain migration and Ruff rule selection patterns captured)*
+*Last Updated: 2026-02-17 (Story 1.5 Code Review - coverage branch config, Ruff PT022 fixture pattern, mutmut Windows/WSL/marker-exclusion patterns, Python 3.14 compatibility warning)*
 *Next Review: [Set cadence - weekly? sprint boundaries?]*
