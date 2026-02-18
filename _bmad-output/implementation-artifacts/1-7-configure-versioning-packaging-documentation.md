@@ -26,14 +26,14 @@ so that the project has automated versioning, package integrity checks, dependen
   - [x] 1.2: Verify `cz bump --dry-run` correctly reads commits and determines version bump
   - [x] 1.3: Update `CONTRIBUTING.md` to replace outdated pipenv/invoke workflow with Poetry/Nox/Commitizen
 
-- [ ] Task 2: Configure check-manifest (AC: 2)
-  - [ ] 2.1: Run `check-manifest` to discover any issues
-  - [ ] 2.2: Add `[tool.check-manifest]` ignore section to `pyproject.toml` for non-distribution files
-  - [ ] 2.3: Verify `check-manifest` passes cleanly
+- [x] Task 2: Configure check-manifest (AC: 2)
+  - [x] 2.1: Run `check-manifest` to discover any issues
+  - [x] 2.2: Add `[tool.check-manifest]` ignore section to `pyproject.toml` for non-distribution files
+  - [x] 2.3: Verify `check-manifest` passes cleanly
 
-- [ ] Task 3: Configure edgetest scaffolding (AC: 3)
-  - [ ] 3.1: Add `[tool.edgetest.envs.latest]` section to `pyproject.toml` specifying which deps to test against latest
-  - [ ] 3.2: Verify `edgetest` command can be invoked without errors
+- [x] Task 3: Configure edgetest scaffolding (AC: 3)
+  - [x] 3.1: Add `[tool.edgetest.envs.latest]` section to `pyproject.toml` specifying which deps to test against latest
+  - [x] 3.2: Verify `edgetest` command can be invoked without errors
 
 - [ ] Task 4: Set up Sphinx documentation (AC: 4, 5)
   - [ ] 4.1: Remove `mkdocs.yml` from project root (see Dev Notes — legacy cookiecutter stub, never configured)
@@ -414,8 +414,11 @@ claude-sonnet-4-6
 
 ### Completion Notes List
 
+- Task 2 (check-manifest): Added [tool.check-manifest] ignore section covering .claude/**, .windsurf/**, _bmad/**, _bmad-output/**, docs/{specs,testing,archive,_build,api}/**, tasks/**, *.yaml, *.yml, dashboard/**, data/**, tests/**, noxfile.py, lock files, and developer docs. check-manifest passes cleanly.
+- Task 3 (edgetest): Added [tool.edgetest] scaffolding with 'latest' env testing pandas/numpy/scikit-learn/xgboost/networkx/joblib against smoke tests. edgetest --help invokes without errors.
 - Task 1 (Commitizen): Verified cz check behavior — 4/5 recent commits pass; 1 GitHub squash-merge commit fails (PR title "Configure Nox session management & automation (#6)" lacks conventional commits type prefix). Documented in CONTRIBUTING.md that PR titles must also follow conventional commits format when using GitHub squash-merge. `cz bump --dry-run --yes` works (--yes required in non-interactive env when no initial tag exists); shows 0.1.0 → 0.2.0 MINOR bump.
 
 ### File List
 
 - `CONTRIBUTING.md` — modified: replaced pipenv/invoke workflow with Poetry/Nox/Commitizen
+- `pyproject.toml` — modified: added [tool.check-manifest] ignore section and [tool.edgetest] scaffolding
