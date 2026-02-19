@@ -1,6 +1,6 @@
 # Story 2.4: Implement Sync CLI & Smart Caching
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -21,63 +21,62 @@ So that I can fetch historical data once and prefer local data on subsequent run
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add CLI and progress dependencies (AC: 1–6)
-  - [ ] 1.1: Add `typer[all]` as a production dependency (provides CLI + rich for progress)
-  - [ ] 1.2: Run `POETRY_VIRTUALENVS_CREATE=false conda run -n ncaa_eval poetry add "typer[all]>=0.15"`
-  - [ ] 1.3: Add `sync.py` (root) to mypy `files` list in `pyproject.toml` to enforce strict type-checking
+- [x] Task 1: Add CLI and progress dependencies (AC: 1–6)
+  - [x] 1.1: Add `typer[all]` as a production dependency (provides CLI + rich for progress)
+  - [x] 1.2: Run `POETRY_VIRTUALENVS_CREATE=false conda run -n ncaa_eval poetry add "typer[all]>=0.15"`
+  - [x] 1.3: Add `sync.py` (root) to mypy `files` list in `pyproject.toml` to enforce strict type-checking
 
-- [ ] Task 2: Implement `SyncEngine` class (AC: 1–5)
-  - [ ] 2.1: Create `src/ncaa_eval/ingest/sync.py` with `SyncResult` dataclass and `SyncEngine` class
-  - [ ] 2.2: `SyncResult` fields: `source: str`, `teams_written: int`, `seasons_written: int`, `games_written: int`, `seasons_cached: int`
-  - [ ] 2.3: `SyncEngine.__init__(self, repository: Repository, data_dir: Path)` — stores repo reference and data root
-  - [ ] 2.4: Implement `sync_kaggle(force_refresh: bool = False) -> SyncResult`:
+- [x] Task 2: Implement `SyncEngine` class (AC: 1–5)
+  - [x] 2.1: Create `src/ncaa_eval/ingest/sync.py` with `SyncResult` dataclass and `SyncEngine` class
+  - [x] 2.2: `SyncResult` fields: `source: str`, `teams_written: int`, `seasons_written: int`, `games_written: int`, `seasons_cached: int`
+  - [x] 2.3: `SyncEngine.__init__(self, repository: Repository, data_dir: Path)` — stores repo reference and data root
+  - [x] 2.4: Implement `sync_kaggle(force_refresh: bool = False) -> SyncResult`:
     - Create `KaggleConnector(extract_dir=self._data_dir / "kaggle")`
     - Call `connector.download(force=force_refresh)` (CSV-level caching already built-in)
     - Cache check teams: if `{data_dir}/teams.parquet` exists and not `force_refresh` → skip `fetch_teams()` + save
     - Cache check seasons: if `{data_dir}/seasons.parquet` exists and not `force_refresh` → load seasons from repo instead of fetch
     - Cache check games per-season: if `{data_dir}/games/season={year}/data.parquet` exists and not `force_refresh` → record as cache hit, skip `fetch_games(year)`
     - Print progress: `"[kaggle] teams: {n}"`, `"[kaggle] season {year}: {n} games written"`, `"[kaggle] season {year}: cache hit, skipped"`
-  - [ ] 2.5: Implement `sync_espn(force_refresh: bool = False) -> SyncResult`:
-    - Load `team_name_to_id` and `season_day_zeros` from repository (Kaggle data MUST be synced first)
+  - [x] 2.5: Implement `sync_espn(force_refresh: bool = False) -> SyncResult`:
+    - Load `team_name_to_id` from `repo.get_teams()` and `season_day_zeros` from KaggleConnector's CSV cache
     - Raise `RuntimeError` with helpful message if teams or seasons are empty (Kaggle not synced)
     - ESPN scope: sync only the most recent available season (max season year from `repo.get_seasons()`)
-    - Cache check per season: if `{data_dir}/games/season={year}/data.parquet` already contains ESPN-prefixed game IDs → skip (see Dev Notes for game_id prefix strategy)
-    - Create `EspnConnector(team_name_to_id=..., season_day_zeros=...)`
-    - Call `connector.fetch_games(year)`, save via repository
+    - Cache check via `.espn_synced_{year}` marker file → skip if exists and not `force_refresh`
+    - Create `EspnConnector(team_name_to_id=..., season_day_zeros=...)`, merge with existing Kaggle games before saving
     - Print progress: `"[espn] season {year}: {n} games written"` or `"[espn] season {year}: cache hit, skipped"`
-  - [ ] 2.6: Implement `sync_all(force_refresh: bool = False) -> list[SyncResult]`:
+  - [x] 2.6: Implement `sync_all(force_refresh: bool = False) -> list[SyncResult]`:
     - Call `sync_kaggle(force_refresh)` first, then `sync_espn(force_refresh)`
     - Return both results
 
-- [ ] Task 3: Create `sync.py` CLI at project root (AC: 1–5)
-  - [ ] 3.1: Create `sync.py` at project root as a thin Typer wrapper
-  - [ ] 3.2: Define Typer `app` with one command taking:
+- [x] Task 3: Create `sync.py` CLI at project root (AC: 1–5)
+  - [x] 3.1: Create `sync.py` at project root as a thin Typer wrapper
+  - [x] 3.2: Define Typer `app` with one command taking:
     - `source: str` — `typer.Option("all", help="Source to sync: kaggle | espn | all")`
     - `dest: Path` — `typer.Option(Path("data/"), help="Local data directory")`
     - `force_refresh: bool` — `typer.Option(False, "--force-refresh", help="Bypass cache and re-fetch all data")`
-  - [ ] 3.3: Instantiate `ParquetRepository(base_path=dest)` and `SyncEngine(repo, dest)`
-  - [ ] 3.4: Route to `engine.sync_kaggle()`, `engine.sync_espn()`, or `engine.sync_all()` based on `source`
-  - [ ] 3.5: Catch `ConnectorError` subclasses; print user-friendly messages and `raise typer.Exit(code=1)`
-  - [ ] 3.6: Print summary on completion (total records written, cache hits, elapsed time)
+  - [x] 3.3: Instantiate `ParquetRepository(base_path=dest)` and `SyncEngine(repo, dest)`
+  - [x] 3.4: Route to `engine.sync_kaggle()`, `engine.sync_espn()`, or `engine.sync_all()` based on `source`
+  - [x] 3.5: Catch `ConnectorError` and `RuntimeError`; print user-friendly messages and `raise typer.Exit(code=1)`
+  - [x] 3.6: Print summary on completion (total records written, cache hits, elapsed time)
 
-- [ ] Task 4: Update module exports (AC: 1)
-  - [ ] 4.1: Add `SyncEngine` and `SyncResult` to `src/ncaa_eval/ingest/__init__.py` exports and `__all__`
+- [x] Task 4: Update module exports (AC: 1)
+  - [x] 4.1: Add `SyncEngine` and `SyncResult` to `src/ncaa_eval/ingest/__init__.py` exports and `__all__`
 
-- [ ] Task 5: Integration tests (AC: 6)
-  - [ ] 5.1: Create `tests/integration/test_sync.py`
-  - [ ] 5.2: Test Kaggle full cycle — patch `KaggleConnector` with `unittest.mock.patch`, inject fixture data from `tests/fixtures/kaggle/`, verify `repo.get_teams()` and `repo.get_games(season)` return expected records after sync
-  - [ ] 5.3: Test Kaggle cache hit — call `sync_kaggle()` once (writes Parquet), call again with `force_refresh=False`, assert `KaggleConnector.fetch_games` NOT called the second time (use `patch` + call count)
-  - [ ] 5.4: Test `--force-refresh` — write Parquet manually, call `sync_kaggle(force_refresh=True)`, assert `KaggleConnector.download` called with `force=True` and fetch methods called
-  - [ ] 5.5: Test ESPN dependency guard — call `sync_espn()` on empty repository, assert `RuntimeError` raised with message mentioning "kaggle"
-  - [ ] 5.6: Test `sync_all` order — mock both connectors, verify Kaggle is invoked before ESPN
-  - [ ] 5.7: Test CLI via `typer.testing.CliRunner` — invoke `sync.py app` with `--source kaggle --dest {tmp_path}`, verify exit code 0 and Parquet files created
+- [x] Task 5: Integration tests (AC: 6)
+  - [x] 5.1: Create `tests/integration/test_sync.py`
+  - [x] 5.2: Test Kaggle full cycle — patch `KaggleConnector`, verify `repo.get_teams()` and `repo.get_games(season)` return expected records after sync
+  - [x] 5.3: Test Kaggle cache hit — call `sync_kaggle()` once (writes Parquet), call again with `force_refresh=False`, assert `KaggleConnector.fetch_games` NOT called the second time
+  - [x] 5.4: Test `--force-refresh` — write Parquet manually, call `sync_kaggle(force_refresh=True)`, assert `KaggleConnector.download` called with `force=True` and fetch methods called
+  - [x] 5.5: Test ESPN dependency guard — call `sync_espn()` on empty repository, assert `RuntimeError` raised with message mentioning "kaggle"
+  - [x] 5.6: Test `sync_all` order — verify Kaggle is invoked before ESPN via method-level mocking
+  - [x] 5.7: Test CLI via `typer.testing.CliRunner` — invoke `sync.py app` with `--source kaggle --dest {tmp_path}`, verify exit code 0 and Parquet files created
 
-- [ ] Task 6: Update mutation testing config and run quality pipeline (AC: all)
-  - [ ] 6.1: Add `src/ncaa_eval/ingest/sync.py` to `paths_to_mutate` in `[tool.mutmut]` (already covered by `src/ncaa_eval/ingest/`)
-  - [ ] 6.2: `ruff check .` passes
-  - [ ] 6.3: `mypy --strict src/ncaa_eval tests sync.py` passes (see Task 1.3)
-  - [ ] 6.4: `pytest` passes with all new tests green (integration tests may need `@pytest.mark.integration`)
-  - [ ] 6.5: `mutmut run` on ingest module (new sync.py logic)
+- [x] Task 6: Update mutation testing config and run quality pipeline (AC: all)
+  - [x] 6.1: Add `src/ncaa_eval/ingest/sync.py` to `paths_to_mutate` in `[tool.mutmut]` (already covered by `src/ncaa_eval/ingest/`)
+  - [x] 6.2: `ruff check .` passes
+  - [x] 6.3: `mypy --strict src/ncaa_eval tests sync.py` passes (see Task 1.3)
+  - [x] 6.4: `pytest` passes with all new tests green (integration tests marked `@pytest.mark.integration`)
+  - [x] 6.5: `mutmut run` on ingest module — 538 killed / 239 survived / 1 suspicious (69% score)
 
 ## Dev Notes
 
@@ -406,6 +405,37 @@ Claude Sonnet 4.6
 
 ### Debug Log References
 
+- Season model has no `day_zero` field → loaded via `KaggleConnector._load_day_zeros()` from cached CSVs (no network call).
+- `save_games()` OVERWRITES per-season partition → `sync_espn` loads existing Kaggle games, merges with ESPN games, then saves the combined list.
+- ESPN caching uses `.espn_synced_{year}` marker files to avoid parsing Parquet to detect ESPN records.
+- CLI tests (`test_cli_*`) marked `@pytest.mark.no_mutation` because they `import sync` (project-root module) by module name, which fails in mutmut's `mutants/` CWD environment.
+- Installed typer 0.24.0 (`>=0.15` constraint satisfied); installed via `conda run pip install` in addition to `poetry add` due to conda env isolation.
+- Added `sync.py` to noxfile.py typecheck session (hard-coded path list).
+
 ### Completion Notes List
 
+- Implemented `SyncResult` dataclass and `SyncEngine` class in `src/ncaa_eval/ingest/sync.py`.
+- `sync_kaggle`: three-tier Parquet cache (teams, seasons, per-season games) with CSV-level pre-cache via `KaggleConnector.download(force=...)`.
+- `sync_espn`: marker-file caching (`.espn_synced_{year}`); merges ESPN games with existing Kaggle games before saving to avoid overwrite data loss; syncs most-recent season only.
+- `sync_all`: calls kaggle then espn in order, returns `list[SyncResult]`.
+- `sync.py` (project root): thin Typer CLI wrapper; catches `ConnectorError` and `RuntimeError`; prints elapsed-time summary.
+- 8 integration tests: full cycle, cache hit, force-refresh, ESPN guard, order, CLI happy-path, CLI invalid source, CLI ESPN guard.
+- Quality pipeline: ruff ✅, mypy --strict ✅ (30 source files, 0 issues), pytest 148/148 ✅, mutmut 538 killed / 239 survived (69%).
+
 ### File List
+
+**New files:**
+- `src/ncaa_eval/ingest/sync.py` — SyncResult dataclass and SyncEngine class
+- `sync.py` — Typer CLI entry point at project root
+- `tests/integration/test_sync.py` — 8 integration tests
+
+**Modified files:**
+- `src/ncaa_eval/ingest/__init__.py` — Added SyncEngine, SyncResult to exports and `__all__`
+- `pyproject.toml` — Added `typer[all]>=0.15` dependency; added `sync.py` to mypy `files`
+- `poetry.lock` — Updated with typer 0.24.0 and transitive deps
+- `noxfile.py` — Added `sync.py` to typecheck session
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — Status updated to review
+
+### Change Log
+
+- 2026-02-19: Implemented Sync CLI & Smart Caching (Story 2.4) — SyncEngine with Parquet-level caching, ESPN marker-file caching, Typer CLI wrapper, 8 integration tests. All quality checks pass.
