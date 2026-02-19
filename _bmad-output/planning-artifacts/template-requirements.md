@@ -1092,6 +1092,8 @@ kaggle = "^2.0.0"
 
 **Rule:** If the Dev Notes mention a breaking change between versions of a library, use `^` not `>=`.
 
+**Important:** Changing constraint syntax (e.g., `>=` → `^`) constitutes a significant change to `pyproject.toml`. Always run `poetry lock` after, or CI will fail with: *"pyproject.toml changed significantly since poetry.lock was last generated."*
+
 ### Precompute Derived Collections in `__init__` (Discovered Story 2.3 Code Review)
 
 Avoid rebuilding derived collections inside hot-path methods. When `__init__` receives a mapping that's later used in case-insensitive lookups, precompute the lowercased version:
