@@ -15,7 +15,7 @@ So that I can make informed decisions about which sources to prioritize based on
 1. **Given** the project needs external NCAA data to function, **When** the developer reviews the spike findings document, **Then** each candidate source is evaluated for: data coverage (years, stats available), API accessibility (public vs. paid, auth method), rate limits and terms of service, and data format/quality.
 2. **And** a recommended priority order of sources is documented with rationale.
 3. **And** any licensing or cost implications are clearly noted.
-4. **And** the findings are committed as a project document in `docs/research/`.
+4. **And** the findings are committed as a project document in `specs/research/` (moved from `docs/research/` per Story 1.9 conventions — `docs/` is pure Sphinx source).
 
 ## Tasks / Subtasks
 
@@ -192,9 +192,11 @@ Claude Opus 4.6 (claude-opus-4-6)
 - 2026-02-19: Major update — expanded from 9 to 18 evaluated sources, added scrape-only sources, added data processing methodologies section, updated all tables and recommendations.
 - 2026-02-19: Code review (AI) — added rate limit documentation for KenPom, cbbdata, sportsdataverse, Warren Nolan, Haslametrics; expanded live verification table with specific test procedures and new Item 8 (BartTorvik efficiency metrics verification); added Review Follow-up action items for Story 2.3 prerequisites.
 - 2026-02-19: Moved `docs/research/data-source-evaluation.md` → `specs/research/data-source-evaluation.md` — planning artifact belongs in `specs/`, not Sphinx source tree (per Story 1.9 conventions).
+- 2026-02-19: Code review round 2 (AI) — fixed AC 4 path to `specs/research/`, added `template-requirements.md` to File List, identified 6 LOW documentation improvements (deferred).
 
 ### File List
 
 - `specs/research/data-source-evaluation.md` (modified) — Research findings document (expanded from 9 to 18 sources)
 - `_bmad-output/implementation-artifacts/2-1-evaluate-data-sources.md` (modified) — Story file updates (task checkboxes, Dev Agent Record, status)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified) — Sprint status update
+- `_bmad-output/planning-artifacts/template-requirements.md` (modified) — Template learnings from code review
