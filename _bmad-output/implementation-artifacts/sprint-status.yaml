@@ -57,7 +57,7 @@ development_status:
   epic-2: in-progress
   2-1-evaluate-data-sources: done
   2-2-define-internal-data-schema-repository-layer: done
-  2-3-implement-data-source-connectors: in-progress
+  2-3-implement-data-source-connectors: review
   2-4-implement-sync-cli-smart-caching: backlog
   epic-2-retrospective: optional
 

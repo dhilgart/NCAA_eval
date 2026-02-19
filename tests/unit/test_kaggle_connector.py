@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import datetime
 import shutil
+import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -197,26 +198,49 @@ class TestKaggleConnectorSeasons:
 # ---------------------------------------------------------------------------
 
 
+def _mock_kaggle_modules() -> MagicMock:
+    """Pre-populate sys.modules with a fake kaggle package so that the
+    ``from kaggle.api.kaggle_api_extended import KaggleApi`` inside
+    ``KaggleConnector.download()`` resolves to our mock instead of importing
+    the real kaggle package (which calls ``api.authenticate()`` at import
+    time and fails without credentials).
+    """
+    mock_api_cls = MagicMock()
+    mock_extended = MagicMock()
+    mock_extended.KaggleApi = mock_api_cls
+    mock_api_mod = MagicMock()
+    mock_kaggle = MagicMock()
+
+    modules = {
+        "kaggle": mock_kaggle,
+        "kaggle.api": mock_api_mod,
+        "kaggle.api.kaggle_api_extended": mock_extended,
+    }
+    return mock_api_cls, modules  # type: ignore[return-value]
+
+
 class TestKaggleConnectorDownload:
     """Tests for download() with mocked KaggleApi."""
 
     def test_auth_failure(self, tmp_path: Path) -> None:
-        with patch("kaggle.api.kaggle_api_extended.KaggleApi") as mock_cls:
-            mock_api = MagicMock()
-            mock_api.authenticate.side_effect = Exception("bad creds")
-            mock_cls.return_value = mock_api
+        mock_api_cls, modules = _mock_kaggle_modules()
+        mock_instance = MagicMock()
+        mock_instance.authenticate.side_effect = Exception("bad creds")
+        mock_api_cls.return_value = mock_instance
 
+        with patch.dict(sys.modules, modules):
             connector = KaggleConnector(extract_dir=tmp_path)
             with pytest.raises(AuthenticationError, match="credentials not found"):
                 connector.download()
 
     def test_download_failure(self, tmp_path: Path) -> None:
-        with patch("kaggle.api.kaggle_api_extended.KaggleApi") as mock_cls:
-            mock_api = MagicMock()
-            mock_api.authenticate.return_value = None
-            mock_api.competition_download_files.side_effect = Exception("network error")
-            mock_cls.return_value = mock_api
+        mock_api_cls, modules = _mock_kaggle_modules()
+        mock_instance = MagicMock()
+        mock_instance.authenticate.return_value = None
+        mock_instance.competition_download_files.side_effect = Exception("network error")
+        mock_api_cls.return_value = mock_instance
 
+        with patch.dict(sys.modules, modules):
             connector = KaggleConnector(extract_dir=tmp_path)
             from ncaa_eval.ingest.connectors.base import NetworkError
 
@@ -224,14 +248,15 @@ class TestKaggleConnectorDownload:
                 connector.download()
 
     def test_successful_download(self, tmp_path: Path) -> None:
-        with patch("kaggle.api.kaggle_api_extended.KaggleApi") as mock_cls:
-            mock_api = MagicMock()
-            mock_api.authenticate.return_value = None
-            mock_api.competition_download_files.return_value = None
-            mock_cls.return_value = mock_api
+        mock_api_cls, modules = _mock_kaggle_modules()
+        mock_instance = MagicMock()
+        mock_instance.authenticate.return_value = None
+        mock_instance.competition_download_files.return_value = None
+        mock_api_cls.return_value = mock_instance
 
+        with patch.dict(sys.modules, modules):
             connector = KaggleConnector(extract_dir=tmp_path)
             connector.download()
 
-            mock_api.authenticate.assert_called_once()
-            mock_api.competition_download_files.assert_called_once()
+            mock_instance.authenticate.assert_called_once()
+            mock_instance.competition_download_files.assert_called_once()
