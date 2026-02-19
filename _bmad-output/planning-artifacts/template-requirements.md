@@ -728,5 +728,119 @@ Markdown links to files outside the Sphinx source tree (e.g., `[specs/file.md](.
 
 **Template Action:** In Markdown files processed by Sphinx, use backtick-quoted text for any reference to files outside `docs/`. Reserve Markdown links for files within the Sphinx source tree.
 
-*Last Updated: 2026-02-18 (Story 1.9 Code Review #2 - added misc.highlighting_failure suppression for mermaid code blocks)*
+### Don't Import Private Symbols from Implementation in Tests ⭐ (Discovered Story 1.8 Code Review)
+
+Tests importing `_PRIVATE_NAMES` from implementation modules create fragile coupling — if the internal is renamed, tests break for non-behavioral reasons. Prefer:
+
+1. **Hardcode observable values** — if the behavior is documented (e.g., logger name `"ncaa_eval"` is documented in the module docstring), hardcode it in tests. It IS the observable API.
+2. **Test behavior, not internals** — instead of asserting `handler.formatter._fmt == _LOG_FORMAT`, emit a log message and assert the captured output contains the expected pipe-delimited components.
+3. **If you must access private stdlib attributes** (like `logging.Formatter._fmt`), that's a red flag the test is over-specified. Rewrite to test observable output.
+
+```python
+# ❌ Fragile: imports private impl details + accesses private stdlib attr
+from ncaa_eval.utils.logger import _LOG_FORMAT, _ROOT_LOGGER_NAME
+assert handler.formatter._fmt == _LOG_FORMAT
+
+# ✅ Tests observable behavior
+log = get_logger("fmtcheck")
+log.info("format-test")
+captured = capsys.readouterr()
+assert " | ncaa_eval.fmtcheck | " in captured.err  # pipe-delimited format
+assert re.search(r"\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}", captured.err)  # timestamp
+```
+
+### Shared Autouse Fixture vs Repeated `teardown_method` ⭐ (Discovered Story 1.8 Code Review)
+
+When multiple test classes in the same file need the same cleanup (e.g., resetting a singleton logger), use a **module-level autouse fixture** instead of repeating `teardown_method` in each class:
+
+```python
+# ❌ Repeated teardown in three classes (DRY violation)
+class TestA:
+    def teardown_method(self) -> None:
+        root = logging.getLogger("ncaa_eval")
+        root.handlers.clear(); root.setLevel(logging.WARNING)
+
+class TestB:
+    def teardown_method(self) -> None:  # identical copy
+        ...
+
+# ✅ Single autouse fixture applies to entire module (including classes without teardown)
+@pytest.fixture(autouse=True)
+def _reset_ncaa_eval_logger() -> Iterator[None]:
+    """Reset the ncaa_eval root logger between every test in this module."""
+    yield
+    root = logging.getLogger("ncaa_eval")
+    root.handlers.clear()
+    root.setLevel(logging.WARNING)
+```
+
+Note: Use `yield` + teardown code. Ruff PT022 only flags `yield` when there is NO teardown code — using `yield` with cleanup after it is correct and expected.
+
+### Assertion Functions Must Raise `ValueError` (not `KeyError`) for Missing Columns ⭐ (Discovered Story 1.8 Code Review)
+
+Any assertion function that accepts column name(s) and accesses `df[col]` must validate column existence first. Letting a `KeyError` propagate violates AC-level requirements for "clear error messages":
+
+```python
+# ❌ df[col] raises KeyError for missing column — confusing to users
+def assert_dtypes(df: pd.DataFrame, expected: Mapping[str, str | type]) -> None:
+    for col, dtype in expected.items():
+        actual = str(df[col].dtype)  # KeyError if col not in df!
+
+# ✅ Validate first, raise ValueError with descriptive message
+def assert_dtypes(df: pd.DataFrame, expected: Mapping[str, str | type]) -> None:
+    missing_cols = set(expected.keys()) - set(df.columns)
+    if missing_cols:
+        msg = f"assert_dtypes failed: columns not found in DataFrame: {missing_cols}"
+        raise ValueError(msg)
+    for col, dtype in expected.items():
+        ...
+```
+
+This pattern applies to `assert_dtypes`, `assert_no_nulls` (specific-columns mode), and `assert_value_range`.
+
+### `follow_imports = "silent"` Does NOT Suppress `[import-untyped]` Under Mypy `--strict` ⭐ (Discovered Story 1.8)
+
+Despite the mypy docs, `follow_imports = "silent"` in `[tool.mypy]` does not suppress `[import-untyped]` errors when `--strict` mode is active. The `--strict` flag re-enables this check. Fix: use targeted `# type: ignore[import-untyped]` on the import line itself:
+
+```python
+import pandas as pd  # type: ignore[import-untyped]
+```
+
+Add this to every file that imports pandas (or other untyped third-party libs). Do NOT install `pandas-stubs` — the project explicitly chose not to.
+
+### Library-First: Surface Existing Libraries Before Reimplementing ⭐ (Discovered Story 1.8 Post-Review)
+
+Before writing a custom implementation for any common data engineering concern, explicitly surface whether a battle-tested library already exists — even if it adds a dependency. Custom code is only justified when no library exists, the library is too heavy, or the story explicitly prohibits new deps.
+
+**Common patterns and their preferred libraries:**
+
+| Custom code you might write | Library to consider first |
+|---|---|
+| DataFrame validation (nulls, dtypes, ranges) | **Pandera** (`pandera.pandas`) |
+| Data modeling / schema validation | **Pydantic** (`pydantic`) |
+| Retry logic / backoff | **tenacity** |
+| CLI argument parsing | **Click** or **Typer** |
+| Progress bars | **tqdm** or **rich** |
+
+**Decision rule:** If a function's docstring could be the README of a popular PyPI package, that package probably already exists.
+
+**Pandera-specific notes (Discovered Story 1.8):**
+- Import as `import pandera.pandas as pa` for pandas validation (the top-level `import pandera as pa` is deprecated in pandera ≥ 0.20)
+- Import the exception separately: `from pandera.errors import SchemaError`
+- Pandera IS fully typed — no `# type: ignore[import-untyped]` needed
+- `pa.DataFrameSchema({col: pa.Column(...)}, strict=False)` — `strict=False` allows extra columns beyond the schema; required for subset-column validation functions
+- When a validation function should always verify column existence (even with no constraints), always build the schema: use `pa.Column(checks=checks or None)` instead of early-returning
+
+### Keep Story File in Sync with Mid-Story Pivots (Discovered Story 1.8 Code Review Round 2)
+
+When a story changes direction mid-implementation (e.g., replacing custom code with a library), the story file must be updated **atomically** with the code change:
+- **Acceptance Criteria**: Revise to reflect the new approach
+- **Tasks/Subtasks**: Update completed/unchecked status to match reality
+- **File List**: Add/remove files to match actual git changes
+- **Completion Notes**: Update test counts, coverage numbers, and deliverables
+- **Change Log**: Document the pivot and rationale
+
+Stale story files create false audit trails — the code review found 3 Critical issues where deleted files were still claimed as deliverables with fabricated test counts.
+
+*Last Updated: 2026-02-18 (Story 1.8 Code Review Round 2 — story sync rule)*
 *Next Review: [Set cadence - weekly? sprint boundaries?]*
