@@ -41,7 +41,7 @@ So that I can make informed decisions about which sources to prioritize based on
   - [x] 4.2: Document licensing/cost implications for each source
   - [x] 4.3: Specify which sources are required vs. optional for the platform
 - [x] Task 5: Write and commit findings document (AC: 4)
-  - [x] 5.1: Create `docs/research/data-source-evaluation.md` with structured findings
+  - [x] 5.1: Create `specs/research/data-source-evaluation.md` with structured findings
   - [x] 5.2: Include summary comparison table and recommendation
   - [x] 5.3: List items requiring live verification with specific test procedures
 
@@ -49,17 +49,17 @@ So that I can make informed decisions about which sources to prioritize based on
 
 *Prerequisites for Story 2.3 — must complete before implementing data connectors:*
 
-- [ ] [AI-Review][HIGH] **Validate `sportsdataverse` package before relying on it as Priority 3** — package is recommended as cbbpy replacement but was never installed or tested during this spike. Run Item 6 test procedure: `python -c "import sportsdataverse.mbb as mbb; sched = mbb.load_mbb_schedule(seasons=[2025]); print(sched.head())"` [docs/research/data-source-evaluation.md:Section 7]
-- [ ] [AI-Review][HIGH] **Verify BartTorvik efficiency metrics (AdjOE/AdjDE/Four Factors) are retrievable via cbbpy** — only `get_team_schedule()` (ESPN data) was live-tested. The entire Priority 2 rationale depends on cbbpy returning BartTorvik efficiency metrics; this was not demonstrated. Run Item 8 test procedure. [docs/research/data-source-evaluation.md:Section 2]
-- [ ] [AI-Review][MEDIUM] **Validate cbbdata REST API responds before choosing it as Priority 2 fallback** — no endpoint was called during this spike. Run Item 5 test procedure (basic curl health check, then API key test). [docs/research/data-source-evaluation.md:Section 6]
-- [ ] [AI-Review][MEDIUM] **Resolve Priority 2 cbbpy-vs-cbbdata decision after live testing** — current recommendation defers this to Story 2.3. After completing H1/H2/M3 above, document a definitive starting choice in Story 2.3 Dev Notes before implementing connectors. [docs/research/data-source-evaluation.md:Priority 2 section]
-- [ ] [AI-Review][LOW] **Confirm `sportsdataverse` v0.0.40 is installed** — appendix table lists it but Completion Notes only confirm kaggle/cbbpy/kenpompy installation. Run: `python -c "import sportsdataverse; print(sportsdataverse.__version__)"` [docs/research/data-source-evaluation.md:Appendix]
+- [ ] [AI-Review][HIGH] **Validate `sportsdataverse` package before relying on it as Priority 3** — package is recommended as cbbpy replacement but was never installed or tested during this spike. Run Item 6 test procedure: `python -c "import sportsdataverse.mbb as mbb; sched = mbb.load_mbb_schedule(seasons=[2025]); print(sched.head())"` [specs/research/data-source-evaluation.md:Section 7]
+- [ ] [AI-Review][HIGH] **Verify BartTorvik efficiency metrics (AdjOE/AdjDE/Four Factors) are retrievable via cbbpy** — only `get_team_schedule()` (ESPN data) was live-tested. The entire Priority 2 rationale depends on cbbpy returning BartTorvik efficiency metrics; this was not demonstrated. Run Item 8 test procedure. [specs/research/data-source-evaluation.md:Section 2]
+- [ ] [AI-Review][MEDIUM] **Validate cbbdata REST API responds before choosing it as Priority 2 fallback** — no endpoint was called during this spike. Run Item 5 test procedure (basic curl health check, then API key test). [specs/research/data-source-evaluation.md:Section 6]
+- [ ] [AI-Review][MEDIUM] **Resolve Priority 2 cbbpy-vs-cbbdata decision after live testing** — current recommendation defers this to Story 2.3. After completing H1/H2/M3 above, document a definitive starting choice in Story 2.3 Dev Notes before implementing connectors. [specs/research/data-source-evaluation.md:Priority 2 section]
+- [ ] [AI-Review][LOW] **Confirm `sportsdataverse` v0.0.40 is installed** — appendix table lists it but Completion Notes only confirm kaggle/cbbpy/kenpompy installation. Run: `python -c "import sportsdataverse; print(sportsdataverse.__version__)"` [specs/research/data-source-evaluation.md:Appendix]
 
 ## Dev Notes
 
 ### This is a SPIKE — Output is a Document, Not Code
 
-This story produces a **research document**, not production code. The deliverable is a comprehensive evaluation committed to `docs/research/data-source-evaluation.md`. No production source code, tests, or package changes are expected.
+This story produces a **research document**, not production code. The deliverable is a comprehensive evaluation committed to `specs/research/data-source-evaluation.md`. No production source code, tests, or package changes are expected.
 
 ### Architecture Context
 
@@ -128,9 +128,9 @@ The following intelligence was gathered during story creation to accelerate the 
 
 ### Project Structure Notes
 
-**Output file location**: `docs/research/data-source-evaluation.md`
-- The `docs/` directory is the project's Sphinx source (restructured in Story 1.9)
-- Research documents go under `docs/research/` (create directory if needed)
+**Output file location**: `specs/research/data-source-evaluation.md`
+- The `docs/` directory is a pure Sphinx source directory (restructured in Story 1.9)
+- Planning/research artifacts belong in `specs/` (not `docs/`), consistent with Story 1.9 conventions
 - This document is a planning artifact, not API documentation — use Markdown, not RST
 
 **No production code changes** — this spike does not modify `src/`, `tests/`, or `pyproject.toml`.
@@ -183,17 +183,18 @@ Claude Opus 4.6 (claude-opus-4-6)
 - **Task 2:** All 3 key packages (`kaggle` 2.0.0, `cbbpy` 2.1.2, `kenpompy` 0.5.0) confirmed installed. `cbbpy` live-tested with partial success (`get_team_schedule` works, `get_games_range` broken). `kaggle` CLI blocked by missing credentials. `kenpompy` import verified but login not tested (requires subscription). `sportsipy` 0.6.0 confirmed stale (130 open issues). Package versions and GitHub activity documented.
 - **Task 3:** Data entity coverage mapped for all sources against architecture requirements (Team, Game, Season). Kaggle covers all core entities. Tournament seeds/brackets only available from Kaggle. Team name/ID mapping challenges identified across sources. `rapidfuzz` in cbbpy noted for Story 4.3.
 - **Task 4:** Priority order documented: Kaggle (Primary/Required), BartTorvik (Secondary/Required), KenPom (Optional), ESPN (Deferred), Sports Reference (Skip), FiveThirtyEight (Skip). Licensing table includes GPL-3.0 concern for kenpompy.
-- **Task 5:** `docs/research/data-source-evaluation.md` created with structured findings, comparison table, detailed evaluations, entity coverage mapping, priority recommendations, licensing section, and live verification items.
+- **Task 5:** `specs/research/data-source-evaluation.md` created with structured findings, comparison table, detailed evaluations, entity coverage mapping, priority recommendations, licensing section, and live verification items.
 - **Update (2026-02-19):** Expanded evaluation to 18 sources. Added: cbbdata REST API, sportsdataverse-py, ncaa-api, Nate Silver/SBCB/COOPER, and 6 scrape-only sources (EvanMiya, Sagarin, Haslametrics, Warren Nolan, TeamRankings, ShotQuality). Added "Data Processing Approaches Worth Replicating" section documenting methodologies from all sources (KenPom tempo-free efficiency, BartTorvik recency weighting, Silver's enhanced Elo, EvanMiya's BPR, ShotQuality's expected points, Massey composite, NET ranking, Kaggle community approaches). Expanded entity coverage and licensing tables.
 
 ### Change Log
 
-- 2026-02-18: Created `docs/research/data-source-evaluation.md` — comprehensive data source evaluation covering 9 sources with priority recommendations, entity coverage mapping, and licensing analysis.
+- 2026-02-18: Created `specs/research/data-source-evaluation.md` — comprehensive data source evaluation covering 9 sources with priority recommendations, entity coverage mapping, and licensing analysis.
 - 2026-02-19: Major update — expanded from 9 to 18 evaluated sources, added scrape-only sources, added data processing methodologies section, updated all tables and recommendations.
 - 2026-02-19: Code review (AI) — added rate limit documentation for KenPom, cbbdata, sportsdataverse, Warren Nolan, Haslametrics; expanded live verification table with specific test procedures and new Item 8 (BartTorvik efficiency metrics verification); added Review Follow-up action items for Story 2.3 prerequisites.
+- 2026-02-19: Moved `docs/research/data-source-evaluation.md` → `specs/research/data-source-evaluation.md` — planning artifact belongs in `specs/`, not Sphinx source tree (per Story 1.9 conventions).
 
 ### File List
 
-- `docs/research/data-source-evaluation.md` (modified) — Research findings document (expanded from 9 to 18 sources)
+- `specs/research/data-source-evaluation.md` (modified) — Research findings document (expanded from 9 to 18 sources)
 - `_bmad-output/implementation-artifacts/2-1-evaluate-data-sources.md` (modified) — Story file updates (task checkboxes, Dev Agent Record, status)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified) — Sprint status update
