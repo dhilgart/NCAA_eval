@@ -948,5 +948,61 @@ pytest_add_cli_args_test_selection = [
 ]
 ```
 
-*Last Updated: 2026-02-19 (Story 2.2 — Pydantic/pyarrow/mutmut learnings)*
+### pyarrow Schema Evolution: `fillna` Before Pydantic Construction ⭐ (Discovered Story 2.2 Code Review)
+
+When using `pyarrow.dataset` with hive-partitioned Parquet files, reading a dataset that mixes **old-schema partitions** (fewer columns) with **new-schema partitions** causes pyarrow to unify schemas and fill missing cells with `null`. For Pydantic fields typed as non-nullable (e.g., `bool`, `int`) with Python defaults, passing `null`/`None` raises `ValidationError` even if the field has a `default=`.
+
+**Pattern:** After `table.to_pandas()`, explicitly `fillna` non-nullable columns with their model defaults before constructing Pydantic instances:
+
+```python
+# In get_games (or equivalent reader), after to_pandas():
+if "num_ot" in df.columns:
+    df["num_ot"] = df["num_ot"].fillna(0)
+if "is_tournament" in df.columns:
+    df["is_tournament"] = df["is_tournament"].fillna(value=False)
+# Optional (datetime.date | None) fields stay as-is — None is valid
+return [Game(**row) for row in df.to_dict(orient="records")]
+```
+
+**Test it:** Write a schema evolution test that creates both an old-schema partition and a new-schema partition, then reads the old one via the dataset API. Without `fillna`, the test exposes the `ValidationError`. With it, the test confirms model defaults are applied.
+
+```python
+# Snippet: create old partition manually, then call repo.get_games(old_season)
+partition_dir.mkdir(parents=True, exist_ok=True)
+pq.write_table(pa.Table.from_pydict(old_data, schema=old_schema), partition_dir / "data.parquet")
+games = repo.get_games(old_season)
+assert games[0].num_ot == 0            # default, not null
+assert games[0].is_tournament is False  # default, not null
+```
+
+**Root cause:** `Pydantic field default` ≠ `None → default`. Pydantic v2 uses the default only when the key is **absent** from the input dict. When pyarrow schema unification adds the column as null, the key IS present (value = `None`), so Pydantic attempts to validate `None` against a non-nullable type.
+
+### Pydantic Cross-Field Invariants: Always Add `@model_validator` ⭐ (Discovered Story 2.2 Code Review)
+
+Data models for domain entities (games, transactions, events) almost always have **cross-field business invariants** beyond per-field constraints. Forgetting these creates schema that accepts semantically impossible data.
+
+**Common basketball/sports game invariants:**
+- Winner's score > loser's score (`w_score > l_score`)
+- A team can't play itself (`w_team_id != l_team_id`)
+
+```python
+from pydantic import model_validator
+
+class Game(BaseModel):
+    ...
+
+    @model_validator(mode="after")
+    def _check_game_integrity(self) -> Game:
+        if self.w_score <= self.l_score:
+            msg = f"w_score ({self.w_score}) must be greater than l_score ({self.l_score})"
+            raise ValueError(msg)
+        if self.w_team_id == self.l_team_id:
+            msg = f"w_team_id and l_team_id must differ (both are {self.w_team_id})"
+            raise ValueError(msg)
+        return self
+```
+
+**Template pattern:** When designing a new data entity, explicitly list "what combinations of field values are semantically impossible?" and add a `@model_validator(mode="after")` for each one. Review these during the code review phase — per-field validators don't catch cross-field logic.
+
+*Last Updated: 2026-02-19 (Story 2.2 Code Review — pyarrow schema evolution + Pydantic cross-field validators)*
 *Next Review: [Set cadence - weekly? sprint boundaries?]*
