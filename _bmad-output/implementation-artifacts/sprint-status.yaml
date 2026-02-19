@@ -56,7 +56,7 @@ development_status:
   # Epic 2: Data Ingestion & Local Warehouse
   epic-2: in-progress
   2-1-evaluate-data-sources: done
-  2-2-define-internal-data-schema-repository-layer: backlog
+  2-2-define-internal-data-schema-repository-layer: ready-for-dev
   2-3-implement-data-source-connectors: backlog
   2-4-implement-sync-cli-smart-caching: backlog
   epic-2-retrospective: optional
