@@ -12,7 +12,7 @@
   <critical>Read EVERY file in the File List - verify implementation against story requirements</critical>
   <critical>Tasks marked complete but not done = CRITICAL finding</critical>
   <critical>Acceptance Criteria not implemented = HIGH severity finding</critical>
-  <critical>Do not review files that are not part of the application's source code. Always exclude the _bmad/ and _bmad-output/ folders from the review. Always exclude IDE and CLI configuration folders like .cursor/ and .windsurf/ and .claude/</critical>
+  <critical>Do not review files that are not part of the application's source code. Always exclude the _bmad/ and _bmad-output/ folders from the review AND from git-vs-File-List discrepancy checks. Always exclude IDE and CLI configuration folders like .cursor/ and .windsurf/ and .claude/</critical>
 
 
   <step n="1" goal="Load story and discover changes">
@@ -60,7 +60,11 @@
     <critical>VALIDATE EVERY CLAIM - Check git reality vs story claims</critical>
 
     <!-- Git vs Story Discrepancies -->
-    <action>Review git vs story File List discrepancies:
+    <!-- NOTE: Exclude _bmad/ and _bmad-output/ files from discrepancy checks.
+         These are workflow-managed artifacts (sprint-status.yaml, template-requirements.md,
+         story files) that are updated by the BMAD toolchain itself, not story deliverables.
+         They follow the same policy as the review exclusion rule above. -->
+    <action>Review git vs story File List discrepancies (exclude _bmad/ and _bmad-output/ paths from all checks):
       1. **Files changed but not in story File List** → MEDIUM finding (incomplete documentation)
       2. **Story lists files but no git changes** → HIGH finding (false claims)
       3. **Uncommitted changes not documented** → MEDIUM finding (transparency issue)

@@ -17,6 +17,8 @@ networkx = "*"
 joblib = "*"
 plotly = "*"
 streamlit = "*"
+pydantic = "^2.12.5"
+pyarrow = "^23.0.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "*"
@@ -41,10 +43,16 @@ build-backend = "poetry.core.masonry.api"
 [tool.mypy]
 strict = true
 files = ["src/ncaa_eval", "tests"]
+plugins = ["pydantic.mypy"]
 follow_imports = "silent"
 warn_redundant_casts = true
 warn_unused_ignores = true
 warn_unused_configs = true
+
+[tool.pydantic-mypy]
+init_typed = true
+init_forbid_extra = true
+warn_required_dynamic_aliases = true
 
 [tool.ruff]
 line-length = 110
@@ -185,12 +193,12 @@ ignore = [
 # Mutation testing targets — Tier 1 priority: evaluation module
 # Extend as modules are implemented:
 # paths_to_mutate = ["src/ncaa_eval/evaluation/", "src/ncaa_eval/model/"]
-paths_to_mutate = ["src/ncaa_eval/evaluation/"]
-# Exclude tests marked @pytest.mark.no_mutation: these use Path(__file__) to navigate to
-# the project root, which resolves incorrectly when mutmut runs tests from mutants/.
-# Structural tests don't test evaluation module logic so are not meaningful for mutation testing.
-# Using -m marker exclusion (not -k name match) so renaming tests doesn't silently break this.
-pytest_add_cli_args_test_selection = ["tests/", "-m", "not no_mutation"]
+paths_to_mutate = ["src/ncaa_eval/evaluation/", "src/ncaa_eval/ingest/"]
+# Exclude tests incompatible with mutmut's mutants/ directory:
+# - @pytest.mark.no_mutation: use Path(__file__) for project root (resolves incorrectly)
+# - test_logger.py: imports ncaa_eval.utils which isn't in the mutant copy
+# Using both -m marker exclusion and --ignore for import-level failures.
+pytest_add_cli_args_test_selection = ["tests/", "-m", "not no_mutation", "--ignore=tests/unit/test_logger.py"]
 # Optional: only mutate lines covered by tests (faster runs):
 # mutate_only_covered_lines = true
 #

@@ -213,6 +213,19 @@ extend-select = [
 - Documentation code examples serve a pedagogical purpose; they should be formatted for human comprehension, not compiler compliance
 - **Code examples in `.md` files are illustrative, not compiled — Black formatting is inappropriate**
 
+#### `pre-commit install` Is Required After Clone ⭐ (Discovered Story 2.2 Code Review #2)
+
+Having `.pre-commit-config.yaml` in the repo does NOT mean hooks are active. The hooks must be explicitly installed into `.git/hooks/` via `pre-commit install`. Without this, commits bypass all hooks silently. CI catches violations via `pre-commit run --all-files` (which doesn't require installation), creating a gap where CI fails but local commits succeed.
+
+**Template Action:** Add `pre-commit install` to the post-clone setup instructions in README and CONTRIBUTING.md. Consider adding a check in the Nox lint session:
+
+```python
+# In noxfile.py lint session — warn if hooks not installed
+import os
+if not os.path.exists(".git/hooks/pre-commit"):
+    session.warn("Pre-commit hooks not installed! Run: pre-commit install")
+```
+
 #### "Style Sweep" Commit Pattern
 
 When first activating pre-commit on an established repo, expect a large auto-fix commit:
@@ -911,5 +924,113 @@ When a story changes direction mid-implementation (e.g., replacing custom code w
 
 Stale story files create false audit trails — the code review found 3 Critical issues where deleted files were still claimed as deliverables with fabricated test counts.
 
-*Last Updated: 2026-02-18 (Story 1.8 Code Review Round 2 — story sync rule)*
+### Pydantic mypy Plugin: Use `dict[str, Any]` in Test Fixtures (Discovered Story 2.2)
+
+The `pydantic.mypy` plugin (with `init_typed = true`) enforces strict constructor types. Test fixtures returning `dict[str, object]` for Pydantic model kwargs fail mypy because `object` is not assignable to specific field types. Use `dict[str, Any]` instead:
+
+```python
+# ❌ Fails mypy with pydantic.mypy plugin (init_typed = true)
+@pytest.fixture
+def valid_kwargs(self) -> dict[str, object]:
+    return {"field_a": 1, "field_b": "value"}
+
+# ✅ Any bypasses the strict init check (acceptable in tests)
+@pytest.fixture
+def valid_kwargs(self) -> dict[str, Any]:
+    return {"field_a": 1, "field_b": "value"}
+```
+
+### pyarrow Requires `# type: ignore[import-untyped]` (Discovered Story 2.2)
+
+pyarrow (like pandas) has no `py.typed` marker. All pyarrow imports need the same treatment:
+
+```python
+import pyarrow as pa  # type: ignore[import-untyped]
+import pyarrow.dataset as ds  # type: ignore[import-untyped]
+import pyarrow.parquet as pq  # type: ignore[import-untyped]
+```
+
+### Mutmut 3.x: `--ignore` for Import-Level Failures (Discovered Story 2.2)
+
+Beyond the `no_mutation` marker for `Path(__file__)` tests, mutmut's `mutants/` directory may lack modules not in `paths_to_mutate`. Tests that import those modules fail at collection time. Use `--ignore` in mutmut config:
+
+```toml
+pytest_add_cli_args_test_selection = [
+    "tests/", "-m", "not no_mutation",
+    "--ignore=tests/unit/test_logger.py"  # imports ncaa_eval.utils not in mutant
+]
+```
+
+### pyarrow Schema Evolution: Generic `_apply_model_defaults` Before Pydantic Construction ⭐ (Discovered Story 2.2, Updated Code Review #2)
+
+When using `pyarrow.dataset` with hive-partitioned Parquet files, reading a dataset that mixes **old-schema partitions** (fewer columns) with **new-schema partitions** causes pyarrow to unify schemas and fill missing cells with `null`. For Pydantic fields typed as non-nullable (e.g., `bool`, `int`) with Python defaults, passing `null`/`None` raises `ValidationError` even if the field has a `default=`.
+
+**Pattern (generic):** Instead of hardcoding `fillna` per column, iterate `model.model_fields` to apply defaults for any column with a non-None Pydantic default. This is self-maintaining as the schema evolves:
+
+```python
+from typing import Any
+
+def _apply_model_defaults(df: pd.DataFrame, model: type[Game]) -> None:
+    """Fill null values in *df* with non-None Pydantic field defaults."""
+    sentinel: Any = ...  # PydanticUndefined is represented as Ellipsis
+    for name, field_info in model.model_fields.items():
+        default = field_info.default
+        if name in df.columns and default is not sentinel and default is not None:
+            df[name] = df[name].fillna(default)
+
+# Usage in get_games (or equivalent reader), after to_pandas():
+df = table.to_pandas()
+_apply_model_defaults(df, Game)
+return [Game(**row) for row in df.to_dict(orient="records")]
+```
+
+**Why generic > hardcoded:** The initial implementation hardcoded `fillna` for `num_ot` and `is_tournament`. Adding a future field with a non-null default (e.g., `is_conference: bool = Field(default=False)`) required remembering to update the reader. The generic approach handles all current and future fields automatically.
+
+**Test it:** Write a schema evolution test that creates both an old-schema partition and a new-schema partition, then reads the old one via the dataset API. Without `fillna`, the test exposes the `ValidationError`. With it, the test confirms model defaults are applied.
+
+```python
+# Snippet: create old partition manually, then call repo.get_games(old_season)
+partition_dir.mkdir(parents=True, exist_ok=True)
+pq.write_table(pa.Table.from_pydict(old_data, schema=old_schema), partition_dir / "data.parquet")
+games = repo.get_games(old_season)
+assert games[0].num_ot == 0            # default, not null
+assert games[0].is_tournament is False  # default, not null
+```
+
+**Root cause:** `Pydantic field default` ≠ `None → default`. Pydantic v2 uses the default only when the key is **absent** from the input dict. When pyarrow schema unification adds the column as null, the key IS present (value = `None`), so Pydantic attempts to validate `None` against a non-nullable type.
+
+### Pydantic Cross-Field Invariants: Always Add `@model_validator` ⭐ (Discovered Story 2.2 Code Review)
+
+Data models for domain entities (games, transactions, events) almost always have **cross-field business invariants** beyond per-field constraints. Forgetting these creates schema that accepts semantically impossible data.
+
+**Common basketball/sports game invariants:**
+- Winner's score > loser's score (`w_score > l_score`)
+- A team can't play itself (`w_team_id != l_team_id`)
+
+```python
+from pydantic import model_validator
+
+class Game(BaseModel):
+    ...
+
+    @model_validator(mode="after")
+    def _check_game_integrity(self) -> Game:
+        if self.w_score <= self.l_score:
+            msg = f"w_score ({self.w_score}) must be greater than l_score ({self.l_score})"
+            raise ValueError(msg)
+        if self.w_team_id == self.l_team_id:
+            msg = f"w_team_id and l_team_id must differ (both are {self.w_team_id})"
+            raise ValueError(msg)
+        return self
+```
+
+**Template pattern:** When designing a new data entity, explicitly list "what combinations of field values are semantically impossible?" and add a `@model_validator(mode="after")` for each one. Review these during the code review phase — per-field validators don't catch cross-field logic.
+
+### Code Review: Exclude `_bmad-output/` from Git-vs-File-List Discrepancy Checks ⭐ (Discovered Story 2.2 Code Review)
+
+BMAD workflow artifacts (`sprint-status.yaml`, `template-requirements.md`, story `.md` files) are updated by the toolchain itself, not the developer. They are not story deliverables. Flagging them as "files changed but not in story File List" creates recurring false-positive MEDIUM findings.
+
+**Fix:** In `code-review/instructions.xml`, the `_bmad/` and `_bmad-output/` exclusion that already applies to the code review scope must also explicitly apply to the git-vs-File-List discrepancy check. Both the `<critical>` header and the discrepancy action should state: *"exclude `_bmad/` and `_bmad-output/` paths from all checks."*
+
+*Last Updated: 2026-02-19 (Story 2.2 Code Review #2 — generic `_apply_model_defaults` pattern + pre-commit install requirement)*
 *Next Review: [Set cadence - weekly? sprint boundaries?]*
