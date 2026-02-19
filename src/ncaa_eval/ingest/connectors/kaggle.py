@@ -203,6 +203,11 @@ class KaggleConnector(Connector):
             if dz is not None:
                 game_date = dz + datetime.timedelta(days=day_num)
 
+            wloc = str(row["WLoc"])
+            if wloc not in ("H", "A", "N"):
+                msg = f"kaggle: {filename} has unexpected WLoc value: {wloc!r}"
+                raise DataFormatError(msg)
+
             games.append(
                 Game(
                     game_id=f"{s}_{day_num}_{w_team_id}_{l_team_id}",
@@ -213,7 +218,7 @@ class KaggleConnector(Connector):
                     l_team_id=l_team_id,
                     w_score=int(row["WScore"]),
                     l_score=int(row["LScore"]),
-                    loc=cast("Literal['H', 'A', 'N']", str(row["WLoc"])),
+                    loc=cast("Literal['H', 'A', 'N']", wloc),
                     num_ot=int(row["NumOT"]),
                     is_tournament=is_tournament,
                 ),

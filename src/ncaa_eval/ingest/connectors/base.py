@@ -41,18 +41,32 @@ class NetworkError(ConnectorError):
 class Connector(abc.ABC):
     """Abstract base class for NCAA data source connectors.
 
-    Not all connectors implement all methods.  Concrete subclasses should raise
-    ``NotImplementedError`` for methods their source does not support.
+    All connectors must implement :meth:`fetch_games`, which is the universal
+    capability.  :meth:`fetch_teams` and :meth:`fetch_seasons` are optional
+    capabilities — subclasses that do not support them inherit the default
+    implementation, which raises ``NotImplementedError``.  Callers should use
+    :func:`isinstance` checks or ``try``/``except NotImplementedError`` to
+    probe optional capabilities before calling them.
     """
-
-    @abc.abstractmethod
-    def fetch_teams(self) -> list[Team]:
-        """Fetch team data from the source."""
 
     @abc.abstractmethod
     def fetch_games(self, season: int) -> list[Game]:
         """Fetch game results for a given *season* year."""
 
-    @abc.abstractmethod
+    def fetch_teams(self) -> list[Team]:
+        """Fetch team data from the source.
+
+        Optional capability — not all connectors provide team master data.
+        Raises:
+            NotImplementedError: If this connector does not support fetching teams.
+        """
+        raise NotImplementedError(f"{type(self).__name__} does not provide team data")
+
     def fetch_seasons(self) -> list[Season]:
-        """Fetch available seasons from the source."""
+        """Fetch available seasons from the source.
+
+        Optional capability — not all connectors provide season master data.
+        Raises:
+            NotImplementedError: If this connector does not support fetching seasons.
+        """
+        raise NotImplementedError(f"{type(self).__name__} does not provide season data")

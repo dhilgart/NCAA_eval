@@ -11,7 +11,7 @@ from ncaa_eval.ingest.connectors.base import (
     DataFormatError,
     NetworkError,
 )
-from ncaa_eval.ingest.schema import Game, Season, Team
+from ncaa_eval.ingest.schema import Game
 
 # ---------------------------------------------------------------------------
 # Exception hierarchy
@@ -53,15 +53,13 @@ class TestExceptionHierarchy:
 
 
 class _StubConnector(Connector):
-    """Minimal concrete connector for testing the ABC contract."""
+    """Minimal concrete connector for testing the ABC contract.
 
-    def fetch_teams(self) -> list[Team]:
-        return []
+    Only fetch_games() is abstract — fetch_teams() and fetch_seasons() are
+    optional capabilities with default NotImplementedError implementations.
+    """
 
     def fetch_games(self, season: int) -> list[Game]:
-        return []
-
-    def fetch_seasons(self) -> list[Season]:
         return []
 
 
@@ -74,6 +72,14 @@ class TestConnectorABC:
 
     def test_stub_connector_instantiates(self) -> None:
         connector = _StubConnector()
-        assert connector.fetch_teams() == []
         assert connector.fetch_games(2024) == []
-        assert connector.fetch_seasons() == []
+
+    def test_optional_fetch_teams_raises_not_implemented(self) -> None:
+        connector = _StubConnector()
+        with pytest.raises(NotImplementedError, match="_StubConnector does not provide team data"):
+            connector.fetch_teams()
+
+    def test_optional_fetch_seasons_raises_not_implemented(self) -> None:
+        connector = _StubConnector()
+        with pytest.raises(NotImplementedError, match="_StubConnector does not provide season data"):
+            connector.fetch_seasons()

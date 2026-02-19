@@ -19,8 +19,8 @@ plotly = "*"
 streamlit = "*"
 pydantic = "^2.12.5"
 pyarrow = "^23.0.1"
-kaggle = ">=2.0.0"
-cbbpy = ">=2.1.2"
+kaggle = "^2.0.0"
+cbbpy = "^2.1.2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "*"

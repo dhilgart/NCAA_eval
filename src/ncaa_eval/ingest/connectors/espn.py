@@ -21,7 +21,7 @@ from ncaa_eval.ingest.connectors.base import (
     Connector,
     DataFormatError,
 )
-from ncaa_eval.ingest.schema import Game, Season, Team
+from ncaa_eval.ingest.schema import Game
 
 logger = logging.getLogger(__name__)
 
@@ -53,14 +53,19 @@ def _parse_game_result(result_str: str) -> tuple[int, int] | None:
 
 def _resolve_team_id(
     name: str,
-    mapping: dict[str, int],
+    lower_map: dict[str, int],
+    original_mapping: dict[str, int],
 ) -> int | None:
     """Resolve an ESPN team name to a Kaggle team ID.
 
     Tries exact match first, then falls back to fuzzy matching via rapidfuzz.
+
+    Args:
+        name: ESPN team name to resolve.
+        lower_map: Pre-computed lowercase-keyed mapping (avoids per-call rebuild).
+        original_mapping: Original mapping with original-case keys (used for fuzzy).
     """
     # Exact match (case-insensitive).
-    lower_map = {k.lower(): v for k, v in mapping.items()}
     exact = lower_map.get(name.lower())
     if exact is not None:
         return exact
@@ -68,7 +73,7 @@ def _resolve_team_id(
     # Fuzzy match.
     best_score = 0.0
     best_id: int | None = None
-    for known_name, tid in mapping.items():
+    for known_name, tid in original_mapping.items():
         score = fuzz.ratio(name.lower(), known_name.lower())
         if score > best_score:
             best_score = score
@@ -95,16 +100,8 @@ class EspnConnector(Connector):
     ) -> None:
         self._team_name_to_id = team_name_to_id
         self._season_day_zeros = season_day_zeros
-
-    # -- Not supported: Teams and Seasons come from Kaggle only -------------
-
-    def fetch_teams(self) -> list[Team]:
-        """Not supported — teams come from Kaggle exclusively."""
-        raise NotImplementedError("EspnConnector does not provide team data")
-
-    def fetch_seasons(self) -> list[Season]:
-        """Not supported — seasons come from Kaggle exclusively."""
-        raise NotImplementedError("EspnConnector does not provide season data")
+        # Pre-compute lowercase map once to avoid O(N×M) rebuilds during parsing.
+        self._lower_team_map: dict[str, int] = {k.lower(): v for k, v in team_name_to_id.items()}
 
     # -- Games --------------------------------------------------------------
 
@@ -150,6 +147,11 @@ class EspnConnector(Connector):
                 logger.debug("espn: get_team_schedule('%s', %d) failed", team_name, season)
                 continue
         if not frames:
+            logger.warning(
+                "espn: all %d per-team schedule fetches failed for season %d — no data available",
+                len(self._team_name_to_id),
+                season,
+            )
             return None
         combined = pd.concat(frames, ignore_index=True)
         # Deduplicate by ESPN game_id (each game appears in both teams' schedules).
@@ -185,8 +187,8 @@ class EspnConnector(Connector):
             # Resolve team IDs.
             team_name = str(row["team"])
             opp_name = str(row["opponent"])
-            team_tid = _resolve_team_id(team_name, self._team_name_to_id)
-            opp_tid = _resolve_team_id(opp_name, self._team_name_to_id)
+            team_tid = _resolve_team_id(team_name, self._lower_team_map, self._team_name_to_id)
+            opp_tid = _resolve_team_id(opp_name, self._lower_team_map, self._team_name_to_id)
             if team_tid is None or opp_tid is None:
                 logger.warning("espn: skipping game %s — unresolved team(s)", espn_game_id)
                 continue

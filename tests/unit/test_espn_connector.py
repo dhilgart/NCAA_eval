@@ -113,25 +113,28 @@ class TestParseGameResult:
 # ---------------------------------------------------------------------------
 
 
+_LOWER_TEAM_MAP = {k.lower(): v for k, v in _TEAM_MAP.items()}
+
+
 class TestResolveTeamId:
     """Tests for team name -> team_id resolution."""
 
     def test_exact_match(self) -> None:
-        assert _resolve_team_id("Duke", _TEAM_MAP) == 1181
+        assert _resolve_team_id("Duke", _LOWER_TEAM_MAP, _TEAM_MAP) == 1181
 
     def test_case_insensitive(self) -> None:
-        assert _resolve_team_id("duke", _TEAM_MAP) == 1181
+        assert _resolve_team_id("duke", _LOWER_TEAM_MAP, _TEAM_MAP) == 1181
 
     def test_fuzzy_match(self) -> None:
         # "N. Carolina" should fuzzy-match "North Carolina"
-        result = _resolve_team_id("N. Carolina", _TEAM_MAP)
+        result = _resolve_team_id("N. Carolina", _LOWER_TEAM_MAP, _TEAM_MAP)
         # Depending on fuzzy score, this may or may not match.
         # With rapidfuzz ratio, "n. carolina" vs "north carolina" ~ 76-82
         # We accept either match or None here.
         assert result in (1314, None)
 
     def test_no_match(self) -> None:
-        result = _resolve_team_id("Nonexistent University", _TEAM_MAP)
+        result = _resolve_team_id("Nonexistent University", _LOWER_TEAM_MAP, _TEAM_MAP)
         assert result is None
 
 
@@ -194,6 +197,20 @@ class TestEspnConnectorGames:
         game = next(g for g in games if g.game_id == "espn_401700001")
         # DayZero for 2025 is 2024-11-04. 2024-11-15 is day 11.
         assert game.day_num == 11
+
+    def test_day_num_fallback_when_no_day_zero(self) -> None:
+        # Season 9999 has no DayZero mapping → day_num should fall back to 0.
+        connector_no_dz = EspnConnector(
+            team_name_to_id=_TEAM_MAP,
+            season_day_zeros={},
+        )
+        df = _make_schedule_df()
+        with patch.object(connector_no_dz, "_fetch_schedule_df", return_value=df):
+            games = connector_no_dz.fetch_games(9999)
+        # Games should still parse (date and day_num gracefully fall back).
+        assert len(games) == 2
+        for game in games:
+            assert game.day_num == 0  # fallback when no DayZero available
 
     def test_default_loc_neutral(self, connector: EspnConnector) -> None:
         df = _make_schedule_df()
