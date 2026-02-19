@@ -911,5 +911,42 @@ When a story changes direction mid-implementation (e.g., replacing custom code w
 
 Stale story files create false audit trails — the code review found 3 Critical issues where deleted files were still claimed as deliverables with fabricated test counts.
 
-*Last Updated: 2026-02-18 (Story 1.8 Code Review Round 2 — story sync rule)*
+### Pydantic mypy Plugin: Use `dict[str, Any]` in Test Fixtures (Discovered Story 2.2)
+
+The `pydantic.mypy` plugin (with `init_typed = true`) enforces strict constructor types. Test fixtures returning `dict[str, object]` for Pydantic model kwargs fail mypy because `object` is not assignable to specific field types. Use `dict[str, Any]` instead:
+
+```python
+# ❌ Fails mypy with pydantic.mypy plugin (init_typed = true)
+@pytest.fixture
+def valid_kwargs(self) -> dict[str, object]:
+    return {"field_a": 1, "field_b": "value"}
+
+# ✅ Any bypasses the strict init check (acceptable in tests)
+@pytest.fixture
+def valid_kwargs(self) -> dict[str, Any]:
+    return {"field_a": 1, "field_b": "value"}
+```
+
+### pyarrow Requires `# type: ignore[import-untyped]` (Discovered Story 2.2)
+
+pyarrow (like pandas) has no `py.typed` marker. All pyarrow imports need the same treatment:
+
+```python
+import pyarrow as pa  # type: ignore[import-untyped]
+import pyarrow.dataset as ds  # type: ignore[import-untyped]
+import pyarrow.parquet as pq  # type: ignore[import-untyped]
+```
+
+### Mutmut 3.x: `--ignore` for Import-Level Failures (Discovered Story 2.2)
+
+Beyond the `no_mutation` marker for `Path(__file__)` tests, mutmut's `mutants/` directory may lack modules not in `paths_to_mutate`. Tests that import those modules fail at collection time. Use `--ignore` in mutmut config:
+
+```toml
+pytest_add_cli_args_test_selection = [
+    "tests/", "-m", "not no_mutation",
+    "--ignore=tests/unit/test_logger.py"  # imports ncaa_eval.utils not in mutant
+]
+```
+
+*Last Updated: 2026-02-19 (Story 2.2 — Pydantic/pyarrow/mutmut learnings)*
 *Next Review: [Set cadence - weekly? sprint boundaries?]*
