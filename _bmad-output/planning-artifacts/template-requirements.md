@@ -738,6 +738,20 @@ Markdown links to files outside the Sphinx source tree (e.g., `[specs/file.md](.
 
 **Template Action:** In Markdown files processed by Sphinx, use backtick-quoted text for any reference to files outside `docs/`. Reserve Markdown links for files within the Sphinx source tree.
 
+### Spike Research Outputs Belong in `specs/research/`, Not `docs/` (Discovered Story 2.1)
+
+Spike stories that produce research documents (e.g., data source evaluations, technology comparisons, feasibility analyses) are planning artifacts, not developer documentation. Their output belongs in `specs/research/`, not `docs/research/`. Placing them in `docs/` violates the "pure Sphinx source" principle from Story 1.9 — Sphinx would either need `exclude_patterns` to hide them or they'd appear in the built documentation as unfinished planning notes.
+
+```
+# BAD — planning artifact pollutes Sphinx source tree
+docs/research/data-source-evaluation.md
+
+# GOOD — planning artifact in specs/ alongside other planning docs
+specs/research/data-source-evaluation.md
+```
+
+**Template Action:** When creating spike stories, set the output path to `specs/research/<document-name>.md`. Reserve `docs/` exclusively for content that should appear in the built Sphinx documentation.
+
 ### Don't Import Private Symbols from Implementation in Tests ⭐ (Discovered Story 1.8 Code Review)
 
 Tests importing `_PRIVATE_NAMES` from implementation modules create fragile coupling — if the internal is renamed, tests break for non-behavioral reasons. Prefer:
