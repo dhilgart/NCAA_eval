@@ -6,6 +6,7 @@ connectors and the real ParquetRepository to verify end-to-end behaviour.
 
 from __future__ import annotations
 
+import datetime
 import shutil
 import sys
 from pathlib import Path
@@ -66,6 +67,25 @@ _GAMES_2023: list[dict[str, Any]] = [
         "loc": "N",
     }
 ]
+
+# ESPN games for season 2024 (most recent season = max(2023, 2024) = 2024)
+_ESPN_GAMES_2024: list[dict[str, Any]] = [
+    {
+        "game_id": "espn_99001",
+        "season": 2024,
+        "day_num": 90,
+        "w_team_id": 1101,
+        "l_team_id": 1104,
+        "w_score": 85,
+        "l_score": 72,
+        "loc": "H",
+    },
+]
+
+_DAY_ZEROS: dict[int, datetime.date] = {
+    2023: datetime.date(2022, 11, 7),
+    2024: datetime.date(2023, 11, 6),
+}
 
 
 def _make_games(records: list[dict[str, Any]]) -> list[Game]:
@@ -133,13 +153,19 @@ def test_sync_kaggle_cache_hit(mock_cls: MagicMock, tmp_path: Path) -> None:
     # First run: writes Parquet
     engine.sync_kaggle()
     fetch_games_count_after_first = instance.fetch_games.call_count
+    fetch_teams_count_after_first = instance.fetch_teams.call_count
+    fetch_seasons_count_after_first = instance.fetch_seasons.call_count
 
     # Second run: should hit cache for all seasons
     result2 = engine.sync_kaggle(force_refresh=False)
 
     assert instance.fetch_games.call_count == fetch_games_count_after_first
+    assert instance.fetch_teams.call_count == fetch_teams_count_after_first
+    assert instance.fetch_seasons.call_count == fetch_seasons_count_after_first
     assert result2.seasons_cached == len(_SEASONS)
     assert result2.games_written == 0
+    assert result2.teams_written == 0
+    assert result2.seasons_written == 0
 
 
 # ---------------------------------------------------------------------------
@@ -190,6 +216,104 @@ def test_sync_espn_requires_kaggle(tmp_path: Path) -> None:
 
     with pytest.raises(RuntimeError, match="kaggle"):
         engine.sync_espn()
+
+
+# ---------------------------------------------------------------------------
+# ESPN full cycle, cache hit, and force-refresh
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.integration
+@patch("ncaa_eval.ingest.sync.EspnConnector")
+@patch("ncaa_eval.ingest.sync.KaggleConnector")
+def test_sync_espn_full_cycle(mock_kaggle_cls: MagicMock, mock_espn_cls: MagicMock, tmp_path: Path) -> None:
+    """ESPN sync fetches games, merges with existing Kaggle games, and creates marker."""
+    # Pre-populate repo with Kaggle data (required ESPN pre-condition)
+    repo = ParquetRepository(tmp_path)
+    repo.save_teams(_TEAMS)
+    repo.save_seasons(_SEASONS)
+    repo.save_games(_make_games(_GAMES_2024))  # existing Kaggle games
+
+    # Mock KaggleConnector used to load day_zeros (no download)
+    kaggle_instance = mock_kaggle_cls.return_value
+    kaggle_instance.load_day_zeros.return_value = _DAY_ZEROS
+
+    # Mock EspnConnector
+    espn_instance = mock_espn_cls.return_value
+    espn_instance.fetch_games.return_value = _make_games(_ESPN_GAMES_2024)
+
+    engine = SyncEngine(repository=repo, data_dir=tmp_path)
+    result = engine.sync_espn()
+
+    assert result.source == "espn"
+    assert result.games_written == len(_ESPN_GAMES_2024)
+    assert result.seasons_cached == 0
+
+    # Verify marker file was created for year 2024
+    assert (tmp_path / ".espn_synced_2024").exists()
+
+    # Verify games were merged: original Kaggle games + ESPN games
+    all_games_2024 = repo.get_games(2024)
+    game_ids = {g.game_id for g in all_games_2024}
+    assert "2024_11_1101_1102" in game_ids  # Kaggle game preserved
+    assert "espn_99001" in game_ids  # ESPN game added
+
+
+@pytest.mark.integration
+@patch("ncaa_eval.ingest.sync.EspnConnector")
+@patch("ncaa_eval.ingest.sync.KaggleConnector")
+def test_sync_espn_cache_hit(mock_kaggle_cls: MagicMock, mock_espn_cls: MagicMock, tmp_path: Path) -> None:
+    """sync_espn skips fetch when marker file exists and force_refresh is False."""
+    repo = ParquetRepository(tmp_path)
+    repo.save_teams(_TEAMS)
+    repo.save_seasons(_SEASONS)
+
+    kaggle_instance = mock_kaggle_cls.return_value
+    kaggle_instance.load_day_zeros.return_value = _DAY_ZEROS
+
+    espn_instance = mock_espn_cls.return_value
+
+    # Pre-create marker for max year (2024)
+    (tmp_path / ".espn_synced_2024").touch()
+
+    engine = SyncEngine(repository=repo, data_dir=tmp_path)
+    result = engine.sync_espn()
+
+    assert result.seasons_cached == 1
+    assert result.games_written == 0
+    espn_instance.fetch_games.assert_not_called()
+
+
+@pytest.mark.integration
+@patch("ncaa_eval.ingest.sync.EspnConnector")
+@patch("ncaa_eval.ingest.sync.KaggleConnector")
+def test_sync_espn_force_refresh(
+    mock_kaggle_cls: MagicMock, mock_espn_cls: MagicMock, tmp_path: Path
+) -> None:
+    """force_refresh=True deletes marker and re-fetches ESPN games."""
+    repo = ParquetRepository(tmp_path)
+    repo.save_teams(_TEAMS)
+    repo.save_seasons(_SEASONS)
+
+    kaggle_instance = mock_kaggle_cls.return_value
+    kaggle_instance.load_day_zeros.return_value = _DAY_ZEROS
+
+    espn_instance = mock_espn_cls.return_value
+    espn_instance.fetch_games.return_value = _make_games(_ESPN_GAMES_2024)
+
+    # Pre-create marker (simulating previous sync)
+    marker = tmp_path / ".espn_synced_2024"
+    marker.touch()
+
+    engine = SyncEngine(repository=repo, data_dir=tmp_path)
+    result = engine.sync_espn(force_refresh=True)
+
+    # Force refresh should re-fetch games (marker deleted then recreated)
+    espn_instance.fetch_games.assert_called_once_with(2024)
+    assert result.games_written == len(_ESPN_GAMES_2024)
+    assert result.seasons_cached == 0
+    # Marker re-created after successful sync
+    assert marker.exists()
 
 
 # ---------------------------------------------------------------------------

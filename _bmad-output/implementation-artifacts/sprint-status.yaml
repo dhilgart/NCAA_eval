@@ -58,7 +58,7 @@ development_status:
   2-1-evaluate-data-sources: done
   2-2-define-internal-data-schema-repository-layer: done
   2-3-implement-data-source-connectors: done
-  2-4-implement-sync-cli-smart-caching: review
+  2-4-implement-sync-cli-smart-caching: done
   epic-2-retrospective: optional
 
   # Epic 3: Exploratory Data Analysis

@@ -1,8 +1,8 @@
 """Sync engine for fetching NCAA data and persisting it with smart caching.
 
-The :class:`SyncEngine` orchestrates data retrieval from configured
-connectors (Kaggle, ESPN) and stores results via a :class:`Repository`.
-Parquet-level caching prevents redundant fetches on subsequent runs.
+`SyncEngine` orchestrates data retrieval from configured connectors (Kaggle,
+ESPN) and stores results via a `Repository`. Parquet-level caching prevents
+redundant fetches on subsequent runs.
 """
 
 from __future__ import annotations
@@ -128,7 +128,7 @@ class SyncEngine:
 
         # Load DayZero mapping from already-downloaded Kaggle CSVs (no network call).
         kaggle_connector = KaggleConnector(extract_dir=self._data_dir / "kaggle")
-        season_day_zeros = kaggle_connector._load_day_zeros()  # noqa: SLF001
+        season_day_zeros = kaggle_connector.load_day_zeros()
 
         # ESPN scope: most recent season only
         year = max(s.year for s in seasons)

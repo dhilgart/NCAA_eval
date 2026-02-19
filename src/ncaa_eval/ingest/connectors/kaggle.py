@@ -134,8 +134,12 @@ class KaggleConnector(Connector):
             raise DataFormatError(msg) from exc
         return df
 
-    def _load_day_zeros(self) -> dict[int, datetime.date]:
-        """Load and cache the season → DayZero mapping."""
+    def load_day_zeros(self) -> dict[int, datetime.date]:
+        """Load and cache the season → DayZero mapping.
+
+        Returns:
+            Mapping of season year to the date of Day 0 for that season.
+        """
         if self._day_zeros is not None:
             return self._day_zeros
         df = self._read_csv("MSeasons.csv")
@@ -161,7 +165,7 @@ class KaggleConnector(Connector):
         ``is_tournament=False``; games from ``MNCAATourneyCompactResults.csv``
         have ``is_tournament=True``.
         """
-        day_zeros = self._load_day_zeros()
+        day_zeros = self.load_day_zeros()
         games: list[Game] = []
         games.extend(
             self._parse_games_csv("MRegularSeasonCompactResults.csv", season, day_zeros, is_tournament=False)

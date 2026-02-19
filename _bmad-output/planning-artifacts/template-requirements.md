@@ -1115,5 +1115,76 @@ def _resolve_team_id(name: str, lower_map: dict[str, int], original: dict[str, i
 
 **Rule:** Any dict comprehension inside a method that's called in a loop is a candidate for precomputation in `__init__`.
 
-*Last Updated: 2026-02-19 (Story 2.3 Code Review — ABC LSP pattern, domain value validation, version pinning, precomputed collections)*
+### `poetry add` Does Not Install Into Active Conda Env (Discovered Story 2.4)
+
+When running `POETRY_VIRTUALENVS_CREATE=false conda run -n ncaa_eval poetry add <pkg>`, Poetry updates `pyproject.toml` and `poetry.lock` but the package may not actually land in the conda env. Always follow `poetry add` with `conda run -n ncaa_eval pip install <pkg>` to guarantee the package is importable from the conda env.
+
+**Workaround until resolved:** Use `conda run -n ncaa_eval pip install <pkg>` as the authoritative installation step; let `poetry add` update `pyproject.toml`/`poetry.lock` for dependency tracking.
+
+### Overwrite-First Repository Writes Require Merge Before Save (Discovered Story 2.4)
+
+When `save_X()` **overwrites** the entire partition (e.g., `save_games()` per-season), adding a second source's data for the same partition requires: **load existing → merge → save combined**. Otherwise the first source's data is silently lost.
+
+```python
+# ❌ Overwrites Kaggle games with ESPN games — Kaggle data LOST
+self._repo.save_games(espn_games)
+
+# ✅ Merge first, then save combined list
+existing = self._repo.get_games(year)
+self._repo.save_games(existing + espn_games)
+```
+
+**Detection:** Check `save_*()` docstrings for "overwrite" vs "append" behavior before writing any logic that calls `save_*()` for the same key from multiple sources.
+
+### ESPN Marker-File Caching (Discovered Story 2.4)
+
+When the cache-check criterion would require reading and inspecting Parquet contents (e.g., "does this partition already contain ESPN-prefixed IDs?"), use lightweight marker files instead:
+
+```
+{data_dir}/.espn_synced_2025   ← empty file; touch() after sync, unlink() on force-refresh
+```
+
+This avoids loading Parquet just to detect presence, while remaining robust to partial failures (only create marker after a successful sync).
+
+### Tests Importing Project-Root Modules by Name Fail in Mutmut (Discovered Story 2.4)
+
+Tests that do `import sync` (where `sync.py` is at the project root, not in a package) fail with `ModuleNotFoundError` when mutmut runs them from `mutants/`. Even with `sys.path.insert` inside the test function, the import can fail.
+
+**Fix:** Mark such tests `@pytest.mark.no_mutation` to exclude them from mutmut. The engine-level tests still provide mutation coverage.
+
+```python
+@pytest.mark.integration
+@pytest.mark.no_mutation  # imports project-root sync.py by name — fails in mutmut context
+def test_cli_sync_kaggle(...) -> None:
+    import sync as sync_module
+    ...
+```
+
+### Private Helper Methods Accessed Cross-Class Require a Public Interface (Discovered Story 2.4 Code Review)
+
+When `Class A` needs to call a helper on `Class B` that is logically useful to external callers, rename it from `_private` to `public`. Suppressing `SLF001` with `# noqa` hides the design smell instead of fixing it.
+
+```python
+# ❌ Suppresses linting, couples SyncEngine to KaggleConnector internals
+season_day_zeros = kaggle_connector._load_day_zeros()  # noqa: SLF001
+
+# ✅ Rename to public; docstring documents the public contract
+def load_day_zeros(self) -> dict[int, datetime.date]:
+    """Load and cache the season → DayZero mapping."""
+    ...
+```
+
+**Rule:** If a `# noqa: SLF001` exists in a caller, question whether the method belongs on the public API. If yes, rename it. If not, consider moving the logic to the callee or a shared utility.
+
+### ESPN-style Multi-Source Caching Requires Full Cycle Tests (Discovered Story 2.4 Code Review)
+
+When a caching strategy involves marker files (or any lightweight sentinel), the following paths must each be tested:
+1. Happy-path: sentinel created after successful sync
+2. Cache hit: sentinel exists → fetch methods not called
+3. Force-refresh: sentinel deleted → re-fetch occurs, sentinel re-created
+4. Merge logic: existing data + new source data combined before overwrite-save
+
+Omitting these tests lets bugs in the entire cache lifecycle go undetected even when the dependency guard and ordering tests pass.
+
+*Last Updated: 2026-02-19 (Story 2.4 Code Review — private method public API promotion, multi-source cache test coverage)*
 *Next Review: [Set cadence - weekly? sprint boundaries?]*

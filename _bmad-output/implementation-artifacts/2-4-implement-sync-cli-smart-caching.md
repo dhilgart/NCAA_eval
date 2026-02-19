@@ -1,6 +1,6 @@
 # Story 2.4: Implement Sync CLI & Smart Caching
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -431,11 +431,27 @@ Claude Sonnet 4.6
 
 **Modified files:**
 - `src/ncaa_eval/ingest/__init__.py` — Added SyncEngine, SyncResult to exports and `__all__`
-- `pyproject.toml` — Added `typer[all]>=0.15` dependency; added `sync.py` to mypy `files`
+- `src/ncaa_eval/ingest/connectors/kaggle.py` — Renamed `_load_day_zeros` → `load_day_zeros` (public API)
+- `pyproject.toml` — Added `typer[all]>=0.15,<2` dependency; added `sync.py` to mypy `files`; added `sync.py` to check-manifest ignore list
 - `poetry.lock` — Updated with typer 0.24.0 and transitive deps
 - `noxfile.py` — Added `sync.py` to typecheck session
-- `_bmad-output/implementation-artifacts/sprint-status.yaml` — Status updated to review
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — Status updated to done
+
+### Senior Developer Review (AI)
+
+**Reviewer:** Claude Sonnet 4.6 (BMAD code-review workflow) — 2026-02-19
+
+**Outcome:** Approved with fixes applied (6 issues auto-fixed, 151 tests pass)
+
+**Issues Fixed:**
+- [H1][HIGH] Renamed `KaggleConnector._load_day_zeros()` → `load_day_zeros()` — private method was accessed cross-class with `# noqa: SLF001` suppression; promoted to public API [`src/ncaa_eval/ingest/connectors/kaggle.py`]
+- [M1][MEDIUM] Added 3 ESPN integration tests (full cycle, cache hit, force-refresh) — caching marker logic and Kaggle+ESPN merge were completely untested [`tests/integration/test_sync.py`]
+- [M2][MEDIUM] Added missing assertions to `test_sync_kaggle_cache_hit` — `fetch_teams`, `fetch_seasons` call counts and `teams_written`/`seasons_written == 0` not previously verified [`tests/integration/test_sync.py`]
+- [M3][MEDIUM] Added `sync.py` to `[tool.check-manifest]` ignore list — root script was git-tracked but absent from distribution and ignore list [`pyproject.toml`]
+- [M4][MEDIUM] Pinned typer to `>=0.15,<2` — unbounded `>=0.15` violates project convention of bounding major-version breaks [`pyproject.toml`]
+- [L1][LOW] Fixed RST `:class:` markup in module docstring — replaced with Google-style single backticks [`src/ncaa_eval/ingest/sync.py`]
 
 ### Change Log
 
+- 2026-02-19: Code review complete — 6 issues fixed (1 HIGH, 4 MEDIUM, 1 LOW); 3 ESPN integration tests added; test count 148 → 151
 - 2026-02-19: Implemented Sync CLI & Smart Caching (Story 2.4) — SyncEngine with Parquet-level caching, ESPN marker-file caching, Typer CLI wrapper, 8 integration tests. All quality checks pass.
