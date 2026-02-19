@@ -1032,5 +1032,88 @@ BMAD workflow artifacts (`sprint-status.yaml`, `template-requirements.md`, story
 
 **Fix:** In `code-review/instructions.xml`, the `_bmad/` and `_bmad-output/` exclusion that already applies to the code review scope must also explicitly apply to the git-vs-File-List discrepancy check. Both the `<critical>` header and the discrepancy action should state: *"exclude `_bmad/` and `_bmad-output/` paths from all checks."*
 
-*Last Updated: 2026-02-19 (Story 2.2 Code Review #2 — generic `_apply_model_defaults` pattern + pre-commit install requirement)*
+### ABC Optional Capabilities: Prefer Non-Abstract Defaults Over NotImplementedError Overrides ⭐ (Discovered Story 2.3 Code Review)
+
+When a base class defines methods that not all subclasses support, making them `@abc.abstractmethod` forces subclasses to "implement" them by raising `NotImplementedError` — a Liskov Substitution Principle violation.
+
+**Pattern:** Only the universally-required method is abstract; optional capabilities have concrete default bodies:
+
+```python
+class Connector(abc.ABC):
+    @abc.abstractmethod
+    def fetch_games(self, season: int) -> list[Game]: ...  # REQUIRED — all sources
+
+    def fetch_teams(self) -> list[Team]:  # OPTIONAL — not all sources provide this
+        raise NotImplementedError(f"{type(self).__name__} does not provide team data")
+
+    def fetch_seasons(self) -> list[Season]:  # OPTIONAL
+        raise NotImplementedError(f"{type(self).__name__} does not provide season data")
+```
+
+**Result:** Subclasses that don't support `fetch_teams`/`fetch_seasons` simply inherit the default — no redundant override needed. Subclasses that DO support them override to return data. Callers use `try/except NotImplementedError` or `isinstance` to probe capabilities.
+
+**Anti-pattern:**
+```python
+# ❌ LSP violation: ABC contract claims fetch_teams returns list[Team]
+#    but subclass "implements" it by raising instead
+class EspnConnector(Connector):
+    def fetch_teams(self) -> list[Team]:
+        raise NotImplementedError("ESPN doesn't have team data")  # ← lying to callers
+```
+
+### Validate Domain-Constrained Values Before Pydantic Construction (Discovered Story 2.3 Code Review)
+
+When parsing raw data that maps to a `Literal[...]` typed field, never use `cast()` alone — `cast()` is zero-cost at runtime and won't catch invalid values. Validate explicitly and raise the appropriate connector exception before handing to Pydantic:
+
+```python
+# ❌ cast() doesn't validate — invalid WLoc causes ValidationError, not DataFormatError
+loc=cast("Literal['H', 'A', 'N']", str(row["WLoc"])),
+
+# ✅ Validate first, raise appropriate error, then cast
+wloc = str(row["WLoc"])
+if wloc not in ("H", "A", "N"):
+    raise DataFormatError(f"kaggle: {filename} has unexpected WLoc value: {wloc!r}")
+loc = cast("Literal['H', 'A', 'N']", wloc)
+```
+
+This ensures callers catch `DataFormatError` (the connector's error contract), not raw Pydantic `ValidationError`.
+
+### Dependency Version Pinning: `^` Not `>=` for Libraries With Known Breaking Changes (Discovered Story 2.3 Code Review)
+
+Use caret pinning (`^x.y.z` = semver-compatible) rather than lower-bound-only (`>=x.y.z`) for any library with documented breaking changes between major versions:
+
+```toml
+# ❌ Allows future majors (kaggle v3, v4) that may break existing API calls
+kaggle = ">=2.0.0"
+
+# ✅ Semver-compatible: allows patch/minor updates, blocks major-version breaks
+kaggle = "^2.0.0"
+```
+
+**Rule:** If the Dev Notes mention a breaking change between versions of a library, use `^` not `>=`.
+
+**Important:** Changing constraint syntax (e.g., `>=` → `^`) constitutes a significant change to `pyproject.toml`. Always run `poetry lock` after, or CI will fail with: *"pyproject.toml changed significantly since poetry.lock was last generated."*
+
+### Precompute Derived Collections in `__init__` (Discovered Story 2.3 Code Review)
+
+Avoid rebuilding derived collections inside hot-path methods. When `__init__` receives a mapping that's later used in case-insensitive lookups, precompute the lowercased version:
+
+```python
+# ❌ Rebuilds lower_map on every call — O(N×M) for N games × M teams
+def _resolve_team_id(name: str, mapping: dict[str, int]) -> int | None:
+    lower_map = {k.lower(): v for k, v in mapping.items()}  # rebuilt every call!
+
+# ✅ Precompute once in __init__, pass as argument
+class EspnConnector:
+    def __init__(self, team_name_to_id: dict[str, int], ...):
+        self._lower_team_map = {k.lower(): v for k, v in team_name_to_id.items()}
+
+def _resolve_team_id(name: str, lower_map: dict[str, int], original: dict[str, int]) -> int | None:
+    exact = lower_map.get(name.lower())  # O(1) lookup
+    ...
+```
+
+**Rule:** Any dict comprehension inside a method that's called in a loop is a candidate for precomputation in `__init__`.
+
+*Last Updated: 2026-02-19 (Story 2.3 Code Review — ABC LSP pattern, domain value validation, version pinning, precomputed collections)*
 *Next Review: [Set cadence - weekly? sprint boundaries?]*
