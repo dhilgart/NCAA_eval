@@ -200,6 +200,7 @@ result = ms.get_team_schedule('Duke', 2025)
 - **Scraping-based** — No official API. Scrapes ESPN and BartTorvik HTML/JSON endpoints
 - **Rate limits:** Self-imposed by cbbpy (polite scraping with delays), but no explicit server-side enforcement documented
 - **Speed concern:** ~237 seconds for 22 games is very slow for bulk historical data collection. A full season (~5,000+ games) would take hours.
+- **Anti-scraping:** **Live-confirmed:** BartTorvik uses a JavaScript browser verification challenge and explicitly disallows scraping key endpoints in `robots.txt`. Direct `curl` requests return "Verifying Browser..." HTML rather than data. cbbpy likely uses session handling to bypass this, but it adds fragility.
 - **Cost:** Free, no subscription required
 
 #### Risk Assessment
@@ -546,11 +547,12 @@ The following sources provide valuable analytics data but have no API and would 
 - **Creator:** Evan Miyakawa
 - **Cost:** Paid subscription (tiered; exact pricing not publicly listed). Trusted by 100+ D1 programs; NCAA-approved for coaching staff use.
 - **Data:** Bayesian Performance Rating (BPR), team O-Rate/D-Rate, lineup ratings (2–5 man combos), player impact metrics, transfer portal rankings, game predictions
-- **Coverage:** Current season + recent history; play-by-play-derived metrics
-- **Tech stack:** Built with R/Shiny
-- **Access:** No API; web-only dashboard. Scraping feasibility unknown — Shiny apps use WebSocket/reactive rendering, making traditional scraping difficult.
+- **Data processing:** Multi-stage Bayesian model combining regularized adjusted plus-minus (RAPM), college-specific box plus-minus, and preseason projections from recruiting/transfer data. See "Approaches Worth Replicating" section for details.
+- **Coverage:** Current season + recent history; play-by-play-derived metrics trained on data back to 2011
+- **Tech stack:** Built with R/Shiny, Firebase authentication
+- **Access:** No API; web-only dashboard. **Live-confirmed:** Uses Firebase auth + R Shiny WebSocket rendering — impractical to scrape programmatically.
 - **Unique value:** Lineup-level analytics and player-specific BPR are unique among evaluated sources. No other source provides adjusted 2-5 man lineup data.
-- **Assessment:** High-quality proprietary data, but paid access + Shiny rendering + no export/API make programmatic integration impractical. Worth considering as a manual enrichment source for model validation rather than automated ingestion.
+- **Assessment:** High-quality proprietary data, but paid access + Firebase auth + Shiny rendering make programmatic integration impractical. Worth considering as a manual enrichment source for model validation rather than automated ingestion.
 
 #### 11b. Sagarin Ratings (sagarin.com)
 
@@ -559,12 +561,12 @@ The following sources provide valuable analytics data but have no API and would 
 - **Creator:** Jeff Sagarin
 - **URL:** `sagarin.com/sports/cbsend.htm`
 - **Cost:** Free (web access)
-- **Data:** Composite ratings combining Elo-chess and Bayesian approaches, SoS rankings
+- **Data:** Dual rating system: (1) "Elo Chess" — pure win/loss, no margin of victory; (2) "Predictor" — incorporates scoring margin, designed to predict point spreads at neutral venues. Uses Bayesian network weighted by starting rankings early in season, transitioning to pure data-driven as schedule graph becomes well-connected. 4-point home court advantage. Exact methodology is proprietary.
 - **Coverage:** Current season, updated throughout the year
-- **Access:** No API; static HTML page with ratings tables. Previously hosted on USA Today; now only on sagarin.com.
-- **Anti-scraping:** No known measures, but HTML format varies and is not consistently structured
+- **Access:** No API; **live-confirmed:** data rendered as `<pre>` formatted plain text with no anti-scraping protections — trivially parseable.
+- **Anti-scraping:** None — simple static HTML
 - **Unique value:** None — **Sagarin ordinal rankings already available in Kaggle MasseyOrdinals as "SAG"**
-- **Assessment:** No independent connector needed. Kaggle MasseyOrdinals provides historical Sagarin rankings in structured CSV format.
+- **Assessment:** No independent connector needed. Kaggle MasseyOrdinals provides historical Sagarin rankings in structured CSV format. However, the dual Elo-chess / Predictor methodology is interesting — see "Approaches Worth Replicating."
 
 #### 11c. Haslametrics (haslametrics.com)
 
@@ -572,12 +574,13 @@ The following sources provide valuable analytics data but have no API and would 
 
 - **Creator:** Erik Haslam
 - **Cost:** Free
-- **Data:** Predictive team ratings, game score predictions, efficiency metrics
-- **Coverage:** Current season
-- **Access:** No API; standard HTML tables. Scraping feasible (no Cloudflare/JS challenges reported). Community scraper exists (`github.com/fattmarley/cbbscraper` — scrapes KenPom, Haslametrics, and BartTorvik using Selenium).
-- **Anti-scraping:** Minimal — appears to be a simple static site
-- **Unique value:** Independent predictive model that differs from KenPom/BartTorvik approaches. Rankings are included in Massey Ratings composite.
-- **Assessment:** Free and scrapable, but the data largely overlaps with BartTorvik's efficiency metrics. Haslametrics ordinal rankings are available via Kaggle MasseyOrdinals. Direct scraping only justified if granular Haslametrics predictions (game-level point spreads) are desired.
+- **Data:** Predictive team ratings, game score predictions, efficiency metrics, momentum and consistency metrics
+- **Data processing:** Preseason baselines incorporate 3 years of program prestige, prior season ratings, returning production, projected transfer production, recruiting rankings, and coaching changes — processed through regression equations. System updates continuously as games are played, becoming more accurate through the season.
+- **Coverage:** Current season (95 data columns per team)
+- **Access:** No API. **Live-confirmed:** Data loaded from XML files with no anti-scraping protections. 95 columns per team available.
+- **Anti-scraping:** None — XML data files accessible without authentication or JS challenges
+- **Unique value:** Independent predictive model that differs from KenPom/BartTorvik approaches. Emphasizes momentum and consistency metrics. Rankings are included in Massey Ratings composite.
+- **Assessment:** Free and trivially scrapable (XML data), but the data largely overlaps with BartTorvik's efficiency metrics. Haslametrics ordinal rankings are available via Kaggle MasseyOrdinals. The preseason baseline methodology (combining program prestige + returning production + recruiting) is worth noting for our preseason modeling approach. Direct scraping justified if game-level predictions or momentum/consistency metrics are desired.
 
 #### 11d. Warren Nolan (warrennolan.com)
 
@@ -585,11 +588,12 @@ The following sources provide valuable analytics data but have no API and would 
 
 - **Cost:** Free
 - **Data:** Live RPI, NET rankings, Elo ratings, SoS, Nitty Gritty reports (used by NCAA selection committee), bracket projections, conference rankings, schedule data
+- **Data processing:** RPI uses the standard formula: `0.25 × Team_WP + 0.50 × Opponents_WP + 0.25 × Opponents_Opponents_WP`, with location weighting (home win = 0.6, road win = 1.4, neutral = 1.0). Note: RPI was replaced by NET for NCAA tournament selection in 2018, but is still published. NET uses Team Value Index (TVI) + adjusted net efficiency.
 - **Coverage:** Current season; historical data back several years (2022+ confirmed via URLs)
-- **Access:** No API; standard HTML pages with data tables. URL structure is predictable (e.g., `/basketball/2026/rpi-live`)
-- **Anti-scraping:** No known aggressive measures
+- **Access:** No API; standard HTML pages with data tables. URL structure is predictable (e.g., `/basketball/2026/rpi-live`). **Live-confirmed:** Zero anti-bot measures and completely open `robots.txt` — easiest scrape target of all evaluated sources.
+- **Anti-scraping:** None whatsoever
 - **Unique value:** NET rankings and Nitty Gritty reports mirror NCAA selection committee data. Only public source for comprehensive NET team sheets.
-- **Assessment:** Valuable as a verification source for NET/RPI data. Scraping is feasible but adds maintenance burden. NET rankings are also available via cbbdata API (`cbd_torvik_current_resume()`). Defer unless NET-specific data becomes a modeling requirement.
+- **Assessment:** Valuable as a verification source for NET/RPI data. Easiest scraping target identified. NET rankings are also available via cbbdata API (`cbd_torvik_current_resume()`). Defer unless NET-specific data becomes a modeling requirement.
 
 #### 11e. TeamRankings (teamrankings.com)
 
@@ -598,10 +602,10 @@ The following sources provide valuable analytics data but have no API and would 
 - **Cost:** Free (basic stats) / Paid (premium picks and projections)
 - **Data:** Team rankings, historical stats, win probabilities, pace/efficiency metrics, conference comparisons, opponent-adjusted stats
 - **Coverage:** Current season + historical data
-- **Access:** No official API. Community Python scraper exists (`github.com/MichaelE919/ncaa-stats-webscraper` — uses requests + BeautifulSoup to scrape team stats).
-- **Anti-scraping:** Unknown — scraper projects exist, suggesting scraping is possible
+- **Access:** No official API. Community Python scraper exists (`github.com/MichaelE919/ncaa-stats-webscraper` — uses requests + BeautifulSoup to scrape team stats). **Live-confirmed:** `robots.txt` requires 10-second crawl delays.
+- **Anti-scraping:** Moderate — 10-second crawl delay enforced via robots.txt
 - **Unique value:** Broad statistical coverage, but nothing not available from Kaggle + BartTorvik
-- **Assessment:** Low priority. Overlaps significantly with existing sources. Community scraper could serve as a starting point if ever needed.
+- **Assessment:** Low priority. Overlaps significantly with existing sources. 10-second crawl delay makes bulk scraping slow. Community scraper could serve as a starting point if ever needed.
 
 #### 11f. ShotQuality (shotqualitybets.com)
 
@@ -621,11 +625,12 @@ The following sources provide valuable analytics data but have no API and would 
 
 #### Massey Ratings (masseyratings.com)
 
-- Aggregates 100+ college basketball ranking systems
+- Aggregates 100+ college basketball ranking systems into a composite comparison
 - **Already available via Kaggle MasseyOrdinals** — the `MMasseyOrdinals.csv` file is sourced from Massey Ratings
-- No official API; web-only access
+- No official API; web-only access. **Live-confirmed:** Returns Cloudflare 403 — scraping is impractical.
+- Massey's own ratings use: full-season re-analysis each week, diminishing-returns margin of victory, home court adjustment, early-season de-weighting, implicit schedule strength
 - Community scraper exists (`github.com/Carrigan/mncaa`) but adds no value over Kaggle data
-- **Assessment: No independent connector needed**
+- **Assessment: No independent connector needed** — Cloudflare blocks scraping anyway, and Kaggle provides the same data in CSV format
 
 #### SportsDataIO
 
@@ -884,6 +889,48 @@ Based on publicly shared Kaggle MMLM solutions:
 - **Custom Elo implementations** within Kaggle competitions have been attempted but rarely beat using pre-computed external ratings
 
 **Replication value:** *HIGH* — Our modeling framework (Epic 5) should support both stateful (Elo) and stateless (XGBoost) approaches, with MasseyOrdinals as a primary feature source. The Monte Carlo tournament simulator is already planned for Story 6.5.
+
+### Sagarin Dual Rating System
+
+Sagarin publishes two complementary ratings that capture different aspects of team strength:
+
+1. **Elo Chess:** Pure win/loss record — no margin of victory. Captures "who beats whom" regardless of score.
+2. **Predictor (Pure Points):** Incorporates scoring margin. The difference between two teams' ratings predicts the margin of victory at a neutral venue.
+
+Additional processing:
+- **4-point home court advantage** constant
+- **Bayesian network at season start:** When the schedule graph is sparse (teams haven't all played interconnected schedules), preseason rankings serve as Bayesian priors. Weights are removed once the graph is well-connected.
+- **Exact methodology is proprietary**
+
+**Replication value:** *MEDIUM* — The dual-system concept (one ignoring margin, one using it) is interesting for our modeling. We could implement both pure-win-loss and margin-adjusted Elo variants and combine them. The Bayesian preseason prior concept is shared with Silver's SBCB and EvanMiya's BPR, reinforcing that preseason information should be incorporated.
+
+### RPI Formula (Historical Reference)
+
+The Rating Percentage Index was the NCAA selection committee's primary tool from 1981 to 2018 (replaced by NET):
+
+`RPI = 0.25 × Team_WP + 0.50 × Opponents_WP + 0.25 × Opponents_Opponents_WP`
+
+With location weighting adjustments (since 2004):
+- Home win = 0.6 wins, Home loss = 1.4 losses
+- Road win = 1.4 wins, Road loss = 0.6 losses
+- Neutral = 1.0
+
+**Replication value:** *LOW* — RPI is outdated and widely criticized for not accounting for scoring margin, but it's still published by Warren Nolan and remains culturally significant. RPI ordinals are available in Kaggle MasseyOrdinals as "RPI". Not worth implementing as a standalone feature, but understanding the formula helps interpret historical selection committee decisions.
+
+### Haslametrics Preseason Baseline Construction
+
+Haslametrics builds preseason team projections from a regression incorporating:
+
+- **3 years of program prestige** (sustained program quality)
+- **Prior season ratings** (recent performance)
+- **Returning production** (minutes/stats returning)
+- **Projected transfer production** (incoming transfer impact)
+- **Recruiting rankings** (incoming freshman talent)
+- **Head coaching changes** (coaching continuity/disruption)
+
+The system continuously updates as games are played, with preseason projections losing weight to actual performance data throughout the season.
+
+**Replication value:** *MEDIUM* — The specific factors for preseason baselines are valuable for our own preseason modeling. The concept of combining program prestige, returning production, and recruiting is well-validated. These factors could serve as features for a preseason team strength prior in our Elo model (Story 5.3) or as preseason features for the XGBoost model (Story 5.4). Recruiting data would need to come from an external source not yet evaluated (247Sports, Rivals, etc.).
 
 ### Multi-Source Scraping Pattern (cbbscraper)
 
