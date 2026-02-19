@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import datetime
 from pathlib import Path
+from typing import Any
 
+import pyarrow as pa  # type: ignore[import-untyped]
+import pyarrow.parquet as pq  # type: ignore[import-untyped]
 import pytest
 
 from ncaa_eval.ingest.repository import ParquetRepository
@@ -25,7 +28,7 @@ def _make_team(team_id: int = 1101, team_name: str = "Abilene Chr") -> Team:
     return Team(team_id=team_id, team_name=team_name)
 
 
-_GAME_DEFAULTS: dict[str, object] = {
+_GAME_DEFAULTS: dict[str, Any] = {
     "season": 2024,
     "day_num": 10,
     "w_team_id": 1101,
@@ -36,10 +39,10 @@ _GAME_DEFAULTS: dict[str, object] = {
 }
 
 
-def _make_game(**overrides: object) -> Game:
-    kw = {**_GAME_DEFAULTS, **overrides}
+def _make_game(**overrides: Any) -> Game:
+    kw: dict[str, Any] = {**_GAME_DEFAULTS, **overrides}
     kw.setdefault("game_id", f"{kw['season']}_{kw['day_num']}_{kw['w_team_id']}_{kw['l_team_id']}")
-    return Game(**kw)  # type: ignore[arg-type]
+    return Game(**kw)
 
 
 # ---------------------------------------------------------------------------
@@ -222,6 +225,7 @@ class TestDirectoryCreation:
 class TestSeasonRoundTrip:
     """Tests for save_seasons -> get_seasons."""
 
+    @pytest.mark.smoke
     def test_round_trip(self, repo: ParquetRepository) -> None:
         seasons = [Season(year=2023), Season(year=2024)]
         repo.save_seasons(seasons)
@@ -231,3 +235,66 @@ class TestSeasonRoundTrip:
 
     def test_get_seasons_empty(self, repo: ParquetRepository) -> None:
         assert repo.get_seasons() == []
+
+
+# ---------------------------------------------------------------------------
+# Schema evolution  (Task 3.6)
+# ---------------------------------------------------------------------------
+
+
+class TestSchemaEvolution:
+    """Tests that older Parquet files missing new columns are still readable.
+
+    Scenario: after a schema update adds ``num_ot`` and ``is_tournament``,
+    season partitions written *before* the update lack those columns.  When
+    pyarrow reads the dataset it unifies schemas across all partitions and fills
+    the missing cells with null.  The repository must convert those nulls back
+    to the Pydantic model defaults rather than passing null into a non-nullable
+    field (which would raise a ValidationError).
+    """
+
+    def test_old_partition_readable_in_mixed_schema_dataset(self, tmp_path: Path) -> None:
+        """Old-schema partition is readable when a newer partition exists alongside it."""
+        repo = ParquetRepository(tmp_path)
+        games_dir = tmp_path / "games"
+
+        # Write a current-schema partition so pyarrow has both schemas in the dataset.
+        repo.save_games([_make_game(season=2024)])
+
+        # Simulate an old-format partition (season=2022) written before num_ot and
+        # is_tournament were added to the schema.
+        old_schema = pa.schema([
+            ("game_id", pa.string()),
+            ("day_num", pa.int64()),
+            ("date", pa.date32()),
+            ("w_team_id", pa.int64()),
+            ("l_team_id", pa.int64()),
+            ("w_score", pa.int64()),
+            ("l_score", pa.int64()),
+            ("loc", pa.string()),
+        ])
+        partition_dir = games_dir / "season=2022"
+        partition_dir.mkdir(parents=True, exist_ok=True)
+        old_table = pa.Table.from_pydict(
+            {
+                "game_id": ["2022_10_1101_1102"],
+                "day_num": [10],
+                "date": [None],
+                "w_team_id": [1101],
+                "l_team_id": [1102],
+                "w_score": [70],
+                "l_score": [65],
+                "loc": ["H"],
+            },
+            schema=old_schema,
+        )
+        pq.write_table(old_table, partition_dir / "data.parquet")
+
+        # Reading the old partition via the dataset API (which unifies schemas across
+        # all partitions, filling missing cells with null) must succeed and apply the
+        # Pydantic model defaults for the missing columns.
+        games = repo.get_games(2022)
+        assert len(games) == 1
+        assert games[0].season == 2022
+        assert games[0].num_ot == 0            # default applied, not null
+        assert games[0].is_tournament is False  # default applied, not null

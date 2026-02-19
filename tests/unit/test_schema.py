@@ -197,6 +197,18 @@ class TestGame:
         restored = Game(**data)
         assert restored == game
 
+    def test_winner_score_must_exceed_loser_score(self, valid_game_kwargs: dict[str, Any]) -> None:
+        with pytest.raises(ValidationError):
+            Game(**{**valid_game_kwargs, "w_score": 60, "l_score": 60})
+
+    def test_winner_score_less_than_loser_rejected(self, valid_game_kwargs: dict[str, Any]) -> None:
+        with pytest.raises(ValidationError):
+            Game(**{**valid_game_kwargs, "w_score": 50, "l_score": 60})
+
+    def test_same_team_ids_rejected(self, valid_game_kwargs: dict[str, Any]) -> None:
+        with pytest.raises(ValidationError):
+            Game(**{**valid_game_kwargs, "w_team_id": 1101, "l_team_id": 1101})
+
     def test_serialization_round_trip_with_date(self) -> None:
         game = Game(
             game_id="2024_10_1101_1102",

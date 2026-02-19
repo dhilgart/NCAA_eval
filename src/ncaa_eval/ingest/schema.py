@@ -11,7 +11,7 @@ from __future__ import annotations
 import datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class Team(BaseModel):
@@ -48,3 +48,13 @@ class Game(BaseModel):
     loc: Literal["H", "A", "N"] = Field(..., alias="Loc")
     num_ot: int = Field(default=0, ge=0, alias="NumOT")
     is_tournament: bool = Field(default=False, alias="IsTournament")
+
+    @model_validator(mode="after")
+    def _check_game_integrity(self) -> Game:
+        if self.w_score <= self.l_score:
+            msg = f"w_score ({self.w_score}) must be greater than l_score ({self.l_score})"
+            raise ValueError(msg)
+        if self.w_team_id == self.l_team_id:
+            msg = f"w_team_id and l_team_id must differ (both are {self.w_team_id})"
+            raise ValueError(msg)
+        return self

@@ -123,6 +123,14 @@ class ParquetRepository(Repository):
             return []
 
         df = table.to_pandas()
+        # Schema evolution: when the dataset spans partitions with different schemas
+        # (e.g., older season files lack columns added later), pyarrow fills missing
+        # cells with null after unifying schemas.  Re-apply Pydantic defaults for
+        # non-nullable Game fields so model construction doesn't fail on null input.
+        if "num_ot" in df.columns:
+            df["num_ot"] = df["num_ot"].fillna(0)
+        if "is_tournament" in df.columns:
+            df["is_tournament"] = df["is_tournament"].fillna(value=False)
         return [Game(**row) for row in df.to_dict(orient="records")]
 
     def get_seasons(self) -> list[Season]:
@@ -135,6 +143,8 @@ class ParquetRepository(Repository):
     # -- writes --------------------------------------------------------------
 
     def save_teams(self, teams: list[Team]) -> None:
+        if not teams:
+            return
         self._base_path.mkdir(parents=True, exist_ok=True)
         table = pa.Table.from_pydict(
             {field: [getattr(t, field) for t in teams] for field in _TEAM_SCHEMA.names},
@@ -168,6 +178,8 @@ class ParquetRepository(Repository):
             pq.write_table(table, partition_dir / "data.parquet")
 
     def save_seasons(self, seasons: list[Season]) -> None:
+        if not seasons:
+            return
         self._base_path.mkdir(parents=True, exist_ok=True)
         table = pa.Table.from_pydict(
             {field: [getattr(s, field) for s in seasons] for field in _SEASON_SCHEMA.names},
