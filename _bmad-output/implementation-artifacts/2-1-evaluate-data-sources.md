@@ -1,6 +1,6 @@
 # Story 2.1 (Spike): Evaluate Data Sources
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -44,6 +44,16 @@ So that I can make informed decisions about which sources to prioritize based on
   - [x] 5.1: Create `docs/research/data-source-evaluation.md` with structured findings
   - [x] 5.2: Include summary comparison table and recommendation
   - [x] 5.3: List items requiring live verification with specific test procedures
+
+### Review Follow-ups (AI)
+
+*Prerequisites for Story 2.3 — must complete before implementing data connectors:*
+
+- [ ] [AI-Review][HIGH] **Validate `sportsdataverse` package before relying on it as Priority 3** — package is recommended as cbbpy replacement but was never installed or tested during this spike. Run Item 6 test procedure: `python -c "import sportsdataverse.mbb as mbb; sched = mbb.load_mbb_schedule(seasons=[2025]); print(sched.head())"` [docs/research/data-source-evaluation.md:Section 7]
+- [ ] [AI-Review][HIGH] **Verify BartTorvik efficiency metrics (AdjOE/AdjDE/Four Factors) are retrievable via cbbpy** — only `get_team_schedule()` (ESPN data) was live-tested. The entire Priority 2 rationale depends on cbbpy returning BartTorvik efficiency metrics; this was not demonstrated. Run Item 8 test procedure. [docs/research/data-source-evaluation.md:Section 2]
+- [ ] [AI-Review][MEDIUM] **Validate cbbdata REST API responds before choosing it as Priority 2 fallback** — no endpoint was called during this spike. Run Item 5 test procedure (basic curl health check, then API key test). [docs/research/data-source-evaluation.md:Section 6]
+- [ ] [AI-Review][MEDIUM] **Resolve Priority 2 cbbpy-vs-cbbdata decision after live testing** — current recommendation defers this to Story 2.3. After completing H1/H2/M3 above, document a definitive starting choice in Story 2.3 Dev Notes before implementing connectors. [docs/research/data-source-evaluation.md:Priority 2 section]
+- [ ] [AI-Review][LOW] **Confirm `sportsdataverse` v0.0.40 is installed** — appendix table lists it but Completion Notes only confirm kaggle/cbbpy/kenpompy installation. Run: `python -c "import sportsdataverse; print(sportsdataverse.__version__)"` [docs/research/data-source-evaluation.md:Appendix]
 
 ## Dev Notes
 
@@ -180,6 +190,7 @@ Claude Opus 4.6 (claude-opus-4-6)
 
 - 2026-02-18: Created `docs/research/data-source-evaluation.md` — comprehensive data source evaluation covering 9 sources with priority recommendations, entity coverage mapping, and licensing analysis.
 - 2026-02-19: Major update — expanded from 9 to 18 evaluated sources, added scrape-only sources, added data processing methodologies section, updated all tables and recommendations.
+- 2026-02-19: Code review (AI) — added rate limit documentation for KenPom, cbbdata, sportsdataverse, Warren Nolan, Haslametrics; expanded live verification table with specific test procedures and new Item 8 (BartTorvik efficiency metrics verification); added Review Follow-up action items for Story 2.3 prerequisites.
 
 ### File List
 

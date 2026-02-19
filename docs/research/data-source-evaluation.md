@@ -267,6 +267,10 @@ The scraping stack is inherently fragile:
 - **Raw KenPom data must NOT be committed to the repository**
 - Any connector must require the user's own subscription credentials
 
+#### Rate Limits
+
+Not applicable — KenPom's ToS prohibits automated scraping, making server-side rate limiting moot. Access is web-only through a paid subscription login. `kenpompy` internally manages session handling via `cloudscraper`; no server-side rate limiting is documented by the community. Since automation is ToS-prohibited, rate limit bypass is not a design requirement.
+
 #### Why Optional?
 
 1. **Kaggle MasseyOrdinals already provides KenPom rankings** (as "POM" system) — sufficient for most modeling needs
@@ -397,6 +401,10 @@ The cbbdata API is a REST API built by Andrew Weatherman that provides structure
 - API key issued at registration
 - No Python client exists — would need to call REST endpoints directly via `httpx`/`requests`
 
+#### Rate Limits
+
+Not publicly documented. No rate limiting is mentioned in the cbbdata README, GitHub issues, or API documentation. Respectful usage (delays between requests, avoid hammering the API) is recommended. Live verification needed to determine actual throttling behavior under sustained load (see Live Verification Needed section).
+
 #### Known Issues
 
 - **GitHub issue #20:** "No Bart Torvik Data for 2025-26 Season" (open)
@@ -439,6 +447,8 @@ The REST API approach is more reliable than cbbpy's HTML scraping, but the 2025-
 | Maintenance | Active — last pushed Jan 2026, more active than cbbpy |
 | Stability | Medium — still wraps undocumented ESPN endpoints |
 | Python support | Native Python package (unlike cbbdata's R-only client) |
+| Rate limits | Not documented — inherits ESPN's undocumented API; unknown server-side throttling |
+| Live testing | **⚠️ Not performed** — package not tested during this spike; see Live Verification item #6 |
 | Unique value | Play-by-play data, polars support |
 
 #### Why Secondary Alternative?
@@ -446,6 +456,7 @@ The REST API approach is more reliable than cbbpy's HTML scraping, but the 2025-
 - Overlaps significantly with cbbpy's ESPN coverage
 - More actively maintained than cbbpy (pushed Jan 2026 vs Nov 2025)
 - 32 open issues suggest some rough edges
+- **Note:** Package was not live-tested during this spike. Story 2.3 must verify functionality before relying on it as a cbbpy replacement
 - Worth evaluating in Story 2.3 as a potential replacement for cbbpy's ESPN scraping if cbbpy bugs persist
 
 ---
@@ -579,6 +590,7 @@ The following sources provide valuable analytics data but have no API and would 
 - **Coverage:** Current season (95 data columns per team)
 - **Access:** No API. **Live-confirmed:** Data loaded from XML files with no anti-scraping protections. 95 columns per team available.
 - **Anti-scraping:** None — XML data files accessible without authentication or JS challenges
+- **Rate limits:** None — live-confirmed: no throttling headers or rate limiting observed on XML data files
 - **Unique value:** Independent predictive model that differs from KenPom/BartTorvik approaches. Emphasizes momentum and consistency metrics. Rankings are included in Massey Ratings composite.
 - **Assessment:** Free and trivially scrapable (XML data), but the data largely overlaps with BartTorvik's efficiency metrics. Haslametrics ordinal rankings are available via Kaggle MasseyOrdinals. The preseason baseline methodology (combining program prestige + returning production + recruiting) is worth noting for our preseason modeling approach. Direct scraping justified if game-level predictions or momentum/consistency metrics are desired.
 
@@ -592,6 +604,7 @@ The following sources provide valuable analytics data but have no API and would 
 - **Coverage:** Current season; historical data back several years (2022+ confirmed via URLs)
 - **Access:** No API; standard HTML pages with data tables. URL structure is predictable (e.g., `/basketball/2026/rpi-live`). **Live-confirmed:** Zero anti-bot measures and completely open `robots.txt` — easiest scrape target of all evaluated sources.
 - **Anti-scraping:** None whatsoever
+- **Rate limits:** None — live-confirmed: completely open `robots.txt` with no `Crawl-delay` directive; no server-side throttling observed
 - **Unique value:** NET rankings and Nitty Gritty reports mirror NCAA selection committee data. Only public source for comprehensive NET team sheets.
 - **Assessment:** Valuable as a verification source for NET/RPI data. Easiest scraping target identified. NET rankings are also available via cbbdata API (`cbd_torvik_current_resume()`). Defer unless NET-specific data becomes a modeling requirement.
 
@@ -953,10 +966,52 @@ The following items could not be fully verified during this spike and should be 
 | 5 | cbbdata REST API 2025-26 data availability | GitHub issues #20/#21 | Determines if REST API is viable for current season |
 | 6 | `sportsdataverse` v0.0.40 functionality | Not yet tested | Determines if it replaces cbbpy for ESPN data |
 | 7 | ESPN API rate limits | Manual testing needed | Affects connector design |
-| 8 | BartTorvik exact year range | cbbpy/cbbdata testing needed | Determines historical data boundary |
-| 9 | COOPER model data availability | Not yet announced | Check in March 2026 for structured data |
+| 8 | BartTorvik efficiency metrics via cbbpy | cbbpy advanced metric functions not tested | Determines whether cbbpy can retrieve AdjOE/AdjDE/T-Rank directly |
+| 9 | BartTorvik exact year range | cbbpy/cbbdata testing needed | Determines historical data boundary |
+| 10 | COOPER model data availability | Not yet announced | Check in March 2026 for structured data |
 
-**Recommendation:** Configure Kaggle API credentials (`~/.kaggle/kaggle.json`) as a prerequisite for Story 2.3. Test `sportsdataverse` as an alternative to `cbbpy`. KenPom subscription is optional and can be deferred.
+### Specific Test Procedures (run once blockers are resolved)
+
+```bash
+# Item 1 & 2: Configure Kaggle credentials, then:
+mkdir -p ~/.kaggle && chmod 700 ~/.kaggle
+# Place kaggle.json in ~/.kaggle/kaggle.json then:
+kaggle competitions list -s march  # verify 2026 competition exists
+kaggle competitions download -c march-machine-learning-mania-2026 -p /tmp/kaggle-test/
+python -c "from kaggle.api.kaggle_api_extended import KaggleApi; api = KaggleApi(); api.authenticate(); print('OK')"
+
+# Item 3: kenpompy (requires $20/yr subscription)
+python -c "import kenpompy; b = kenpompy.utils.login('YOUR_EMAIL', 'YOUR_PASSWORD'); df = kenpompy.summary.get_efficiency(b); print(df.head())"
+
+# Item 4: cbbpy get_games_range fix check
+python -c "import cbbpy.mens_scraper as ms; df = ms.get_games_range('2025-03-15', '2025-03-16'); print(df.head())"
+
+# Item 5: cbbdata REST API health check
+curl -s "https://cbbdata.aweatherman.com/" | head -50  # confirm API responds
+# With account credentials (register at cbbdata R client):
+curl -H "Authorization: Bearer YOUR_API_KEY" "https://cbbdata.aweatherman.com/api/torvik/ratings?season=2026" | python -m json.tool | head -30
+
+# Item 6: sportsdataverse basic functionality
+python -c "import sportsdataverse.mbb as mbb; sched = mbb.load_mbb_schedule(seasons=[2025]); print(sched.head())"
+python -c "import sportsdataverse.mbb as mbb; pbp = mbb.load_mbb_pbp(seasons=[2025]); print(pbp.shape)"
+
+# Item 7: ESPN rate limits (send 10 rapid requests, observe for 429/throttling)
+for i in $(seq 1 10); do curl -s -o /dev/null -w "%{http_code}\n" "https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball/scoreboard?dates=20250315"; done
+
+# Item 8: BartTorvik efficiency metrics via cbbpy (verify these functions return BartTorvik data, not just ESPN)
+python -c "import cbbpy.mens_scraper as ms; help(ms)"  # inspect available functions for BartTorvik efficiency
+python -c "import cbbpy.mens_scraper as ms; df = ms.get_team_schedule('Duke', 2025); print(df.columns.tolist())"
+
+# Item 9: BartTorvik exact year range
+# Via cbbpy:
+python -c "import cbbpy.mens_scraper as ms; df = ms.get_team_schedule('Duke', 2008); print(f'2008 rows: {len(df)}')"
+python -c "import cbbpy.mens_scraper as ms; df = ms.get_team_schedule('Duke', 2007); print(f'2007 rows: {len(df)}')"
+
+# Item 10: COOPER model — check Silver Bulletin Substack for structured data in March 2026
+# https://www.silverbulletindata.com/p/college-basketball-ratings
+```
+
+**Recommendation:** Configure Kaggle API credentials (`~/.kaggle/kaggle.json`) as the first prerequisite for Story 2.3. Then test `sportsdataverse` (Item 6) and cbbpy BartTorvik metrics (Item 8) before selecting the Priority 2 implementation approach.
 
 ---
 

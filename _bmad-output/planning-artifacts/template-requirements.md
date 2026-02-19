@@ -585,6 +585,16 @@ Code review workflow generates PRs following .github/pull_request_template.md st
   - **Timing:** After story creation, before invoking dev-story
   - **Rationale:** Clean separation between SM work (story planning) and Dev work (implementation). Git status becomes accurate indicator of actual code changes.
 
+**Story 2.1 - Data Source Evaluation Spike (2026-02-19 Code Review):**
+- ⚠️ **Spike package validation blocked by credentials/subscriptions** — Task 2 mandated live testing of `kaggle` and `kenpompy`, both blocked by infrastructure (missing API key, no subscription). Template for data source evaluation spikes should include a "credentials checklist" upfront so blockers are resolved before dev-story begins, not discovered mid-spike.
+  - **Pattern:** Add a "Pre-Spike Prerequisites" section listing required credentials, accounts, and subscriptions before dev-story is invoked.
+
+- ⚠️ **Rate limits are a required AC dimension but easy to omit** — AC 1 for data source evaluations explicitly requires "rate limits and terms of service" per source, but several sources had no rate limit documentation initially. When building data source evaluation spikes, rate limits should be treated as a required field — even "not documented" or "not applicable" are valid answers that must be explicit.
+
+- ⚠️ **"Items requiring live verification" need specific test procedures, not just blockers** — Research spike subtasks that produce a live verification list should require runnable commands, not just descriptions of what's blocked. Template should explicitly require: `- Blocker description AND specific shell command to run when unblocked`.
+
+- ✅ **Adversarial code review catches undocumented test gaps** — The review caught that `sportsdataverse` (Priority 3 recommendation) was never live-tested, and BartTorvik's core metrics were never retrieved via cbbpy. For documentation/research spikes, code review still finds valuable gaps — it just shifts from code quality to claim validation and documentation completeness. Confirmed: adversarial review works for spikes, not just code stories.
+
 ---
 
 ## 8. Template Implementation Checklist
