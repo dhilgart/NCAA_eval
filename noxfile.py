@@ -30,6 +30,7 @@ def typecheck(session: nox.Session) -> None:
         "src/ncaa_eval",
         "tests",
         "noxfile.py",
+        "sync.py",
     )
 
 
