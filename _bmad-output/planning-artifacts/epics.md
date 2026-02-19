@@ -277,22 +277,18 @@ So that I can make informed decisions about which sources to prioritize based on
 **And** any licensing or cost implications are clearly noted
 **And** the findings are committed as a project document
 
-#### Spike Decisions (Story 2.1) — PENDING HUMAN APPROVAL
+#### Spike Decisions (Story 2.1) — APPROVED
 
-> **Review Note (Code Review Round 3):** The source selection below was made by the dev agent without human stakeholder approval. The spike ACs only required documenting "recommended priority order" — not making the final selection. Additionally: sportsdataverse-py (#3) was never live-tested during the spike, and Warren Nolan (#4) is categorized as "Deferred Scrape-Only" in the research document, contradicting its inclusion here. **The product owner should review and confirm/revise these selections before Story 2.2 begins.**
-
-The data source evaluation (see `specs/research/data-source-evaluation.md`) assessed 18 candidate sources. The following 4 sources are **recommended** for MVP implementation in Stories 2.2–2.4:
+The data source evaluation (see `specs/research/data-source-evaluation.md`) assessed 18 candidate sources. The following 2 sources are **approved** for MVP implementation in Stories 2.2–2.4:
 
 | # | Source | Access Method | Primary Value | Risk Note |
 |:---|:---|:---|:---|:---|
 | 1 | **Kaggle MMLM** | `kaggle` CLI/API (free) | Historical game data 1985+, seeds, brackets, MasseyOrdinals (100+ ranking systems) | Low — well-established |
-| 2 | **BartTorvik / cbbdata API** | REST API (free) | Adjusted efficiency metrics (AdjOE/AdjDE), T-Rank, Four Factors 2008+ | Medium — 2025-26 data issues |
-| 3 | **sportsdataverse-py** | Python package (free) | ESPN API wrapper, play-by-play data 2002+, schedules | **High — not tested during spike** |
-| 4 | **Warren Nolan** | HTML scraping (free) | NET rankings, RPI, Nitty Gritty strength-of-schedule reports | Medium — contradicts research doc "Deferred" status |
+| 2 | **ESPN via cbbpy** | `cbbpy` scraper (free) | Current-season game data, calendar dates, schedule enrichment | Medium — ESPN endpoint instability |
 
-**Story mapping:** Story 2.2 (schema) must accommodate fields from all confirmed sources. Story 2.3 (connectors) implements one connector per source. Story 2.4 (sync CLI) orchestrates all connectors with caching.
+**Story mapping:** Story 2.2 (schema) accommodates fields from all sources. Story 2.3 (connectors) implements one connector per approved source. Story 2.4 (sync CLI) orchestrates all connectors with caching.
 
-**Deferred to post-MVP backlog:** Nate Silver / SBCB Elo ratings (Substack scraping), KenPom ($20/yr subscription + fragile scraping), EvanMiya (paid), ShotQuality ($3K/yr).
+**Deferred to post-MVP backlog:** BartTorvik scraping (no Python client — cbbdata is R-only, cbbpy is ESPN-only), Warren Nolan (scrape-only, low priority), sportsdataverse-py (28 open issues, redundant with cbbpy), Nate Silver / SBCB Elo ratings (Substack scraping), KenPom ($20/yr subscription + fragile scraping), EvanMiya (paid), ShotQuality ($3K/yr).
 
 ### Story 2.2: Define Internal Data Schema & Repository Layer
 
@@ -903,3 +899,23 @@ Scrape Nate Silver's Silver Bulletin (Substack) posts for free Elo ratings. Silv
 - **Cost:** Free tier includes Elo tables; paid tier ($8/mo) for full SBCB/COOPER model outputs
 - **Risk:** Substack layout changes could break scraper; Silver may move to COOPER platform in 2026
 - **Source:** Story 2.1 spike — `specs/research/data-source-evaluation.md`, Section 9
+
+### BartTorvik Direct Scraping
+
+Scrape barttorvik.com for adjusted efficiency metrics (AdjOE, AdjDE), T-Rank ratings, and Four Factors data (2008+). The `cbbdata` REST API is R-only with no Python client, and `cbbpy` does not provide BartTorvik data (ESPN scraper only). Direct scraping of barttorvik.com or use of the [andrewsundberg Kaggle dataset](https://www.kaggle.com/datasets/andrewsundberg/college-basketball-dataset) for historical T-Rank CSVs are the viable Python access paths.
+
+- **Access:** HTML scraping of barttorvik.com (no official API) or Kaggle CSV dataset
+- **Cost:** Free
+- **Risk:** HTML scraping is fragile; site layout changes could break scraper. Kaggle dataset may lag behind current season.
+- **Value:** Adjusted efficiency metrics are the gold standard for team strength estimation. Kaggle MasseyOrdinals provides partial coverage via "POM" system (KenPom-derived), but direct BartTorvik metrics (especially Four Factors and recency-weighted ratings) would be more granular.
+- **Source:** Story 2.3 scoping — confirmed `cbbdata` is R-only, `cbbpy` is ESPN-only. See `specs/research/data-source-evaluation.md`, Section 2.
+
+### Warren Nolan Scraping
+
+Scrape warrennolan.com for NET rankings, RPI, and Nitty Gritty strength-of-schedule reports. Provides official NCAA evaluation metrics used by the selection committee.
+
+- **Access:** HTML scraping (no API, no structured data export)
+- **Cost:** Free
+- **Risk:** HTML scraping is fragile; categorized as "Deferred Scrape-Only" in Story 2.1 research document. Inclusion in the original Spike Decisions MVP table contradicted the research recommendation.
+- **Value:** NET rankings are the NCAA's official team evaluation metric (replaced RPI in 2018). Useful for tournament selection committee modeling but not essential for game outcome prediction.
+- **Source:** Story 2.1 spike — `specs/research/data-source-evaluation.md`, Section 4. Story 2.3 scoping deferred due to contradiction with research doc classification.
