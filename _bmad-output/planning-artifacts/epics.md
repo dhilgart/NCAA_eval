@@ -277,6 +277,21 @@ So that I can make informed decisions about which sources to prioritize based on
 **And** any licensing or cost implications are clearly noted
 **And** the findings are committed as a project document
 
+#### Spike Decisions (Story 2.1)
+
+The data source evaluation (see `specs/research/data-source-evaluation.md`) assessed 18 candidate sources. The following 4 sources are selected for MVP implementation in Stories 2.2–2.4:
+
+| # | Source | Access Method | Primary Value |
+|:---|:---|:---|:---|
+| 1 | **Kaggle MMLM** | `kaggle` CLI/API (free) | Historical game data 1985+, seeds, brackets, MasseyOrdinals (100+ ranking systems) |
+| 2 | **BartTorvik / cbbdata API** | REST API (free) | Adjusted efficiency metrics (AdjOE/AdjDE), T-Rank, Four Factors 2008+ |
+| 3 | **sportsdataverse-py** | Python package (free) | ESPN API wrapper, play-by-play data 2002+, schedules |
+| 4 | **Warren Nolan** | HTML scraping (free) | NET rankings, RPI, Nitty Gritty strength-of-schedule reports |
+
+**Story mapping:** Story 2.2 (schema) must accommodate fields from all 4 sources. Story 2.3 (connectors) implements one connector per source. Story 2.4 (sync CLI) orchestrates all connectors with caching.
+
+**Deferred to post-MVP backlog:** Nate Silver / SBCB Elo ratings (Substack scraping), KenPom ($20/yr subscription + fragile scraping), EvanMiya (paid), ShotQuality ($3K/yr).
+
 ### Story 2.2: Define Internal Data Schema & Repository Layer
 
 As a data scientist,
@@ -873,3 +888,16 @@ So that I can quickly learn how to use the platform's key workflows.
 **And** a "How to Add a Custom Metric" tutorial demonstrates extending the evaluation engine via the plugin registry
 **And** each tutorial includes runnable code examples and expected outputs
 **And** tutorials are written in Sphinx-compatible RST or Markdown and integrated into the auto-generated documentation
+
+## Post-MVP Backlog
+
+Items identified during development for future consideration. These are not scheduled for any sprint but may be promoted into epics/stories later.
+
+### Nate Silver / SBCB Elo Rating Scraping
+
+Scrape Nate Silver's Silver Bulletin (Substack) posts for free Elo ratings. Silver publishes pre-tournament Elo rankings (~350 D1 teams, history back to 1950) that could serve as an additional feature source or model benchmark. His enhanced Elo system includes margin-of-victory diminishing returns, per-team home court advantage, and variable K-factor — worth replicating or comparing against.
+
+- **Access:** Substack HTML scraping (no API, no structured data export)
+- **Cost:** Free tier includes Elo tables; paid tier ($8/mo) for full SBCB/COOPER model outputs
+- **Risk:** Substack layout changes could break scraper; Silver may move to COOPER platform in 2026
+- **Source:** Story 2.1 spike — `specs/research/data-source-evaluation.md`, Section 9
