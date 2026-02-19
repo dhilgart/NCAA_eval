@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import abc
 from pathlib import Path
+from typing import Any
 
 import pandas as pd  # type: ignore[import-untyped]
 import pyarrow as pa  # type: ignore[import-untyped]
@@ -58,29 +59,51 @@ class Repository(abc.ABC):
 
 # Explicit PyArrow schemas for deterministic column types across reads/writes.
 
-_TEAM_SCHEMA = pa.schema([
-    ("team_id", pa.int64()),
-    ("team_name", pa.string()),
-    ("canonical_name", pa.string()),
-])
+_TEAM_SCHEMA = pa.schema(
+    [
+        ("team_id", pa.int64()),
+        ("team_name", pa.string()),
+        ("canonical_name", pa.string()),
+    ]
+)
 
-_SEASON_SCHEMA = pa.schema([
-    ("year", pa.int64()),
-])
+_SEASON_SCHEMA = pa.schema(
+    [
+        ("year", pa.int64()),
+    ]
+)
 
-_GAME_SCHEMA = pa.schema([
-    ("game_id", pa.string()),
-    ("season", pa.int64()),
-    ("day_num", pa.int64()),
-    ("date", pa.date32()),
-    ("w_team_id", pa.int64()),
-    ("l_team_id", pa.int64()),
-    ("w_score", pa.int64()),
-    ("l_score", pa.int64()),
-    ("loc", pa.string()),
-    ("num_ot", pa.int64()),
-    ("is_tournament", pa.bool_()),
-])
+_GAME_SCHEMA = pa.schema(
+    [
+        ("game_id", pa.string()),
+        ("season", pa.int64()),
+        ("day_num", pa.int64()),
+        ("date", pa.date32()),
+        ("w_team_id", pa.int64()),
+        ("l_team_id", pa.int64()),
+        ("w_score", pa.int64()),
+        ("l_score", pa.int64()),
+        ("loc", pa.string()),
+        ("num_ot", pa.int64()),
+        ("is_tournament", pa.bool_()),
+    ]
+)
+
+
+def _apply_model_defaults(df: pd.DataFrame, model: type[Game]) -> None:
+    """Fill null values in *df* with non-None Pydantic field defaults.
+
+    When pyarrow unifies schemas across partitions that were written at
+    different schema versions, columns present in newer partitions but absent
+    in older ones are filled with null.  This helper re-applies the Pydantic
+    model defaults so that ``model(**row)`` doesn't receive ``None`` for a
+    field that expects a concrete default value.
+    """
+    sentinel: Any = ...  # PydanticUndefined is represented as Ellipsis
+    for name, field_info in model.model_fields.items():
+        default = field_info.default
+        if name in df.columns and default is not sentinel and default is not None:
+            df[name] = df[name].fillna(default)
 
 
 class ParquetRepository(Repository):
@@ -123,14 +146,12 @@ class ParquetRepository(Repository):
             return []
 
         df = table.to_pandas()
-        # Schema evolution: when the dataset spans partitions with different schemas
-        # (e.g., older season files lack columns added later), pyarrow fills missing
-        # cells with null after unifying schemas.  Re-apply Pydantic defaults for
-        # non-nullable Game fields so model construction doesn't fail on null input.
-        if "num_ot" in df.columns:
-            df["num_ot"] = df["num_ot"].fillna(0)
-        if "is_tournament" in df.columns:
-            df["is_tournament"] = df["is_tournament"].fillna(value=False)
+        # Schema evolution: when the dataset spans partitions with different
+        # schemas (e.g., older files lack columns added later), pyarrow fills
+        # missing cells with null after unifying schemas.  Re-apply Pydantic
+        # defaults for any column whose model field has a non-None default so
+        # model construction doesn't fail on unexpected null input.
+        _apply_model_defaults(df, Game)
         return [Game(**row) for row in df.to_dict(orient="records")]
 
     def get_seasons(self) -> list[Season]:
@@ -170,10 +191,7 @@ class ParquetRepository(Repository):
             # Build a schema without the partition column (pyarrow hive
             # partitioning stores it in the directory name).
             write_schema = pa.schema([f for f in _GAME_SCHEMA if f.name != "season"])
-            data = {
-                field.name: [getattr(g, field.name) for g in season_games]
-                for field in write_schema
-            }
+            data = {field.name: [getattr(g, field.name) for g in season_games] for field in write_schema}
             table = pa.Table.from_pydict(data, schema=write_schema)
             pq.write_table(table, partition_dir / "data.parquet")
 

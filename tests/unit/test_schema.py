@@ -142,22 +142,24 @@ class TestGame:
         assert game.is_tournament is True
 
     def test_alias_construction(self) -> None:
-        game = Game.model_validate({
-            "GameID": "2024_10_1101_1102",
-            "Season": 2024,
-            "DayNum": 10,
-            "WTeamID": 1101,
-            "LTeamID": 1102,
-            "WScore": 75,
-            "LScore": 60,
-            "Loc": "H",
-        })
+        game = Game.model_validate(
+            {
+                "GameID": "2024_10_1101_1102",
+                "Season": 2024,
+                "DayNum": 10,
+                "WTeamID": 1101,
+                "LTeamID": 1102,
+                "WScore": 75,
+                "LScore": 60,
+                "Loc": "H",
+            }
+        )
         assert game.game_id == "2024_10_1101_1102"
 
-    def test_loc_values(self, valid_game_kwargs: dict[str, Any]) -> None:
-        for loc_val in ("H", "A", "N"):
-            game = Game(**{**valid_game_kwargs, "loc": loc_val})
-            assert game.loc == loc_val
+    @pytest.mark.parametrize("loc_val", ["H", "A", "N"])
+    def test_loc_values(self, valid_game_kwargs: dict[str, Any], loc_val: str) -> None:
+        game = Game(**{**valid_game_kwargs, "loc": loc_val})
+        assert game.loc == loc_val
 
     def test_invalid_loc(self, valid_game_kwargs: dict[str, Any]) -> None:
         with pytest.raises(ValidationError):

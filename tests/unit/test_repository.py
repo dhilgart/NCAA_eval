@@ -78,6 +78,12 @@ class TestTeamRoundTrip:
         assert len(result) == 1
         assert result[0].team_name == "New Name"
 
+    def test_save_empty_is_noop(self, repo: ParquetRepository) -> None:
+        repo.save_teams([_make_team()])
+        repo.save_teams([])
+        result = repo.get_teams()
+        assert len(result) == 1
+
 
 # ---------------------------------------------------------------------------
 # Games round-trip — single season  (subtask 6.2)
@@ -96,6 +102,7 @@ class TestGameRoundTripSingle:
         assert result[0].game_id == games[0].game_id
         assert result[0].w_score == 75
         assert result[0].l_score == 60
+        assert result[0].date is None
 
     def test_round_trip_with_date(self, repo: ParquetRepository) -> None:
         game = Game(
@@ -236,6 +243,19 @@ class TestSeasonRoundTrip:
     def test_get_seasons_empty(self, repo: ParquetRepository) -> None:
         assert repo.get_seasons() == []
 
+    def test_overwrite(self, repo: ParquetRepository) -> None:
+        repo.save_seasons([Season(year=2023)])
+        repo.save_seasons([Season(year=2024)])
+        result = repo.get_seasons()
+        assert len(result) == 1
+        assert result[0].year == 2024
+
+    def test_save_empty_is_noop(self, repo: ParquetRepository) -> None:
+        repo.save_seasons([Season(year=2023)])
+        repo.save_seasons([])
+        result = repo.get_seasons()
+        assert len(result) == 1
+
 
 # ---------------------------------------------------------------------------
 # Schema evolution  (Task 3.6)
@@ -263,16 +283,18 @@ class TestSchemaEvolution:
 
         # Simulate an old-format partition (season=2022) written before num_ot and
         # is_tournament were added to the schema.
-        old_schema = pa.schema([
-            ("game_id", pa.string()),
-            ("day_num", pa.int64()),
-            ("date", pa.date32()),
-            ("w_team_id", pa.int64()),
-            ("l_team_id", pa.int64()),
-            ("w_score", pa.int64()),
-            ("l_score", pa.int64()),
-            ("loc", pa.string()),
-        ])
+        old_schema = pa.schema(
+            [
+                ("game_id", pa.string()),
+                ("day_num", pa.int64()),
+                ("date", pa.date32()),
+                ("w_team_id", pa.int64()),
+                ("l_team_id", pa.int64()),
+                ("w_score", pa.int64()),
+                ("l_score", pa.int64()),
+                ("loc", pa.string()),
+            ]
+        )
         partition_dir = games_dir / "season=2022"
         partition_dir.mkdir(parents=True, exist_ok=True)
         old_table = pa.Table.from_pydict(
@@ -296,5 +318,5 @@ class TestSchemaEvolution:
         games = repo.get_games(2022)
         assert len(games) == 1
         assert games[0].season == 2022
-        assert games[0].num_ot == 0            # default applied, not null
+        assert games[0].num_ot == 0  # default applied, not null
         assert games[0].is_tournament is False  # default applied, not null

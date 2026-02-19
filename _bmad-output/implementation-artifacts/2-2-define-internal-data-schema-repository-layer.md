@@ -240,9 +240,9 @@ Claude Opus 4.6
 - Repository ABC defines 6 abstract methods: get_teams, get_games, get_seasons, save_teams, save_games, save_seasons
 - ParquetRepository uses pyarrow for reads/writes with explicit schemas; games partitioned by season (hive-style)
 - Uses `pyarrow.dataset` API for game reads with predicate pushdown on season filter
-- Schema evolution handled in `get_games`: null-fills `num_ot` and `is_tournament` after pyarrow schema unification across mixed-version partitions
+- Schema evolution handled via generic `_apply_model_defaults()` helper that iterates `Game.model_fields` to null-fill any column with a non-None Pydantic default
 - `save_teams([])` and `save_seasons([])` are no-ops (consistent with `save_games([])`)
-- 30 schema tests + 19 repository tests = 49 new tests, all passing (73 total)
+- 32 schema tests + 22 repository tests = 54 new tests, all passing (78 total)
 - Mutation testing: 134/151 killed (88.7%); 17 surviving mutants are all equivalent (library default behaviors)
 - Added pydantic, pyarrow as direct dependencies; configured pydantic.mypy plugin
 
@@ -250,14 +250,15 @@ Claude Opus 4.6
 
 - 2026-02-19: Implemented Story 2.2 — Pydantic v2 schema models (Team, Game, Season), Repository ABC, ParquetRepository, 44 unit tests, full quality pipeline passing
 - 2026-02-19: Code review (AI) — 1 HIGH + 4 MEDIUM issues found and fixed: (H1) added schema evolution test + `get_games` null-fill for pyarrow schema unification; (M2) `w_score > l_score` model validator; (M3) `w_team_id != l_team_id` model validator; (M4) empty-list guard in `save_teams`/`save_seasons`; (M1) added template-requirements.md to File List. LOW: smoke marker on Season round-trip, `dict[str, Any]` in test helpers. 73 total tests passing.
+- 2026-02-19: Code review #2 (AI) — 3 MEDIUM + 3 LOW issues found and fixed: (M1) generic `_apply_model_defaults()` replaces hardcoded schema evolution null-fill; (M2) added empty-list save tests for teams/seasons; (M3) corrected story test count 19→18. (L1) added seasons overwrite test; (L2) parametrized `test_loc_values`; (L3) added `date=None` assertion in games round-trip. Also fixed: ruff-format violations in 3 files, installed pre-commit hooks locally. 78 total tests passing.
 
 ### File List
 
 - `src/ncaa_eval/ingest/schema.py` (new) — Pydantic v2 models for Team, Game, Season
-- `src/ncaa_eval/ingest/repository.py` (new) — Repository ABC + ParquetRepository implementation
+- `src/ncaa_eval/ingest/repository.py` (new) — Repository ABC + ParquetRepository with generic `_apply_model_defaults()` helper
 - `src/ncaa_eval/ingest/__init__.py` (modified) — Added exports for schema and repository classes
-- `tests/unit/test_schema.py` (new) — 27 unit tests for schema models
-- `tests/unit/test_repository.py` (new) — 17 unit tests for ParquetRepository round-trips
+- `tests/unit/test_schema.py` (new) — 32 unit tests for schema models (parametrized loc values)
+- `tests/unit/test_repository.py` (new) — 22 unit tests for ParquetRepository round-trips
 - `pyproject.toml` (modified) — Added pydantic/pyarrow deps, pydantic.mypy plugin, updated mutmut paths
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified) — Story status updated
 - `_bmad-output/planning-artifacts/template-requirements.md` (modified) — Added Pydantic/pyarrow/mutmut learnings from Story 2.2

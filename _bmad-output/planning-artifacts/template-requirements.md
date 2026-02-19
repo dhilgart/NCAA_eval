@@ -213,6 +213,19 @@ extend-select = [
 - Documentation code examples serve a pedagogical purpose; they should be formatted for human comprehension, not compiler compliance
 - **Code examples in `.md` files are illustrative, not compiled — Black formatting is inappropriate**
 
+#### `pre-commit install` Is Required After Clone ⭐ (Discovered Story 2.2 Code Review #2)
+
+Having `.pre-commit-config.yaml` in the repo does NOT mean hooks are active. The hooks must be explicitly installed into `.git/hooks/` via `pre-commit install`. Without this, commits bypass all hooks silently. CI catches violations via `pre-commit run --all-files` (which doesn't require installation), creating a gap where CI fails but local commits succeed.
+
+**Template Action:** Add `pre-commit install` to the post-clone setup instructions in README and CONTRIBUTING.md. Consider adding a check in the Nox lint session:
+
+```python
+# In noxfile.py lint session — warn if hooks not installed
+import os
+if not os.path.exists(".git/hooks/pre-commit"):
+    session.warn("Pre-commit hooks not installed! Run: pre-commit install")
+```
+
 #### "Style Sweep" Commit Pattern
 
 When first activating pre-commit on an established repo, expect a large auto-fix commit:
@@ -948,21 +961,30 @@ pytest_add_cli_args_test_selection = [
 ]
 ```
 
-### pyarrow Schema Evolution: `fillna` Before Pydantic Construction ⭐ (Discovered Story 2.2 Code Review)
+### pyarrow Schema Evolution: Generic `_apply_model_defaults` Before Pydantic Construction ⭐ (Discovered Story 2.2, Updated Code Review #2)
 
 When using `pyarrow.dataset` with hive-partitioned Parquet files, reading a dataset that mixes **old-schema partitions** (fewer columns) with **new-schema partitions** causes pyarrow to unify schemas and fill missing cells with `null`. For Pydantic fields typed as non-nullable (e.g., `bool`, `int`) with Python defaults, passing `null`/`None` raises `ValidationError` even if the field has a `default=`.
 
-**Pattern:** After `table.to_pandas()`, explicitly `fillna` non-nullable columns with their model defaults before constructing Pydantic instances:
+**Pattern (generic):** Instead of hardcoding `fillna` per column, iterate `model.model_fields` to apply defaults for any column with a non-None Pydantic default. This is self-maintaining as the schema evolves:
 
 ```python
-# In get_games (or equivalent reader), after to_pandas():
-if "num_ot" in df.columns:
-    df["num_ot"] = df["num_ot"].fillna(0)
-if "is_tournament" in df.columns:
-    df["is_tournament"] = df["is_tournament"].fillna(value=False)
-# Optional (datetime.date | None) fields stay as-is — None is valid
+from typing import Any
+
+def _apply_model_defaults(df: pd.DataFrame, model: type[Game]) -> None:
+    """Fill null values in *df* with non-None Pydantic field defaults."""
+    sentinel: Any = ...  # PydanticUndefined is represented as Ellipsis
+    for name, field_info in model.model_fields.items():
+        default = field_info.default
+        if name in df.columns and default is not sentinel and default is not None:
+            df[name] = df[name].fillna(default)
+
+# Usage in get_games (or equivalent reader), after to_pandas():
+df = table.to_pandas()
+_apply_model_defaults(df, Game)
 return [Game(**row) for row in df.to_dict(orient="records")]
 ```
+
+**Why generic > hardcoded:** The initial implementation hardcoded `fillna` for `num_ot` and `is_tournament`. Adding a future field with a non-null default (e.g., `is_conference: bool = Field(default=False)`) required remembering to update the reader. The generic approach handles all current and future fields automatically.
 
 **Test it:** Write a schema evolution test that creates both an old-schema partition and a new-schema partition, then reads the old one via the dataset API. Without `fillna`, the test exposes the `ValidationError`. With it, the test confirms model defaults are applied.
 
@@ -1004,5 +1026,11 @@ class Game(BaseModel):
 
 **Template pattern:** When designing a new data entity, explicitly list "what combinations of field values are semantically impossible?" and add a `@model_validator(mode="after")` for each one. Review these during the code review phase — per-field validators don't catch cross-field logic.
 
-*Last Updated: 2026-02-19 (Story 2.2 Code Review — pyarrow schema evolution + Pydantic cross-field validators)*
+### Code Review: Exclude `_bmad-output/` from Git-vs-File-List Discrepancy Checks ⭐ (Discovered Story 2.2 Code Review)
+
+BMAD workflow artifacts (`sprint-status.yaml`, `template-requirements.md`, story `.md` files) are updated by the toolchain itself, not the developer. They are not story deliverables. Flagging them as "files changed but not in story File List" creates recurring false-positive MEDIUM findings.
+
+**Fix:** In `code-review/instructions.xml`, the `_bmad/` and `_bmad-output/` exclusion that already applies to the code review scope must also explicitly apply to the git-vs-File-List discrepancy check. Both the `<critical>` header and the discrepancy action should state: *"exclude `_bmad/` and `_bmad-output/` paths from all checks."*
+
+*Last Updated: 2026-02-19 (Story 2.2 Code Review #2 — generic `_apply_model_defaults` pattern + pre-commit install requirement)*
 *Next Review: [Set cadence - weekly? sprint boundaries?]*
