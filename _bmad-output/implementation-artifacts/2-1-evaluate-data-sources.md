@@ -174,13 +174,15 @@ Claude Opus 4.6 (claude-opus-4-6)
 - **Task 3:** Data entity coverage mapped for all sources against architecture requirements (Team, Game, Season). Kaggle covers all core entities. Tournament seeds/brackets only available from Kaggle. Team name/ID mapping challenges identified across sources. `rapidfuzz` in cbbpy noted for Story 4.3.
 - **Task 4:** Priority order documented: Kaggle (Primary/Required), BartTorvik (Secondary/Required), KenPom (Optional), ESPN (Deferred), Sports Reference (Skip), FiveThirtyEight (Skip). Licensing table includes GPL-3.0 concern for kenpompy.
 - **Task 5:** `docs/research/data-source-evaluation.md` created with structured findings, comparison table, detailed evaluations, entity coverage mapping, priority recommendations, licensing section, and live verification items.
+- **Update (2026-02-19):** Expanded evaluation to 18 sources. Added: cbbdata REST API, sportsdataverse-py, ncaa-api, Nate Silver/SBCB/COOPER, and 6 scrape-only sources (EvanMiya, Sagarin, Haslametrics, Warren Nolan, TeamRankings, ShotQuality). Added "Data Processing Approaches Worth Replicating" section documenting methodologies from all sources (KenPom tempo-free efficiency, BartTorvik recency weighting, Silver's enhanced Elo, EvanMiya's BPR, ShotQuality's expected points, Massey composite, NET ranking, Kaggle community approaches). Expanded entity coverage and licensing tables.
 
 ### Change Log
 
 - 2026-02-18: Created `docs/research/data-source-evaluation.md` — comprehensive data source evaluation covering 9 sources with priority recommendations, entity coverage mapping, and licensing analysis.
+- 2026-02-19: Major update — expanded from 9 to 18 evaluated sources, added scrape-only sources, added data processing methodologies section, updated all tables and recommendations.
 
 ### File List
 
-- `docs/research/data-source-evaluation.md` (new) — Research findings document
+- `docs/research/data-source-evaluation.md` (modified) — Research findings document (expanded from 9 to 18 sources)
 - `_bmad-output/implementation-artifacts/2-1-evaluate-data-sources.md` (modified) — Story file updates (task checkboxes, Dev Agent Record, status)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified) — Sprint status update
