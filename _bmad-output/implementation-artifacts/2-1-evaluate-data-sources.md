@@ -1,0 +1,165 @@
+# Story 2.1 (Spike): Evaluate Data Sources
+
+Status: ready-for-dev
+
+<!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
+
+## Story
+
+As a data scientist,
+I want a documented evaluation of available NCAA data sources (Kaggle, KenPom, BartTorvik, ESPN, Nate Silver, etc.),
+So that I can make informed decisions about which sources to prioritize based on feasibility, coverage, cost, and rate limits.
+
+## Acceptance Criteria
+
+1. **Given** the project needs external NCAA data to function, **When** the developer reviews the spike findings document, **Then** each candidate source is evaluated for: data coverage (years, stats available), API accessibility (public vs. paid, auth method), rate limits and terms of service, and data format/quality.
+2. **And** a recommended priority order of sources is documented with rationale.
+3. **And** any licensing or cost implications are clearly noted.
+4. **And** the findings are committed as a project document in `docs/research/`.
+
+## Tasks / Subtasks
+
+- [ ] Task 1: Research and evaluate each candidate data source (AC: 1)
+  - [ ] 1.1: Evaluate Kaggle March Machine Learning Mania datasets (coverage, format, API access via `kaggle` package)
+  - [ ] 1.2: Evaluate KenPom (kenpom.com) — data, cost, `kenpompy` package, scraping policies
+  - [ ] 1.3: Evaluate BartTorvik (barttorvik.com) — data, `cbbpy` package, access method
+  - [ ] 1.4: Evaluate ESPN undocumented API — endpoints, stability, `cbbpy` coverage
+  - [ ] 1.5: Evaluate Sports Reference / `sportsipy` — scraping viability, current package status
+  - [ ] 1.6: Evaluate FiveThirtyEight / Nate Silver — current data availability post-Silver departure
+  - [ ] 1.7: Evaluate other sources (NCAA official, SportsDataIO, Massey Ratings) — brief assessment
+- [ ] Task 2: Validate Python package availability and functionality (AC: 1)
+  - [ ] 2.1: Test `kaggle` CLI (`kaggle competitions download`) with a small dataset
+  - [ ] 2.2: Test `cbbpy` — install, call basic functions, verify data returns
+  - [ ] 2.3: Test `kenpompy` — install, check if login/scraping still works (requires subscription to fully test)
+  - [ ] 2.4: Document package versions, maintenance status, and known issues for each
+- [ ] Task 3: Assess data entity coverage vs. architecture requirements (AC: 1)
+  - [ ] 3.1: Map each source's data fields to architecture entities (Team, Game, Season)
+  - [ ] 3.2: Identify which sources provide tournament seeds, bracket structure, and Massey ordinals
+  - [ ] 3.3: Identify team name/ID mapping challenges across sources
+- [ ] Task 4: Document recommended priority order with rationale (AC: 2, 3)
+  - [ ] 4.1: Rank sources by: data completeness, access reliability, cost, maintenance burden
+  - [ ] 4.2: Document licensing/cost implications for each source
+  - [ ] 4.3: Specify which sources are required vs. optional for the platform
+- [ ] Task 5: Write and commit findings document (AC: 4)
+  - [ ] 5.1: Create `docs/research/data-source-evaluation.md` with structured findings
+  - [ ] 5.2: Include summary comparison table and recommendation
+  - [ ] 5.3: List items requiring live verification with specific test procedures
+
+## Dev Notes
+
+### This is a SPIKE — Output is a Document, Not Code
+
+This story produces a **research document**, not production code. The deliverable is a comprehensive evaluation committed to `docs/research/data-source-evaluation.md`. No production source code, tests, or package changes are expected.
+
+### Architecture Context
+
+**Data Entities Required** (from Architecture Section 4.1):
+- **Team**: `TeamID` (int), `Name` (str), `CanonicalName` (str)
+- **Game**: `GameID`, `Season`, `Date`, `WTeamID`, `LTeamID`, `WScore`, `LScore`, `Loc`
+- **Season**: `Year` (int)
+
+**Architecture Data Layer** (Section 8.2):
+- Primary Store: Parquet for immutable game data
+- Metadata Store: SQLite for tracking
+- Pattern: Repository pattern abstraction
+- Dependencies: `pandas`, `requests` [Source: specs/05-architecture-fullstack.md#Section 5.1]
+
+**Requirements Alignment**:
+- FR1 (Unified Data Ingestion): Sources must support ingestion into a single unified schema
+- FR2 (Persistent Local Store): Sources must provide historical bulk data for one-time sync
+- FR3 (Smart Caching): Sources should support incremental updates or have stable bulk download
+
+### Pre-Research Intelligence (from Web Research)
+
+The following intelligence was gathered during story creation to accelerate the spike. The dev agent should **verify all claims with live testing** and update as needed.
+
+#### Source Priority Hypothesis (to validate)
+
+| Priority | Source | Cost | Access Method | Primary Value | Python Package |
+|:---|:---|:---|:---|:---|:---|
+| 1 (Primary) | Kaggle MMLM | Free | `kaggle` CLI/API | Historical game data 1985+, seeds, brackets, MasseyOrdinals | `kaggle` v2.0.0 |
+| 2 (Secondary) | BartTorvik | Free | `cbbpy` scraper | Adjusted efficiency, T-Rank, Four Factors (2008+) | `cbbpy` v2.1.2 |
+| 3 (Optional) | KenPom | $20/yr | `kenpompy` scraper | Gold-standard adj. efficiency (2002+, fragile scraping) | `kenpompy` v0.5.0 |
+| 4 (Deferred) | ESPN | Free | Undocumented REST | Real-time scores (current season focus) | via `cbbpy` |
+| Skip | Sports Reference | Free/Paid | Broken scrapers | Anti-scraping blocks Python libraries | `sportsipy` (broken) |
+| Skip | FiveThirtyEight | Free | GitHub static | No longer updated post-Nate Silver departure | None |
+
+#### Kaggle MMLM Key Facts
+
+- Annual competition since 2014 (skipped 2020/COVID)
+- CSV files: compact results 1985+, detailed box scores 2003+, seeds, slots, conferences, MasseyOrdinals (100+ ranking systems)
+- `kaggle` Python package v2.0.0 (major bump — check for breaking changes vs 1.x)
+- The `MMasseyOrdinals.csv` file already contains KenPom-derived rankings, reducing need for separate KenPom connector
+- **VERIFY**: Has the 2026 competition launched? Check in late Feb / early Mar 2026
+
+#### BartTorvik / `cbbpy` Key Facts
+
+- `cbbpy` v2.1.2: multi-source scraper (BartTorvik + ESPN), returns DataFrames
+- Dependencies include `rapidfuzz` (useful for team name matching later in Story 4.3)
+- Free, no subscription required
+- **VERIFY**: Install and test basic functions, check GitHub issues for breakage
+
+#### KenPom / `kenpompy` Key Facts
+
+- Requires $20/yr KenPom subscription
+- `kenpompy` v0.5.0 uses `cloudscraper` + `mechanicalsoup` — fragile against Cloudflare
+- KenPom ToS generally prohibits scraping for redistribution
+- **VERIFY**: Does `kenpompy` still work with current kenpom.com layout?
+
+#### Items Requiring Live Verification
+
+1. Kaggle MMLM 2026 competition status
+2. `kaggle` v2.0.0 CLI syntax (breaking changes from 1.x?)
+3. `cbbpy` v2.1.2 installation and basic functionality
+4. `kenpompy` v0.5.0 current compatibility with kenpom.com
+5. ESPN undocumented API endpoint stability
+6. FiveThirtyEight GitHub data repo availability
+7. BartTorvik historical data extent (exact year range)
+
+### Project Structure Notes
+
+**Output file location**: `docs/research/data-source-evaluation.md`
+- The `docs/` directory is the project's Sphinx source (restructured in Story 1.9)
+- Research documents go under `docs/research/` (create directory if needed)
+- This document is a planning artifact, not API documentation — use Markdown, not RST
+
+**No production code changes** — this spike does not modify `src/`, `tests/`, or `pyproject.toml`.
+
+### Previous Story Intelligence
+
+Epic 1 (all 9 stories done) established the complete developer toolchain:
+- Poetry + Conda env integration (`POETRY_VIRTUALENVS_CREATE=false`)
+- Ruff + Mypy + pre-commit hooks
+- Pytest + Hypothesis + Mutmut testing framework
+- Nox session management (`nox` runs lint → typecheck → tests)
+- Commitizen for conventional commits
+- Sphinx documentation in `docs/`
+- Structured logging via `ncaa_eval.utils.log` with Pandera for data assertions
+
+**Key pattern from Epic 1**: `from __future__ import annotations` required in all Python files (Ruff FA100 rule). Not relevant for this spike (no Python files) but critical for Stories 2.2+.
+
+### Git Intelligence
+
+Recent commits follow conventional commit format: `feat(scope): description`, `docs(story): ...`
+- Story branches use pattern: `story/{story-key}`
+- Story artifacts committed with: `docs(story): create story X.Y — <title>`
+
+### References
+
+- [Source: _bmad-output/planning-artifacts/epics.md#Epic 2, Story 2.1]
+- [Source: specs/05-architecture-fullstack.md#Section 4.1 — Data Entities]
+- [Source: specs/05-architecture-fullstack.md#Section 5.1 — Ingestion Engine]
+- [Source: specs/05-architecture-fullstack.md#Section 8.2 — Data Access Layer]
+- [Source: specs/03-prd.md#FR1, FR2, FR3]
+
+## Dev Agent Record
+
+### Agent Model Used
+
+{{agent_model_name_version}}
+
+### Debug Log References
+
+### Completion Notes List
+
+### File List
