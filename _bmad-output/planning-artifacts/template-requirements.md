@@ -36,7 +36,8 @@ development:
 
 **Discovered in Story 1.5 (2026-02-17):**
 - `mutmut = "*"` — mutmut 3.x is **Windows-incompatible**: unconditionally imports `resource` (Unix-only stdlib). Requires Linux or WSL for local use. CI (ubuntu-latest) is unaffected.
-- `poetry.lock` can go stale even when `pyproject.toml` is correct — always run `poetry lock --no-update && poetry install --with dev` after adding deps to ensure lock file is current (pytest-cov 7.0.0 was missing despite being in pyproject.toml)
+- `poetry.lock` can go stale even when `pyproject.toml` is correct — always run `poetry lock && poetry install --with dev` after adding deps to ensure lock file is current (pytest-cov 7.0.0 was missing despite being in pyproject.toml). **Note: Poetry 2.x removed `--no-update`; use `poetry lock` alone.**
+- `poetry.lock` must be regenerated after ANY constraint change, not just additions — changing `>=0.15` to `>=0.15,<2` is sufficient to break CI with: *"pyproject.toml changed significantly since poetry.lock was last generated"*. This applies to both dev agents AND code review agents that modify pyproject.toml as part of fixes. (Discovered: Story 2.4 Code Review × 2)
 - Always include `[tool.coverage.run]` alongside `[tool.coverage.report]` in pyproject.toml from day one — branch coverage is disabled by default and omitting this section means the coverage report never shows branch gaps
 
 ### Session Management (Nox) ⭐ (Discovered Story 1.6)
