@@ -277,18 +277,20 @@ So that I can make informed decisions about which sources to prioritize based on
 **And** any licensing or cost implications are clearly noted
 **And** the findings are committed as a project document
 
-#### Spike Decisions (Story 2.1)
+#### Spike Decisions (Story 2.1) — PENDING HUMAN APPROVAL
 
-The data source evaluation (see `specs/research/data-source-evaluation.md`) assessed 18 candidate sources. The following 4 sources are selected for MVP implementation in Stories 2.2–2.4:
+> **Review Note (Code Review Round 3):** The source selection below was made by the dev agent without human stakeholder approval. The spike ACs only required documenting "recommended priority order" — not making the final selection. Additionally: sportsdataverse-py (#3) was never live-tested during the spike, and Warren Nolan (#4) is categorized as "Deferred Scrape-Only" in the research document, contradicting its inclusion here. **The product owner should review and confirm/revise these selections before Story 2.2 begins.**
 
-| # | Source | Access Method | Primary Value |
-|:---|:---|:---|:---|
-| 1 | **Kaggle MMLM** | `kaggle` CLI/API (free) | Historical game data 1985+, seeds, brackets, MasseyOrdinals (100+ ranking systems) |
-| 2 | **BartTorvik / cbbdata API** | REST API (free) | Adjusted efficiency metrics (AdjOE/AdjDE), T-Rank, Four Factors 2008+ |
-| 3 | **sportsdataverse-py** | Python package (free) | ESPN API wrapper, play-by-play data 2002+, schedules |
-| 4 | **Warren Nolan** | HTML scraping (free) | NET rankings, RPI, Nitty Gritty strength-of-schedule reports |
+The data source evaluation (see `specs/research/data-source-evaluation.md`) assessed 18 candidate sources. The following 4 sources are **recommended** for MVP implementation in Stories 2.2–2.4:
 
-**Story mapping:** Story 2.2 (schema) must accommodate fields from all 4 sources. Story 2.3 (connectors) implements one connector per source. Story 2.4 (sync CLI) orchestrates all connectors with caching.
+| # | Source | Access Method | Primary Value | Risk Note |
+|:---|:---|:---|:---|:---|
+| 1 | **Kaggle MMLM** | `kaggle` CLI/API (free) | Historical game data 1985+, seeds, brackets, MasseyOrdinals (100+ ranking systems) | Low — well-established |
+| 2 | **BartTorvik / cbbdata API** | REST API (free) | Adjusted efficiency metrics (AdjOE/AdjDE), T-Rank, Four Factors 2008+ | Medium — 2025-26 data issues |
+| 3 | **sportsdataverse-py** | Python package (free) | ESPN API wrapper, play-by-play data 2002+, schedules | **High — not tested during spike** |
+| 4 | **Warren Nolan** | HTML scraping (free) | NET rankings, RPI, Nitty Gritty strength-of-schedule reports | Medium — contradicts research doc "Deferred" status |
+
+**Story mapping:** Story 2.2 (schema) must accommodate fields from all confirmed sources. Story 2.3 (connectors) implements one connector per source. Story 2.4 (sync CLI) orchestrates all connectors with caching.
 
 **Deferred to post-MVP backlog:** Nate Silver / SBCB Elo ratings (Substack scraping), KenPom ($20/yr subscription + fragile scraping), EvanMiya (paid), ShotQuality ($3K/yr).
 

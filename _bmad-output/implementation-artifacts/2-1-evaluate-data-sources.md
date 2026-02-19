@@ -47,6 +47,10 @@ So that I can make informed decisions about which sources to prioritize based on
 
 ### Review Follow-ups (AI)
 
+*Prerequisites for Story 2.2 — must complete before defining schema:*
+
+- [ ] [AI-Review][HIGH] **Product owner must review and approve MVP source selection** — The "Spike Decisions" section in epics.md was committed by the dev agent without human approval. The selections include an untested source (sportsdataverse-py) and a source contradicting research recommendations (Warren Nolan, listed as "Deferred" in the research doc). The product owner should confirm/revise the 4 MVP sources before Story 2.2 schema design begins. [_bmad-output/planning-artifacts/epics.md:Spike Decisions]
+
 *Prerequisites for Story 2.3 — must complete before implementing data connectors:*
 
 - [ ] [AI-Review][HIGH] **Validate `sportsdataverse` package before relying on it as Priority 3** — package is recommended as cbbpy replacement but was never installed or tested during this spike. Run Item 6 test procedure: `python -c "import sportsdataverse.mbb as mbb; sched = mbb.load_mbb_schedule(seasons=[2025]); print(sched.head())"` [specs/research/data-source-evaluation.md:Section 7]
@@ -193,6 +197,7 @@ Claude Opus 4.6 (claude-opus-4-6)
 - 2026-02-19: Code review (AI) — added rate limit documentation for KenPom, cbbdata, sportsdataverse, Warren Nolan, Haslametrics; expanded live verification table with specific test procedures and new Item 8 (BartTorvik efficiency metrics verification); added Review Follow-up action items for Story 2.3 prerequisites.
 - 2026-02-19: Moved `docs/research/data-source-evaluation.md` → `specs/research/data-source-evaluation.md` — planning artifact belongs in `specs/`, not Sphinx source tree (per Story 1.9 conventions).
 - 2026-02-19: Code review round 2 (AI) — fixed AC 4 path to `specs/research/`, added `template-requirements.md` to File List, identified 6 LOW documentation improvements (deferred).
+- 2026-02-19: Code review round 3 (AI) — 7 findings (2H, 3M, 2L). Fixed: added `epics.md` to File List (M4), added rate limit column to comparison table (L6), added decision-gate AC pattern to template-requirements.md (M5). Flagged for human decision: source selection in Spike Decisions needs stakeholder approval (H1), sportsdataverse untested (H2), Warren Nolan contradicts research recommendations (M3).
 
 ### File List
 
@@ -200,3 +205,4 @@ Claude Opus 4.6 (claude-opus-4-6)
 - `_bmad-output/implementation-artifacts/2-1-evaluate-data-sources.md` (modified) — Story file updates (task checkboxes, Dev Agent Record, status)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified) — Sprint status update
 - `_bmad-output/planning-artifacts/template-requirements.md` (modified) — Template learnings from code review
+- `_bmad-output/planning-artifacts/epics.md` (modified) — Spike Decisions section + Post-MVP Backlog added

@@ -24,26 +24,26 @@ This document evaluates 18 candidate NCAA basketball data sources for the NCAA_e
 
 ## Source Comparison Table
 
-| # | Source | Cost | Coverage | Access Method | Python Pkg | Status | Priority |
-|:---|:---|:---|:---|:---|:---|:---|:---|
-| 1 | Kaggle MMLM | Free | 1985–present | `kaggle` CLI/API | `kaggle` 2.0.0 | Active (annual) | Primary |
-| 2 | BartTorvik / cbbdata | Free | 2008–present | REST API (~30 endpoints) | R only; Python via `cbbpy` 2.1.2 | API has 2025-26 issues | Secondary |
-| 3 | sportsdataverse-py | Free | 2002–present | ESPN API wrapper | `sportsdataverse` 0.0.40 | Active (98 stars) | Secondary alt. |
-| 4 | KenPom | $20/yr | 2002–present | Web scraping | `kenpompy` 0.5.0 | Fragile | Optional |
-| 5 | ESPN API | Free | Current season | Undocumented REST | via `cbbpy` / `sportsdataverse` | Working | Deferred |
-| 6 | ncaa-api | Free | Current | REST API (ncaa.com proxy) | None (TypeScript) | Active (210 stars) | Deferred |
-| 7 | Nate Silver / SBCB | Free/Paid | 1950–present | No API; Substack | None | COOPER coming 2026 | Monitor |
-| 8 | EvanMiya | Paid | Current + recent | No API; Shiny app | None | Active (100+ D1 teams) | Monitor |
-| 9 | Warren Nolan | Free | Current + ~4yr | No API; HTML scraping | None | Active | Deferred |
-| 10 | Haslametrics | Free | Current season | No API; HTML scraping | None | Active | Deferred |
-| 11 | Sagarin | Free | Current season | No API; HTML page | None | Active | Skip (in MasseyOrdinals) |
-| 12 | TeamRankings | Free/Paid | Current + hist. | No API; scraping | None (community scraper) | Active | Deferred |
-| 13 | ShotQuality | $50-250/mo | Current | REST API (paid) | None | Active | Skip (too expensive) |
-| 14 | Sports Reference | Free | 1947–present | Blocked scrapers | `sportsipy` 0.6.0 | Broken | Skip |
-| 15 | FiveThirtyEight | Free | 2014–2018 | GitHub static | None | Stale | Skip |
-| 16 | Massey Ratings | Free | Varies | Web only | None | Available | Skip (in Kaggle) |
-| 17 | SportsDataIO | Paid | Current | REST API | None | Active | Deferred |
-| 18 | NCAA Official | Free | Limited | Web / `ncaa-api` | None | robots.txt blocks | Deferred |
+| # | Source | Cost | Coverage | Access Method | Python Pkg | Rate Limits | Status | Priority |
+|:---|:---|:---|:---|:---|:---|:---|:---|:---|
+| 1 | Kaggle MMLM | Free | 1985–present | `kaggle` CLI/API | `kaggle` 2.0.0 | Generous (bulk ZIP) | Active (annual) | Primary |
+| 2 | BartTorvik / cbbdata | Free | 2008–present | REST API (~30 endpoints) | R only; Python via `cbbpy` 2.1.2 | Not documented | API has 2025-26 issues | Secondary |
+| 3 | sportsdataverse-py | Free | 2002–present | ESPN API wrapper | `sportsdataverse` 0.0.40 | Not documented | Active (98 stars) | Secondary alt. |
+| 4 | KenPom | $20/yr | 2002–present | Web scraping | `kenpompy` 0.5.0 | N/A (ToS prohibits) | Fragile | Optional |
+| 5 | ESPN API | Free | Current season | Undocumented REST | via `cbbpy` / `sportsdataverse` | Unknown | Working | Deferred |
+| 6 | ncaa-api | Free | Current | REST API (ncaa.com proxy) | None (TypeScript) | 5 req/sec | Active (210 stars) | Deferred |
+| 7 | Nate Silver / SBCB | Free/Paid | 1950–present | No API; Substack | None | N/A | COOPER coming 2026 | Monitor |
+| 8 | EvanMiya | Paid | Current + recent | No API; Shiny app | None | N/A | Active (100+ D1 teams) | Monitor |
+| 9 | Warren Nolan | Free | Current + ~4yr | No API; HTML scraping | None | None (open robots.txt) | Active | Deferred |
+| 10 | Haslametrics | Free | Current season | No API; HTML scraping | None | None | Active | Deferred |
+| 11 | Sagarin | Free | Current season | No API; HTML page | None | None | Active | Skip (in MasseyOrdinals) |
+| 12 | TeamRankings | Free/Paid | Current + hist. | No API; scraping | None (community scraper) | 10s crawl delay | Active | Deferred |
+| 13 | ShotQuality | $50-250/mo | Current | REST API (paid) | None | Unknown (paid) | Active | Skip (too expensive) |
+| 14 | Sports Reference | Free | 1947–present | Blocked scrapers | `sportsipy` 0.6.0 | Aggressive blocking | Broken | Skip |
+| 15 | FiveThirtyEight | Free | 2014–2018 | GitHub static | None | N/A | Stale | Skip |
+| 16 | Massey Ratings | Free | Varies | Web only | None | Cloudflare 403 | Available | Skip (in Kaggle) |
+| 17 | SportsDataIO | Paid | Current | REST API | None | Unknown (paid) | Active | Deferred |
+| 18 | NCAA Official | Free | Limited | Web / `ncaa-api` | None | robots.txt blocks all | robots.txt blocks | Deferred |
 
 ---
 

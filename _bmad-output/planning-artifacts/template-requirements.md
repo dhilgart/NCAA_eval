@@ -595,9 +595,52 @@ Code review workflow generates PRs following .github/pull_request_template.md st
 
 - ✅ **Adversarial code review catches undocumented test gaps** — The review caught that `sportsdataverse` (Priority 3 recommendation) was never live-tested, and BartTorvik's core metrics were never retrieved via cbbpy. For documentation/research spikes, code review still finds valuable gaps — it just shifts from code quality to claim validation and documentation completeness. Confirmed: adversarial review works for spikes, not just code stories.
 
+**Story 2.1 - Data Source Evaluation Spike (2026-02-19 Code Review Round 3):**
+- ❌ **Spike stories must include a decision-gate AC for scoping choices** — The dev agent selected 4 specific data sources for MVP (committing them to epics.md) without human stakeholder approval. The spike ACs only required "recommended priority order" — not a final selection. Scoping decisions that directly affect downstream stories (2.2-2.4 in this case) must be gated by human review. **Template pattern for future spike stories:**
+  ```
+  **And** the product owner reviews the spike findings and approves which
+  [sources/technologies/approaches] to include in the MVP scope before
+  downstream stories begin implementation.
+  ```
+  - **Applies to:** Stories 4.1 (feature techniques), 5.1 (modeling approaches), 6.4 (simulation confidence), 7.7 (slider mechanism), and any future spike story whose output constrains downstream implementation scope.
+  - **Rationale:** Spikes produce recommendations. Decisions belong to the product owner. The dev agent must present options with trade-offs, not commit selections unilaterally. (Discovered: Story 2.1 Code Review Round 3)
+
+- ❌ **Do not select untested components for MVP scope** — sportsdataverse-py was marked "⚠️ Not performed — package not tested during this spike" in the research document yet was selected as MVP Source #3. Similarly, Warren Nolan was categorized as "Deferred Scrape-Only" in the research recommendations but promoted to MVP Source #4. Selections should be consistent with the evidence gathered during the spike. (Discovered: Story 2.1 Code Review Round 3)
+
 ---
 
-## 8. Template Implementation Checklist
+## 8. Cookie-Cutter Improvements Feedback Loop
+
+### `cookie-cutter-improvements.md` — Required Template Artifact
+
+The cookie-cutter template MUST ship with an empty `cookie-cutter-improvements.md` file at the project root (or `_bmad-output/planning-artifacts/`). This file serves the same role for **future projects built from the template** that `template-requirements.md` serves for NCAA_eval: a living document where the team captures learnings, conventions, and gotchas that should flow back upstream into the cookie-cutter template.
+
+**Template content (shipped empty with scaffold):**
+```markdown
+# Cookie-Cutter Improvements
+
+Learnings discovered in this project that should be contributed back to the
+cookie-cutter template. Review periodically and submit upstream PRs.
+
+---
+
+<!-- Add entries below as: ### Category / #### Finding Title / description -->
+```
+
+**Hooks:** Every workflow/agent that currently writes to `template-requirements.md` must also be configured to write to `cookie-cutter-improvements.md` in projects generated from the template. Specifically:
+- **Code review workflow** (`_bmad/bmm/workflows/4-implementation/code-review/instructions.xml`, Step 4.5) — the template learning capture step
+- **Any agent** following the MEMORY.md rule: *"All agents must automatically add learnings/discoveries to template-requirements.md when they identify patterns, gotchas, or conventions"*
+- **Retrospective workflows** — if they produce template-worthy findings
+
+**Important distinction:**
+- `template-requirements.md` = learnings for building the ORIGINAL template (NCAA_eval → cookie-cutter)
+- `cookie-cutter-improvements.md` = learnings from USING the template in a new project (new-project → upstream template PR)
+
+(Discovered: Story 2.1 Code Review Round 3, user request)
+
+---
+
+## 9. Template Implementation Checklist
 
 ### Phase 1: Extract
 - [ ] Finalize this document with all decisions
@@ -610,6 +653,8 @@ Code review workflow generates PRs following .github/pull_request_template.md st
 - [ ] Parameterize project-specific values
 - [ ] Create cruft configuration
 - [ ] Write template README
+- [ ] Include empty `cookie-cutter-improvements.md` with scaffold content
+- [ ] Configure BMAD hooks to write to `cookie-cutter-improvements.md` instead of `template-requirements.md`
 
 ### Phase 3: BMAD Integration
 - [ ] Document BMAD version compatibility
@@ -630,7 +675,7 @@ Code review workflow generates PRs following .github/pull_request_template.md st
 
 ---
 
-## 9. Template Metadata
+## 10. Template Metadata
 
 ```yaml
 template_name: "bmad-python-project"
