@@ -1193,5 +1193,61 @@ When a caching strategy involves marker files (or any lightweight sentinel), the
 
 Omitting these tests lets bugs in the entire cache lifecycle go undetected even when the dependency guard and ordering tests pass.
 
-*Last Updated: 2026-02-19 (Story 2.4 Code Review — private method public API promotion, multi-source cache test coverage)*
+### EDA Notebooks: Separate Conventions from Production Code ⭐ (Discovered Story 3.1)
+
+EDA notebooks in `notebooks/eda/` are exploration artifacts, not production code. Different rules apply:
+
+| Rule | `src/` production code | `notebooks/eda/` notebooks |
+|---|---|---|
+| `mypy --strict` | ✅ Required | ❌ Not applicable |
+| Ruff linting | ✅ Required | ❌ Not applied by default |
+| `from __future__ import annotations` | ✅ Required | ❌ Not required |
+| No-iterrows mandate | ✅ Enforced by linting | ✅ Apply as discipline only |
+| Commit with executed outputs | N/A | ✅ Required |
+
+**Template pattern:** When a story is EDA/exploration type, add a "Story Nature" section to Dev Notes stating: *"This is an EDA story — the primary deliverable is a notebook artifact, not module code. `mypy --strict` and Ruff do NOT apply. No-iterrows is a style discipline but not a lint gate."*
+
+### `gitignore` Data Directory Pattern ⭐ (Discovered Story 3.1)
+
+To track a `data/` directory in git while ignoring its contents (downloaded/generated data files), use the `.gitkeep` negation pattern:
+
+```gitignore
+# Ignore all data directory contents
+data/*
+# But track the directory itself via a gitkeep
+!data/.gitkeep
+```
+
+**Critical:** Never delete `data/.gitkeep` during development (e.g., after populating `data/` with real files). On a fresh clone, `data/` will not exist if `.gitkeep` is absent. Any code that uses `Path("data/")` will break. **Code review must check for unstaged deletions of `.gitkeep`** — this is a common accident when working with data directories.
+
+### nbconvert Execution: Use `--output-dir`, Not `--output` ⭐ (Discovered Story 3.1)
+
+When executing Jupyter notebooks via `nbconvert` from the **repo root** for in-place output (same directory as source):
+
+```bash
+# ❌ WRONG — doubles the path: writes to notebooks/eda/notebooks/eda/file.ipynb
+conda run -n ncaa_eval jupyter nbconvert --to notebook --execute \
+  --output notebooks/eda/01_data_quality_audit.ipynb \
+  notebooks/eda/01_data_quality_audit.ipynb
+
+# ✅ CORRECT — writes output next to source notebook
+conda run -n ncaa_eval jupyter nbconvert --to notebook --execute \
+  --ExecutePreprocessor.timeout=600 \
+  --output-dir notebooks/eda \
+  notebooks/eda/01_data_quality_audit.ipynb
+```
+
+**Rule:** Always use `--output-dir <directory>` and omit `--output` when the target location is the same directory as the source notebook. The `--output` flag appends to the input directory path, causing doubling.
+
+**Note:** nbconvert 7.x sets the kernel working directory to the **notebook's directory** by default. Relative file paths in notebook cells resolve relative to `notebooks/eda/`, not the repo root. Use `Path("../../data/")` or `Path(__file__).parent.parent.parent / "data"` style paths, not `Path("data/")`.
+
+### Multi-Source Data: Verify Connector Behavior Against Architecture Assumptions ⭐ (Discovered Story 3.1 Code Review)
+
+When writing EDA notebooks that analyze data ingested by connectors, **read the connector source code** before writing narrative about expected field behavior. Connector implementation often differs from the architecture document's description.
+
+**Example (NCAA_eval Story 3.1):** The architecture and Dev Notes described `Game.date = None` for Kaggle games (1985–2024). However, `KaggleConnector._parse_games_csv()` derives `game_date = day_zeros.get(s) + timedelta(days=day_num)` for ALL seasons, populating `date` for every game. The notebook's output correctly showed 0 null dates — but the narrative described it as wrong behavior.
+
+**Template pattern:** Before writing "expected behavior" narrative in a notebook cell, verify it by reading the actual data loading code. If the data surprises you, investigate why — don't assume the data is wrong.
+
+*Last Updated: 2026-02-20 (Story 3.1 Code Review — EDA notebook conventions, gitkeep pattern, nbconvert --output-dir, connector behavior verification)*
 *Next Review: [Set cadence - weekly? sprint boundaries?]*
