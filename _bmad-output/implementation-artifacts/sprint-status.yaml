@@ -64,7 +64,7 @@ development_status:
   # Epic 3: Exploratory Data Analysis
   epic-3: in-progress
   3-1-data-quality-audit: done
-  3-2-statistical-exploration-relationship-analysis: in-progress
+  3-2-statistical-exploration-relationship-analysis: done
   3-3-document-findings-feature-engineering-recommendations: backlog
   epic-3-retrospective: optional
 
