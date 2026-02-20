@@ -427,11 +427,14 @@ Claude Sonnet 4.6
 **New files:**
 - `src/ncaa_eval/ingest/sync.py` — SyncResult dataclass and SyncEngine class
 - `sync.py` — Typer CLI entry point at project root
-- `tests/integration/test_sync.py` — 8 integration tests
+- `tests/integration/test_sync.py` — 11 integration tests
 
 **Modified files:**
 - `src/ncaa_eval/ingest/__init__.py` — Added SyncEngine, SyncResult to exports and `__all__`
-- `src/ncaa_eval/ingest/connectors/kaggle.py` — Renamed `_load_day_zeros` → `load_day_zeros` (public API)
+- `src/ncaa_eval/ingest/connectors/kaggle.py` — Renamed `_load_day_zeros` → `load_day_zeros` (public API); added `fetch_team_spellings()`; added zipfile auto-extraction for kaggle 2.0; fixed date format to `%m/%d/%Y`; updated auth error message
+- `src/ncaa_eval/ingest/connectors/espn.py` — Switched `fuzz.ratio` → `fuzz.token_set_ratio`; removed `get_games_season` fallback; fixed docstring RST markup
+- `tests/fixtures/kaggle/MSeasons.csv` — Updated DayZero format to `%m/%d/%Y` (matches real Kaggle data)
+- `README.md` — Updated Kaggle API setup instructions for new access_token flow
 - `pyproject.toml` — Added `typer[all]>=0.15,<2` dependency; added `sync.py` to mypy `files`; added `sync.py` to check-manifest ignore list
 - `poetry.lock` — Updated with typer 0.24.0 and transitive deps
 - `noxfile.py` — Added `sync.py` to typecheck session
@@ -441,9 +444,9 @@ Claude Sonnet 4.6
 
 **Reviewer:** Claude Sonnet 4.6 (BMAD code-review workflow) — 2026-02-19
 
-**Outcome:** Approved with fixes applied (6 issues auto-fixed, 151 tests pass)
+**Outcome:** Approved with fixes applied (12 issues auto-fixed across 2 review passes, 151 tests pass)
 
-**Issues Fixed:**
+**Round 1 Issues Fixed:**
 - [H1][HIGH] Renamed `KaggleConnector._load_day_zeros()` → `load_day_zeros()` — private method was accessed cross-class with `# noqa: SLF001` suppression; promoted to public API [`src/ncaa_eval/ingest/connectors/kaggle.py`]
 - [M1][MEDIUM] Added 3 ESPN integration tests (full cycle, cache hit, force-refresh) — caching marker logic and Kaggle+ESPN merge were completely untested [`tests/integration/test_sync.py`]
 - [M2][MEDIUM] Added missing assertions to `test_sync_kaggle_cache_hit` — `fetch_teams`, `fetch_seasons` call counts and `teams_written`/`seasons_written == 0` not previously verified [`tests/integration/test_sync.py`]
@@ -451,7 +454,17 @@ Claude Sonnet 4.6
 - [M4][MEDIUM] Pinned typer to `>=0.15,<2` — unbounded `>=0.15` violates project convention of bounding major-version breaks [`pyproject.toml`]
 - [L1][LOW] Fixed RST `:class:` markup in module docstring — replaced with Google-style single backticks [`src/ncaa_eval/ingest/sync.py`]
 
+**Round 2 Issues Fixed (post-review changes: zip extraction, spellings, fuzzy matching, README):**
+- [C1][CRITICAL] Fixed 11 failing unit tests — `load_day_zeros()` date format changed to `%m/%d/%Y` (real Kaggle 2.0 format) but test fixture still used ISO format; updated `tests/fixtures/kaggle/MSeasons.csv` to match real data format [`tests/fixtures/kaggle/MSeasons.csv`]
+- [M5][MEDIUM] Vectorized `fetch_team_spellings()` — replaced `iterrows()` loop with `dict(zip(...))` per Style Guide §6.2 mandate [`src/ncaa_eval/ingest/connectors/kaggle.py`]
+- [M6][MEDIUM] Vectorized `_build_espn_team_map()` — replaced `iterrows()` with `.tolist()` extraction per Style Guide §6.2 [`src/ncaa_eval/ingest/sync.py`]
+- [M7][MEDIUM] Fixed auth error message — `~/.kaggle/kaggle.json` contradicted README's new `~/.kaggle/access_token` instructions; updated error to reference README [`src/ncaa_eval/ingest/connectors/kaggle.py`]
+- [M8][MEDIUM] Mocked `_build_espn_team_map` and `fetch_team_spellings` in ESPN tests — tests were implicitly calling real cbbpy internal CSV; now properly isolated [`tests/integration/test_sync.py`]
+- [L2][LOW] Fixed stale `fetch_games()` docstring — still said "Attempts get_games_season() first" after that code path was removed [`src/ncaa_eval/ingest/connectors/espn.py`]
+- [L3][LOW] Fixed RST double backticks (``) → Google-style single backticks in `_fetch_schedule_df`, `_build_espn_team_map`, and `EspnConnector` module docstrings [`src/ncaa_eval/ingest/connectors/espn.py`, `src/ncaa_eval/ingest/sync.py`]
+
 ### Change Log
 
+- 2026-02-19: Second code review — 7 issues fixed (1 CRITICAL, 4 MEDIUM, 2 LOW); 11 unit tests restored; ESPN tests properly isolated from cbbpy internals; test count remains 151
 - 2026-02-19: Code review complete — 6 issues fixed (1 HIGH, 4 MEDIUM, 1 LOW); 3 ESPN integration tests added; test count 148 → 151
 - 2026-02-19: Implemented Sync CLI & Smart Caching (Story 2.4) — SyncEngine with Parquet-level caching, ESPN marker-file caching, Typer CLI wrapper, 8 integration tests. All quality checks pass.

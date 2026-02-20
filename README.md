@@ -21,15 +21,17 @@ The `sync.py` data pipeline downloads NCAA data from the [Kaggle March Machine L
 **Setup:**
 
 1. Create a free [Kaggle account](https://www.kaggle.com/account/login) if you don't have one.
-2. Accept the competition rules at the [March Machine Learning Mania 2025](https://www.kaggle.com/competitions/march-machine-learning-mania-2025) competition page.
-3. Generate an API token: go to **Account → Settings → API → Create New Token**. This downloads `kaggle.json`.
-4. Place it at `~/.kaggle/kaggle.json` (Linux/macOS) or `C:\Users\<username>\.kaggle\kaggle.json` (Windows), then restrict permissions:
+2. **Verify your phone number** — Kaggle requires phone verification before the API can access any competition data. Go to **Account → Settings → Phone Verification** and complete verification.
+3. **Accept the competition rules** — required for each competition year you want data from:
+   - [March Machine Learning Mania 2025](https://www.kaggle.com/competitions/march-machine-learning-mania-2025/rules) (historical data through the 2025 tournament)
+   - Accept the current year's competition rules as well if it is listed on [Kaggle](https://www.kaggle.com/competitions?search=march+machine+learning+mania)
+4. Get your API token: go to **Account → Settings → API → Create New Token** and copy the token value (starts with `KGAT_`).
+5. Save the token to `~/.kaggle/access_token`:
    ```bash
    mkdir -p ~/.kaggle
-   mv ~/Downloads/kaggle.json ~/.kaggle/kaggle.json
-   chmod 600 ~/.kaggle/kaggle.json
+   echo "KGAT_your_token_here" > ~/.kaggle/access_token
+   chmod 600 ~/.kaggle/access_token
    ```
-   Alternatively, set the `KAGGLE_USERNAME` and `KAGGLE_KEY` environment variables.
 
 For full details see the [Kaggle API documentation](https://github.com/Kaggle/kaggle-api/blob/main/docs/README.md).
 

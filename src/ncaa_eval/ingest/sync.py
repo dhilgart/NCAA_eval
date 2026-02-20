@@ -8,13 +8,103 @@ redundant fetches on subsequent runs.
 from __future__ import annotations
 
 import dataclasses
+import logging
 from pathlib import Path
 
+import pandas as pd  # type: ignore[import-untyped]
 import typer
+from rapidfuzz import fuzz
 
 from ncaa_eval.ingest.connectors.espn import EspnConnector
 from ncaa_eval.ingest.connectors.kaggle import KaggleConnector
 from ncaa_eval.ingest.repository import Repository
+
+logger = logging.getLogger(__name__)
+
+# Minimum fuzzy-match score when resolving ESPN locations not found in spellings.
+_FUZZY_THRESHOLD = 80
+
+# ESPN location names that aren't covered by MTeamSpellings.csv.  These are
+# persistent ESPN abbreviations/nicknames that no generic fuzzy algorithm
+# can safely resolve without false positives (e.g. "App State" would match
+# "Iowa State" at 88 via partial_ratio; "minnesota" would match at 100 for
+# "St. Thomas-Minnesota").  Add entries here when the sync log reports
+# unmatched ESPN locations.
+_ESPN_LOCATION_OVERRIDES: dict[str, int] = {
+    "App State": 1111,  # ESPN abbrev.; Kaggle: "Appalachian St"
+    "UL Monroe": 1419,  # ESPN abbrev.; Kaggle: "ULM"
+    "St. Thomas-Minnesota": 1472,  # ESPN hyphenated; Kaggle: "St Thomas MN"
+}
+
+
+def _build_espn_team_map(year: int, spellings: dict[str, int]) -> dict[str, int]:
+    """Build ESPN location-name → Kaggle TeamID mapping via cbbpy's bundled team map.
+
+    cbbpy ships a `mens_team_map.csv` that lists every D-I team per season
+    with the `location` name ESPN uses internally (e.g. `"UC Santa Barbara"`,
+    `"Florida Gulf Coast"`).  Using these location names as the keys in
+    `team_name_to_id` means:
+
+    * `_fetch_per_team` queries cbbpy with *exact* ESPN names → no wrong
+      fuzzy match (avoids `"california-santa-barbara"` → `"California"`).
+    * The schedule DataFrame's `team`/`opponent` columns also use these
+      location names → `_resolve_team_id` can do direct dict lookups.
+
+    Each ESPN location is resolved to a Kaggle ID by exact lookup in the
+    Kaggle spellings dict (lowercased).  A token-set-ratio fuzzy fallback
+    handles any locations not covered by the spellings.
+
+    Falls back to the latest available season in the map if *year* is absent
+    (e.g. cbbpy hasn't published the current season's map yet).
+    """
+    import cbbpy  # type: ignore[import-untyped]  # local import; no stubs
+
+    map_path = Path(cbbpy.__file__).parent / "utils" / "mens_team_map.csv"
+    df: pd.DataFrame = pd.read_csv(map_path)
+
+    available: set[int] = set(int(s) for s in df["season"].unique())
+    if year not in available:
+        fallback = max(available)
+        logger.info("espn: season %d not in cbbpy team map; using %d", year, fallback)
+        year = fallback
+
+    season_df: pd.DataFrame = df[df["season"] == year]
+    locations: list[str] = season_df["location"].astype(str).tolist()
+    result: dict[str, int] = {}
+    unmatched: list[str] = []
+
+    for location in locations:
+        # Explicit overrides take priority (handles ESPN abbreviations that
+        # can't be safely resolved by generic fuzzy matching).
+        if location in _ESPN_LOCATION_OVERRIDES:
+            result[location] = _ESPN_LOCATION_OVERRIDES[location]
+            continue
+        kaggle_id: int | None = spellings.get(location.lower())
+        if kaggle_id is not None:
+            result[location] = kaggle_id
+            continue
+        # Fuzzy fallback for locations not covered by the spellings file.
+        best_score = 0.0
+        best_id: int | None = None
+        for spelling, tid in spellings.items():
+            score = float(fuzz.token_set_ratio(location.lower(), spelling))
+            if score > best_score:
+                best_score = score
+                best_id = tid
+        if best_score >= _FUZZY_THRESHOLD and best_id is not None:
+            result[location] = best_id
+        else:
+            unmatched.append(location)
+
+    if unmatched:
+        logger.warning(
+            "espn: %d ESPN locations could not be matched to a Kaggle team: %s%s",
+            len(unmatched),
+            unmatched[:5],
+            " ..." if len(unmatched) > 5 else "",
+        )
+
+    return result
 
 
 @dataclasses.dataclass
@@ -124,14 +214,18 @@ class SyncEngine:
                 "Run: python sync.py --source kaggle --dest <path>"
             )
 
-        team_name_to_id = {t.team_name: t.team_id for t in teams}
-
-        # Load DayZero mapping from already-downloaded Kaggle CSVs (no network call).
+        # Load DayZero mapping and alternate spellings from already-downloaded Kaggle CSVs.
         kaggle_connector = KaggleConnector(extract_dir=self._data_dir / "kaggle")
         season_day_zeros = kaggle_connector.load_day_zeros()
+        spellings = kaggle_connector.fetch_team_spellings()
 
         # ESPN scope: most recent season only
         year = max(s.year for s in seasons)
+
+        # Build ESPN location → Kaggle ID mapping using cbbpy's authoritative
+        # team list.  This ensures _fetch_per_team passes exact ESPN location
+        # names to cbbpy (no wrong internal fuzzy matches).
+        team_name_to_id = _build_espn_team_map(year, spellings)
 
         # Cache check via marker file
         marker = self._espn_marker(year)

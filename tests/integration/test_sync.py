@@ -87,6 +87,22 @@ _DAY_ZEROS: dict[int, datetime.date] = {
     2024: datetime.date(2023, 11, 6),
 }
 
+# Spellings dict returned by KaggleConnector.fetch_team_spellings() in ESPN tests.
+_SPELLINGS: dict[str, int] = {
+    "abilene chr": 1101,
+    "air force": 1102,
+    "akron": 1103,
+    "alabama": 1104,
+}
+
+# Team map returned by _build_espn_team_map() in ESPN tests.
+_ESPN_TEAM_MAP: dict[str, int] = {
+    "Abilene Christian": 1101,
+    "Air Force": 1102,
+    "Akron": 1103,
+    "Alabama": 1104,
+}
+
 
 def _make_games(records: list[dict[str, Any]]) -> list[Game]:
     return [Game(**r) for r in records]
@@ -224,9 +240,15 @@ def test_sync_espn_requires_kaggle(tmp_path: Path) -> None:
 
 
 @pytest.mark.integration
+@patch("ncaa_eval.ingest.sync._build_espn_team_map", return_value=_ESPN_TEAM_MAP)
 @patch("ncaa_eval.ingest.sync.EspnConnector")
 @patch("ncaa_eval.ingest.sync.KaggleConnector")
-def test_sync_espn_full_cycle(mock_kaggle_cls: MagicMock, mock_espn_cls: MagicMock, tmp_path: Path) -> None:
+def test_sync_espn_full_cycle(
+    mock_kaggle_cls: MagicMock,
+    mock_espn_cls: MagicMock,
+    mock_build_map: MagicMock,
+    tmp_path: Path,
+) -> None:
     """ESPN sync fetches games, merges with existing Kaggle games, and creates marker."""
     # Pre-populate repo with Kaggle data (required ESPN pre-condition)
     repo = ParquetRepository(tmp_path)
@@ -234,9 +256,10 @@ def test_sync_espn_full_cycle(mock_kaggle_cls: MagicMock, mock_espn_cls: MagicMo
     repo.save_seasons(_SEASONS)
     repo.save_games(_make_games(_GAMES_2024))  # existing Kaggle games
 
-    # Mock KaggleConnector used to load day_zeros (no download)
+    # Mock KaggleConnector used to load day_zeros + spellings (no download)
     kaggle_instance = mock_kaggle_cls.return_value
     kaggle_instance.load_day_zeros.return_value = _DAY_ZEROS
+    kaggle_instance.fetch_team_spellings.return_value = _SPELLINGS
 
     # Mock EspnConnector
     espn_instance = mock_espn_cls.return_value
@@ -258,11 +281,20 @@ def test_sync_espn_full_cycle(mock_kaggle_cls: MagicMock, mock_espn_cls: MagicMo
     assert "2024_11_1101_1102" in game_ids  # Kaggle game preserved
     assert "espn_99001" in game_ids  # ESPN game added
 
+    # Verify _build_espn_team_map was called with the spellings dict
+    mock_build_map.assert_called_once_with(2024, _SPELLINGS)
+
 
 @pytest.mark.integration
+@patch("ncaa_eval.ingest.sync._build_espn_team_map", return_value=_ESPN_TEAM_MAP)
 @patch("ncaa_eval.ingest.sync.EspnConnector")
 @patch("ncaa_eval.ingest.sync.KaggleConnector")
-def test_sync_espn_cache_hit(mock_kaggle_cls: MagicMock, mock_espn_cls: MagicMock, tmp_path: Path) -> None:
+def test_sync_espn_cache_hit(
+    mock_kaggle_cls: MagicMock,
+    mock_espn_cls: MagicMock,
+    mock_build_map: MagicMock,
+    tmp_path: Path,
+) -> None:
     """sync_espn skips fetch when marker file exists and force_refresh is False."""
     repo = ParquetRepository(tmp_path)
     repo.save_teams(_TEAMS)
@@ -270,6 +302,7 @@ def test_sync_espn_cache_hit(mock_kaggle_cls: MagicMock, mock_espn_cls: MagicMoc
 
     kaggle_instance = mock_kaggle_cls.return_value
     kaggle_instance.load_day_zeros.return_value = _DAY_ZEROS
+    kaggle_instance.fetch_team_spellings.return_value = _SPELLINGS
 
     espn_instance = mock_espn_cls.return_value
 
@@ -285,10 +318,14 @@ def test_sync_espn_cache_hit(mock_kaggle_cls: MagicMock, mock_espn_cls: MagicMoc
 
 
 @pytest.mark.integration
+@patch("ncaa_eval.ingest.sync._build_espn_team_map", return_value=_ESPN_TEAM_MAP)
 @patch("ncaa_eval.ingest.sync.EspnConnector")
 @patch("ncaa_eval.ingest.sync.KaggleConnector")
 def test_sync_espn_force_refresh(
-    mock_kaggle_cls: MagicMock, mock_espn_cls: MagicMock, tmp_path: Path
+    mock_kaggle_cls: MagicMock,
+    mock_espn_cls: MagicMock,
+    mock_build_map: MagicMock,
+    tmp_path: Path,
 ) -> None:
     """force_refresh=True deletes marker and re-fetches ESPN games."""
     repo = ParquetRepository(tmp_path)
@@ -297,6 +334,7 @@ def test_sync_espn_force_refresh(
 
     kaggle_instance = mock_kaggle_cls.return_value
     kaggle_instance.load_day_zeros.return_value = _DAY_ZEROS
+    kaggle_instance.fetch_team_spellings.return_value = _SPELLINGS
 
     espn_instance = mock_espn_cls.return_value
     espn_instance.fetch_games.return_value = _make_games(_ESPN_GAMES_2024)
