@@ -72,11 +72,11 @@ So that I can identify signals and relationships worth pursuing in feature engin
   - [x] 7.2: Save `notebooks/eda/statistical_exploration_findings.md` with machine-readable findings summary (analogous to `data_quality_findings.md` from Story 3.1)
   - [x] 7.3: Include a ranked list of recommended features for Epic 4 based on correlation analysis
 
-- [ ] Task 9: Review Follow-ups (AI)
-  - [ ] [AI-Review][HIGH] Fix `day_to_round_num` function — Elite 8 (days 145-146) incorrectly bucketed with Sweet 16 (round_num=2); Final Four days 147-148 mislabeled as "E8" (round_num=3) instead of FF. Recalibrate cutoffs to match `day_to_round_name`, re-execute notebook, verify correlation table changes. [notebooks/eda/02_statistical_exploration.ipynb, Cell 30]
-  - [ ] [AI-Review][HIGH] AC4 gap: Strength of Schedule not computed — add SoS metric (e.g., opponent win-rate average) to Section 4 or a new Section 4b; correlate with tournament outcomes; document signal strength. [notebooks/eda/02_statistical_exploration.ipynb, Cells 22-26]
-  - [ ] [AI-Review][MEDIUM] Vectorize Cell 17 upset-rate filter — `.apply(lambda r: ..., axis=1)` used to match classic bracket pairs; replace with `pd.merge` against a pairs lookup DataFrame. [notebooks/eda/02_statistical_exploration.ipynb, Cell 17]
-  - [ ] [AI-Review][LOW] Log NaN imputation count before Pearson correlation — `fillna(median)` is silent; print count of imputed values per stat. [notebooks/eda/02_statistical_exploration.ipynb, Cell 31]
+- [x] Task 9: Review Follow-ups (AI)
+  - [x] [AI-Review][HIGH] Fix `day_to_round_num` function — corrected in commit `1a2a8d8`; cutoffs now match actual DayNum ranges; round distribution validates (164 E8, 78 FF, 39 Champions). [notebooks/eda/02_statistical_exploration.ipynb, Cell 30]
+  - [x] [AI-Review][HIGH] AC4 gap: SoS implemented in commit `1a2a8d8` — Cells 31-32 compute vectorized opponent win-rate SoS; Pearson r=0.2970 with tournament advancement (MEDIUM signal). [notebooks/eda/02_statistical_exploration.ipynb, Cells 31-32]
+  - [ ] [AI-Review][MEDIUM] Vectorize conference pair construction — **NOTE: original action item misidentified Cell 17; actual issue is Cell 25.** Cell 25 uses `.apply(lambda r: "_vs_".join(sorted([r["w_conf"], r["l_conf"]])), axis=1)` on 74K+ rows; vectorize via `np.sort(df[["w_conf", "l_conf"]].values, axis=1)`. [notebooks/eda/02_statistical_exploration.ipynb, Cell 25]
+  - [ ] [AI-Review][LOW] Log NaN imputation count before Pearson correlation — `fillna(median)` is silent; print count of imputed values per stat. [notebooks/eda/02_statistical_exploration.ipynb, Cell 33]
 
 - [x] Task 8: Execute notebook and commit (AC: 7)
   - [x] 8.1: Run via `conda run -n ncaa_eval jupyter nbconvert --to notebook --execute --ExecutePreprocessor.timeout=600 --output-dir notebooks/eda notebooks/eda/02_statistical_exploration.ipynb`
@@ -410,20 +410,23 @@ Claude Sonnet 4.6
 - Fixed `favored_seed` KeyError in sort_values: moved `sort_values` before column selection.
 - Fixed `include_groups=False` + group key access in seed wins cell: rewrote with cleaner champions-via-idxmax approach.
 - Verified actual DayNum→round mapping from data (max DayNum=154, not 164 as story notes suggested); updated mapping to match actual data.
+- (Code review round 2) Fixed `day_to_round_num` cutoffs — round_num=2 was incorrectly covering both Sweet 16 and Elite 8; corrected to separate S16 (≤144) and E8 (≤148) buckets. SoS analysis added as Cells 31-32.
+- (Code review round 2) Cell 17 apply(axis=1) was a false alarm — `.min(axis=1)/.max(axis=1)` are vectorized. Real apply issue is in Cell 25 (conference pair construction), still open as action item.
 
 ### Completion Notes List
 
-- Notebook `notebooks/eda/02_statistical_exploration.ipynb` created with 38 cells (7 markdown, 31 code), executed 0 errors.
-- Key findings from actual data:
+- Notebook `notebooks/eda/02_statistical_exploration.ipynb` created with 40 cells (7 markdown, 33 code), executed 0 errors. (Expanded from 38 cells to add SoS analysis in code review round 2.)
+- Key findings from actual data (corrected after day_to_round_num fix):
   - 196,716 deduplicated games (2025: 11,454 → 6,909 after dedup)
   - Mean winning margin: 12.1 pts; home win rate: 65.8% (non-neutral regular season)
   - Home advantage: +2.2 pts over neutral site; trend decreasing (p=0.0006, statistically significant)
   - 1v16 nearly always chalk; 5v12 and 8v9 most volatile matchups
-  - FGM (r=0.247), Score (r=0.221), FGPct (r=0.217) are top positive predictors of tournament advancement
-  - PF (r=-0.158) and TO_rate (r=-0.136) are top negative predictors
+  - **SoS ↔ tournament advancement: Pearson r = 0.2970** (p=3.16e-53, MEDIUM signal); mean SoS increases monotonically from R64 teams (0.516) to Champions (0.562)
+  - FGM (r=0.263), Score (r=0.235), FGPct (r=0.227) are top positive predictors of tournament advancement (values updated after round-mapping fix)
+  - PF (r=-0.157) and TO_rate (r=-0.142) are top negative predictors
   - FG% differential: winners average 0.476 vs 0.397 for losers (+0.078) in tournament games
   - Top conferences by tournament wins: ACC, Big Ten, Big East, SEC, Big 12
-- Findings saved to `notebooks/eda/statistical_exploration_findings.md` (2,898 bytes)
+- Findings saved to `notebooks/eda/statistical_exploration_findings.md` (3,232 bytes)
 - All Plotly visualizations use `plotly_dark` template; no iterrows() used anywhere
 
 ### File List
@@ -435,3 +438,5 @@ Claude Sonnet 4.6
 ## Change Log
 
 - 2026-02-20: Story 3.2 implemented — statistical exploration EDA notebook with 6 sections covering scoring distributions, venue effects, seed patterns, conference strength, statistical correlations, and findings summary. Notebook executed with 0 errors, all 31 code cells completed.
+- 2026-02-20: Code review round 1 — fixed duplicate Section 7 in findings file; added 03_distribution_analysis.ipynb to File List; created action items for day_to_round_num bug, AC4 SoS gap, apply vectorization.
+- 2026-02-20: Code review round 2 fixes — corrected day_to_round_num cutoffs; added SoS analysis (Cells 31-32, r=0.2970); re-executed notebook (40 cells, 0 errors). Correlation values updated. Story remains in-progress: Cell 25 apply(axis=1) vectorization still outstanding.
