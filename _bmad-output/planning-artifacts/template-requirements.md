@@ -1402,8 +1402,50 @@ When a technical document presents a ranked list with a stated criterion (e.g., 
 
 **Pattern:** Add a "Ranking rationale:" paragraph immediately after any ranked list header that explains the composite criteria and why the top-metric item may not appear first.
 
+### Extension Notebook Outputs Must Be Committed With the Notebook ⭐ (Discovered Story 3.2/3.3 Code Review)
+
+When a story adds an "extension" notebook (e.g., `03_distribution_analysis.ipynb` added in a separate commit labeled "Story 3.2 extension"), **any files that notebook writes to disk must be staged and committed in the same commit as the notebook itself.** Failure to do this:
+- Leaves generated artifacts in an untracked state that future git checkouts won't contain
+- Makes synthesis stories (Story 3.3) miss the unpersisted output when reading only the committed findings files
+- Sends downstream implementers on research spikes for questions already empirically answered
+
+**Root cause (Story 3.2):** `03_distribution_analysis.ipynb` used `with open(findings_path, "a")` to append Section 7 to `statistical_exploration_findings.md`. The notebook was committed with executed outputs showing "Section 7 appended..." but the updated `.md` file was never staged. Story 3.3's dev agent only read `statistical_exploration_findings.md` (as directed) and never saw Section 7 — so distribution fitting was treated as an open research question despite being empirically solved.
+
+**Code review checklist for extension notebooks:**
+- [ ] For each `open(path, "w"/"a")` call in the notebook, verify the output file is staged and committed
+- [ ] Check the notebook's execution output — if it says "appended to X.md", verify X.md shows that content in `git diff`
+- [ ] Extension notebook commits should always include: the `.ipynb` file AND all output files it writes
+
+**Append-mode risk:** `open(path, "a")` in notebooks means re-executing the notebook appends a duplicate section. Prefer the regex-replace pattern from the "Multi-Notebook Findings Files" note above. If append is used, note in the notebook's first cell that re-execution will duplicate sections — and add a guard:
+```python
+# Guard against duplicate sections
+findings_text = findings_path.read_text()
+if "## Section 7:" not in findings_text:
+    with open(findings_path, "a") as f:
+        f.write(section)
+```
+
+### Section Numbering in Multi-Notebook Findings Files ⭐ (Discovered Story 3.2/3.3)
+
+When multiple notebooks contribute numbered sections to the same findings file, coordinate section numbers explicitly. If a planned section is dropped, downstream notebook section numbers become orphaned:
+- `02_statistical_exploration.ipynb` → Sections 1–5 + "Known Data Limitations"
+- A planned Section 6 was never created
+- `03_distribution_analysis.ipynb` hardcoded "Section 7" → gap in numbering
+
+**Pattern:** Define section numbers in a comment at the top of each notebook:
+```python
+# Section assignments for statistical_exploration_findings.md:
+# Section 1: Scoring Distributions (02_statistical_exploration.ipynb)
+# Section 2: Venue Effects (02_statistical_exploration.ipynb)
+# ...
+# Section 6: [RESERVED for Women's Analysis or drop and renumber]
+# Section 7: Box-Score Distributions (03_distribution_analysis.ipynb)
+```
+Or renumber sequentially when sections are dropped rather than leaving gaps.
+
 *Last Updated: 2026-02-20 (Story 3.1 Code Review — EDA notebook conventions, gitkeep pattern, nbconvert --output-dir, connector behavior verification)*
 *Updated: 2026-02-20 (Story 3.2 extension — Epic 4 normalization design requirements from user)*
 *Updated: 2026-02-20 (Story 3.2 Code Review — day-to-round mapping consistency, multi-notebook findings files, story file list completeness, apply-vs-vectorize)*
 *Updated: 2026-02-20 (Story 3.3 Code Review — documentation synthesis story review pattern, ranked list rationale requirement)*
+*Updated: 2026-02-20 (Story 3.3 Code Review Round 2 — extension notebook output commit gap, section numbering in multi-notebook findings files)*
 *Next Review: [Set cadence - weekly? sprint boundaries?]*
