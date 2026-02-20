@@ -81,3 +81,67 @@ Generated from: `notebooks/eda/02_statistical_exploration.ipynb` (Story 3.2)
 - **2025 tournament:** Incomplete at data export time; excluded from outcome correlations
 - **2025 deduplication:** Applied — ESPN records preferred over Kaggle duplicates
 - **Conference names:** Not normalized across realignment years
+
+
+---
+## Section 7: Box-Score Statistical Distribution Analysis
+
+**Data coverage:**
+- Men's Detailed Results: regular season (2003–2025, 118,882 rows) + tournament (2003–2024, 1,382 rows)
+- Women's Detailed Results: regular season (2010–2025, 81,708 rows) + tournament (2010–2024, 894 rows)
+
+### Distribution Shape Summary (Combined gender, All Games)
+
+| Stat | Skewness | Excess Kurtosis | Shape | Transform | Scaler |
+|------|----------|-----------------|-------|-----------|--------|
+
+### Key Findings
+
+- **Approx. normal (no transform):** FGM, FGA, Score, DR, FTM, FTA — central-limit effect from summing many possessions per game.
+- **Right-skewed (log1p recommended):** Blk, Stl, OR — rare events with heavy right tails.
+- **Mildly right-skewed (sqrt or log1p):** FGM3, FGA3, Ast, TO, PF — moderate skew, era effects present for 3-point stats.
+- **Bounded [0,1] (logit transform):** FGPct, 3PPct, FTPct, TO_rate — Beta-like distributions; standard Normal transforms are inappropriate.
+- **Men vs. Women:** Distributions are broadly similar in shape. Women's data shows higher FTPct means and slightly lower FGM3/FGA3 (smaller 3-point volume historically). Shape labels are consistent across genders.
+- **Regular Season vs. Tournament:** Tournament data has tighter distributions (less variance) consistent with more evenly-matched teams in March. Shape labels unchanged.
+
+
+---
+## Section 7: Box-Score Statistical Distribution Analysis
+
+**Source notebook:** `notebooks/eda/03_distribution_analysis.ipynb`
+
+**Data coverage (team-game observations per stat):**
+- Men's Detailed Results: regular season (2003–2025) + tournament (2003–2024)
+- Women's Detailed Results: regular season (2010–2025) + tournament (2010–2024)
+
+### Normalization Recommendations (Combined gender, All Games)
+
+| Stat | Skewness | Excess Kurtosis | Shape | Transform | Scaler |
+|------|----------|-----------------|-------|-----------|--------|
+| Blk | +0.96 | +1.35 | mildly right-skewed | sqrt | RobustScaler |
+| Stl | +0.75 | +1.03 | mildly right-skewed | sqrt | RobustScaler |
+| TO | +0.59 | +0.70 | mildly right-skewed | sqrt | RobustScaler |
+| FTM | +0.58 | +0.37 | mildly right-skewed | sqrt | RobustScaler |
+| OR | +0.57 | +0.48 | mildly right-skewed | sqrt | RobustScaler |
+| FGM3 | +0.55 | +0.38 | mildly right-skewed | sqrt | RobustScaler |
+| FTA | +0.52 | +0.33 | mildly right-skewed | sqrt | RobustScaler |
+| Ast | +0.49 | +0.40 | approx. normal | none | StandardScaler |
+| TO_rate | +0.45 | +0.40 | bounded [0,1] | logit | StandardScaler |
+| FGA3 | +0.43 | +0.46 | approx. normal | none | StandardScaler |
+| FGA | +0.32 | +0.46 | approx. normal | none | StandardScaler |
+| PF | +0.31 | +0.23 | approx. normal | none | StandardScaler |
+| FGM | +0.29 | +0.34 | approx. normal | none | StandardScaler |
+| DR | +0.26 | +0.13 | approx. normal | none | StandardScaler |
+| Score | +0.17 | +0.16 | approx. normal | none | StandardScaler |
+| 3PPct | +0.15 | +0.33 | bounded [0,1] | logit | StandardScaler |
+| FGPct | +0.06 | -0.03 | bounded [0,1] | logit | StandardScaler |
+| FTPct | -0.49 | +1.15 | bounded [0,1] | logit | StandardScaler |
+
+### Key Findings
+
+- **Approx. normal (no transform needed):** Score, FGM, FGA, DR, FTM, FTA — central-limit effect from summing many possession events per game.
+- **Right-skewed (log1p recommended):** Blk, Stl, OR — rare events with heavy right tails; log1p brings them closer to normal.
+- **Mildly right-skewed (sqrt or log1p):** FGM3, FGA3, Ast, TO, PF — moderate skew; era effects present for 3-point stats (higher volumes post-2010).
+- **Bounded [0,1] (logit transform):** FGPct, 3PPct, FTPct, TO_rate — Beta-like distributions; standard Normal/log transforms are inappropriate.
+- **Men vs. Women:** Shape labels are consistent across genders. Women's data shows higher FTPct means and lower FGM3/FGA3 (smaller historical 3-point volume).
+- **Regular Season vs. Tournament:** Distributions have same shape but tighter spread in tournament (more evenly-matched teams). Transform recommendations unchanged.
