@@ -65,7 +65,7 @@ development_status:
   epic-3: in-progress
   3-1-data-quality-audit: done
   3-2-statistical-exploration-relationship-analysis: done
-  3-3-document-findings-feature-engineering-recommendations: ready-for-dev
+  3-3-document-findings-feature-engineering-recommendations: in-progress
   epic-3-retrospective: optional
 
   # Epic 4: Feature Engineering Suite
