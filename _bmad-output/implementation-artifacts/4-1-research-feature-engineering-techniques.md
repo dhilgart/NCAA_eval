@@ -1,6 +1,6 @@
 # Story 4.1: Research Feature Engineering Techniques (Spike)
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -23,61 +23,61 @@ so that I can make informed decisions about which transformations to implement b
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Pre-Spike Context Loading (AC: 1–7) — read ALL required documents before starting research
-  - [ ] 1.1: Read `notebooks/eda/eda_findings_synthesis.md` — primary EDA reference; contains 13 ranked feature candidates and Epic 4 story-by-story guidance
-  - [ ] 1.2: Read `notebooks/eda/statistical_exploration_findings.md` Section 7 — empirically derived normalization transforms for all 18 box-score stats (do NOT re-derive; these are already solved)
-  - [ ] 1.3: Read `specs/research/data-source-evaluation.md` — established research document format/convention to follow
-  - [ ] 1.4: Review `specs/05-architecture-fullstack.md` Section 3 (Tech Stack) and Section 9 (Project Structure) — confirms `networkx` is already a dependency; `transform/` is the target module
+- [x] Task 1: Pre-Spike Context Loading (AC: 1–7) — read ALL required documents before starting research
+  - [x] 1.1: Read `notebooks/eda/eda_findings_synthesis.md` — primary EDA reference; contains 13 ranked feature candidates and Epic 4 story-by-story guidance
+  - [x] 1.2: Read `notebooks/eda/statistical_exploration_findings.md` Section 7 — empirically derived normalization transforms for all 18 box-score stats (do NOT re-derive; these are already solved)
+  - [x] 1.3: Read `specs/research/data-source-evaluation.md` — established research document format/convention to follow
+  - [x] 1.4: Review `specs/05-architecture-fullstack.md` Section 3 (Tech Stack) and Section 9 (Project Structure) — confirms `networkx` is already a dependency; `transform/` is the target module
 
-- [ ] Task 2: Research Opponent Adjustment Techniques (AC: 1, 5, 6)
-  - [ ] 2.1: Research SRS (Simple Rating System) — least-squares approach; compare to KenPom's AdjEM
-  - [ ] 2.2: Research ridge regression / Lasso for efficiency rating (AdjOE / AdjDE) — penalized least squares on game outcomes
-  - [ ] 2.3: Research Massey Rating system (linear algebra approach) — already available via `MMasseyOrdinals.csv` with 100+ systems
-  - [ ] 2.4: Assess feasibility vs. complexity vs. expected predictive value; compare against EDA SoS baseline (r=0.2970)
-  - [ ] 2.5: Validate: opponent-adjusted efficiency should exceed raw SoS (r=0.2970) baseline — if not, the adjustment adds no value
+- [x] Task 2: Research Opponent Adjustment Techniques (AC: 1, 5, 6)
+  - [x] 2.1: Research SRS (Simple Rating System) — least-squares approach; compare to KenPom's AdjEM
+  - [x] 2.2: Research ridge regression / Lasso for efficiency rating (AdjOE / AdjDE) — penalized least squares on game outcomes
+  - [x] 2.3: Research Massey Rating system (linear algebra approach) — already available via `MMasseyOrdinals.csv` with 100+ systems
+  - [x] 2.4: Assess feasibility vs. complexity vs. expected predictive value; compare against EDA SoS baseline (r=0.2970)
+  - [x] 2.5: Validate: opponent-adjusted efficiency should exceed raw SoS (r=0.2970) baseline — if not, the adjustment adds no value
 
-- [ ] Task 3: Research Sequential / Momentum Feature Approaches (AC: 2, 5, 6)
-  - [ ] 3.1: Research rolling window sizes — candidates: last 5, 10, 20 games (EDA has no strong evidence; must be empirically validated in Story 4.4)
-  - [ ] 3.2: Research recency-weighting schemes — exponential decay vs. uniform window vs. adaptive window
-  - [ ] 3.3: Research streak features — win/loss streak length, direction, and termination points
-  - [ ] 3.4: Research performance trajectory features (momentum) — rate-of-change of rolling averages
-  - [ ] 3.5: Review Kaggle MMLM top solutions for sequential feature approaches
+- [x] Task 3: Research Sequential / Momentum Feature Approaches (AC: 2, 5, 6)
+  - [x] 3.1: Research rolling window sizes — candidates: last 5, 10, 20 games (EDA has no strong evidence; must be empirically validated in Story 4.4)
+  - [x] 3.2: Research recency-weighting schemes — exponential decay vs. uniform window vs. adaptive window
+  - [x] 3.3: Research streak features — win/loss streak length, direction, and termination points
+  - [x] 3.4: Research performance trajectory features (momentum) — rate-of-change of rolling averages
+  - [x] 3.5: Review Kaggle MMLM top solutions for sequential feature approaches
 
-- [ ] Task 4: Research Graph-Based Features (AC: 3, 5, 6)
-  - [ ] 4.1: Research PageRank on win/loss directed graph (W→L edge, weight = margin of victory) — compare to naive SoS (r=0.2970 baseline)
-  - [ ] 4.2: Research betweenness centrality — quantifies "bridge" teams in schedule network
-  - [ ] 4.3: Research HITS (hub/authority) algorithm for schedule-strength quantification
-  - [ ] 4.4: Research incremental graph construction — must support walk-forward updates (cannot recompute from scratch at each time step)
-  - [ ] 4.5: Assess whether graph features justify extra complexity (networkx is already in tech stack — no new dependency)
-  - [ ] 4.6: Evaluate graph feature predictive value against SoS baseline — REQUIRED validation before recommending inclusion
+- [x] Task 4: Research Graph-Based Features (AC: 3, 5, 6)
+  - [x] 4.1: Research PageRank on win/loss directed graph (W→L edge, weight = margin of victory) — compare to naive SoS (r=0.2970 baseline)
+  - [x] 4.2: Research betweenness centrality — quantifies "bridge" teams in schedule network
+  - [x] 4.3: Research HITS (hub/authority) algorithm for schedule-strength quantification
+  - [x] 4.4: Research incremental graph construction — must support walk-forward updates (cannot recompute from scratch at each time step)
+  - [x] 4.5: Assess whether graph features justify extra complexity (networkx is already in tech stack — no new dependency)
+  - [x] 4.6: Evaluate graph feature predictive value against SoS baseline — REQUIRED validation before recommending inclusion
 
-- [ ] Task 5: Review Kaggle MMLM Community Techniques (AC: 4, 5, 6)
-  - [ ] 5.1: Review Kaggle MMLM 2024, 2023, 2022, 2021 competition discussion boards (public threads)
-  - [ ] 5.2: Extract community-proven feature engineering patterns — specifically noting which techniques appear consistently across winning solutions
-  - [ ] 5.3: Review published MMLM writeups/kernels for feature importance analysis
-  - [ ] 5.4: Identify techniques in MMLM that are NOT yet captured in the EDA tier list — add as new candidates
+- [x] Task 5: Review Kaggle MMLM Community Techniques (AC: 4, 5, 6)
+  - [x] 5.1: Review Kaggle MMLM 2024, 2023, 2022, 2021 competition discussion boards (public threads)
+  - [x] 5.2: Extract community-proven feature engineering patterns — specifically noting which techniques appear consistently across winning solutions
+  - [x] 5.3: Review published MMLM writeups/kernels for feature importance analysis
+  - [x] 5.4: Identify techniques in MMLM that are NOT yet captured in the EDA tier list — add as new candidates
 
-- [ ] Task 6: Research Massey Ordinal Systems (AC: 4–6)
-  - [ ] 6.1: Identify top Massey Ordinal systems by season coverage from `MMasseyOrdinals.csv` — known top 5: AP, DOL, COL, MOR, POM (all 23 seasons)
-  - [ ] 6.2: Research which Massey systems are most widely cited in MMLM top solutions
-  - [ ] 6.3: Research composite ranking approaches (mean, weighted ensemble of multiple Massey systems)
-  - [ ] 6.4: Assess: do Massey Ordinals add signal beyond box-score features already in the EDA tier list?
+- [x] Task 6: Research Massey Ordinal Systems (AC: 4–6)
+  - [x] 6.1: Identify top Massey Ordinal systems by season coverage from `MMasseyOrdinals.csv` — known top 5: AP, DOL, COL, MOR, POM (all 23 seasons)
+  - [x] 6.2: Research which Massey systems are most widely cited in MMLM top solutions
+  - [x] 6.3: Research composite ranking approaches (mean, weighted ensemble of multiple Massey systems)
+  - [x] 6.4: Assess: do Massey Ordinals add signal beyond box-score features already in the EDA tier list?
 
-- [ ] Task 7: Compile Findings & Create Research Document (AC: 1–8)
-  - [ ] 7.1: Create `specs/research/feature-engineering-techniques.md` following Story 2.1 document conventions
-  - [ ] 7.2: Section 1 — Data Context (what EDA already confirmed; what remains open; cite specific r-values and finding sources)
-  - [ ] 7.3: Section 2 — Opponent Adjustment Techniques survey with feasibility/complexity/value assessment
-  - [ ] 7.4: Section 3 — Sequential/Momentum Feature survey with window-size recommendations and implementation approach
-  - [ ] 7.5: Section 4 — Graph Feature survey with centrality comparison vs. SoS baseline
-  - [ ] 7.6: Section 5 — Massey Ordinal analysis and recommendation
-  - [ ] 7.7: Section 6 — Community Techniques from Kaggle MMLM review
-  - [ ] 7.8: Section 7 — Prioritized Implementation Plan mapping each technique to Story 4.2–4.7 and flagging which are MVP vs. post-MVP
-  - [ ] 7.9: DO NOT make final MVP-scope selections — present ranked options with trade-offs for product owner review (see AC 8)
+- [x] Task 7: Compile Findings & Create Research Document (AC: 1–8)
+  - [x] 7.1: Create `specs/research/feature-engineering-techniques.md` following Story 2.1 document conventions
+  - [x] 7.2: Section 1 — Data Context (what EDA already confirmed; what remains open; cite specific r-values and finding sources)
+  - [x] 7.3: Section 2 — Opponent Adjustment Techniques survey with feasibility/complexity/value assessment
+  - [x] 7.4: Section 3 — Sequential/Momentum Feature survey with window-size recommendations and implementation approach
+  - [x] 7.5: Section 4 — Graph Feature survey with centrality comparison vs. SoS baseline
+  - [x] 7.6: Section 5 — Massey Ordinal analysis and recommendation
+  - [x] 7.7: Section 6 — Community Techniques from Kaggle MMLM review
+  - [x] 7.8: Section 7 — Prioritized Implementation Plan mapping each technique to Story 4.2–4.7 and flagging which are MVP vs. post-MVP
+  - [x] 7.9: DO NOT make final MVP-scope selections — present ranked options with trade-offs for product owner review (see AC 8)
 
-- [ ] Task 8: Commit & Gate (AC: 7, 8)
-  - [ ] 8.1: `git add specs/research/feature-engineering-techniques.md`
-  - [ ] 8.2: Commit: `docs(research): feature engineering techniques survey (Story 4.1)`
-  - [ ] 8.3: Update sprint-status.yaml: `4-1-research-feature-engineering-techniques` → `done`
+- [x] Task 8: Commit & Gate (AC: 7, 8)
+  - [x] 8.1: `git add specs/research/feature-engineering-techniques.md`
+  - [x] 8.2: Commit: `docs(research): feature engineering techniques survey (Story 4.1)`
+  - [x] 8.3: Update sprint-status.yaml: `4-1-research-feature-engineering-techniques` → `done`
 
 ## Dev Notes
 
@@ -263,6 +263,26 @@ Claude Sonnet 4.6 (create-story workflow)
 
 ### Debug Log References
 
+None — pure documentation spike; no code execution required.
+
 ### Completion Notes List
 
+- Loaded all 4 required pre-spike context documents (Tasks 1.1–1.4)
+- Researched opponent adjustment techniques: SRS, ridge regression, Massey method, Colley — ridge regression recommended for MVP due to best sparse-schedule handling
+- Researched sequential/momentum features: rolling windows (5/10/20 games), EWMA (α=0.15–0.20), streaks, trajectory — empirical validation deferred to Story 4.4
+- Researched graph features: PageRank on directed W→L graph validated in peer-reviewed literature (71.6% accuracy, above SoS baseline); betweenness/HITS marginal
+- Reviewed Kaggle MMLM community solutions 2014–2025 (year-by-year): FiveThirtyEight 538 ratings dominated 2018–2023; SAG+POM+MOR+WLK composite is the validated open alternative; Elo with margin scaling and per-possession normalization (Four Factors) are Tier 2 features across top solutions
+- Key new finding from Kaggle review: Probability calibration (isotonic/spline) is used by winners (2025 winner: cubic-spline in-fold); overtime rescaling to pts/40min recommended for preprocessing
+- Researched Massey Ordinal systems: SAG+POM+MOR+WLK validated composite; PCA reduction deferred to Post-MVP; temporal slicing of `RankingDayNum` field required for walk-forward compatibility
+- Created `specs/research/feature-engineering-techniques.md` (7 sections, 20 ranked techniques in priority order) following Story 2.1 document conventions
+- Decision-gate respected: findings presented as proposals with trade-offs; final MVP-scope selections deferred to product owner (AC 8)
+
 ### File List
+
+specs/research/feature-engineering-techniques.md
+
+## Change Log
+
+| Date | Change | Author |
+|:---|:---|:---|
+| 2026-02-20 | Created feature-engineering-techniques.md — 7-section research document covering opponent adjustment, sequential, graph, Massey ordinal, and Kaggle MMLM techniques; year-by-year Kaggle MMLM review 2014–2025; prioritized implementation plan for Stories 4.2–4.7 | Claude Sonnet 4.6 (dev-story) |
