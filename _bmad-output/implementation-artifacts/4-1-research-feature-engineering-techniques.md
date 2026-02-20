@@ -1,6 +1,6 @@
 # Story 4.1: Research Feature Engineering Techniques (Spike)
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -77,7 +77,7 @@ so that I can make informed decisions about which transformations to implement b
 - [x] Task 8: Commit & Gate (AC: 7, 8)
   - [x] 8.1: `git add specs/research/feature-engineering-techniques.md`
   - [x] 8.2: Commit: `docs(research): feature engineering techniques survey (Story 4.1)`
-  - [x] 8.3: Update sprint-status.yaml: `4-1-research-feature-engineering-techniques` → `done`
+  - [x] 8.3: Update sprint-status.yaml: `4-1-research-feature-engineering-techniques` → `review` (submitted for code review; code-review workflow advances to `done`)
 
 ## Dev Notes
 
@@ -271,7 +271,7 @@ None — pure documentation spike; no code execution required.
 - Researched opponent adjustment techniques: SRS, ridge regression, Massey method, Colley — ridge regression recommended for MVP due to best sparse-schedule handling
 - Researched sequential/momentum features: rolling windows (5/10/20 games), EWMA (α=0.15–0.20), streaks, trajectory — empirical validation deferred to Story 4.4
 - Researched graph features: PageRank on directed W→L graph validated in peer-reviewed literature (71.6% accuracy, above SoS baseline); betweenness/HITS marginal
-- Reviewed Kaggle MMLM community solutions 2014–2025 (year-by-year): FiveThirtyEight 538 ratings dominated 2018–2023; SAG+POM+MOR+WLK composite is the validated open alternative; Elo with margin scaling and per-possession normalization (Four Factors) are Tier 2 features across top solutions
+- Reviewed Kaggle MMLM community solutions 2014–2025 (year-by-year) via secondary sources (Medium writeups, mlcontests.com, public GitHub repositories): FiveThirtyEight 538 ratings dominated 2018–2023; SAG+POM+MOR+WLK composite is the validated open alternative; Elo with margin scaling and per-possession normalization (Four Factors) are Tier 2 features across top solutions. NOTE: Kaggle discussion boards themselves returned only JavaScript (authentication required); AC 4 was fulfilled through secondary sources — direct board threads not accessed.
 - Key new finding from Kaggle review: Probability calibration (isotonic/spline) is used by winners (2025 winner: cubic-spline in-fold); overtime rescaling to pts/40min recommended for preprocessing
 - Researched Massey Ordinal systems: SAG+POM+MOR+WLK validated composite; PCA reduction deferred to Post-MVP; temporal slicing of `RankingDayNum` field required for walk-forward compatibility
 - Created `specs/research/feature-engineering-techniques.md` (7 sections, 20 ranked techniques in priority order) following Story 2.1 document conventions
@@ -286,3 +286,4 @@ specs/research/feature-engineering-techniques.md
 | Date | Change | Author |
 |:---|:---|:---|
 | 2026-02-20 | Created feature-engineering-techniques.md — 7-section research document covering opponent adjustment, sequential, graph, Massey ordinal, and Kaggle MMLM techniques; year-by-year Kaggle MMLM review 2014–2025; prioritized implementation plan for Stories 4.2–4.7 | Claude Sonnet 4.6 (dev-story) |
+| 2026-02-20 | Code review fixes (9 issues, 5 fixed): corrected arxiv:2508.02725 year (2024→2025, paper confirmed real); added SAG/WLK coverage gate with MOR+POM+DOL fallback; replaced iterrows PageRank example with nx.from_pandas_edgelist() per no-iterrows mandate; clarified Task 8.3 sprint-status target (review, not done); added Kaggle boards access limitation to completion notes; disambiguated per-possession MVP vs Four Factors Post-MVP; added probability calibration to MVP list; added validation gate conditional note; fixed 2021 attribution uncertainty. | Claude Sonnet 4.6 (code-review) |

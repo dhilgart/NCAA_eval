@@ -70,7 +70,7 @@ development_status:
 
   # Epic 4: Feature Engineering Suite
   epic-4: in-progress
-  4-1-research-feature-engineering-techniques: review
+  4-1-research-feature-engineering-techniques: done
   4-2-implement-chronological-data-serving-api: backlog
   4-3-implement-canonical-team-id-mapping-data-cleaning: backlog
   4-4-implement-sequential-transformations: backlog

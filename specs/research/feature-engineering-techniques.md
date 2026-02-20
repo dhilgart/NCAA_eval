@@ -201,7 +201,7 @@ New features not in this table (graph centrality, Elo ratings, Massey ordinals) 
 - **20-game windows:** Covers roughly 55–65% of a college basketball season. Approaches a "second half of season" metric. Less sensitive to single-game volatility.
 - **Full-season:** KenPom and SRS compute full-season aggregates but weight recent games more heavily in their iterative solvers (implicitly encoding recency).
 
-**Academic reference:** A 2024 deep learning paper on NCAA basketball (arxiv:2508.02725) explicitly noted that rolling windows were not used and that "static features lack patterns such as recent form, late-season momentum." No paper in the literature provided a rigorous optimal-window-size comparison for NCAA tournament prediction specifically.
+**Academic reference:** A 2025 deep learning paper on NCAA basketball (Habib, M.I., "Forecasting NCAA Basketball Outcomes with Deep Learning: A Comparative Study of LSTM and Transformer Models," arXiv:2508.02725) explicitly noted that rolling windows were not used and that "static features lack patterns such as recent form, late-season momentum." No paper in the literature provided a rigorous optimal-window-size comparison for NCAA tournament prediction specifically.
 
 **Recommendation for Story 4.4:** Implement all three window sizes (5, 10, 20) as parallel feature columns. Empirically validate via correlation with tournament advancement and XGBoost feature importance during Story 5.4 model development. Include full-season aggregate as a fourth reference column.
 
@@ -300,13 +300,19 @@ New features not in this table (graph centrality, Elo ratings, Massey ordinals) 
 ```python
 import networkx as nx
 
-G = nx.DiGraph()
-for _, game in games_df.iterrows():
-    weight = min(game.w_score - game.l_score, 25)
-    G.add_edge(game.l_team_id, game.w_team_id, weight=weight)
+# Vectorized edge construction — do NOT use iterrows (project mandate)
+games_df = games_df.assign(weight=games_df["w_score"].sub(games_df["l_score"]).clip(upper=25))
+G = nx.from_pandas_edgelist(
+    games_df,
+    source="l_team_id",
+    target="w_team_id",
+    edge_attr="weight",
+    create_using=nx.DiGraph,
+)
 
-pr = nx.pagerank(G, alpha=0.85, weight='weight')
+pr = nx.pagerank(G, alpha=0.85, weight="weight")
 ```
+> ⚠️ **Story 4.5 implementation note:** Use `nx.from_pandas_edgelist()` as shown above. Never use `iterrows()` — the project's no-iterrows mandate applies to all source code in `src/ncaa_eval/`.
 
 **Normalization for PageRank scores:** PageRank values are non-negative and approximately power-law distributed (few teams have very high scores). Recommend: log transform + StandardScaler. Validate distribution empirically.
 
@@ -429,7 +435,7 @@ r_new = pagerank_power_iteration(A, r_init=r_prev, tol=1e-6, max_iter=5)
 | SAG | Sagarin | Three-component: Predictor + Golden Mean + Recent | Yes |
 | WLK | Whitlock | Margin-based power ratings | Yes |
 
-**Note:** Among the top-5 by 23-season coverage (AP, DOL, COL, MOR, POM), AP and COL do not use margin of victory. For tournament prediction, margin-based systems (DOL, MOR, POM) are more predictive. SAG and WLK are also margin-based and appear in community-validated ensembles but may have shorter coverage spans — verify in the local MMasseyOrdinals.csv before implementation.
+**Coverage alert:** The confirmed top-5 systems with all 23 seasons of coverage (2003–2025) are AP, DOL, COL, MOR, POM. Of these, AP and COL do not use margin of victory — leaving MOR, POM, and DOL as the confirmed full-coverage margin-based systems. SAG (Sagarin) and WLK (Whitlock) appear in community-validated ensembles as the most predictive composite, but their full 23-season coverage in the local `MMasseyOrdinals.csv` is **unconfirmed** — Story 4.3 must verify before committing to SAG+POM+MOR+WLK. If SAG or WLK have gaps, fall back to MOR+POM+DOL as the confirmed margin-based composite.
 
 ---
 
@@ -444,9 +450,14 @@ massey_composite = (SAG_rank + POM_rank + MOR_rank + WLK_rank) / 4
 
 Logistic regression using `delta_massey_composite = team1_massey_composite - team2_massey_composite` achieved log loss ~−0.540–0.543 in documented solutions (Conor Dewey methodology, 2019+).
 
+**⚠️ Coverage verification required (Story 4.3 gate):** SAG and WLK are NOT confirmed in the top-5 by 23-season coverage (that list is AP, DOL, COL, MOR, POM). Story 4.3 must verify SAG and WLK span before committing to this composite. If coverage gaps are found:
+- **Primary fallback:** `(MOR_rank + POM_rank + DOL_rank) / 3` — all three confirmed for 23 seasons, all margin-based
+- The SAG+POM+MOR+WLK composite remains the MVP target if coverage is confirmed
+
 **Which systems to include/exclude:**
-- **Include:** SAG (Sagarin), POM (KenPom), MOR (Sonny Moore), WLK (Whitlock) — consistently validated
-- **Neutral:** DOL, MAS, COL — less frequently cited in top-solution feature lists
+- **Include (if coverage confirmed):** SAG (Sagarin), POM (KenPom), MOR (Sonny Moore), WLK (Whitlock) — consistently validated in community solutions
+- **Confirmed-coverage fallback:** DOL, MOR, POM — all 23 seasons, all margin-based
+- **Neutral:** MAS, COL — less frequently cited in top-solution feature lists
 - **Exclude from efficiency composite:** AP — human poll; less predictive than computer systems for game outcomes
 
 **Preseason note:** Preseason AP polls have been found to predict bowl game outcomes better than final pre-game polls (capturing program history/prestige rather than recency). This is counterintuitive but suggests AP as a preseason prior feature may add value distinct from efficiency-based end-of-season rankings.
@@ -516,7 +527,7 @@ Use only Massey rankings from the specific pre-tournament snapshot date (day 128
 | 2018 | raddar (Barušauskas) | FiveThirtyEight 538 team ratings | Team Quality transformation | FTE already the best public signal — use it directly |
 | 2019 | Unknown | KenPom + ORB/TO margin | Likely Bayesian logistic | Silver medal: goto_conversion bias correction on 538 |
 | 2020 | — | — | — | Tournament cancelled (COVID-19) |
-| 2021 | raddar (believed) | 538 Team Quality | Same raddar approach | 65 Massey systems + XGBoost documented in parallel solution |
+| 2021 | Unknown (raddar approach continued by others) | 538 Team Quality | Same raddar approach | 65 Massey systems + XGBoost documented in a parallel top-ranked solution (Edwards 2021); actual 1st-place attribution unconfirmed |
 | 2022 | Amir Ghazi | 538 Team Quality | raddar code verbatim | Original raddar finished 593rd with *new* approach |
 | 2023 | RustyB | 538 Team Quality + Brier fix | raddar code, minor tweaks | Top-1% gold: 10 best Massey systems + XGBoost |
 | 2024 | Unknown | External ratings | Monte Carlo simulation (R) | Probabilistic simulation; no ML model in conventional sense |
@@ -654,7 +665,7 @@ Edwards 2021 rescaled overtime game scores to a points-per-40-minutes equivalent
 | **Composite Massey ordinals (SAG + POM + MOR + WLK)** | **Recommended for MVP** — validated across 2014–2025; primary signal in top solutions |
 | **Elo rating difference** | **Recommended for MVP** — validated in Edwards 2021 and many other solutions |
 | **Four Factors (eFG%, ORB%, FTR)** | **Recommended for MVP** — eFG% extends FGPct; ORB% is new; 2003+ required |
-| **Per-possession normalization** | **Recommended MVP** — use `FGA − OR + TO + 0.44×FTA` as denominator for all counting stats |
+| **Per-possession normalization (possession denominator)** | **Recommended MVP** — use `possessions = FGA − OR + TO + 0.44×FTA` as denominator for counting stats (distinct from Four Factors derived metrics — see below) |
 | **Probability calibration** | **Recommended MVP** — apply isotonic or spline calibration to model outputs; prevents overconfidence |
 | **LRMC** | Post-MVP — higher implementation complexity; validated but marginal vs. Elo |
 | **Overtime rescaling** | **Recommended** — low-cost preprocessing; prevents OT game outliers from distorting aggregations |
@@ -667,6 +678,8 @@ Edwards 2021 rescaled overtime game scores to a points-per-40-minutes equivalent
 ## 7. Prioritized Implementation Plan
 
 **DECISION-GATE NOTE:** The rankings below represent proposals with trade-off assessments, not final MVP-scope selections. The product owner makes the final scope decisions per AC 8 before downstream Stories 4.2–4.7 begin. Features marked "Recommended for MVP" are proposals based on expected predictive value, implementation cost, and community validation.
+
+**VALIDATION GATE NOTE:** All MVP recommendations are **conditional** on passing the validation gates specified in the table. Any feature that does not exceed the SoS baseline (r=0.2970) during Story 4.4–4.6 implementation should be demoted to Post-MVP regardless of its ranking here, and the product owner should be notified before that story is marked complete.
 
 ### 7.1 Story Mapping
 
@@ -685,7 +698,7 @@ Edwards 2021 rescaled overtime game scores to a points-per-40-minutes equivalent
 
 | # | Feature | Story | Rationale | Validation Requirement |
 |:---|:---|:---|:---|:---|
-| 1 | Massey composite (SAG + POM + MOR + WLK avg) | 4.3 | Community-validated; pre-computed; highest log-loss performance in Kaggle MMLM | Verify 23-season coverage in local `MMasseyOrdinals.csv` |
+| 1 | Massey composite (SAG + POM + MOR + WLK avg, **if coverage confirmed**; else MOR + POM + DOL) | 4.3 | Community-validated; pre-computed; highest log-loss performance in Kaggle MMLM | **GATE:** Verify SAG and WLK 23-season coverage in local `MMasseyOrdinals.csv` before implementation. Fallback: MOR+POM+DOL (all confirmed full-coverage margin systems). |
 | 2 | Rolling FGPct (10-game) | 4.4 | Highest raw r=0.2269; tournament diff +0.078 | Should improve on season-average FGPct |
 | 3 | Rolling FGM / Scoring (10-game) | 4.4 | r=0.2628 / 0.2349 | Standard feature from EDA Tier 1 |
 | 4 | Elo rating (K=38, margin scaling, mean reversion) | 4.6 | Tier 2 in every validated Kaggle MMLM solution; captures recency | Must exceed SoS baseline (r=0.2970) |
@@ -694,6 +707,7 @@ Edwards 2021 rescaled overtime game scores to a points-per-40-minutes equivalent
 | 7 | Rolling TO_rate, PF, DR (10-game) | 4.4 | EDA Tier 1 negative predictors; r=−0.1424, −0.1574 | Standard from EDA Tier 1 |
 | 8 | EWMA (α=0.20) momentum feature | 4.4 | Low cost; addresses recency without window-size tuning | Feature importance validation in Story 5.4 |
 | 9 | loc encoding (H/A/N) | 4.4 | EDA Tier 2; declining home advantage is time-varying | Encode as numeric + include season interaction |
+| 10 | Probability calibration (isotonic or cubic-spline) | 4.7 | 2019 and 2021 silver medals; 2025 winner used in-fold spline calibration; corrects favourite-longshot bias in all efficiency-based ratings | Apply after base model validated; in-fold calibration prevents leakage |
 
 **Recommended for Post-MVP (defer unless MVP underperforms):**
 
@@ -703,7 +717,7 @@ Edwards 2021 rescaled overtime game scores to a points-per-40-minutes equivalent
 | 11 | Streak features | 4.4 | Mixed statistical evidence; low expected incremental value |
 | 12 | Betweenness centrality | 4.5 | No NCAA validation; likely low incremental value over PageRank |
 | 13 | Four Factors (eFG%, ORB%, FTR) | 4.4/4.6 | Subsumes FGPct/TO_rate; higher complexity; validate after MVP |
-| 14 | Tempo normalization (per-possession) | 4.4/4.6 | Requires possession estimation; higher complexity |
+| 14 | Full Four Factors feature set (eFG%, ORB%, FTR) via per-possession arithmetic | 4.4/4.6 | Distinct from MVP possession denominator (which is simpler). Full Four Factors require per-possession arithmetic applied to derived metrics — higher pipeline complexity; validate after MVP rolling stats are implemented. |
 | 15 | Glicko-2 / TrueSkill | 4.6 | Marginal improvement over Elo; uncertainty quantification only useful for early-season; not needed for pre-tournament snapshot |
 | 16 | PCA composite (full Massey set) | 4.3 | Complexity of PCA pipeline; Simple average (MVP option) captures most of the signal |
 | 17 | HITS / clustering coefficient | 4.5 | No NCAA validation; high PageRank correlation for HITS |
