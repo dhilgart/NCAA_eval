@@ -51,6 +51,8 @@ games_2025_dedup = pd.concat([games_2025[is_espn], kaggle_only], ignore_index=Tr
 
 Ranked by expected predictive value based on empirical evidence from Stories 3.1 and 3.2. All correlation values are Pearson r with tournament round reached (2003–2024 data, n=196,716 deduplicated games).
 
+**Ranking rationale:** Within Tier 1, direct box-score stats (FGM, Score, FGPct) are ordered first by their per-game correlation. SoS is ranked after direct box-score stats despite having the highest raw r-value (0.2970) because it is a derived composite metric requiring multi-game opponent aggregation — it cannot be computed from a single game's box score and introduces a Story 4.5/4.6 dependency. Negative predictors (PF, TO_rate) and DR follow, ordered by absolute r-magnitude. This ordering reflects implementation priority: build direct box-score features first, then add the composite SoS proxy.
+
 ### Tier 1 — High Confidence (Direct Empirical Evidence from Story 3.2)
 
 These signals have strong quantitative backing from the correlation analysis.
@@ -71,7 +73,7 @@ These signals have strong quantitative backing from the correlation analysis.
    - → Story 4.4 (sequential FGPct rolling average) + Story 4.7 (stateful feature serving)
 
 4. **Strength of Schedule (SoS)**
-   - r = **0.2970** with tournament advancement (p=3.16e-53, MEDIUM signal)
+   - r = **0.2970** with tournament advancement — the highest single-stat r-value in the dataset (p=3.16e-53; Story 3.2 classifies this as "MEDIUM signal" based on effect-size conventions for r < 0.3, not evidence quality — see ranking rationale above)
    - Mean SoS rises monotonically from R64 (0.516) → Sweet 16 → Elite 8 → Final Four → Champions (0.562)
    - Computed as mean regular-season opponent win rate up to each game date
    - → Story 4.5 (graph centrality — stronger SoS proxy via PageRank) and Story 4.6 (opponent-adjusted efficiency — most rigorous SoS)
@@ -197,7 +199,7 @@ EDA provides directional evidence but does not definitively rank all feature can
 
 ### Story 4.4 (Sequential Transformations)
 
-Implement rolling features in this priority order (by expected predictive value from Section 2):
+Implement rolling features in this order (Section 2 Tier 1 ranking: direct box-score stats first by r-value, then composite SoS — see Section 2 ranking rationale):
 
 | Feature | r (tournament advancement) | Notes |
 |---------|---------------------------|-------|
@@ -234,7 +236,8 @@ Must combine outputs from all prior feature stories:
 
 | Feature Source | Story | Notes |
 |---------------|-------|-------|
-| Sequential stats (FGPct, FGM, TO_rate, PF, DR, loc) | 4.4 | Rolling windows; 2003+ only for box scores |
+| Sequential stats (FGPct, FGM, Score, TO_rate, PF, DR, loc) | 4.4 | Rolling windows; 2003+ only for box scores |
+| Rolling SoS (opponent win rate) | 4.4 | Running mean of opponent regular-season win rates; r=0.2970 — highest single-stat correlation |
 | Graph centrality (PageRank, betweenness) | 4.5 | Directed W→L graph; incremental updates |
 | Opponent-adjusted efficiency | 4.6 | Validated against SoS baseline |
 | Seed info | 4.3 | (season, team_id) → seed_num, region, is_play_in |

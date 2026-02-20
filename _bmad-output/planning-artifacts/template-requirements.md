@@ -1380,7 +1380,30 @@ df["conf_pair"] = sorted_cols["conf_a"] + "_vs_" + sorted_cols["conf_b"]
 
 **Rule:** If `apply(axis=1)` accesses only 2 columns and performs a string/arithmetic operation, it can always be vectorized. The no-iterrows mandate in EDA notebooks includes `apply(axis=1)` equivalents.
 
+### Documentation Synthesis Story Reviews: Content Accuracy over Code Quality ⭐ (Discovered Story 3.3 Code Review)
+
+For stories with no code deliverables (pure markdown synthesis), the adversarial code review shifts from code quality to **content accuracy and internal consistency**. Key checks:
+
+1. **Cross-section consistency**: The same item appearing in multiple sections (e.g., a metric in a ranked list AND in a story guidance table AND in a priority table) must be consistent in value, ordering, and label
+2. **Ranked list completeness**: If a feature appears in Section A as a ranked item, it must appear in all downstream tables that reference that feature set — omissions create gaps in implementation guidance
+3. **Stated criteria vs actual ordering**: When a document says "ranked by X" but uses a multi-factor ordering that deviates from strict X-ordering, the rationale must be stated explicitly. Silent deviations mislead readers
+
+**Template pattern:** Doc-only story reviews should include explicit checks:
+- [ ] Every item in the ranking appears in all relevant downstream tables
+- [ ] Ranking order is explained if it deviates from the stated primary criterion
+- [ ] Signal labels (e.g., "MEDIUM signal") from upstream notebooks are explained in context if they appear counterintuitive in the synthesized document
+
+### Ranked Lists Require Explicit Ordering Rationale ⭐ (Discovered Story 3.3 Code Review)
+
+When a technical document presents a ranked list with a stated criterion (e.g., "ranked by expected predictive value") but the actual ordering uses a composite of multiple factors, the deviation from the primary metric ordering **must be explained**. Silent deviations:
+- Lead readers to wrong implementation priorities (implement FGPct before SoS despite SoS having 31% higher correlation)
+- Create internal contradictions between sections that reference the same ranked items
+- Confuse downstream story developers who use the list as implementation order guidance
+
+**Pattern:** Add a "Ranking rationale:" paragraph immediately after any ranked list header that explains the composite criteria and why the top-metric item may not appear first.
+
 *Last Updated: 2026-02-20 (Story 3.1 Code Review — EDA notebook conventions, gitkeep pattern, nbconvert --output-dir, connector behavior verification)*
 *Updated: 2026-02-20 (Story 3.2 extension — Epic 4 normalization design requirements from user)*
 *Updated: 2026-02-20 (Story 3.2 Code Review — day-to-round mapping consistency, multi-notebook findings files, story file list completeness, apply-vs-vectorize)*
+*Updated: 2026-02-20 (Story 3.3 Code Review — documentation synthesis story review pattern, ranked list rationale requirement)*
 *Next Review: [Set cadence - weekly? sprint boundaries?]*

@@ -1,6 +1,6 @@
 # Story 3.3: Document Findings & Feature Engineering Recommendations
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -35,6 +35,11 @@ So that Epic 4 (Feature Engineering) has clear direction on what features to bui
 - [x] Task 3: Commit document (AC: 5)
   - [x] 3.1: `git add notebooks/eda/eda_findings_synthesis.md`
   - [x] 3.2: Commit: `docs(eda): synthesize EDA findings and feature engineering recommendations (Story 3.3)`
+
+### Review Follow-ups (AI)
+
+- [ ] [AI-Review][LOW] L1: "All games have dates" bullet in Section 3 (Known Limitations) is a positive fact-correction, not a limitation — consider framing it as a note under Section 1 Issue #2 or adding "(Assumption correction)" prefix [`notebooks/eda/eda_findings_synthesis.md`:163]
+- [ ] [AI-Review][LOW] L2: PF/TO_rate ordering inconsistency between Section 2 (PF #5 r=-0.1574, then TO_rate #6 r=-0.1424) and Story 4.4 table (TO_rate first, then PF) — both orderings are defensible but the inconsistency may cause confusion [`notebooks/eda/eda_findings_synthesis.md`:84,205]
 
 ## Dev Notes
 
@@ -223,6 +228,7 @@ None — pure documentation story, no code execution or debugging required.
 - **Source fidelity:** All correlation values, row counts, and statistics taken verbatim from `data_quality_findings.md` and `statistical_exploration_findings.md` — no values invented or extrapolated
 - **Epic 4 readiness:** Document includes 2025 deduplication code snippet, seed parsing pattern, and normalization configurability parameters (`gender_scope`, `dataset_scope`) from `template-requirements.md`
 - **No code changes:** Zero modifications to `src/ncaa_eval/`, `tests/`, or `pyproject.toml` — pure markdown synthesis as specified
+- **Code review fixes applied:** (1) Added explicit ranking rationale paragraph to Section 2 intro explaining why SoS ranks after direct box-score stats despite having the highest r-value (0.2970); (2) Added clarification to SoS description that "MEDIUM signal" is Story 3.2's effect-size classification, not a quality judgment; (3) Added Rolling SoS row to Story 4.7 Feature Source integration table; (4) Clarified Story 4.4 table header to reference ranking rationale
 
 ### File List
 
@@ -233,3 +239,4 @@ None — pure documentation story, no code execution or debugging required.
 ### Change Log
 
 - 2026-02-20: Story 3.3 implemented — EDA findings synthesis document created as `notebooks/eda/eda_findings_synthesis.md` (Agent: Claude Sonnet 4.6)
+- 2026-02-20: Code review fixes applied — added ranking rationale, SoS signal clarification, SoS to Story 4.7 table, Story 4.4 table header fix (Agent: Claude Sonnet 4.6)
