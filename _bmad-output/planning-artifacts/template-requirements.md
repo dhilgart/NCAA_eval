@@ -1249,5 +1249,138 @@ When writing EDA notebooks that analyze data ingested by connectors, **read the 
 
 **Template pattern:** Before writing "expected behavior" narrative in a notebook cell, verify it by reading the actual data loading code. If the data surprises you, investigate why — don't assume the data is wrong.
 
+### Epic 4 Normalization Design Requirements ⭐ (User Preference, 2026-02-20)
+
+These are explicit user requirements for how the Epic 4 feature engineering / normalization system must be designed. Capture in Epic 4 story acceptance criteria.
+
+#### 1. Gender normalization scope — default separate, user-selectable
+
+Distribution analysis (Story 3.2) shows Men and Women have the same *shape* labels but different *location/scale*:
+- Score: Men ~70, Women ~64
+- FTPct: Women systematically higher than Men
+- FGM3/FGA3: Men have historically higher 3-point volumes
+
+**Default:** Normalize Men and Women **separately** (calibrate to each sport's own distribution).
+
+**User must be able to override** to "combined" (shared normalization across genders) — for example when building a single M+W model or when the user intentionally wants cross-gender comparability.
+
+**Implementation pattern:**
+```python
+# Normalization config should expose a gender_scope parameter:
+gender_scope: Literal["separate", "combined"] = "separate"  # default: separate
+```
+
+#### 2. Dataset-type normalization scope — default regular season only, user-selectable
+
+Tournament data has **survivorship bias** (only 64–68 elite teams qualify) and **30× smaller sample size** than regular season (~2,276 vs ~118,882 games for Men's). Normalizing against tournament distributions biases toward elite-team performance ranges.
+
+**Default:** Normalize using **regular season statistics only**.
+
+**User must be able to override** to "tournament", "combined", or "all_games" — for example when building tournament-only predictors where the user wants normalization anchored to tournament-level play.
+
+**Implementation pattern:**
+```python
+dataset_scope: Literal["regular_season", "tournament", "combined"] = "regular_season"  # default
+```
+
+#### 3. Advanced distribution fitting — Epic 4 investigation required
+
+Story 3.2 distribution analysis only fit Normal and Log-Normal. The following distributions should be investigated in Epic 4 to find the best fit per stat:
+
+| Stat group | Candidate distributions | Why |
+|---|---|---|
+| Bounded [0,1] rates: FGPct, 3PPct, FTPct, TO_rate | **Beta**, Logit-Normal | Natural support on [0,1]; Beta parameterizes shape explicitly |
+| Right-skewed counting: Blk, Stl, OR | **Gamma**, **Weibull**, Log-Normal | Gamma/Weibull often beat Log-Normal for non-negative count data |
+| Moderate-skew counting: FGM3, FGA3, Ast, TO, PF, FTM, FTA | **Negative Binomial**, Gamma, Normal | Negative Binomial handles overdispersed count data |
+| High-volume (approx. normal): Score, FGM, FGA, DR | Normal, **Skew-Normal** | Already approximately normal; Skew-Normal may capture mild tails |
+
+**Goodness-of-fit metrics** to use for distribution selection:
+- Kolmogorov-Smirnov test (distribution-free, large-N valid)
+- Anderson-Darling test (more sensitive to tails)
+- AIC / BIC (when fitting parametric distributions with different parameter counts)
+- Visual: Q-Q plots against each candidate distribution (not just Normal)
+
+#### 4. Normalization pipeline configurability
+
+The normalization system must expose all of the above as **user-configurable parameters** at the preprocessing pipeline level. Defaults encode the recommendations above. Per-stat overrides should be possible (e.g., use "combined" gender normalization for FGPct but "separate" for Score).
+
+### Parallel DayNum-to-Round Mapping Functions Must Share Identical Cutoffs ⭐ (Discovered Story 3.2 Code Review)
+
+When a notebook defines two parallel mapping functions from the same DayNum input — one returning a numeric round index, one returning a human-readable name — they MUST use **identical boundary values**. Mismatched cutoffs corrupt any analysis that uses the numeric encoding:
+
+```python
+# ❌ Inconsistent: day 147 → round_num=3 ("E8") but round_name="Final Four"
+def day_to_round_num(day: int) -> int:
+    if day <= 146: return 2   # S16/E8 combined
+    elif day <= 148: return 3  # ← actually FF days!
+
+def day_to_round_name(day: int) -> str:
+    if day <= 146: return "Elite 8"
+    elif day <= 152: return "Final Four"  # ← correct
+
+# ✅ Consistent: derive name from num, or use a single lookup table
+ROUND_MAP = [(135, 0, "First Four"), (139, 1, "R64/R32"), (144, 2, "Sweet 16"),
+             (146, 3, "Elite 8"), (152, 4, "Final Four"), (999, 5, "Champion")]
+
+def _day_to_round(day: int) -> tuple[int, str]:
+    for cutoff, num, name in ROUND_MAP:
+        if day <= cutoff:
+            return num, name
+    return 5, "Champion"
+```
+
+**Template pattern:** Never write two separate if/elif ladders for the same data. Use a single lookup table and derive both the numeric index and the string label from it.
+
+### Multi-Notebook Findings Files: Overwrite, Don't Append Duplicate Sections ⭐ (Discovered Story 3.2 Code Review)
+
+When multiple notebooks contribute to the same markdown findings file, **later notebooks must overwrite or replace** placeholder sections from earlier notebooks — never append a second copy of the same section heading. Duplicate headings cause:
+
+1. Contradictory recommendations (the placeholder may have different values than the computed output)
+2. Malformed documents that confuse Epic downstream consumers
+
+**Pattern:** Notebook 02 should write a placeholder section that notebook 03 *replaces* (using a known sentinel marker) or notebook 03 should use a regex replace to update the section in-place:
+
+```python
+# ✅ In notebook 03's summary cell — replace section, don't append
+import re
+findings_path = Path("statistical_exploration_findings.md")
+content = findings_path.read_text()
+new_section = f"## Section 7: Box-Score Statistical Distribution Analysis\n\n{new_content}"
+# Replace from the previous Section 7 header to the next --- separator
+updated = re.sub(r"## Section 7:.*?(?=\n---|\Z)", new_section, content, flags=re.DOTALL)
+findings_path.write_text(updated)
+```
+
+**Alternative:** Omit the Section 7 placeholder from notebook 02 entirely; only notebook 03 writes Section 7.
+
+### EDA Story File List: All Committed Files Must Be Listed, Including "Extension" Notebooks ⭐ (Discovered Story 3.2 Code Review)
+
+Any file committed to the story branch — including notebooks added in later commits on the same branch labeled "extension" — must appear in the story's Dev Agent Record File List. The git branch is the audit boundary, not the commit message. If it's on the branch, it's a story deliverable.
+
+**Anti-pattern:** Adding `03_distribution_analysis.ipynb` with commit `"Story 3.2 extension"` while the story File List only lists `02_statistical_exploration.ipynb`.
+
+### `apply(lambda r: ..., axis=1)` Is Iterrows-Equivalent — Vectorize It ⭐ (Discovered Story 3.2 Code Review)
+
+`.apply(func, axis=1)` applies a Python function row-by-row through the DataFrame. For operations that construct strings from two columns (like sorted conference pair keys), this is always vectorizable:
+
+```python
+# ❌ Row-wise apply — iterrows-equivalent
+df["conf_pair"] = df.apply(
+    lambda r: "_vs_".join(sorted([r["w_conf"], r["l_conf"]])), axis=1
+)
+
+# ✅ Vectorized — uses numpy sort on 2D array
+sorted_cols = pd.DataFrame(
+    np.sort(df[["w_conf", "l_conf"]].values, axis=1),
+    columns=["conf_a", "conf_b"],
+    index=df.index,
+)
+df["conf_pair"] = sorted_cols["conf_a"] + "_vs_" + sorted_cols["conf_b"]
+```
+
+**Rule:** If `apply(axis=1)` accesses only 2 columns and performs a string/arithmetic operation, it can always be vectorized. The no-iterrows mandate in EDA notebooks includes `apply(axis=1)` equivalents.
+
 *Last Updated: 2026-02-20 (Story 3.1 Code Review — EDA notebook conventions, gitkeep pattern, nbconvert --output-dir, connector behavior verification)*
+*Updated: 2026-02-20 (Story 3.2 extension — Epic 4 normalization design requirements from user)*
+*Updated: 2026-02-20 (Story 3.2 Code Review — day-to-round mapping consistency, multi-notebook findings files, story file list completeness, apply-vs-vectorize)*
 *Next Review: [Set cadence - weekly? sprint boundaries?]*
