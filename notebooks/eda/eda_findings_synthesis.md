@@ -18,6 +18,8 @@ Synthesized from `data_quality_findings.md` (Story 3.1) confirmed issues and rec
 | 5 | 109 games with `w_score > 130`; 168 with `margin > 60` | LOW | Keep — legitimate historical data, not errors |
 | 6 | 2025: `loc`/`num_ot` discrepancy between Kaggle and ESPN for same game | MEDIUM | ESPN values preferred (API-verified) — resolved by deduplication (Issue #2) |
 
+**Note (assumption correction):** All 201,261 games have a populated `date` field — Kaggle games via `DayZero + timedelta(days=day_num)`, ESPN games from the API. Epic 4 pipelines do not need null-date handling.
+
 ### Deduplication Pattern for 2025
 
 Any Epic 4 pipeline that aggregates 2025 data must apply this pattern:
@@ -162,8 +164,6 @@ Epic 4 developers must be aware of these constraints when designing feature pipe
 
 - **Survivorship bias in tournament stats**: Tournament games involve only 64–68 elite teams per year. Tournament-computed statistics (differentials, upset rates) are not representative of the full D1 population (~380 teams).
 
-- **All games have dates**: All 201,261 games have a populated `date` field — Kaggle games via `DayZero + timedelta(days=day_num)`, ESPN games from API. No null-date handling needed in Epic 4 pipelines.
-
 - **ESPN scope is current season only**: ESPN enrichment covers 2025 only. All historical tournament data (1985–2024) comes from Kaggle compact results.
 
 ---
@@ -179,7 +179,7 @@ EDA provides directional evidence but does not definitively rank all feature can
 **Priority research questions:**
 1. Do graph centrality metrics (PageRank, betweenness) add signal beyond naive SoS (r=0.2970 baseline)?
 2. Which Massey Ordinal systems best complement box-score features? (Top 5 by coverage: AP, DOL, COL, MOR, POM — all 23 seasons)
-3. What distribution family fits each stat? (Beta for rates like FGPct; Gamma/Poisson for counts like FGM, PF)
+3. ~~What distribution family fits each stat?~~ — **Resolved** by `03_distribution_analysis.ipynb` (162 observations across 18 stats × 3 genders × 3 dataset types). See `statistical_exploration_findings.md` Section 7 for the full empirical normalization table. Summary: bounded rates (FGPct, 3PPct, FTPct, TO_rate) → logit + StandardScaler; mildly right-skewed counts (Blk, Stl, TO, FTM, OR, FGM3, FTA) → sqrt + RobustScaler; high-volume counting (Score, FGM, FGA, DR, Ast, FGA3, PF) → no transform + StandardScaler.
 4. What rolling window size is optimal? (EDA has no strong evidence for 5 vs. 10 vs. 20 games — must be validated empirically)
 
 **Reference:** `template-requirements.md` Section on "Epic 4 Normalization Design Requirements" — normalization configurability requirements (`gender_scope`, `dataset_scope`) are already specified.
@@ -201,15 +201,17 @@ EDA provides directional evidence but does not definitively rank all feature can
 
 Implement rolling features in this order (Section 2 Tier 1 ranking: direct box-score stats first by r-value, then composite SoS — see Section 2 ranking rationale):
 
-| Feature | r (tournament advancement) | Notes |
-|---------|---------------------------|-------|
-| Rolling FGPct | r=0.2269 (tournament diff: +0.078) | Highest tournament-game differential |
-| Rolling FGM / Scoring | r=0.2628 / 0.2349 | Highest raw correlations |
-| Rolling SoS (opponent win rate) | r=0.2970 | Compute as running mean of opponent regular-season win rates |
-| Rolling TO_rate | r=-0.1424 | Negative predictor; include in feature set |
-| Rolling PF | r=-0.1574 | Negative predictor; largest negative correlation |
-| Rolling DR | winner diff: +4.5 | Defensive rebounding differential |
+| Feature | r (tournament advancement) | Normalization (from Section 7) |
+|---------|---------------------------|-------------------------------|
+| Rolling FGPct | r=0.2269 (tournament diff: +0.078) | logit + StandardScaler (bounded [0,1]) |
+| Rolling FGM / Scoring | r=0.2628 / 0.2349 | no transform + StandardScaler (approx. normal) |
+| Rolling SoS (opponent win rate) | r=0.2970 | no transform + StandardScaler (approx. normal) |
+| Rolling PF | r=-0.1574 | no transform + StandardScaler (approx. normal) |
+| Rolling TO_rate | r=-0.1424 | logit + StandardScaler (bounded [0,1]) |
+| Rolling DR | winner diff: +4.5 | no transform + StandardScaler (approx. normal) |
 | `loc` encoding | 65.8% home win rate | H=1, A=-1, N=0 (or one-hot for tree models) |
+
+**Normalization:** Recommendations above are empirically derived — see `statistical_exploration_findings.md` Section 7 for all 18 stats. The pattern for additional stats: Blk/Stl/TO/FTM/OR/FGM3/FTA → sqrt + RobustScaler; 3PPct/FTPct → logit + StandardScaler.
 
 **Window sizes:** EDA provides no strong evidence for optimal window. Research in Story 4.1 — candidates: last 5, 10, 20 games.
 

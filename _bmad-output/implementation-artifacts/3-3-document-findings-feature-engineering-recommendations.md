@@ -38,8 +38,9 @@ So that Epic 4 (Feature Engineering) has clear direction on what features to bui
 
 ### Review Follow-ups (AI)
 
-- [ ] [AI-Review][LOW] L1: "All games have dates" bullet in Section 3 (Known Limitations) is a positive fact-correction, not a limitation — consider framing it as a note under Section 1 Issue #2 or adding "(Assumption correction)" prefix [`notebooks/eda/eda_findings_synthesis.md`:163]
-- [ ] [AI-Review][LOW] L2: PF/TO_rate ordering inconsistency between Section 2 (PF #5 r=-0.1574, then TO_rate #6 r=-0.1424) and Story 4.4 table (TO_rate first, then PF) — both orderings are defensible but the inconsistency may cause confusion [`notebooks/eda/eda_findings_synthesis.md`:84,205]
+- [x] [AI-Review][LOW] L1: "All games have dates" bullet in Section 3 (Known Limitations) is a positive fact-correction, not a limitation — consider framing it as a note under Section 1 Issue #2 or adding "(Assumption correction)" prefix [`notebooks/eda/eda_findings_synthesis.md`:163]
+- [x] [AI-Review][LOW] L2: PF/TO_rate ordering inconsistency between Section 2 (PF #5 r=-0.1574, then TO_rate #6 r=-0.1424) and Story 4.4 table (TO_rate first, then PF) — both orderings are defensible but the inconsistency may cause confusion [`notebooks/eda/eda_findings_synthesis.md`:84,205]
+- [x] [AI-Review][HIGH] Distribution analysis gap: `03_distribution_analysis.ipynb` Section 7 normalization recommendations were never committed to `statistical_exploration_findings.md` — Story 4.1 was incorrectly framing distribution fitting as an open research question when it was already empirically resolved. Fixed: appended Section 7 to `statistical_exploration_findings.md`; updated Story 4.1 guidance in synthesis doc to reference pre-computed transforms; updated Story 4.4 table with normalization column.
 
 ## Dev Notes
 
@@ -232,11 +233,13 @@ None — pure documentation story, no code execution or debugging required.
 
 ### File List
 
-- `notebooks/eda/eda_findings_synthesis.md` — Created (synthesis document, primary deliverable)
-- `_bmad-output/implementation-artifacts/3-3-document-findings-feature-engineering-recommendations.md` — Updated (tasks, status, Dev Agent Record)
-- `_bmad-output/implementation-artifacts/sprint-status.yaml` — Updated (`3-3-...` → `review`)
+- `notebooks/eda/eda_findings_synthesis.md` — Created (synthesis document, primary deliverable); updated (distribution gap fix: Story 4.1 guidance, Story 4.4 normalization, L1/L2 fixes)
+- `notebooks/eda/statistical_exploration_findings.md` — Updated (appended Section 7: box-score distribution analysis, normalization recommendations table)
+- `_bmad-output/implementation-artifacts/3-3-document-findings-feature-engineering-recommendations.md` — Updated (tasks, status, Dev Agent Record, review follow-ups)
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — Updated (`3-3-...` → `done`)
 
 ### Change Log
 
 - 2026-02-20: Story 3.3 implemented — EDA findings synthesis document created as `notebooks/eda/eda_findings_synthesis.md` (Agent: Claude Sonnet 4.6)
 - 2026-02-20: Code review fixes applied — added ranking rationale, SoS signal clarification, SoS to Story 4.7 table, Story 4.4 table header fix (Agent: Claude Sonnet 4.6)
+- 2026-02-20: Distribution gap fix — `03_distribution_analysis.ipynb` Section 7 appended to `statistical_exploration_findings.md`; Story 4.1 distribution question marked resolved with pre-computed transform summary; Story 4.4 table expanded with normalization column; L1 ("all games have dates") moved from limitations to Section 1 assumption-correction note; L2 (PF/TO_rate ordering) standardized to |r| ordering in Story 4.4 table (Agent: Claude Sonnet 4.6)
