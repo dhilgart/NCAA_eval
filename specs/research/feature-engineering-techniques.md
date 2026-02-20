@@ -38,13 +38,15 @@ All values below are from `notebooks/eda/statistical_exploration_findings.md` an
 | PF | –0.1574 | Personal fouls (negative predictor) |
 | TO_rate | –0.1424 | `TO / (FGA + 0.44×FTA + TO)` |
 
-**Normalization — already resolved** (`statistical_exploration_findings.md` Section 7):
+**Normalization — baseline established, further investigation open** (`statistical_exploration_findings.md` Section 7):
 
-| Stat Group | Transform | Scaler |
-|:---|:---|:---|
-| Bounded rates (FGPct, 3PPct, FTPct, TO_rate) | logit | StandardScaler |
-| Mildly right-skewed counts (Blk, Stl, TO, FTM, OR, FGM3, FTA) | sqrt | RobustScaler |
-| High-volume counting (Score, FGM, FGA, DR, Ast, FGA3, PF) | none | StandardScaler |
+The EDA established a working baseline using standard transforms (logit, sqrt, none) paired with StandardScaler or RobustScaler. These are a reasonable starting point but were not exhaustively compared against advanced distribution families (Beta, Gamma, Weibull, Log-Normal). Story 4.7 should treat these as the default, not the final answer.
+
+| Stat Group | Baseline Transform | Baseline Scaler | Notes |
+|:---|:---|:---|:---|
+| Bounded rates (FGPct, 3PPct, FTPct, TO_rate) | logit | StandardScaler | Beta distribution fit may be superior — validate in Story 4.7 |
+| Mildly right-skewed counts (Blk, Stl, TO, FTM, OR, FGM3, FTA) | sqrt | RobustScaler | Gamma/Weibull may fit better than sqrt-Normal assumption |
+| High-volume counting (Score, FGM, FGA, DR, Ast, FGA3, PF) | none | StandardScaler | Likely near-Normal at scale; validate with Q-Q plots |
 
 New features not in this table (graph centrality, Elo ratings, Massey ordinals) require separate normalization assessment — addressed in their respective sections below.
 

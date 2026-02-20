@@ -201,17 +201,17 @@ Feature serving layer must support:
 
 The research document should address which techniques require separate normalization by gender/dataset scope.
 
-### Normalization Is Already Resolved — Do NOT Reopen
+### Normalization — Baseline Established, Not Finalized
 
-`statistical_exploration_findings.md` Section 7 empirically determined normalization transforms for all 18 box-score stats across 162 observations. The research document should reference this table, not derive new recommendations:
+`statistical_exploration_findings.md` Section 7 established a working baseline using standard transforms (logit, sqrt, none). These are a reasonable starting point but were not compared against advanced distribution families (Beta, Gamma, Weibull, Log-Normal). Story 4.7 should treat the EDA table as the default, not the final answer.
 
-| Stat Group | Transform | Scaler |
+| Stat Group | Baseline Transform | Baseline Scaler |
 |---|---|---|
 | Bounded rates (FGPct, 3PPct, FTPct, TO_rate) | logit | StandardScaler |
 | Right-skewed counts (Blk, Stl, TO, FTM, OR, FGM3, FTA) | sqrt | RobustScaler |
 | High-volume counting (Score, FGM, FGA, DR, Ast, FGA3, PF) | none | StandardScaler |
 
-Story 4.1 research should only address normalization for NEW features not in this table (e.g., graph centrality metrics, Elo ratings, Massey ordinals).
+Story 4.1 research should address normalization for NEW features not in this table (e.g., graph centrality metrics, Elo ratings, Massey ordinals). Advanced distribution investigation (Beta, Gamma, etc.) is deferred to Story 4.7.
 
 ### Previous Story Learnings (Story 2.1 Spike — Data Source Evaluation)
 
@@ -231,7 +231,7 @@ Pattern to follow from Story 2.1 (`data-source-evaluation.md`):
 - **Do not** create Python code or modify any `src/ncaa_eval/` files
 - **Do not** re-run EDA notebooks or recompute statistics — cite existing findings by file and section
 - **Do not** finalize MVP scope unilaterally — present options with trade-offs and let the product owner decide (AC 8)
-- **Do not** reopen the normalization question — Section 7 of `statistical_exploration_findings.md` already resolves it
+- **Do not** re-derive the baseline normalization table — cite the EDA baseline; advanced distribution investigation (Beta, Gamma, Weibull) belongs to Story 4.7, not this spike
 - **Do not** place the findings document in `_bmad-output/` — use `specs/research/` (same directory as Story 2.1 output)
 - **Do not** add the research document to mypy scope or Ruff checks
 
