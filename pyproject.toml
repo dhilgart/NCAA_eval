@@ -38,6 +38,7 @@ edgetest = "*"
 sphinx = "*"
 furo = "*"
 myst-parser = "*"
+jupyterlab = ">=4.0,<5"
 
 [build-system]
 requires = ["poetry-core"]
