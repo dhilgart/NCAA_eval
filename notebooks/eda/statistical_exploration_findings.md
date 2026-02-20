@@ -86,28 +86,6 @@ Generated from: `notebooks/eda/02_statistical_exploration.ipynb` (Story 3.2)
 ---
 ## Section 7: Box-Score Statistical Distribution Analysis
 
-**Data coverage:**
-- Men's Detailed Results: regular season (2003–2025, 118,882 rows) + tournament (2003–2024, 1,382 rows)
-- Women's Detailed Results: regular season (2010–2025, 81,708 rows) + tournament (2010–2024, 894 rows)
-
-### Distribution Shape Summary (Combined gender, All Games)
-
-| Stat | Skewness | Excess Kurtosis | Shape | Transform | Scaler |
-|------|----------|-----------------|-------|-----------|--------|
-
-### Key Findings
-
-- **Approx. normal (no transform):** FGM, FGA, Score, DR, FTM, FTA — central-limit effect from summing many possessions per game.
-- **Right-skewed (log1p recommended):** Blk, Stl, OR — rare events with heavy right tails.
-- **Mildly right-skewed (sqrt or log1p):** FGM3, FGA3, Ast, TO, PF — moderate skew, era effects present for 3-point stats.
-- **Bounded [0,1] (logit transform):** FGPct, 3PPct, FTPct, TO_rate — Beta-like distributions; standard Normal transforms are inappropriate.
-- **Men vs. Women:** Distributions are broadly similar in shape. Women's data shows higher FTPct means and slightly lower FGM3/FGA3 (smaller 3-point volume historically). Shape labels are consistent across genders.
-- **Regular Season vs. Tournament:** Tournament data has tighter distributions (less variance) consistent with more evenly-matched teams in March. Shape labels unchanged.
-
-
----
-## Section 7: Box-Score Statistical Distribution Analysis
-
 **Source notebook:** `notebooks/eda/03_distribution_analysis.ipynb`
 
 **Data coverage (team-game observations per stat):**

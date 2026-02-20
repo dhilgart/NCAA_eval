@@ -1,6 +1,6 @@
 # Story 3.2: Statistical Exploration & Relationship Analysis
 
-Status: review
+Status: in-progress
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -71,6 +71,12 @@ So that I can identify signals and relationships worth pursuing in feature engin
   - [x] 7.1: Write a Markdown cell summarizing: top predictive signals found, conference/seed/venue findings, known data limitations
   - [x] 7.2: Save `notebooks/eda/statistical_exploration_findings.md` with machine-readable findings summary (analogous to `data_quality_findings.md` from Story 3.1)
   - [x] 7.3: Include a ranked list of recommended features for Epic 4 based on correlation analysis
+
+- [ ] Task 9: Review Follow-ups (AI)
+  - [ ] [AI-Review][HIGH] Fix `day_to_round_num` function — Elite 8 (days 145-146) incorrectly bucketed with Sweet 16 (round_num=2); Final Four days 147-148 mislabeled as "E8" (round_num=3) instead of FF. Recalibrate cutoffs to match `day_to_round_name`, re-execute notebook, verify correlation table changes. [notebooks/eda/02_statistical_exploration.ipynb, Cell 30]
+  - [ ] [AI-Review][HIGH] AC4 gap: Strength of Schedule not computed — add SoS metric (e.g., opponent win-rate average) to Section 4 or a new Section 4b; correlate with tournament outcomes; document signal strength. [notebooks/eda/02_statistical_exploration.ipynb, Cells 22-26]
+  - [ ] [AI-Review][MEDIUM] Vectorize Cell 17 upset-rate filter — `.apply(lambda r: ..., axis=1)` used to match classic bracket pairs; replace with `pd.merge` against a pairs lookup DataFrame. [notebooks/eda/02_statistical_exploration.ipynb, Cell 17]
+  - [ ] [AI-Review][LOW] Log NaN imputation count before Pearson correlation — `fillna(median)` is silent; print count of imputed values per stat. [notebooks/eda/02_statistical_exploration.ipynb, Cell 31]
 
 - [x] Task 8: Execute notebook and commit (AC: 7)
   - [x] 8.1: Run via `conda run -n ncaa_eval jupyter nbconvert --to notebook --execute --ExecutePreprocessor.timeout=600 --output-dir notebooks/eda notebooks/eda/02_statistical_exploration.ipynb`
@@ -423,6 +429,7 @@ Claude Sonnet 4.6
 ### File List
 
 - notebooks/eda/02_statistical_exploration.ipynb
+- notebooks/eda/03_distribution_analysis.ipynb
 - notebooks/eda/statistical_exploration_findings.md
 
 ## Change Log
