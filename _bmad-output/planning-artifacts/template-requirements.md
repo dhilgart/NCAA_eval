@@ -1249,5 +1249,61 @@ When writing EDA notebooks that analyze data ingested by connectors, **read the 
 
 **Template pattern:** Before writing "expected behavior" narrative in a notebook cell, verify it by reading the actual data loading code. If the data surprises you, investigate why — don't assume the data is wrong.
 
+### Epic 4 Normalization Design Requirements ⭐ (User Preference, 2026-02-20)
+
+These are explicit user requirements for how the Epic 4 feature engineering / normalization system must be designed. Capture in Epic 4 story acceptance criteria.
+
+#### 1. Gender normalization scope — default separate, user-selectable
+
+Distribution analysis (Story 3.2) shows Men and Women have the same *shape* labels but different *location/scale*:
+- Score: Men ~70, Women ~64
+- FTPct: Women systematically higher than Men
+- FGM3/FGA3: Men have historically higher 3-point volumes
+
+**Default:** Normalize Men and Women **separately** (calibrate to each sport's own distribution).
+
+**User must be able to override** to "combined" (shared normalization across genders) — for example when building a single M+W model or when the user intentionally wants cross-gender comparability.
+
+**Implementation pattern:**
+```python
+# Normalization config should expose a gender_scope parameter:
+gender_scope: Literal["separate", "combined"] = "separate"  # default: separate
+```
+
+#### 2. Dataset-type normalization scope — default regular season only, user-selectable
+
+Tournament data has **survivorship bias** (only 64–68 elite teams qualify) and **30× smaller sample size** than regular season (~2,276 vs ~118,882 games for Men's). Normalizing against tournament distributions biases toward elite-team performance ranges.
+
+**Default:** Normalize using **regular season statistics only**.
+
+**User must be able to override** to "tournament", "combined", or "all_games" — for example when building tournament-only predictors where the user wants normalization anchored to tournament-level play.
+
+**Implementation pattern:**
+```python
+dataset_scope: Literal["regular_season", "tournament", "combined"] = "regular_season"  # default
+```
+
+#### 3. Advanced distribution fitting — Epic 4 investigation required
+
+Story 3.2 distribution analysis only fit Normal and Log-Normal. The following distributions should be investigated in Epic 4 to find the best fit per stat:
+
+| Stat group | Candidate distributions | Why |
+|---|---|---|
+| Bounded [0,1] rates: FGPct, 3PPct, FTPct, TO_rate | **Beta**, Logit-Normal | Natural support on [0,1]; Beta parameterizes shape explicitly |
+| Right-skewed counting: Blk, Stl, OR | **Gamma**, **Weibull**, Log-Normal | Gamma/Weibull often beat Log-Normal for non-negative count data |
+| Moderate-skew counting: FGM3, FGA3, Ast, TO, PF, FTM, FTA | **Negative Binomial**, Gamma, Normal | Negative Binomial handles overdispersed count data |
+| High-volume (approx. normal): Score, FGM, FGA, DR | Normal, **Skew-Normal** | Already approximately normal; Skew-Normal may capture mild tails |
+
+**Goodness-of-fit metrics** to use for distribution selection:
+- Kolmogorov-Smirnov test (distribution-free, large-N valid)
+- Anderson-Darling test (more sensitive to tails)
+- AIC / BIC (when fitting parametric distributions with different parameter counts)
+- Visual: Q-Q plots against each candidate distribution (not just Normal)
+
+#### 4. Normalization pipeline configurability
+
+The normalization system must expose all of the above as **user-configurable parameters** at the preprocessing pipeline level. Defaults encode the recommendations above. Per-stat overrides should be possible (e.g., use "combined" gender normalization for FGPct but "separate" for Score).
+
 *Last Updated: 2026-02-20 (Story 3.1 Code Review — EDA notebook conventions, gitkeep pattern, nbconvert --output-dir, connector behavior verification)*
+*Updated: 2026-02-20 (Story 3.2 extension — Epic 4 normalization design requirements from user)*
 *Next Review: [Set cadence - weekly? sprint boundaries?]*
