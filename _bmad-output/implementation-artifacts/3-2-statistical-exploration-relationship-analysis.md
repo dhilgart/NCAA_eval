@@ -1,6 +1,6 @@
 # Story 3.2: Statistical Exploration & Relationship Analysis
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -22,60 +22,60 @@ So that I can identify signals and relationships worth pursuing in feature engin
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create notebook and load data (AC: 1–6)
-  - [ ] 1.1: Create `notebooks/eda/02_statistical_exploration.ipynb`
-  - [ ] 1.2: Load compact game data from `ParquetRepository` (all 41 seasons, deduplicated)
-  - [ ] 1.3: Load `MNCAATourneySeeds.csv` directly from `data/kaggle/` for seed-based analysis
-  - [ ] 1.4: Load `MTeamConferences.csv` for conference-based analysis
-  - [ ] 1.5: Load `MRegularSeasonDetailedResults.csv` and `MNCAATourneyDetailedResults.csv` for stat correlations (2003–2024)
-  - [ ] 1.6: Apply 2025 deduplication: drop duplicate matchup tuples `(w_team_id, l_team_id, day_num)` keeping ESPN records (game_id startswith "espn_"), then drop Kaggle duplicates for same matchup
+- [x] Task 1: Create notebook and load data (AC: 1–6)
+  - [x] 1.1: Create `notebooks/eda/02_statistical_exploration.ipynb`
+  - [x] 1.2: Load compact game data from `ParquetRepository` (all 41 seasons, deduplicated)
+  - [x] 1.3: Load `MNCAATourneySeeds.csv` directly from `data/kaggle/` for seed-based analysis
+  - [x] 1.4: Load `MTeamConferences.csv` for conference-based analysis
+  - [x] 1.5: Load `MRegularSeasonDetailedResults.csv` and `MNCAATourneyDetailedResults.csv` for stat correlations (2003–2024)
+  - [x] 1.6: Apply 2025 deduplication: drop duplicate matchup tuples `(w_team_id, l_team_id, day_num)` keeping ESPN records (game_id startswith "espn_"), then drop Kaggle duplicates for same matchup
 
-- [ ] Task 2: Section 1 — Scoring Distributions (AC: 1)
-  - [ ] 2.1: Plot histogram of `margin = w_score - l_score` for all seasons combined (Plotly, dark mode)
-  - [ ] 2.2: Plot distributions of `w_score` and `l_score` — include mean/median annotations
-  - [ ] 2.3: Plot per-season average margin over time (1985–2025) as a line chart — annotate COVID 2020 gap
-  - [ ] 2.4: Break scoring distributions by `loc` (H/A/N) — box plots per location category
-  - [ ] 2.5: Compute win-by-location summary table: average margin by H/A/N, count of wins per category
+- [x] Task 2: Section 1 — Scoring Distributions (AC: 1)
+  - [x] 2.1: Plot histogram of `margin = w_score - l_score` for all seasons combined (Plotly, dark mode)
+  - [x] 2.2: Plot distributions of `w_score` and `l_score` — include mean/median annotations
+  - [x] 2.3: Plot per-season average margin over time (1985–2025) as a line chart — annotate COVID 2020 gap
+  - [x] 2.4: Break scoring distributions by `loc` (H/A/N) — box plots per location category
+  - [x] 2.5: Compute win-by-location summary table: average margin by H/A/N, count of wins per category
 
-- [ ] Task 3: Section 2 — Venue Effects / Home Court Advantage (AC: 2)
-  - [ ] 3.1: For regular-season games only (`is_tournament == False`), compute home win rate by season: `loc == 'H'` share of all non-neutral games; plot as line chart
-  - [ ] 3.2: Compute average margin for home wins vs. away wins vs. neutral games; present as bar chart
-  - [ ] 3.3: Test whether home advantage has changed over time — plot `home_win_rate` vs. `year`; add trend line annotation
-  - [ ] 3.4: Neutral site breakdown: percentage of neutral-site games that are tournament vs. non-tournament (conference tourneys), by season
+- [x] Task 3: Section 2 — Venue Effects / Home Court Advantage (AC: 2)
+  - [x] 3.1: For regular-season games only (`is_tournament == False`), compute home win rate by season: `loc == 'H'` share of all non-neutral games; plot as line chart
+  - [x] 3.2: Compute average margin for home wins vs. away wins vs. neutral games; present as bar chart
+  - [x] 3.3: Test whether home advantage has changed over time — plot `home_win_rate` vs. `year`; add trend line annotation
+  - [x] 3.4: Neutral site breakdown: percentage of neutral-site games that are tournament vs. non-tournament (conference tourneys), by season
 
-- [ ] Task 4: Section 3 — Seed Patterns & Upset Rates (AC: 5)
-  - [ ] 4.1: Load `MNCAATourneySeeds.csv`; parse seed number (e.g., "W01" → 1) and region; build lookup `(season, team_id) → seed`
-  - [ ] 4.2: Merge seed data onto tournament games DataFrame to produce `(w_seed, l_seed)` per game
-  - [ ] 4.3: Build upset rate matrix: for each seed matchup (1v16, 2v15, … 8v9), compute upset rate (lower-seeded team wins). Show as heatmap (Plotly imshow or table)
-  - [ ] 4.4: Plot distribution of actual vs. expected wins by seed number — bar chart of "games won past round 1" per seed 1–16
-  - [ ] 4.5: Document notable historical upsets by seed: highest-upset-rate matchups, most frequent "chalk" results
-  - [ ] 4.6: Post-2011 seasons include 68 teams (First Four); distinguish "true" 16-seeds from play-in winners
+- [x] Task 4: Section 3 — Seed Patterns & Upset Rates (AC: 5)
+  - [x] 4.1: Load `MNCAATourneySeeds.csv`; parse seed number (e.g., "W01" → 1) and region; build lookup `(season, team_id) → seed`
+  - [x] 4.2: Merge seed data onto tournament games DataFrame to produce `(w_seed, l_seed)` per game
+  - [x] 4.3: Build upset rate matrix: for each seed matchup (1v16, 2v15, … 8v9), compute upset rate (lower-seeded team wins). Show as heatmap (Plotly imshow or table)
+  - [x] 4.4: Plot distribution of actual vs. expected wins by seed number — bar chart of "games won past round 1" per seed 1–16
+  - [x] 4.5: Document notable historical upsets by seed: highest-upset-rate matchups, most frequent "chalk" results
+  - [x] 4.6: Post-2011 seasons include 68 teams (First Four); distinguish "true" 16-seeds from play-in winners
 
-- [ ] Task 5: Section 4 — Conference-Strength Analysis (AC: 4)
-  - [ ] 5.1: Load `MTeamConferences.csv`; build `(season, team_id) → conference` lookup
-  - [ ] 5.2: Compute within-conference win rates for regular-season games (using `game_id` prefix to identify games between conference-mates; approximate by checking if both teams share the same conference in that season)
-  - [ ] 5.3: Compute tournament representation by conference per season: number of teams seeded 1–4 vs. 5–8 vs. 9–16 by conference
-  - [ ] 5.4: Compute inter-conference performance: win rate when Conference A plays Conference B (top 10 conference pairs by game volume)
-  - [ ] 5.5: Plot top 10 conferences by cumulative tournament wins (1985–2025) as a horizontal bar chart
+- [x] Task 5: Section 4 — Conference-Strength Analysis (AC: 4)
+  - [x] 5.1: Load `MTeamConferences.csv`; build `(season, team_id) → conference` lookup
+  - [x] 5.2: Compute within-conference win rates for regular-season games (using `game_id` prefix to identify games between conference-mates; approximate by checking if both teams share the same conference in that season)
+  - [x] 5.3: Compute tournament representation by conference per season: number of teams seeded 1–4 vs. 5–8 vs. 9–16 by conference
+  - [x] 5.4: Compute inter-conference performance: win rate when Conference A plays Conference B (top 10 conference pairs by game volume)
+  - [x] 5.5: Plot top 10 conferences by cumulative tournament wins (1985–2025) as a horizontal bar chart
 
-- [ ] Task 6: Section 5 — Statistical Correlations with Tournament Outcomes (AC: 3)
-  - [ ] 6.1: Load `MRegularSeasonDetailedResults.csv` and `MNCAATourneyDetailedResults.csv` from `data/kaggle/` directly (2003–2025)
-  - [ ] 6.2: Compute per-team, per-season regular-season averages: FGM, FGA, FGPct, 3P, 3PA, 3PPct, FTM, FTA, FTPct, OR, DR, Ast, TO, Stl, Blk, PF (both team and opponent columns)
-  - [ ] 6.3: Merge regular-season stats with tournament outcomes (did team reach Round of 32, Sweet 16, Elite 8, Final Four, Championship?)
-  - [ ] 6.4: Compute Pearson correlations between each stat and tournament advance depth; display as a ranked correlation table (top 10 positive, top 10 negative)
-  - [ ] 6.5: Plot scatter: `FGPct` vs. `tournament_round_reached` (2003–2024); similar for `TO_rate`, `3PPct`
-  - [ ] 6.6: For tournament games only: compute average stat difference between winner and loser; show which stats best differentiate tournament winners from losers
-  - [ ] 6.7: Note 2025 limitation: `MNCAATourneyDetailedResults.csv` stops at 2024; 2025 tournament hasn't completed yet
+- [x] Task 6: Section 5 — Statistical Correlations with Tournament Outcomes (AC: 3)
+  - [x] 6.1: Load `MRegularSeasonDetailedResults.csv` and `MNCAATourneyDetailedResults.csv` from `data/kaggle/` directly (2003–2025)
+  - [x] 6.2: Compute per-team, per-season regular-season averages: FGM, FGA, FGPct, 3P, 3PA, 3PPct, FTM, FTA, FTPct, OR, DR, Ast, TO, Stl, Blk, PF (both team and opponent columns)
+  - [x] 6.3: Merge regular-season stats with tournament outcomes (did team reach Round of 32, Sweet 16, Elite 8, Final Four, Championship?)
+  - [x] 6.4: Compute Pearson correlations between each stat and tournament advance depth; display as a ranked correlation table (top 10 positive, top 10 negative)
+  - [x] 6.5: Plot scatter: `FGPct` vs. `tournament_round_reached` (2003–2024); similar for `TO_rate`, `3PPct`
+  - [x] 6.6: For tournament games only: compute average stat difference between winner and loser; show which stats best differentiate tournament winners from losers
+  - [x] 6.7: Note 2025 limitation: `MNCAATourneyDetailedResults.csv` stops at 2024; 2025 tournament hasn't completed yet
 
-- [ ] Task 7: Section 6 — Findings Summary & Epic 4 Recommendations (AC: 7)
-  - [ ] 7.1: Write a Markdown cell summarizing: top predictive signals found, conference/seed/venue findings, known data limitations
-  - [ ] 7.2: Save `notebooks/eda/statistical_exploration_findings.md` with machine-readable findings summary (analogous to `data_quality_findings.md` from Story 3.1)
-  - [ ] 7.3: Include a ranked list of recommended features for Epic 4 based on correlation analysis
+- [x] Task 7: Section 6 — Findings Summary & Epic 4 Recommendations (AC: 7)
+  - [x] 7.1: Write a Markdown cell summarizing: top predictive signals found, conference/seed/venue findings, known data limitations
+  - [x] 7.2: Save `notebooks/eda/statistical_exploration_findings.md` with machine-readable findings summary (analogous to `data_quality_findings.md` from Story 3.1)
+  - [x] 7.3: Include a ranked list of recommended features for Epic 4 based on correlation analysis
 
-- [ ] Task 8: Execute notebook and commit (AC: 7)
-  - [ ] 8.1: Run via `conda run -n ncaa_eval jupyter nbconvert --to notebook --execute --ExecutePreprocessor.timeout=600 --output-dir notebooks/eda notebooks/eda/02_statistical_exploration.ipynb`
-  - [ ] 8.2: Verify 0 cell errors, all outputs rendered
-  - [ ] 8.3: Commit: `docs(eda): statistical exploration & relationship analysis notebook (Story 3.2)`
+- [x] Task 8: Execute notebook and commit (AC: 7)
+  - [x] 8.1: Run via `conda run -n ncaa_eval jupyter nbconvert --to notebook --execute --ExecutePreprocessor.timeout=600 --output-dir notebooks/eda notebooks/eda/02_statistical_exploration.ipynb`
+  - [x] 8.2: Verify 0 cell errors, all outputs rendered
+  - [x] 8.3: Commit: `docs(eda): statistical exploration & relationship analysis notebook (Story 3.2)`
 
 ## Dev Notes
 
@@ -400,6 +400,31 @@ Claude Sonnet 4.6
 
 ### Debug Log References
 
+- Fixed `loc_label` KeyError: column was added to `all_games_dedup` AFTER `reg_games` copy was made; moved `loc_label` mapping to setup cell before splits.
+- Fixed `favored_seed` KeyError in sort_values: moved `sort_values` before column selection.
+- Fixed `include_groups=False` + group key access in seed wins cell: rewrote with cleaner champions-via-idxmax approach.
+- Verified actual DayNum→round mapping from data (max DayNum=154, not 164 as story notes suggested); updated mapping to match actual data.
+
 ### Completion Notes List
 
+- Notebook `notebooks/eda/02_statistical_exploration.ipynb` created with 38 cells (7 markdown, 31 code), executed 0 errors.
+- Key findings from actual data:
+  - 196,716 deduplicated games (2025: 11,454 → 6,909 after dedup)
+  - Mean winning margin: 12.1 pts; home win rate: 65.8% (non-neutral regular season)
+  - Home advantage: +2.2 pts over neutral site; trend decreasing (p=0.0006, statistically significant)
+  - 1v16 nearly always chalk; 5v12 and 8v9 most volatile matchups
+  - FGM (r=0.247), Score (r=0.221), FGPct (r=0.217) are top positive predictors of tournament advancement
+  - PF (r=-0.158) and TO_rate (r=-0.136) are top negative predictors
+  - FG% differential: winners average 0.476 vs 0.397 for losers (+0.078) in tournament games
+  - Top conferences by tournament wins: ACC, Big Ten, Big East, SEC, Big 12
+- Findings saved to `notebooks/eda/statistical_exploration_findings.md` (2,898 bytes)
+- All Plotly visualizations use `plotly_dark` template; no iterrows() used anywhere
+
 ### File List
+
+- notebooks/eda/02_statistical_exploration.ipynb
+- notebooks/eda/statistical_exploration_findings.md
+
+## Change Log
+
+- 2026-02-20: Story 3.2 implemented — statistical exploration EDA notebook with 6 sections covering scoring distributions, venue effects, seed patterns, conference strength, statistical correlations, and findings summary. Notebook executed with 0 errors, all 31 code cells completed.
