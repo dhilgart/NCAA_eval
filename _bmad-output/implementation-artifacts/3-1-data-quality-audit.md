@@ -1,6 +1,6 @@
 # Story 3.1: Data Quality Audit
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -22,70 +22,67 @@ So that I understand data quality issues before building features or models.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add Jupyter to dev dependencies (AC: 7)
-  - [ ] 1.1: Run `POETRY_VIRTUALENVS_CREATE=false conda run -n ncaa_eval poetry add --group dev "jupyterlab>=4.0,<5"` to add JupyterLab as a dev dependency
-  - [ ] 1.2: Follow with `conda run -n ncaa_eval pip install "jupyterlab>=4.0,<5"` to ensure it lands in the conda env (see `poetry add` conda gap in Dev Notes)
-  - [ ] 1.3: Verify `conda run -n ncaa_eval jupyter lab --version` succeeds
+- [x] Task 1: Add Jupyter to dev dependencies (AC: 7)
+  - [x] 1.1: Run `POETRY_VIRTUALENVS_CREATE=false conda run -n ncaa_eval poetry add --group dev "jupyterlab>=4.0,<5"` to add JupyterLab as a dev dependency
+  - [x] 1.2: Follow with `conda run -n ncaa_eval pip install "jupyterlab>=4.0,<5"` to ensure it lands in the conda env (see `poetry add` conda gap in Dev Notes)
+  - [x] 1.3: Verify `conda run -n ncaa_eval jupyter lab --version` succeeds (installed 4.5.4)
 
-- [ ] Task 2: Create notebook directory structure (AC: 7)
-  - [ ] 2.1: Create `notebooks/eda/` directory (use `mkdir -p notebooks/eda`)
-  - [ ] 2.2: Add `notebooks/eda/` path reference to `.gitignore` exclusion check — notebooks directory should be tracked (NOT gitignored). Only `data/` is gitignored.
-  - [ ] 2.3: Create `notebooks/.gitkeep` or a `notebooks/README.md` placeholder if notebook is not yet started
+- [x] Task 2: Create notebook directory structure (AC: 7)
+  - [x] 2.1: Create `notebooks/eda/` directory (use `mkdir -p notebooks/eda`)
+  - [x] 2.2: Add `notebooks/eda/` path reference to `.gitignore` exclusion check — notebooks directory should be tracked (NOT gitignored). Only `data/` is gitignored.
+  - [x] 2.3: Notebook created directly in Task 3; no placeholder needed.
 
-- [ ] Task 3: Implement Section 1 — Setup & Data Loading (AC: 1)
-  - [ ] 3.1: Create `notebooks/eda/01_data_quality_audit.ipynb`
-  - [ ] 3.2: Section 1 imports: `from pathlib import Path`, `import pandas as pd`, `import numpy as np`, `import plotly.express as px`, `import plotly.graph_objects as go`, `from ncaa_eval.ingest import ParquetRepository`
-  - [ ] 3.3: Instantiate `repo = ParquetRepository(base_path=Path("../../data/"))` (relative to notebook location)
-  - [ ] 3.4: Load all entities: `teams = repo.get_teams()`, `seasons = repo.get_seasons()`, then build games by iterating all seasons
-  - [ ] 3.5: Print summary: team count, season count (min/max year), total game count
+- [x] Task 3: Implement Section 1 — Setup & Data Loading (AC: 1)
+  - [x] 3.1: Create `notebooks/eda/01_data_quality_audit.ipynb`
+  - [x] 3.2: Section 1 imports: `from pathlib import Path`, `import pandas as pd`, `import numpy as np`, `import plotly.express as px`, `import plotly.graph_objects as go`, `from ncaa_eval.ingest import ParquetRepository`
+  - [x] 3.3: Instantiate `repo = ParquetRepository(base_path=Path("../../data/"))` (relative to notebook location)
+  - [x] 3.4: Load all entities: `teams = repo.get_teams()`, `seasons = repo.get_seasons()`, then build games by iterating all seasons
+  - [x] 3.5: Print summary: team count, season count (min/max year), total game count
 
-- [ ] Task 4: Implement Section 2 — Schema Audit (AC: 1)
-  - [ ] 4.1: **Teams table:** Convert `teams` list to DataFrame, display `.dtypes`, `.shape`, `.describe()`, and first 5 rows. Show unique `canonical_name` count vs `team_name` count (are there teams with empty canonical_name?).
-  - [ ] 4.2: **Seasons table:** Convert `seasons` to DataFrame, show year range (1985–2025 = 41 seasons), verify no gaps in year sequence (`set(range(1985, 2026)) - set(s.year for s in seasons)`).
-  - [ ] 4.3: **Games table:** Build a consolidated DataFrame of ALL games by calling `repo.get_games(s.year)` for each season and concatenating. Show total row count, column types, date range of `date` field (nullable), `day_num` range, `season` min/max. This is the primary data structure for EDA.
-  - [ ] 4.4: **Per-season game counts:** Group by `season` and count rows. Plot as Plotly bar chart (x=season, y=game_count). Flag any seasons with unusually low counts (COVID 2020 context).
-  - [ ] 4.5: **Tournament flag audit:** Group by `season` and count `is_tournament == True` games. The 2020 season should have 0 tournament games. Show as a separate bar chart; label the 2020 bar in red.
+- [x] Task 4: Implement Section 2 — Schema Audit (AC: 1)
+  - [x] 4.1: **Teams table:** Convert `teams` list to DataFrame, display `.dtypes`, `.shape`, `.describe()`, and first 5 rows. Show unique `canonical_name` count vs `team_name` count (are there teams with empty canonical_name?).
+  - [x] 4.2: **Seasons table:** Convert `seasons` to DataFrame, show year range (1985–2025 = 41 seasons), verify no gaps in year sequence (`set(range(1985, 2026)) - set(s.year for s in seasons)`).
+  - [x] 4.3: **Games table:** Build a consolidated DataFrame of ALL games by calling `repo.get_games(s.year)` for each season and concatenating. Show total row count, column types, date range of `date` field (nullable), `day_num` range, `season` min/max. This is the primary data structure for EDA.
+  - [x] 4.4: **Per-season game counts:** Group by `season` and count rows. Plot as Plotly bar chart (x=season, y=game_count). Flag any seasons with unusually low counts (COVID 2020 context).
+  - [x] 4.5: **Tournament flag audit:** Group by `season` and count `is_tournament == True` games. The 2020 season should have 0 tournament games. Show as a separate bar chart; label the 2020 bar in red.
 
-- [ ] Task 5: Implement Section 3 — Missing Value Analysis (AC: 2)
-  - [ ] 5.1: **Teams:** Show null counts per column (`team_name`, `canonical_name`). Flag any teams where `canonical_name == ""` (empty string default, not null).
-  - [ ] 5.2: **Games — `date` column:** `date` is `datetime.date | None` (Kaggle compact results may have `day_num` only, ESPN has actual dates). Count null `date` values per season and show as table. Kaggle games 1985–2024 should have `date=None`; ESPN 2025 games should have actual dates.
-  - [ ] 5.3: **Games — `num_ot`:** Show distribution of `num_ot` values (0, 1, 2, 3+ OT games). Count by season. Flag any games with `num_ot >= 4` as extreme outliers.
-  - [ ] 5.4: **Games — `loc`:** Show distribution of `loc` values (H/A/N) per season and overall. Neutral-site games (N) should be predominantly tournament and conference tournament games.
-  - [ ] 5.5: All missing-value analysis must use vectorized pandas (`.isnull().sum()`, `.value_counts()`, `.groupby().agg()` — no `iterrows()`).
+- [x] Task 5: Implement Section 3 — Missing Value Analysis (AC: 2)
+  - [x] 5.1: **Teams:** Show null counts per column (`team_name`, `canonical_name`). Flag any teams where `canonical_name == ""` (empty string default, not null).
+  - [x] 5.2: **Games — `date` column:** `date` is `datetime.date | None` (Kaggle compact results may have `day_num` only, ESPN has actual dates). Count null `date` values per season and show as table. Kaggle games 1985–2024 should have `date=None`; ESPN 2025 games should have actual dates.
+  - [x] 5.3: **Games — `num_ot`:** Show distribution of `num_ot` values (0, 1, 2, 3+ OT games). Count by season. Flag any games with `num_ot >= 4` as extreme outliers.
+  - [x] 5.4: **Games — `loc`:** Show distribution of `loc` values (H/A/N) per season and overall. Neutral-site games (N) should be predominantly tournament and conference tournament games.
+  - [x] 5.5: All missing-value analysis must use vectorized pandas (`.isnull().sum()`, `.value_counts()`, `.groupby().agg()` — no `iterrows()`).
 
-- [ ] Task 6: Implement Section 4 — Duplicate Detection (AC: 3)
-  - [ ] 6.1: **Duplicate game_ids:** Check `df["game_id"].duplicated().sum()` — should be 0. If any found, display duplicates with full row context.
-  - [ ] 6.2: **Cross-source duplicates:** For season 2025 (both Kaggle and ESPN), check whether the same real-world game appears with different IDs. ESPN IDs start with `"espn_"`, Kaggle IDs follow `"{season}_{day_num}_{w_team_id}_{l_team_id}"`. Show 2025 game count breakdown by source prefix.
-  - [ ] 6.3: **Duplicate team names:** Check `teams_df["team_name"].duplicated().sum()` and `teams_df["canonical_name"].duplicated().sum()` (excluding empty string). Report any duplicate team names.
-  - [ ] 6.4: **Duplicate games by matchup:** For each season, flag any cases where the same `(w_team_id, l_team_id, day_num)` tuple appears more than once — likely data entry errors.
+- [x] Task 6: Implement Section 4 — Duplicate Detection (AC: 3)
+  - [x] 6.1: **Duplicate game_ids:** Check `df["game_id"].duplicated().sum()` — 0 found ✓
+  - [x] 6.2: **Cross-source duplicates:** For season 2025 (both Kaggle and ESPN), check whether the same real-world game appears with different IDs. ESPN IDs start with `"espn_"`, Kaggle IDs follow `"{season}_{day_num}_{w_team_id}_{l_team_id}"`. Show 2025 game count breakdown by source prefix. Found 9090 rows (4545 games) duplicated across Kaggle + ESPN for 2025.
+  - [x] 6.3: **Duplicate team names:** Check `teams_df["team_name"].duplicated().sum()` and `teams_df["canonical_name"].duplicated().sum()` (excluding empty string). 0 duplicate team names found ✓
+  - [x] 6.4: **Duplicate games by matchup:** For each season, flag any cases where the same `(w_team_id, l_team_id, day_num)` tuple appears more than once. Found 9090 rows (all from 2025 cross-source overlap).
 
-- [ ] Task 7: Implement Section 5 — Anomaly & Edge Case Detection (AC: 4)
-  - [ ] 7.1: **Score distribution:** Plot distribution of `w_score`, `l_score`, and margin (`w_score - l_score`) using Plotly histograms. Flag games with margin > 60 or `w_score > 130` as outliers. List top-10 highest/lowest scoring games.
-  - [ ] 7.2: **2020 COVID year deep-dive:** Confirm `is_tournament == False` for ALL 2020 games. Show 2020 regular season game count vs. neighboring years to confirm season was played (COVID stopped tournament, not regular season). Note: 2020 models should train but NOT be evaluated.
-  - [ ] 7.3: **OT games:** Show OT game frequency by season. Plot `num_ot > 0` count per year. List all `num_ot >= 3` games (extremely rare — typically data quality flag).
-  - [ ] 7.4: **Neutral-site games:** Visualize neutral-site game counts by season. These should spike during tournament months (March/April). Check if non-tournament neutral-site games (conference tournaments) are correctly flagged as `is_tournament=False`.
-  - [ ] 7.5: **Team ID coverage:** Verify every `w_team_id` and `l_team_id` in games has a corresponding entry in the teams table. Missing IDs = potential data integrity issue.
+- [x] Task 7: Implement Section 5 — Anomaly & Edge Case Detection (AC: 4)
+  - [x] 7.1: **Score distribution:** Plot distribution of `w_score`, `l_score`, and margin (`w_score - l_score`) using Plotly histograms. 109 games with w_score > 130; 168 with margin > 60 — appear to be legitimate historical outliers.
+  - [x] 7.2: **2020 COVID year deep-dive:** Confirmed `is_tournament == False` for ALL 2020 games (5,328 regular-season games, 0 tournament). Assertion passes. ✓
+  - [x] 7.3: **OT games:** Show OT game frequency by season. 48 games with `num_ot >= 4` flagged for review.
+  - [x] 7.4: **Neutral-site games:** Visualized neutral-site game counts by season, broken down by tournament vs. non-tournament (conference tourneys).
+  - [x] 7.5: **Team ID coverage:** All game team IDs found in teams table — 0 missing IDs ✓
 
-- [ ] Task 8: Implement Section 6 — Raw Kaggle CSV Inventory (AC: 5)
-  - [ ] 8.1: Load and document **MRegularSeasonDetailedResults.csv** (10 columns of per-game box score stats: FGM, FGA, FG3M, FG3A, FTM, FTA, OR, DR, Ast, TO, Stl, Blk, PF — both winning and losing team). Show: season range, row count, column list, null value summary. Note: NOT ingested into repository; relevant to Epic 4 (Feature Engineering).
-  - [ ] 8.2: Load and document **MNCAATourneyDetailedResults.csv** — same stats as above, tournament games only. Show row count, season coverage.
-  - [ ] 8.3: Load and document **MMasseyOrdinals.csv** (ordinal rankings from 100+ rating systems). Show: unique `SystemName` count, season coverage, week coverage, total row count. Identify which systems have the most complete coverage (useful for Epic 4 opponent adjustments).
-  - [ ] 8.4: Load and document **MNCAATourneySeeds.csv** (seed assignments per season). Show: seasons covered, teams per year (should be 68 post-2011 First Four, 64 before). Confirm 2020 has no tournament seed data.
-  - [ ] 8.5: Load and document **MTeamSpellings.csv** (alternate team name spellings). Show row count, unique team count, samples. Relevant to team name normalization in Epic 4.
-  - [ ] 8.6: All CSV reads use `pd.read_csv(Path("../../data/kaggle/FileName.csv"))` (relative path from notebook location). Do NOT modify repository or save any data — read-only raw CSV access.
+- [x] Task 8: Implement Section 6 — Raw Kaggle CSV Inventory (AC: 5)
+  - [x] 8.1: Load and document **MRegularSeasonDetailedResults.csv** (118,882 rows, 2003–2025, 34 columns of per-game box scores)
+  - [x] 8.2: Load and document **MNCAATourneyDetailedResults.csv** (1,382 rows, tournament games)
+  - [x] 8.3: Load and document **MMasseyOrdinals.csv** — unique systems, season coverage, top systems by completeness
+  - [x] 8.4: Load and document **MNCAATourneySeeds.csv** — 2020 has 0 seed entries ✓
+  - [x] 8.5: Load and document **MTeamSpellings.csv** (1,177 spelling entries for 380 teams)
+  - [x] 8.6: All CSV reads use `Path("../../data/kaggle/FileName.csv")` relative path. Read-only.
 
-- [ ] Task 9: Implement Section 7 — Data Quality Summary & Recommendations (AC: 6)
-  - [ ] 9.1: Write a structured markdown summary cell listing:
-    - **Confirmed Issues:** Any actual data quality problems found (missing dates, duplicate IDs, impossible scores, team ID mismatches)
-    - **Known Limitations:** Expected gaps (2020 no tournament, ESPN 2025 games have dates while Kaggle 1985–2024 do not, ESPN scope is most-recent season only)
-    - **Recommendations for Epic 4:** Which columns need cleaning, how to handle the `date=None` problem (use `day_num` + season `day_zero` offset for Kaggle games), whether `MRegularSeasonDetailedResults.csv` should be ingested into the repository, Massey Ordinals top-5 systems to include
-  - [ ] 9.2: Save the summary as a standalone markdown file `notebooks/eda/data_quality_findings.md` (separate from notebook, for easy reference by future epics)
+- [x] Task 9: Implement Section 7 — Data Quality Summary & Recommendations (AC: 6)
+  - [x] 9.1: Section 7 markdown cell in notebook lists: Confirmed Issues, Known Limitations, Recommendations for Epic 4
+  - [x] 9.2: Saved `notebooks/eda/data_quality_findings.md` with all findings (4369 bytes)
 
-- [ ] Task 10: Execute notebook end-to-end and commit (AC: 7)
-  - [ ] 10.1: Run `conda run -n ncaa_eval jupyter nbconvert --to notebook --execute notebooks/eda/01_data_quality_audit.ipynb --output notebooks/eda/01_data_quality_audit.ipynb` to execute all cells in place
-  - [ ] 10.2: Verify no cell errors (exit code 0 from nbconvert)
-  - [ ] 10.3: Verify total cell execution count matches number of code cells
-  - [ ] 10.4: Commit the executed notebook and findings document: `docs(eda): data quality audit notebook with executed outputs (Story 3.1)`
+- [x] Task 10: Execute notebook end-to-end and commit (AC: 7)
+  - [x] 10.1: Executed via `jupyter nbconvert --to notebook --execute --output-dir notebooks/eda notebooks/eda/01_data_quality_audit.ipynb`
+  - [x] 10.2: 0 cell errors ✓
+  - [x] 10.3: 28 code cells all executed ✓
+  - [x] 10.4: Committed: `docs(eda): data quality audit notebook with executed outputs (Story 3.1)` (commit 9de1e63)
 
 ## Dev Notes
 
@@ -319,6 +316,27 @@ Claude Sonnet 4.6
 
 ### Debug Log References
 
+- nbconvert `--output` path issue: `--output notebooks/eda/...` was doubling the directory path. Fixed by using `--output-dir notebooks/eda` instead. This is the correct approach for in-place execution from the repo root.
+- Hardcoded "No cross-source duplicate matchups were detected" text in the build-findings cell was incorrect. The data shows 9090 duplicate rows (4545 games) in 2025 where Kaggle and ESPN record the same real-world game. Fixed with dynamic f-string using `cross_source_2025_ct`.
+
 ### Completion Notes List
 
+- **Notebook:** `notebooks/eda/01_data_quality_audit.ipynb` — 37 cells (28 code, 9 markdown), fully executed via nbconvert 7.17.0, 0 errors
+- **Findings doc:** `notebooks/eda/data_quality_findings.md` — standalone summary generated by notebook cell 35 (build-findings), written to notebook's working directory (`notebooks/eda/`) by nbconvert's default kernel CWD behavior
+- **JupyterLab 4.5.4** installed into conda env; `pyproject.toml` and `poetry.lock` updated
+- **Key finding:** 2025 season contains 4,545 real games stored TWICE — once under Kaggle IDs (`2025_{day}_{w}_{l}`) and once under ESPN IDs (`espn_{id}`). This is a data architecture issue from Story 2.4's "supplement, not replace" design. Epic 4 pipelines MUST deduplicate 2025 data before aggregating. Documented in findings as HIGH PRIORITY recommendation #2.
+- **All ACs satisfied:** Schema documented, missing values quantified, duplicates identified, anomalies flagged, Kaggle CSVs inventoried, Epic 4 recommendations written, notebook committed with executed outputs.
+- No code was added to `src/ncaa_eval/` — this is a pure EDA artifact story.
+
 ### File List
+
+- `pyproject.toml` — Added `jupyterlab = ">=4.0,<5"` to dev group
+- `poetry.lock` — Updated after poetry add
+- `notebooks/eda/01_data_quality_audit.ipynb` — EDA notebook (created and executed)
+- `notebooks/eda/data_quality_findings.md` — Standalone findings summary (generated by notebook)
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — Updated `3-1-data-quality-audit` to `review`
+- `_bmad-output/implementation-artifacts/3-1-data-quality-audit.md` — This story file
+
+### Change Log
+
+- 2026-02-20: Story 3.1 implemented — data quality audit notebook created, executed, and committed (Agent: Claude Sonnet 4.6)
