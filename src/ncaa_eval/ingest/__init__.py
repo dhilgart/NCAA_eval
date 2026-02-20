@@ -13,6 +13,7 @@ from ncaa_eval.ingest.connectors import (
 )
 from ncaa_eval.ingest.repository import ParquetRepository, Repository
 from ncaa_eval.ingest.schema import Game, Season, Team
+from ncaa_eval.ingest.sync import SyncEngine, SyncResult
 
 __all__ = [
     "AuthenticationError",
@@ -26,5 +27,7 @@ __all__ = [
     "ParquetRepository",
     "Repository",
     "Season",
+    "SyncEngine",
+    "SyncResult",
     "Team",
 ]

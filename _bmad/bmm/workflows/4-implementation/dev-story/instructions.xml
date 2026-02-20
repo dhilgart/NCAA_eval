@@ -289,6 +289,15 @@
     <action>Validate implementation meets ALL story acceptance criteria; enforce quantitative thresholds explicitly</action>
     <action if="regression tests fail">STOP and fix before continuing - identify breaking changes immediately</action>
     <action if="new tests fail">STOP and fix before continuing - ensure implementation correctness</action>
+
+    <!-- Poetry lock file sync (CRITICAL - prevents CI failures) -->
+    <check if="pyproject.toml was modified in this task (dependency added, removed, or constraint changed)">
+      <critical>ALWAYS regenerate poetry.lock after ANY pyproject.toml change - Poetry 2.x removed --no-update flag</critical>
+      <action>Run: POETRY_VIRTUALENVS_CREATE=false conda run -n ncaa_eval poetry lock</action>
+      <action>Stage the updated poetry.lock for the upcoming commit</action>
+      <action>Include poetry.lock in this task's File List</action>
+      <note>Failure to sync poetry.lock causes CI to fail with: "pyproject.toml changed significantly since poetry.lock was last generated"</note>
+    </check>
   </step>
 
   <step n="9" goal="Validate and mark task complete ONLY when fully done">

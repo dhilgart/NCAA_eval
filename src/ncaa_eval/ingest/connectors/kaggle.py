@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import datetime
 import logging
+import zipfile
 from pathlib import Path
 from typing import Literal, cast
 
@@ -31,6 +32,7 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 _TEAMS_COLUMNS = {"TeamID", "TeamName"}
+_SPELLINGS_COLUMNS = {"TeamNameSpelling", "TeamID"}
 _REGULAR_SEASON_COLUMNS = {
     "Season",
     "DayNum",
@@ -100,7 +102,7 @@ class KaggleConnector(Connector):
         except Exception as exc:
             msg = (
                 "kaggle: credentials not found. "
-                "Create ~/.kaggle/kaggle.json or set KAGGLE_USERNAME/KAGGLE_KEY environment variables."
+                "Save your API token to ~/.kaggle/access_token (see README for setup instructions)."
             )
             raise AuthenticationError(msg) from exc
 
@@ -114,6 +116,13 @@ class KaggleConnector(Connector):
         except Exception as exc:
             msg = f"kaggle: failed to download competition '{self._competition}': {exc}"
             raise NetworkError(msg) from exc
+
+        # kaggle 2.0.0 no longer auto-extracts the zip — unzip manually
+        zip_path = self._extract_dir / f"{self._competition}.zip"
+        if zip_path.exists():
+            with zipfile.ZipFile(zip_path, "r") as zf:
+                zf.extractall(self._extract_dir)
+            zip_path.unlink()
 
     # -- CSV loading helpers ------------------------------------------------
 
@@ -134,15 +143,19 @@ class KaggleConnector(Connector):
             raise DataFormatError(msg) from exc
         return df
 
-    def _load_day_zeros(self) -> dict[int, datetime.date]:
-        """Load and cache the season → DayZero mapping."""
+    def load_day_zeros(self) -> dict[int, datetime.date]:
+        """Load and cache the season → DayZero mapping.
+
+        Returns:
+            Mapping of season year to the date of Day 0 for that season.
+        """
         if self._day_zeros is not None:
             return self._day_zeros
         df = self._read_csv("MSeasons.csv")
         _validate_columns(df, _SEASONS_COLUMNS, "MSeasons.csv")
         mapping: dict[int, datetime.date] = {}
         for _, row in df.iterrows():
-            mapping[int(row["Season"])] = datetime.date.fromisoformat(str(row["DayZero"]))
+            mapping[int(row["Season"])] = datetime.datetime.strptime(str(row["DayZero"]), "%m/%d/%Y").date()
         self._day_zeros = mapping
         return mapping
 
@@ -154,6 +167,17 @@ class KaggleConnector(Connector):
         _validate_columns(df, _TEAMS_COLUMNS, "MTeams.csv")
         return [Team(team_id=int(row["TeamID"]), team_name=str(row["TeamName"])) for _, row in df.iterrows()]
 
+    def fetch_team_spellings(self) -> dict[str, int]:
+        """Parse ``MTeamSpellings.csv`` into a spelling → TeamID mapping.
+
+        Returns every alternate spelling (lower-cased) for each team, which
+        provides much wider coverage than the canonical names in MTeams.csv
+        when resolving ESPN team name strings to Kaggle IDs.
+        """
+        df = self._read_csv("MTeamSpellings.csv")
+        _validate_columns(df, _SPELLINGS_COLUMNS, "MTeamSpellings.csv")
+        return dict(zip(df["TeamNameSpelling"].str.lower(), df["TeamID"].astype(int)))
+
     def fetch_games(self, season: int) -> list[Game]:
         """Parse regular-season and tournament CSVs into Game models.
 
@@ -161,7 +185,7 @@ class KaggleConnector(Connector):
         ``is_tournament=False``; games from ``MNCAATourneyCompactResults.csv``
         have ``is_tournament=True``.
         """
-        day_zeros = self._load_day_zeros()
+        day_zeros = self.load_day_zeros()
         games: list[Game] = []
         games.extend(
             self._parse_games_csv("MRegularSeasonCompactResults.csv", season, day_zeros, is_tournament=False)

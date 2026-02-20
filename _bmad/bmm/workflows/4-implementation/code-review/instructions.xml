@@ -70,6 +70,20 @@
       3. **Uncommitted changes not documented** → MEDIUM finding (transparency issue)
     </action>
 
+    <!-- Poetry lock file staleness check (CRITICAL - causes CI failures) -->
+    <check if="pyproject.toml is in story File List OR was found in git changes">
+      <action>Check if poetry.lock is also in story File List or git changes</action>
+      <check if="poetry.lock NOT in story File List AND NOT in git changes">
+        <action>Flag as HIGH finding: "pyproject.toml modified but poetry.lock not updated — will cause CI failure"</action>
+        <action>Include fix instructions: Run `POETRY_VIRTUALENVS_CREATE=false conda run -n ncaa_eval poetry lock` (Poetry 2.x; no --no-update flag)</action>
+      </check>
+      <check if="code-review agent itself modified pyproject.toml during fixes">
+        <critical>YOU must run `POETRY_VIRTUALENVS_CREATE=false conda run -n ncaa_eval poetry lock` before committing your fixes</critical>
+        <action>Run poetry lock and stage poetry.lock with the fix commit</action>
+        <action>Include poetry.lock in the review commit's staged files</action>
+      </check>
+    </check>
+
     <!-- Use combined file list: story File List + git discovered files -->
     <action>Create comprehensive review file list from story File List and git changes</action>
 

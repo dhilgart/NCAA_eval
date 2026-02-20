@@ -1,6 +1,6 @@
 """ESPN data source connector backed by the cbbpy scraper library.
 
-The :class:`EspnConnector` fetches current/recent season game data from ESPN
+The `EspnConnector` fetches current/recent season game data from ESPN
 via cbbpy.  It does **not** provide team or season master data — those come
 exclusively from the Kaggle connector.  A ``team_name_to_id`` mapping (built
 from Kaggle's MTeams.csv) is required for translating ESPN team names into
@@ -74,7 +74,7 @@ def _resolve_team_id(
     best_score = 0.0
     best_id: int | None = None
     for known_name, tid in original_mapping.items():
-        score = fuzz.ratio(name.lower(), known_name.lower())
+        score = fuzz.token_set_ratio(name.lower(), known_name.lower())
         if score > best_score:
             best_score = score
             best_id = tid
@@ -108,8 +108,8 @@ class EspnConnector(Connector):
     def fetch_games(self, season: int) -> list[Game]:
         """Fetch game results for *season* from ESPN via cbbpy.
 
-        Attempts ``get_games_season()`` first; falls back to per-team
-        ``get_team_schedule()`` if the season-wide call fails.
+        Uses `get_team_schedule()` for each team in the mapping and
+        deduplicates by ESPN game ID.
         """
         df = self._fetch_schedule_df(season)
         if df is None or df.empty:
@@ -119,20 +119,15 @@ class EspnConnector(Connector):
     # -- internal -----------------------------------------------------------
 
     def _fetch_schedule_df(self, season: int) -> pd.DataFrame | None:
-        """Try to load a season schedule DataFrame from cbbpy."""
-        # Attempt 1: season-wide call.
-        try:
-            result = ms.get_games_season(season)
-            if isinstance(result, tuple):
-                df = result[0]  # game info is the first element
-            else:
-                df = result
-            if isinstance(df, pd.DataFrame) and not df.empty:
-                return df
-        except Exception:
-            logger.info("espn: get_games_season(%d) failed, trying per-team fallback", season)
+        """Load a season schedule DataFrame from cbbpy via per-team schedules.
 
-        # Attempt 2: per-team schedule fallback.
+        `get_games_season` is intentionally avoided here: it fetches
+        boxscores and play-by-play for every game (thousands of no-timeout
+        HTTP requests) and returns a game-info schema that is incompatible
+        with the schedule columns expected by `_parse_schedule_df`.
+        `get_team_schedule` returns the correct schedule-format schema
+        (`team`, `opponent`, `game_result`, …) with one request per team.
+        """
         return self._fetch_per_team(season)
 
     def _fetch_per_team(self, season: int) -> pd.DataFrame | None:

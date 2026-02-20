@@ -36,7 +36,8 @@ development:
 
 **Discovered in Story 1.5 (2026-02-17):**
 - `mutmut = "*"` — mutmut 3.x is **Windows-incompatible**: unconditionally imports `resource` (Unix-only stdlib). Requires Linux or WSL for local use. CI (ubuntu-latest) is unaffected.
-- `poetry.lock` can go stale even when `pyproject.toml` is correct — always run `poetry lock --no-update && poetry install --with dev` after adding deps to ensure lock file is current (pytest-cov 7.0.0 was missing despite being in pyproject.toml)
+- `poetry.lock` can go stale even when `pyproject.toml` is correct — always run `poetry lock && poetry install --with dev` after adding deps to ensure lock file is current (pytest-cov 7.0.0 was missing despite being in pyproject.toml). **Note: Poetry 2.x removed `--no-update`; use `poetry lock` alone.**
+- `poetry.lock` must be regenerated after ANY constraint change, not just additions — changing `>=0.15` to `>=0.15,<2` is sufficient to break CI with: *"pyproject.toml changed significantly since poetry.lock was last generated"*. This applies to both dev agents AND code review agents that modify pyproject.toml as part of fixes. (Discovered: Story 2.4 Code Review × 2)
 - Always include `[tool.coverage.run]` alongside `[tool.coverage.report]` in pyproject.toml from day one — branch coverage is disabled by default and omitting this section means the coverage report never shows branch gaps
 
 ### Session Management (Nox) ⭐ (Discovered Story 1.6)
@@ -572,6 +573,12 @@ Code review workflow generates PRs following .github/pull_request_template.md st
 **Story 1.6 - Configure Session Management (2026-02-18 Code Review):**
 - ❌ **RST double backticks in Google-style docstrings** — Module-level docstrings used RST `` ``code`` `` syntax instead of Google-style single `` `code` ``. All Python files in this project use Google docstring style; single backticks are correct for inline code. Ruff does not catch this automatically.
 - ❌ **noxfile.py excluded from automated mypy enforcement** — The typecheck session's mypy invocation scoped to `src/ncaa_eval tests`, leaving `noxfile.py` type-checked only once at implementation time. Fixed by adding `noxfile.py` as an explicit path to the mypy invocation in the typecheck session.
+
+**Story 2.4 - Sync CLI & Smart Caching (2026-02-19 Code Review Round 2):**
+- ❌ **Test fixture date format not updated with production code change** — When `load_day_zeros()` was updated to parse `%m/%d/%Y` (the actual Kaggle CSV format), the test fixture `MSeasons.csv` was not updated from ISO `YYYY-MM-DD`. This broke 11 unit tests silently — they passed the first time but failed after the format change. **Template pattern: Test fixture CSVs must use the same format as the real upstream data. When changing date format parsing in production code, always update the corresponding fixture files in the same commit.**
+- ❌ **`iterrows()` used in new dict-building methods** — `fetch_team_spellings()` (new) and `_build_espn_team_map()` (new function) both used `for _, row in df.iterrows()` which violates Style Guide §6.2. For simple dict construction, use `dict(zip(df["col1"].str.lower(), df["col2"].astype(int)))`. For complex conditional logic per-row, extract `.tolist()` first and iterate over the Python list (not the DataFrame).
+- ❌ **Integration tests coupled to external library internals** — ESPN tests mocked `KaggleConnector` and `EspnConnector` but did NOT mock the module-level `_build_espn_team_map()` function, which reads a CSV from `cbbpy.__file__`'s package directory. Tests were silently calling real cbbpy code, coupling them to cbbpy's internal file structure. **Template pattern: When using `@patch` to mock classes, also patch any module-level helper functions that call into external library internals. If a function reads from `pkg.__file__`, it MUST be mocked in unit/integration tests.**
+- ❌ **User-facing error messages not updated with API changes** — When the README was updated to reflect new Kaggle 2.0 auth (`access_token` file) the error message in `download()` still referenced `~/.kaggle/kaggle.json` and `KAGGLE_USERNAME/KAGGLE_KEY`. Error messages are user documentation — they must be updated atomically with README changes. (Discovered: Story 2.4 Code Review Round 2)
 
 **Story 1.5 - Configure Testing Framework (2026-02-17):**
 - ❌ **Mutmut 3.x is Windows-incompatible** — imports `resource` (Unix-only stdlib) unconditionally in `__main__.py`. Any `mutmut` invocation fails on Windows with `ModuleNotFoundError: No module named 'resource'`. Required switching to WSL for local mutation testing. **Template action: Document WSL as required for full local toolchain; note CI (ubuntu-latest) is unaffected.**
@@ -1115,5 +1122,76 @@ def _resolve_team_id(name: str, lower_map: dict[str, int], original: dict[str, i
 
 **Rule:** Any dict comprehension inside a method that's called in a loop is a candidate for precomputation in `__init__`.
 
-*Last Updated: 2026-02-19 (Story 2.3 Code Review — ABC LSP pattern, domain value validation, version pinning, precomputed collections)*
+### `poetry add` Does Not Install Into Active Conda Env (Discovered Story 2.4)
+
+When running `POETRY_VIRTUALENVS_CREATE=false conda run -n ncaa_eval poetry add <pkg>`, Poetry updates `pyproject.toml` and `poetry.lock` but the package may not actually land in the conda env. Always follow `poetry add` with `conda run -n ncaa_eval pip install <pkg>` to guarantee the package is importable from the conda env.
+
+**Workaround until resolved:** Use `conda run -n ncaa_eval pip install <pkg>` as the authoritative installation step; let `poetry add` update `pyproject.toml`/`poetry.lock` for dependency tracking.
+
+### Overwrite-First Repository Writes Require Merge Before Save (Discovered Story 2.4)
+
+When `save_X()` **overwrites** the entire partition (e.g., `save_games()` per-season), adding a second source's data for the same partition requires: **load existing → merge → save combined**. Otherwise the first source's data is silently lost.
+
+```python
+# ❌ Overwrites Kaggle games with ESPN games — Kaggle data LOST
+self._repo.save_games(espn_games)
+
+# ✅ Merge first, then save combined list
+existing = self._repo.get_games(year)
+self._repo.save_games(existing + espn_games)
+```
+
+**Detection:** Check `save_*()` docstrings for "overwrite" vs "append" behavior before writing any logic that calls `save_*()` for the same key from multiple sources.
+
+### ESPN Marker-File Caching (Discovered Story 2.4)
+
+When the cache-check criterion would require reading and inspecting Parquet contents (e.g., "does this partition already contain ESPN-prefixed IDs?"), use lightweight marker files instead:
+
+```
+{data_dir}/.espn_synced_2025   ← empty file; touch() after sync, unlink() on force-refresh
+```
+
+This avoids loading Parquet just to detect presence, while remaining robust to partial failures (only create marker after a successful sync).
+
+### Tests Importing Project-Root Modules by Name Fail in Mutmut (Discovered Story 2.4)
+
+Tests that do `import sync` (where `sync.py` is at the project root, not in a package) fail with `ModuleNotFoundError` when mutmut runs them from `mutants/`. Even with `sys.path.insert` inside the test function, the import can fail.
+
+**Fix:** Mark such tests `@pytest.mark.no_mutation` to exclude them from mutmut. The engine-level tests still provide mutation coverage.
+
+```python
+@pytest.mark.integration
+@pytest.mark.no_mutation  # imports project-root sync.py by name — fails in mutmut context
+def test_cli_sync_kaggle(...) -> None:
+    import sync as sync_module
+    ...
+```
+
+### Private Helper Methods Accessed Cross-Class Require a Public Interface (Discovered Story 2.4 Code Review)
+
+When `Class A` needs to call a helper on `Class B` that is logically useful to external callers, rename it from `_private` to `public`. Suppressing `SLF001` with `# noqa` hides the design smell instead of fixing it.
+
+```python
+# ❌ Suppresses linting, couples SyncEngine to KaggleConnector internals
+season_day_zeros = kaggle_connector._load_day_zeros()  # noqa: SLF001
+
+# ✅ Rename to public; docstring documents the public contract
+def load_day_zeros(self) -> dict[int, datetime.date]:
+    """Load and cache the season → DayZero mapping."""
+    ...
+```
+
+**Rule:** If a `# noqa: SLF001` exists in a caller, question whether the method belongs on the public API. If yes, rename it. If not, consider moving the logic to the callee or a shared utility.
+
+### ESPN-style Multi-Source Caching Requires Full Cycle Tests (Discovered Story 2.4 Code Review)
+
+When a caching strategy involves marker files (or any lightweight sentinel), the following paths must each be tested:
+1. Happy-path: sentinel created after successful sync
+2. Cache hit: sentinel exists → fetch methods not called
+3. Force-refresh: sentinel deleted → re-fetch occurs, sentinel re-created
+4. Merge logic: existing data + new source data combined before overwrite-save
+
+Omitting these tests lets bugs in the entire cache lifecycle go undetected even when the dependency guard and ordering tests pass.
+
+*Last Updated: 2026-02-19 (Story 2.4 Code Review — private method public API promotion, multi-source cache test coverage)*
 *Next Review: [Set cadence - weekly? sprint boundaries?]*
