@@ -88,9 +88,7 @@ New features not in this table (graph centrality, Elo ratings, Massey ordinals) 
 
 **KenPom AdjEM relationship:** KenPom solves offense and defense separately on a per-100-possession basis. The iterative formula is `AdjO_A = RawO_A × (national_avg_D / AdjD_opponent)`. Conceptually identical to SRS but normalized by possessions.
 
-**Data requirements:** Box-score results 2003+. Full-season convergence requires at least ~8 games per team (October–January sample may be unreliable). Pre-tournament final ratings are most stable.
-
-**Sparse schedule handling:** Poor early in the season. Teams with 3–5 games have ratings driven entirely by margins, not schedule adjustment. No built-in regularization.
+**Data requirements:** Box-score results 2003+. This project always computes ratings on full-season data (pre-tournament snapshot), so convergence is well-conditioned with 30+ games per team.
 
 **Computational complexity:** O(k × |E|) iterative, or O(n³) direct solve. For NCAA (n=350 teams, |E|=5,800 games/season): trivial.
 
@@ -101,20 +99,19 @@ New features not in this table (graph centrality, Elo ratings, Massey ordinals) 
 | Feasibility | ✅ High — well-documented linear algebra; no new dependencies |
 | Complexity | Medium — iterative convergence; numerical stability required |
 | Expected value | High — KenPom-equivalent metric; should exceed SoS baseline |
-| Sparse schedule risk | ⚠️ Poor early season without regularization |
 
 ---
 
 ### 2.2 Ridge Regression / Penalized Least Squares
 
-**Description:** Frames the team-rating problem as regularized regression: minimize `‖Gr − S‖² + λ‖r‖²`. The regularized normal equations `(GᵀG + λI) r = GᵀS` are always full-rank and invertible, shrinking sparse-schedule teams toward the league mean (zero).
+**Description:** Frames the team-rating problem as regularized regression: minimize `‖Gr − S‖² + λ‖r‖²`. The regularized normal equations `(GᵀG + λI) r = GᵀS` are always full-rank and invertible, shrinking team ratings toward the league mean (zero).
 
-**Why regularization helps new teams:** A team with 3 games has a tiny diagonal entry in `GᵀG`. Without regularization, its rating is driven entirely by those 3 margins. Ridge shrinks this estimate by a factor proportional to λ, providing more stable predictions early in the season.
+**Relevance for full-season ratings:** Since this project always uses full-season data, regularization's primary benefit (stabilizing sparse early-season ratings) is not a concern. Ridge still provides a benefit for teams in structurally isolated conference subgraphs — where all intra-conference games form a near-singular sub-block — but this is a minor edge case with 30+ games per team.
 
 **Lambda selection:**
 - Cross-validation on prior seasons: minimize log loss on game outcomes across the prior 3–5 seasons.
 - Typical range: λ = 10–100 (in points-squared units for margin data).
-- Alternative: early-season λ = 100 (heavy shrinkage), late-season λ = 10 (trust the data).
+- With full-season data, small λ (10–20) is appropriate — heavy shrinkage is unnecessary.
 
 **Lasso (L1):** Produces sparse solutions; less useful for ratings (all teams should have non-zero ratings). Elastic net (L1 + L2) may help if the schedule graph has near-collinear subgraphs (isolated conferences playing only among themselves).
 
@@ -125,9 +122,8 @@ New features not in this table (graph centrality, Elo ratings, Massey ordinals) 
 | Factor | Assessment |
 |:---|:---|
 | Feasibility | ✅ High — scikit-learn Ridge is trivial |
-| Complexity | Low — single matrix solve; lambda tuning adds one CV loop |
-| Expected value | High — same accuracy as SRS but more stable early season |
-| Sparse schedule risk | ✅ Best of all methods — explicit regularization |
+| Complexity | Low-Medium — single matrix solve; lambda tuning adds one CV loop |
+| Expected value | High — equivalent to SRS at full season; minor stability benefit for isolated conferences |
 
 ---
 
@@ -139,8 +135,6 @@ New features not in this table (graph centrality, Elo ratings, Massey ordinals) 
 
 **Handling ties / OT:** Overtime games contribute to the diagonal (games played) and to `p` (full final margin, including OT). The standard Massey formulation naturally handles OT — no special case required.
 
-**Sparse schedule handling:** Same weakness as SRS — no regularization, so teams with few games have unstable early-season ratings. Direct solve (Cholesky) gives a unique solution given the constraint, but early-season solutions are driven by small samples.
-
 **Available via MMasseyOrdinals.csv:** The "MAS" system in the Kaggle dataset is Massey's own system. Full historical ordinals are available for 2003–2024, providing an alternative to re-implementing the solver.
 
 | Factor | Assessment |
@@ -148,7 +142,6 @@ New features not in this table (graph centrality, Elo ratings, Massey ordinals) 
 | Feasibility | ✅ High — n×n matrix solve; O(n³) but trivial for n=350 |
 | Complexity | Low — equivalent to SRS in a different formulation |
 | Expected value | Same as SRS; available pre-computed via MMasseyOrdinals |
-| Sparse schedule risk | ⚠️ Same weakness as SRS — no regularization |
 
 ---
 
@@ -167,7 +160,6 @@ New features not in this table (graph centrality, Elo ratings, Massey ordinals) 
 | Feasibility | ✅ High — Cholesky solve via scipy |
 | Complexity | Low — same as Massey |
 | Expected value | Lower than SRS/Massey — no margin signal |
-| Sparse schedule risk | ✅ Built-in Bayesian prior of 0.5 |
 
 **Recommendation:** Prefer as a feature from MMasseyOrdinals (pre-computed) rather than re-implementing. Do not implement as a standalone solver for Story 4.6.
 
@@ -175,13 +167,17 @@ New features not in this table (graph centrality, Elo ratings, Massey ordinals) 
 
 ### 2.5 Feasibility Summary and Recommendation for Story 4.6
 
-| Method | Sparse Handling | Week-to-Week Stability | Margin Used | Recommendation |
+**Context:** This project always computes ratings on full-season data (pre-tournament snapshot, 30+ games per team). Sparse-schedule considerations are not a factor — all methods are well-conditioned at full season.
+
+| Method | Full-Season Accuracy | Implementation Cost | Margin Used | Recommendation |
 |:---|:---|:---|:---|:---|
-| Ridge regression | ✅ Best | High | Yes | **Recommended for MVP** — best sparse-schedule behavior |
-| SRS / Massey iterative | ⚠️ Poor early | Moderate | Yes | **Recommended for MVP** — use as pre-tournament final rating |
-| Massey direct solve | ⚠️ Same | High (deterministic) | Yes | Secondary — pre-computed via MMasseyOrdinals |
-| Colley Matrix | ✅ Bayesian prior | High | No | **Not Recommended** — margin data discarded |
-| Elo (dynamic) | ✅ Conference prior | Moderate | Via K-factor | Best for *in-season* tracking; see Section 6 |
+| SRS / Massey iterative | High | Low — no tuning required | Yes | **Recommended for MVP** — simplest to implement; deterministic; no hyperparameter |
+| Massey direct solve | Same as SRS | Low — Cholesky; no tuning | Yes | **Recommended for MVP** — equivalent to SRS; pre-computed via MMasseyOrdinals as fallback |
+| Ridge regression | Equivalent to SRS | Medium — lambda tuning via CV | Yes | Secondary — adds lambda CV complexity with no meaningful accuracy gain at full season |
+| Colley Matrix | Lower | Low | No | **Not Recommended** — discards margin signal |
+| Elo (dynamic) | Comparable | Medium — K-factor design | Via K-factor | Best for *in-season* tracking; see Section 6 |
+
+**Revised recommendation for Story 4.6:** Implement SRS (iterative solve) as the primary opponent-adjustment method — it is the simplest, requires no hyperparameter tuning, and is well-conditioned on full-season data. Massey (direct Cholesky solve) is an equivalent alternative if a direct solver is preferred. Ridge adds lambda tuning complexity without meaningful accuracy benefit given full-season data.
 
 **Validation gate for Story 4.6:** Any opponent-adjustment implementation must be validated to exceed the SoS baseline (r=0.2970). If opponent-adjusted efficiency does not exceed this baseline, the adjustment adds no value over the raw SoS feature already planned for Story 4.4.
 
@@ -705,7 +701,7 @@ Edwards 2021 rescaled overtime game scores to a points-per-40-minutes equivalent
 | 3 | Rolling FGM / Scoring (10-game) | 4.4 | r=0.2628 / 0.2349 | Standard feature from EDA Tier 1 |
 | 4 | Elo rating (K=38, margin scaling, mean reversion) | 4.6 | Tier 2 in every validated Kaggle MMLM solution; captures recency | Must exceed SoS baseline (r=0.2970) |
 | 5 | PageRank (margin-weighted, warm-start) | 4.5 | Peer-reviewed validation; should exceed SoS baseline | Must exceed SoS r=0.2970 in local validation |
-| 6 | Ridge efficiency ratings (AdjO, AdjD, AdjEM) | 4.6 | KenPom-equivalent metric; stable for sparse schedules | Must exceed SoS baseline (r=0.2970) |
+| 6 | SRS / Massey efficiency ratings (AdjO, AdjD, AdjEM equivalent) | 4.6 | KenPom-equivalent metric; simplest full-season solver; no hyperparameter tuning | Must exceed SoS baseline (r=0.2970) |
 | 7 | Rolling TO_rate, PF, DR (10-game) | 4.4 | EDA Tier 1 negative predictors; r=−0.1424, −0.1574 | Standard from EDA Tier 1 |
 | 8 | EWMA (α=0.20) momentum feature | 4.4 | Low cost; addresses recency without window-size tuning | Feature importance validation in Story 5.4 |
 | 9 | loc encoding (H/A/N) | 4.4 | EDA Tier 2; declining home advantage is time-varying | Encode as numeric + include season interaction |
