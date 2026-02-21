@@ -1448,4 +1448,43 @@ Or renumber sequentially when sections are dropped rather than leaving gaps.
 *Updated: 2026-02-20 (Story 3.2 Code Review — day-to-round mapping consistency, multi-notebook findings files, story file list completeness, apply-vs-vectorize)*
 *Updated: 2026-02-20 (Story 3.3 Code Review — documentation synthesis story review pattern, ranked list rationale requirement)*
 *Updated: 2026-02-20 (Story 3.3 Code Review Round 2 — extension notebook output commit gap, section numbering in multi-notebook findings files)*
+*Updated: 2026-02-20 (Story 4.1 Code Review — research spike patterns: code examples, composite coverage gates, arXiv verification, Kaggle board limitation, spike sprint-status task wording)*
+
+---
+
+## Research Spike Patterns (Discovered: Story 4.1 Code Review, 2026-02-20)
+
+### Code Examples in Research Docs Must Be Anti-Pattern-Free
+Research spike documents (like `specs/research/`) will be used as implementation references by downstream developers. Any code shown — even pseudocode — must follow project mandates:
+- **No `iterrows()`** — use `nx.from_pandas_edgelist()`, `.itertuples()`, or fully vectorized patterns
+- **No magic numbers without comments**
+- Always add an explicit warning note if a code snippet is pseudocode-only and must be rewritten for production
+
+### Composite Ranking Recommendation Gate: Verify Coverage Before Recommending
+When a research spike recommends a composite of external data systems (e.g., Massey ordinals SAG+POM+MOR+WLK), always:
+1. Cross-check the recommended members against the confirmed full-coverage set
+2. If any member is unconfirmed, make the recommendation conditional with an explicit fallback using only confirmed-coverage members
+3. Add a verification step to the implementation story (4.3 in this case)
+
+Pattern: *"Use SAG+POM+MOR+WLK if coverage confirmed; fallback: MOR+POM+DOL (confirmed full-coverage margin systems)"*
+
+### arXiv Citation Verification in Research Spikes
+ArXiv IDs use `YYMM.NNNNN` format. An ID of `2508.xxxxx` = August 2025. Always verify:
+- The paper actually exists at arxiv.org
+- The year stated in the document matches the arXiv submission year
+- Papers near the knowledge cutoff (2025+) require explicit verification — do not rely on training knowledge alone
+
+### Kaggle Discussion Boards Require Authentication
+Kaggle competition discussion boards return JavaScript boilerplate when fetched without authentication. Research spikes cannot access board content directly. When writing story ACs for Kaggle research spikes:
+- ✅ Use: *"Review documented community solutions and published writeups for Kaggle MMLM"*
+- ❌ Avoid: *"Review Kaggle discussion boards"* (inaccessible without login)
+- Secondary sources (Medium, mlcontests.com, public GitHub repos) are the practical approach
+
+### Spike Sprint-Status Task Wording
+Spike story task descriptions for the final sprint-status update should say `→ review` not `→ done`. Spikes go through code review like any other story before reaching `done`. Using `→ done` in the task description creates a false-completion scenario when the agent correctly sets `→ review`.
+
+Correct pattern:
+```
+- [ ] X.X: Update sprint-status.yaml: `story-key` → `review` (code review advances to `done`)
+```
 *Next Review: [Set cadence - weekly? sprint boundaries?]*
