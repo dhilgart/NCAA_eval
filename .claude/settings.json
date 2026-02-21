@@ -64,7 +64,18 @@
       "Bash(ncaa-git commit *)",
       "Bash(ncaa-git push *)",
       "Bash(ncaa-git fetch *)",
-      "Bash(ncaa-git stash *)"
+      "Bash(ncaa-git stash *)",
+      "Bash(/home/dhilg/bin/ncaa-git status *)",
+      "Bash(/home/dhilg/bin/ncaa-git diff *)",
+      "Bash(/home/dhilg/bin/ncaa-git log *)",
+      "Bash(/home/dhilg/bin/ncaa-git show *)",
+      "Bash(/home/dhilg/bin/ncaa-git branch *)",
+      "Bash(/home/dhilg/bin/ncaa-git checkout *)",
+      "Bash(/home/dhilg/bin/ncaa-git add *)",
+      "Bash(/home/dhilg/bin/ncaa-git commit *)",
+      "Bash(/home/dhilg/bin/ncaa-git push *)",
+      "Bash(/home/dhilg/bin/ncaa-git fetch *)",
+      "Bash(/home/dhilg/bin/ncaa-git stash *)"
     ]
   }
 }
