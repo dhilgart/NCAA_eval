@@ -1,6 +1,6 @@
 # Story 4.3: Implement Canonical Team ID Mapping & Data Cleaning
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -551,6 +551,29 @@ None.
 - 26 unit tests: 201 total suite tests pass, zero regressions.
 - ruff clean, mypy --strict clean (33 source files).
 
+### Senior Developer Review (AI)
+
+Reviewer: Claude Sonnet 4.6 (code-review) on 2026-02-21
+
+**Findings:** 0 High, 3 Medium, 4 Low
+
+**MEDIUM issues fixed (3):**
+1. `composite_pca()` — added empty-snapshot guard (`if snapshot.empty: return pd.DataFrame()`) before `PCA().fit()` call that would crash on empty data.
+2. `composite_weighted()` — added `if not weights: raise ValueError(...)` guard to prevent `ZeroDivisionError` when caller passes `weights={}`.
+3. `composite_pca()` untested — added 3 PCA tests (`test_massey_composite_pca_explicit_components`, `test_massey_composite_pca_auto_select`, `test_massey_composite_pca_empty_snapshot`) and 1 weighted-validation test.
+
+**LOW action items (deferred):**
+
+#### Review Follow-ups (AI)
+- [ ] [AI-Review][LOW] `run_coverage_gate()` uses `.isin(list(_GATE_SYSTEMS))` — tuple coercion is unnecessary; pandas `.isin()` accepts tuples directly [normalization.py:367]
+- [ ] [AI-Review][LOW] Tests import private constants `_FALLBACK_SYSTEMS` and `_PRIMARY_COMPOSITE` — couples test to implementation internals; consider exporting via public alias if needed long-term [test_normalization.py:11-13]
+- [ ] [AI-Review][LOW] `normalize_zscore()` silently returns NaN-filled Series when `col.std() == 0` (all teams same rank) — undocumented edge case; consider adding a warning log [normalization.py:567]
+- [ ] [AI-Review][LOW] `normalize()` with empty-string input causes full-dict prefix scan and misleading warning output [normalization.py:186-187]
+
+**Post-fix quality gate:**
+- 30 unit tests pass (4 new), 206 total suite tests, zero regressions
+- ruff clean, mypy --strict clean
+
 ### File List
 
 - `src/ncaa_eval/transform/normalization.py` (new)
@@ -565,3 +588,4 @@ None.
 |:---|:---|:---|
 | 2026-02-21 | Created story 4.3 — Implement Canonical Team ID Mapping & Data Cleaning | Claude Sonnet 4.6 (create-story) |
 | 2026-02-21 | Implemented normalization.py, updated transform/__init__.py, wrote 26 unit tests; all quality gates pass | Claude Sonnet 4.6 (dev-story) |
+| 2026-02-21 | Code review: fixed 3 MEDIUM issues (composite_pca empty guard, composite_weighted empty-weights guard, 4 new PCA/weighted tests); 4 LOW action items deferred; status → done | Claude Sonnet 4.6 (code-review) |

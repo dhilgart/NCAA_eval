@@ -446,10 +446,17 @@ class MasseyOrdinalsStore:
             season: Season year.
             day_num: Temporal cutoff (inclusive).
             weights: Mapping of system name → weight (any positive floats).
+                Must not be empty.
 
         Returns:
             Series indexed by TeamID with weighted ordinal rank per team.
+
+        Raises:
+            ValueError: If ``weights`` is empty.
         """
+        if not weights:
+            msg = "weights dict must not be empty"
+            raise ValueError(msg)
         systems = list(weights.keys())
         snapshot = self.get_snapshot(season, day_num, systems=systems)
         w = pd.Series(weights)
@@ -485,6 +492,8 @@ class MasseyOrdinalsStore:
 
         snapshot = self.get_snapshot(season, day_num)
         snapshot = snapshot.dropna()
+        if snapshot.empty:
+            return pd.DataFrame()
         if n_components is None:
             pca_full = PCA()
             pca_full.fit(snapshot.values)

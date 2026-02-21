@@ -627,6 +627,12 @@ Code review workflow generates PRs following .github/pull_request_template.md st
 
 - ❌ **Do not select untested components for MVP scope** — sportsdataverse-py was marked "⚠️ Not performed — package not tested during this spike" in the research document yet was selected as MVP Source #3. Similarly, Warren Nolan was categorized as "Deferred Scrape-Only" in the research recommendations but promoted to MVP Source #4. Selections should be consistent with the evidence gathered during the spike. (Discovered: Story 2.1 Code Review Round 3)
 
+**Story 4.3 - Canonical Team ID Mapping & Data Cleaning (2026-02-21 Code Review):**
+- ❌ **ML library `.fit()` calls crash on empty DataFrames** — `composite_pca()` called `PCA().fit(snapshot.values)` with no guard after `snapshot.dropna()`. When no data matched season/day_num filters, this raised `ValueError`. **Template pattern: always guard `if df.empty: return pd.DataFrame()` before any sklearn/ML method that expects non-empty input.**
+- ❌ **Empty-dict inputs cause silent ZeroDivisionError in weighted aggregations** — `composite_weighted({})` caused `w.sum() = 0` → division by zero. **Template pattern: validate dict inputs are non-empty at method entry with a `ValueError` before any arithmetic.**
+- ❌ **Every public method in a store/manager class must have at least one test** — `composite_pca()` (AC 8c, Option C) was the only composite method without a test and happened to have the worst edge-case bugs. When a class exposes 11+ methods, it's easy to miss one. **Template pattern: map every public method to a test ID during story planning; leave blank IDs as explicit TODOs.**
+- ℹ️ **pandas `.isin()` accepts any iterable** — passing a `tuple` or `frozenset` directly is idiomatic; wrapping in `list()` is unnecessary clutter (PEP 20). Use `.isin(_GATE_SYSTEMS)` not `.isin(list(_GATE_SYSTEMS))`.
+
 **Story 4.1 - Feature Engineering Techniques Spike (2026-02-21 SM retrospective):**
 - ❌ **Spike stories must include a post-PO-approval checklist AC for updating downstream epic story descriptions** — After Story 4.1 was approved, the SM had to manually read through the research document and update ACs in epics.md for Stories 4.3–4.7 and add a new Story 4.8 placeholder. This work was not in the story's AC list and was only discovered as necessary after PO approval. **Template pattern for all future spike stories whose output defines implementation scope:**
   ```

@@ -421,6 +421,47 @@ def test_massey_normalize_zscore(massey_composite_store: MasseyOrdinalsStore) ->
 
 
 # ---------------------------------------------------------------------------
+# MasseyOrdinalsStore — composite_pca (AC 8c)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+def test_massey_composite_pca_explicit_components(massey_composite_store: MasseyOrdinalsStore) -> None:
+    """composite_pca with explicit n_components returns DataFrame with PC columns indexed by TeamID."""
+    result = massey_composite_store.composite_pca(2023, 100, n_components=1)
+    assert "PC1" in result.columns
+    assert len(result) == 3
+    assert set(result.index) == {1001, 1002, 1003}
+
+
+@pytest.mark.unit
+def test_massey_composite_pca_auto_select(massey_composite_store: MasseyOrdinalsStore) -> None:
+    """composite_pca with n_components=None auto-selects to capture >=90% variance."""
+    result = massey_composite_store.composite_pca(2023, 100, n_components=None, min_variance=0.90)
+    assert result.shape[0] == 3
+    assert all(col.startswith("PC") for col in result.columns)
+
+
+@pytest.mark.unit
+def test_massey_composite_pca_empty_snapshot(tmp_path: Path) -> None:
+    """composite_pca returns empty DataFrame when no data matches season/day_num."""
+    rows: list[tuple[int, int, str, int, int]] = [
+        (2023, 100, "SAG", 1001, 10),
+    ]
+    csv = _build_massey_csv(tmp_path, rows)
+    store = MasseyOrdinalsStore.from_csv(csv)
+    result = store.composite_pca(2024, 100)  # Wrong season → empty snapshot
+    assert result.empty
+
+
+@pytest.mark.unit
+def test_massey_composite_weighted_empty_weights_raises(massey_composite_store: MasseyOrdinalsStore) -> None:
+    """composite_weighted raises ValueError when weights dict is empty."""
+    with pytest.raises(ValueError, match="weights dict must not be empty"):
+        massey_composite_store.composite_weighted(2023, 100, weights={})
+
+
+# ---------------------------------------------------------------------------
 # MasseyOrdinalsStore — rank delta
 # ---------------------------------------------------------------------------
 
