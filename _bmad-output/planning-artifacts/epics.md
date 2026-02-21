@@ -439,88 +439,152 @@ So that I can train models with walk-forward validation without risk of data lea
 ### Story 4.3: Implement Canonical Team ID Mapping & Data Cleaning
 
 As a data scientist,
-I want a normalization layer that maps diverse team names to canonical IDs and applies standard data cleaning,
-So that features are computed on consistent, clean data regardless of the original source.
+I want a normalization layer that maps diverse team names to canonical IDs, integrates supplementary lookup tables, and ingests Massey Ordinal rankings,
+So that features are computed on consistent, clean data and all pre-computed multi-system ratings are available to the feature pipeline with temporal fidelity.
 
 **Acceptance Criteria:**
 
 **Given** ingested data may contain varying team name formats across sources
 **When** the developer runs the normalization pipeline
-**Then** all team name variants are mapped to a single canonical TeamID per team
+**Then** all team name variants are mapped to a single canonical TeamID per team using `MTeamSpellings.csv`
 **And** the mapping handles common variations (abbreviations, mascots, "State" vs "St.", etc.)
 **And** unmapped team names raise warnings with suggested matches
-**And** data cleaning applies scaling, categorical encoding, and normalization as needed
 **And** the cleaning pipeline is idempotent (running it twice produces the same result)
-**And** the normalization module is covered by unit tests with known name-variant fixtures
+
+**And** `MNCAATourneySeeds.csv` is parsed into structured fields: `seed_num` (integer 1–16), `region` (W/X/Y/Z), `is_play_in` (bool — True for seeds with 'a'/'b' suffix)
+**And** `MTeamConferences.csv` provides a `(season, team_id) → conference` lookup for every season available
+
+**And** `MMasseyOrdinals.csv` is ingested with all 100+ ranking systems, preserving the `RankingDayNum` temporal field for each record
+**And** a **coverage gate** verifies whether SAG (Sagarin) and WLK (Whitlock) are present for all 23 seasons (2003–2025): if either has gaps, the fallback composite is MOR+POM+DOL (all confirmed full-coverage, all margin-based)
+**And** the following composite building blocks are available (modeler selects at feature-serving time):
+  - **Option A:** Simple average of selected systems' ordinal ranks (e.g., `(SAG + POM + MOR + WLK) / 4` if coverage confirmed; fallback `(MOR + POM + DOL) / 3`)
+  - **Option B:** Weighted ensemble with system weights derived from prior-season CV log loss
+  - **Option C:** PCA reduction of all available systems to N principal components (capturing ≥90% variance)
+  - **Option D:** Pre-tournament snapshot — use only ordinals from the last available `RankingDayNum ≤ 128` per system per season
+**And** ordinal feature normalization options are provided: rank delta between teams (primary matchup feature), percentile (bounded [0,1]), and z-score per season
+**And** the pre-computed Colley ("COL") and Massey ("MAS") systems from `MMasseyOrdinals.csv` are available as alternatives to reimplementing those solvers in Story 4.6
+**And** the normalization and ingestion module is covered by unit tests with known name-variant fixtures and known ordinal coverage assertions
 
 ### Story 4.4: Implement Sequential Transformations
 
 As a data scientist,
-I want rolling averages, streaks, and momentum features computed from chronologically ordered game data,
-So that I can capture recent team form and trends as predictive features.
+I want rolling windows, EWMA, momentum, streak, per-possession, and Four Factor features computed from chronologically ordered game data,
+So that I can capture recent team form, efficiency, and trends as predictive features without data leakage.
 
 **Acceptance Criteria:**
 
 **Given** chronological game data is available via the serving API (Story 4.2)
 **When** the developer applies sequential transformations to a team's game history
-**Then** rolling averages are computed over configurable windows (e.g., last 5, 10, 20 games)
-**And** win/loss streaks are tracked with current streak length and direction
-**And** momentum features capture "last N games" performance trends
+**Then** rolling averages are computed over configurable windows of 5, 10, and 20 games (plus full-season aggregate) for all EDA Tier 1 stats; all three window sizes are parallel feature columns — not competing features, but modeler-configurable parameters of the same building block
 **And** all sequential features respect chronological ordering (no future data leakage)
 **And** features are computed using vectorized operations (numpy/pandas) per NFR1
-**And** edge cases are handled (season start with insufficient history, mid-season breaks)
+
+**And** EWMA (Exponentially Weighted Moving Average) is implemented with configurable α (range 0.10–0.30; recommended start α=0.15–0.20 mapping to effective window of 9–12 games); uses `pandas.DataFrame.ewm(alpha=α).mean()` per team per season
+**And** a momentum/trajectory feature is produced as `ewma_fast − ewma_slow` (rate of change of efficiency; positive = improving form into tournament)
+
+**And** win/loss streaks are encoded as a signed integer: `+N` for winning streak of N games, `−N` for losing streak, capturing pure win/loss sequence dynamics independent of efficiency magnitude
+
+**And** per-possession normalization is applied to all counting stats: `possessions = FGA − OR + TO + 0.44 × FTA`; stat values are divided by possession count to remove pace confound
+**And** Four Factors are computed: `eFG% = (FGM + 0.5 × FGM3) / FGA`, `ORB% = OR / (OR + opponent_DR)`, `FTR = FTA / FGA`, `TO% = TO / possessions`
+
+**And** home court encoding converts `loc` to a numeric feature: H=+1, A=−1, N=0 (or one-hot for tree-based models); EDA-confirmed +2.2pt home margin advantage
+**And** time-decay game weighting applies the BartTorvik formula before rolling aggregations: games >40 days old lose 1% weight per day, with a floor of 60% (`weight = max(0.6, 1 − 0.01 × max(0, days_ago − 40))`)
+**And** `rescale_overtime(score, num_ot)` from Story 4.2 is applied to raw scores before any aggregation (normalizes OT games to 40-minute equivalent)
+
+**And** edge cases are handled: season start with insufficient history, mid-season breaks
 **And** sequential transformations are covered by unit tests validating correctness and temporal integrity
 
 ### Story 4.5: Implement Graph Builders & Centrality Features
 
 As a data scientist,
-I want to convert season schedules into NetworkX graph objects and compute centrality metrics,
-So that I can quantify strength of schedule and network position as predictive features.
+I want to convert season schedules into NetworkX directed graphs and compute PageRank, betweenness centrality, HITS (hub + authority), and clustering coefficient features,
+So that I can quantify transitive team strength, structural schedule position, and schedule diversity as predictive features.
 
 **Acceptance Criteria:**
 
 **Given** game data for a season is available
 **When** the developer builds a season graph and computes centrality features
-**Then** the season schedule is converted to a NetworkX directed graph (teams as nodes, games as edges)
-**And** edge weights reflect margin of victory or win probability
-**And** PageRank is computed to quantify overall team strength within the schedule network
-**And** betweenness centrality and other relevant metrics are available as features
-**And** graph features can be computed incrementally as games are added (for walk-forward use)
-**And** graph builders are covered by unit tests with known small-graph fixtures
+**Then** the season schedule is converted to a NetworkX directed graph with edges directed winner←loser (loser "votes for" winner quality), using `nx.from_pandas_edgelist()` — no iterrows
+**And** edge weights are margin-of-victory capped at 25 points (`min(margin, 25)`) to prevent extreme-blowout distortion
+**And** optional date-recency weighting multiplies edge weight by a recency factor (e.g., games in the last 20 days get 1.5× weight)
 
-### Story 4.6: Implement Opponent Adjustments
+**And** **PageRank** is computed (directed, margin-weighted, `nx.pagerank(G, alpha=0.85, weight="weight")`) — captures transitive win-chain strength (2 hops vs. SoS 1 hop); peer-reviewed NCAA validation: 71.6% vs. 64.2% naive win-ratio (Matthews et al. 2021)
+**And** **Betweenness centrality** is computed (`nx.betweenness_centrality()`) — captures structural "bridge" position; distinct signal from both strength (PageRank) and schedule quality (SoS)
+**And** **HITS** hub and authority scores are both computed via a single `nx.hits()` call; authority score is exposed (largely redundant with PageRank, r≈0.908, but zero additional cost); hub score is a distinct signal ("quality schedule despite losses")
+**And** **Clustering coefficient** is computed (`nx.clustering()`) — schedule diversity metric: low clustering = broad cross-conference scheduling
+
+**And** walk-forward incremental update strategy is implemented: PageRank uses power-iteration warm start (initialize with previous solution; 2–5 iterations instead of 30–50); betweenness is fully recomputed each time step (O(V×E) per step; pre-computed and stored by game date for walk-forward use over 40+ seasons)
+
+**And** graph features can be computed incrementally as games are added (for walk-forward use in Story 4.7)
+**And** graph builders are covered by unit tests with known small-graph fixtures including PageRank convergence and betweenness structural correctness assertions
+
+### Story 4.6: Implement Batch Opponent Adjustment Rating Systems
 
 As a data scientist,
-I want linear algebra solvers for opponent-adjusted efficiency statistics,
-So that I can generate features that account for strength of competition.
+I want batch linear algebra rating solvers (SRS, Ridge, Colley) that produce opponent-adjusted team ratings for the full season,
+So that I can generate features that account for schedule strength and quality of competition.
 
 **Acceptance Criteria:**
 
-**Given** game data with scores and team matchup information is available
-**When** the developer runs the opponent adjustment solver
-**Then** offensive and defensive efficiency ratings are computed adjusted for opponent strength
-**And** the solver uses linear algebra methods (e.g., ridge regression, least squares) per FR5
-**And** ratings can be computed incrementally for walk-forward compatibility
-**And** the solver handles edge cases (teams with very few games, unconnected schedule components)
-**And** opponent-adjusted stats are validated against known benchmarks (e.g., KenPom-style ratings on historical data)
-**And** the solver is covered by unit tests including convergence and edge case tests
+**Given** full-season game data with scores and team matchup information is available
+**When** the developer runs the opponent adjustment solvers
+**Then** **SRS (Simple Rating System)** is implemented as the Group A canonical representative: fixed-point iteration solve (`r_i(k+1) = avg_margin_i + avg(r_j for all opponents j)`); convergence guaranteed for connected schedules (~3,000–5,000 iterations); produces margin-adjusted batch rating
+**And** **Ridge regression** is implemented as the Group A λ-parameterized variant: regularized SRS via `sklearn.linear_model.Ridge`; λ configurable in range 10–100 (default λ=20 for full-season data); exposes shrinkage as a modeler-visible tuning knob without providing a distinct signal from SRS
+**And** **Colley Matrix** is implemented as the Group B representative (win/loss only): Cholesky solve for the Colley matrix `C[i,i] = 2 + t_i`, `C[i,j] = -n_ij`; or the pre-computed "COL" system from `MMasseyOrdinals.csv` (ingested in Story 4.3) is used as an alternative — implementation choice resolved during Story 4.6 development
+
+**And** all three solvers produce full-season pre-tournament snapshots (ratings as of the last regular-season game), not in-season incremental updates (that is Story 4.8's responsibility)
+**And** the solvers handle edge cases: teams with very few games, structurally isolated conference subgraphs (near-singular sub-blocks), unconnected schedule components
+**And** outputs are validated against the pre-computed "MAS" (Massey) system in `MMasseyOrdinals.csv` for sanity-check benchmarking
+
+**And** note: Elo (dynamic game-by-game rating as a feature building block) is implemented in Story 4.8, not here — that story covers the stateful/incremental rating approach
+**And** the solvers are covered by unit tests including convergence assertions (SRS), lambda-sensitivity tests (Ridge), and win/loss isolation tests (Colley)
 
 ### Story 4.7: Implement Stateful Feature Serving
 
 As a data scientist,
-I want a feature serving layer that feeds chronologically-ordered, combined features to models during training,
-So that models receive a consistent, temporally-safe feature matrix regardless of which transformations are active.
+I want a feature serving layer that combines all active feature transformations into a temporally-safe feature matrix, with in-fold probability calibration and matchup-level feature support,
+So that models receive a consistent, leakage-free feature matrix with calibrated probability outputs.
 
 **Acceptance Criteria:**
 
-**Given** sequential, graph, opponent adjustment, and normalization features are implemented (Stories 4.3-4.6)
+**Given** sequential, graph, batch rating, dynamic rating, and normalization features are implemented (Stories 4.3–4.6, 4.8)
 **When** the developer requests features for a model training run
-**Then** the serving layer combines all active feature transformations into a unified feature matrix
+**Then** the serving layer combines all active feature transformations into a unified feature matrix via declarative configuration (specify which building blocks to activate)
 **And** features are served in strict chronological order matching the data serving API (Story 4.2)
 **And** the serving layer enforces that no feature computation uses future data relative to the prediction point
-**And** feature configuration is declarative (specify which transformations to include)
 **And** the serving layer supports both stateful (per-game iteration) and stateless (batch) consumption modes
-**And** the feature serving pipeline is covered by integration tests validating end-to-end temporal integrity
+
+**And** **Massey ordinal temporal slicing** is enforced: for each game at date D, only ordinals with `RankingDayNum` published ≤ D are used — prevents ordinal leakage during walk-forward backtesting
+**And** **matchup-level features** are computed as team_A − team_B deltas: seed differential (`seed_num_A − seed_num_B`), ordinal rank deltas, Elo delta, SRS delta — these are the primary matchup signals for tournament prediction
+
+**And** **probability calibration** is applied in-fold (not post-hoc): isotonic regression or cubic-spline calibration fitted on training fold predictions, applied to test fold predictions; the `goto_conversion` Python package is assessed as an alternative calibration implementation
+**And** calibration is always in-fold to prevent leakage — fitting calibration on held-out data is NOT acceptable
+
+**And** `gender_scope` and `dataset_scope` are configurable parameters on the feature server (e.g., men's vs. women's data; Kaggle-only vs. ESPN-enriched games)
+**And** the feature serving pipeline is covered by integration tests validating end-to-end temporal integrity, calibration leakage prevention, and matchup-level delta correctness
+
+### Story 4.8: Implement Dynamic Rating Features (Elo Feature Building Block)
+
+As a data scientist,
+I want a game-by-game Elo rating system that produces team ratings as features for the walk-forward feature pipeline,
+So that I can capture in-season trajectory and momentum in addition to the full-season batch ratings from Story 4.6.
+
+**Note:** This story implements Elo ratings as a **feature building block** (a rating computed from game history to feed as input to another model, e.g., XGBoost). Story 5.3 implements Elo as a complete predictive **model** — these are architecturally distinct.
+
+**Acceptance Criteria:**
+
+**Given** chronological game data is available via the serving API (Story 4.2)
+**When** the developer runs the Elo feature generator on a season's game history
+**Then** Elo ratings are updated game-by-game from a configurable initial rating (default 1500): `r_new = r_old + K_eff × (actual − expected)`, where `expected = 1 / (1 + 10^((r_opponent − r_team)/400))`
+**And** the K-factor is configurable and supports variable-K: K=56 (early season) → K=38 (regular season) → K=47.5 (tournament games)
+**And** margin-of-victory scaling is supported: `K_eff = K × min(margin, max_margin)^0.85` (Silver/SBCB formula; diminishing returns on blowouts); `max_margin` is configurable
+**And** home-court adjustment subtracts a configurable number of Elo points (default 3–4) from the home team's effective rating before computing expected outcome
+**And** season mean-reversion is applied between seasons: regress a configurable fraction (default 25%, range 20–35%) of each team's rating toward its conference mean to account for roster turnover
+**And** a pre-tournament Elo snapshot (as of the last regular-season game) is available as a team-level feature column compatible with Story 4.7 matchup delta computation
+**And** Elo updates are walk-forward compatible: computed incrementally game-by-game from the chronological serving API with no future data leakage
+**And** the Elo feature generator is covered by unit tests validating rating updates, margin scaling, home court adjustment, and season mean-reversion correctness
+
+---
 
 ## Epic 5: Core Modeling Framework
 
@@ -890,6 +954,24 @@ So that I can quickly learn how to use the platform's key workflows.
 ## Post-MVP Backlog
 
 Items identified during development for future consideration. These are not scheduled for any sprint but may be promoted into epics/stories later.
+
+### LRMC (Logistic Regression Markov Chain) Rating System
+
+Models tournament outcomes as a Markov chain where each team's win probability against any opponent is derived from game-by-game outcomes via logistic regression. Results in a steady-state probability distribution over tournament outcomes. Documented in Edwards 2021 (top Kaggle MMLM solution writeup) as one of several rating systems computed from scratch.
+
+- **Complexity:** High — requires implementing a Markov chain transition matrix; more complex than SRS/Ridge/Colley batch solvers
+- **Distinctness:** Distinct from SRS/Ridge (batch least-squares) and Elo (dynamic updates); provides Markov-chain-derived win probabilities rather than point-differential-based ratings
+- **Source:** Story 4.1 spike — `specs/research/feature-engineering-techniques.md` Section 6.4 (Edwards 2021) and Section 7.2 (Distinct Building Blocks table, Story 4.6)
+- **Deferred because:** High implementation complexity relative to marginal distinctness; no peer-reviewed NCAA-specific validation; Edwards 2021 used it but ranked mid-pack; LRMC may not provide independent signal beyond SRS + Elo combination
+
+### TrueSkill / Glicko-2 Rating Systems
+
+Uncertainty-quantified Elo variants that explicitly model rating variance (uncertainty) per team. TrueSkill uses a factor graph with Gaussian belief propagation; Glicko-2 uses RD (Rating Deviation) and volatility parameters. Both are available as Python packages (`trueskill`, `glicko2`).
+
+- **Complexity:** Medium-High — requires understanding factor graphs (TrueSkill) or RD update formulas (Glicko-2)
+- **Distinctness:** Distinct from Elo in that they quantify rating uncertainty per team — a team with high uncertainty (few games or inconsistent results) has lower effective rating certainty. Marginal signal over Elo for pre-tournament snapshots with 30+ games per team.
+- **Source:** Story 4.1 spike — `specs/research/feature-engineering-techniques.md` Section 7.2 (Distinct Building Blocks, "TrueSkill / Glicko-2", Story 4.6) and Section 6.8 (Community Techniques table)
+- **Deferred because:** Marginal information gain over Elo at full-season (30+ games per team reduces uncertainty gap); occasional top-25 community validation but not consistently top-10; implementation cost not justified until Elo (Story 4.8) is validated
 
 ### Nate Silver / SBCB Elo Rating Scraping
 

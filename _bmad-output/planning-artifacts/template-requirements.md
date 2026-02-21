@@ -627,6 +627,18 @@ Code review workflow generates PRs following .github/pull_request_template.md st
 
 - ❌ **Do not select untested components for MVP scope** — sportsdataverse-py was marked "⚠️ Not performed — package not tested during this spike" in the research document yet was selected as MVP Source #3. Similarly, Warren Nolan was categorized as "Deferred Scrape-Only" in the research recommendations but promoted to MVP Source #4. Selections should be consistent with the evidence gathered during the spike. (Discovered: Story 2.1 Code Review Round 3)
 
+**Story 4.1 - Feature Engineering Techniques Spike (2026-02-21 SM retrospective):**
+- ❌ **Spike stories must include a post-PO-approval checklist AC for updating downstream epic story descriptions** — After Story 4.1 was approved, the SM had to manually read through the research document and update ACs in epics.md for Stories 4.3–4.7 and add a new Story 4.8 placeholder. This work was not in the story's AC list and was only discovered as necessary after PO approval. **Template pattern for all future spike stories whose output defines implementation scope:**
+  ```
+  **And** after PO approval of the spike findings, the SM updates the downstream
+  story descriptions in epics.md to incorporate all building blocks and scope
+  decisions from the research document — adding new story placeholders as needed
+  and moving deferred items to the Post-MVP Backlog.
+  ```
+  - **Applies to:** All research spikes that produce a scope-defining document: 4.1 (feature techniques → Epic 4 stories), 5.1 (modeling approaches → Epic 5 stories), 6.4 (simulation confidence → Story 6.5), 7.7 (slider mechanism → Story 7.5), and any future spike.
+  - **Why this matters:** Research spikes are not "done" when the document is approved. The SM still needs to propagate the findings back into the epic AC structure before the next story can be created with correct context. Without this AC, the create-story workflow operates on stale story descriptions that don't reflect research findings.
+  - **Who does the work:** SM agent — not the dev agent. This is a sprint planning/story maintenance task, not implementation. (Discovered: Story 4.1, 2026-02-21)
+
 ---
 
 ## 8. Cookie-Cutter Improvements Feedback Loop
