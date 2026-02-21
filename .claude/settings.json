@@ -53,7 +53,18 @@
       "Bash(conda run *)",
       "Bash(python *)",
       "Bash(python3 *)",
-      "Bash(pytest *)"
+      "Bash(pytest *)",
+      "Bash(ncaa-git status *)",
+      "Bash(ncaa-git diff *)",
+      "Bash(ncaa-git log *)",
+      "Bash(ncaa-git show *)",
+      "Bash(ncaa-git branch *)",
+      "Bash(ncaa-git checkout *)",
+      "Bash(ncaa-git add *)",
+      "Bash(ncaa-git commit *)",
+      "Bash(ncaa-git push *)",
+      "Bash(ncaa-git fetch *)",
+      "Bash(ncaa-git stash *)"
     ]
   }
 }
