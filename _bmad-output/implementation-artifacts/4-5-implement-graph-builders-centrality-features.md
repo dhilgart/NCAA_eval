@@ -1,6 +1,6 @@
 # Story 4.5: Implement Graph Builders & Centrality Features
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -26,62 +26,62 @@ so that I can quantify transitive team strength, structural schedule position, a
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `src/ncaa_eval/transform/graph.py` — module header, constants, and `build_season_graph()` (AC: 1–3)
-  - [ ] 1.1: Add module header: `from __future__ import annotations`, imports, module-level logger (`import networkx as nx  # type: ignore[import-untyped]`, `import pandas as pd  # type: ignore[import-untyped]`)
-  - [ ] 1.2: Define module-level constants: `DEFAULT_MARGIN_CAP: int = 25`, `DEFAULT_RECENCY_WINDOW_DAYS: int = 20`, `DEFAULT_RECENCY_MULTIPLIER: float = 1.5`, `PAGERANK_ALPHA: float = 0.85`
-  - [ ] 1.3: Implement `build_season_graph(games_df: pd.DataFrame, margin_cap: int = DEFAULT_MARGIN_CAP, reference_day_num: int | None = None, recency_window_days: int = DEFAULT_RECENCY_WINDOW_DAYS, recency_multiplier: float = DEFAULT_RECENCY_MULTIPLIER) -> nx.DiGraph` — fully vectorized using `nx.from_pandas_edgelist()`; returns empty DiGraph if `games_df` is empty; edges: `source="l_team_id"`, `target="w_team_id"`, `edge_attr="weight"`; weight = `(w_score − l_score).clip(upper=margin_cap)`; apply recency multiplier to games within `recency_window_days` of `reference_day_num` (which defaults to `games_df["day_num"].max()` if None); aggregate parallel edges (same team pair playing multiple times) using `groupby(["l_team_id", "w_team_id"])["weight"].sum()` before `from_pandas_edgelist()`
+- [x] Task 1: Create `src/ncaa_eval/transform/graph.py` — module header, constants, and `build_season_graph()` (AC: 1–3)
+  - [x] 1.1: Add module header: `from __future__ import annotations`, imports, module-level logger (`import networkx as nx  # type: ignore[import-untyped]`, `import pandas as pd  # type: ignore[import-untyped]`)
+  - [x] 1.2: Define module-level constants: `DEFAULT_MARGIN_CAP: int = 25`, `DEFAULT_RECENCY_WINDOW_DAYS: int = 20`, `DEFAULT_RECENCY_MULTIPLIER: float = 1.5`, `PAGERANK_ALPHA: float = 0.85`
+  - [x] 1.3: Implement `build_season_graph(games_df: pd.DataFrame, margin_cap: int = DEFAULT_MARGIN_CAP, reference_day_num: int | None = None, recency_window_days: int = DEFAULT_RECENCY_WINDOW_DAYS, recency_multiplier: float = DEFAULT_RECENCY_MULTIPLIER) -> nx.DiGraph` — fully vectorized using `nx.from_pandas_edgelist()`; returns empty DiGraph if `games_df` is empty; edges: `source="l_team_id"`, `target="w_team_id"`, `edge_attr="weight"`; weight = `(w_score − l_score).clip(upper=margin_cap)`; apply recency multiplier to games within `recency_window_days` of `reference_day_num` (which defaults to `games_df["day_num"].max()` if None); aggregate parallel edges (same team pair playing multiple times) using `groupby(["l_team_id", "w_team_id"])["weight"].sum()` before `from_pandas_edgelist()`
 
-- [ ] Task 2: Implement module-level centrality functions (AC: 4–7)
-  - [ ] 2.1: Implement `compute_pagerank(G: nx.DiGraph, alpha: float = PAGERANK_ALPHA, nstart: dict[int, float] | None = None) -> dict[int, float]` — `nx.pagerank(G, alpha=alpha, weight="weight", nstart=nstart)`; if `G.number_of_nodes() == 0`, return `{}`; returns `dict[int, float]` mapping team_id → score
-  - [ ] 2.2: Implement `compute_betweenness_centrality(G: nx.DiGraph) -> dict[int, float]` — `nx.betweenness_centrality(G, normalized=True)`; if `G.number_of_nodes() == 0`, return `{}`; no edge weights (structural betweenness — cleaner for "bridge" interpretation)
-  - [ ] 2.3: Implement `compute_hits(G: nx.DiGraph, max_iter: int = 100) -> tuple[dict[int, float], dict[int, float]]` — guard: if `G.number_of_edges() == 0`, return `({n: 0.0 for n in G.nodes()}, {n: 0.0 for n in G.nodes()})`; wrap `nx.hits(G, max_iter=max_iter)` in a try/except for `nx.PowerIterationFailedConvergence`; on convergence failure: log warning and return uniform scores (`1/n` each); returns `(hub_dict, authority_dict)` where both are `dict[int, float]`
-  - [ ] 2.4: Implement `compute_clustering_coefficient(G: nx.DiGraph) -> dict[int, float]` — `nx.clustering(G.to_undirected())`; if `G.number_of_nodes() == 0`, return `{}`; returns `dict[int, float]` mapping team_id → coefficient
+- [x] Task 2: Implement module-level centrality functions (AC: 4–7)
+  - [x] 2.1: Implement `compute_pagerank(G: nx.DiGraph, alpha: float = PAGERANK_ALPHA, nstart: dict[int, float] | None = None) -> dict[int, float]` — `nx.pagerank(G, alpha=alpha, weight="weight", nstart=nstart)`; if `G.number_of_nodes() == 0`, return `{}`; returns `dict[int, float]` mapping team_id → score
+  - [x] 2.2: Implement `compute_betweenness_centrality(G: nx.DiGraph) -> dict[int, float]` — `nx.betweenness_centrality(G, normalized=True)`; if `G.number_of_nodes() == 0`, return `{}`; no edge weights (structural betweenness — cleaner for "bridge" interpretation)
+  - [x] 2.3: Implement `compute_hits(G: nx.DiGraph, max_iter: int = 100) -> tuple[dict[int, float], dict[int, float]]` — guard: if `G.number_of_edges() == 0`, return `({n: 0.0 for n in G.nodes()}, {n: 0.0 for n in G.nodes()})`; wrap `nx.hits(G, max_iter=max_iter)` in a try/except for `nx.PowerIterationFailedConvergence`; on convergence failure: log warning and return uniform scores (`1/n` each); returns `(hub_dict, authority_dict)` where both are `dict[int, float]`
+  - [x] 2.4: Implement `compute_clustering_coefficient(G: nx.DiGraph) -> dict[int, float]` — `nx.clustering(G.to_undirected())`; if `G.number_of_nodes() == 0`, return `{}`; returns `dict[int, float]` mapping team_id → coefficient
 
-- [ ] Task 3: Implement `GraphTransformer` class (AC: 8–10)
-  - [ ] 3.1: Define `GraphTransformer` class with `__init__(self, margin_cap: int = DEFAULT_MARGIN_CAP, recency_window_days: int = DEFAULT_RECENCY_WINDOW_DAYS, recency_multiplier: float = DEFAULT_RECENCY_MULTIPLIER) -> None`
-  - [ ] 3.2: Implement `build_graph(self, games_df: pd.DataFrame, reference_day_num: int | None = None) -> nx.DiGraph` — delegates to `build_season_graph()` with instance config; returns `nx.DiGraph`
-  - [ ] 3.3: Implement `add_game_to_graph(self, graph: nx.DiGraph, w_team_id: int, l_team_id: int, margin: int, day_num: int, reference_day_num: int) -> None` — in-place update for walk-forward incremental use; weight = `min(margin, self._margin_cap)`; apply recency multiplier if `day_num >= (reference_day_num − self._recency_window_days)`; if edge `(l_team_id, w_team_id)` already exists: `graph[l_team_id][w_team_id]["weight"] += weight`; else: `graph.add_edge(l_team_id, w_team_id, weight=weight)`; also add isolated nodes if not present (`graph.add_node(team_id)`)
-  - [ ] 3.4: Implement `compute_features(self, graph: nx.DiGraph, pagerank_init: dict[int, float] | None = None) -> pd.DataFrame` — calls all four centrality functions; merges results into a single per-team DataFrame with columns `["team_id", "pagerank", "betweenness_centrality", "hits_hub", "hits_authority", "clustering_coefficient"]`; returns empty DataFrame with these column names if graph has no nodes; all team_ids are integers
-  - [ ] 3.5: Implement `transform(self, games_df: pd.DataFrame, reference_day_num: int | None = None, pagerank_init: dict[int, float] | None = None) -> pd.DataFrame` — convenience method: calls `build_graph()` then `compute_features()`; returns empty DataFrame with correct columns if `games_df` is empty
+- [x] Task 3: Implement `GraphTransformer` class (AC: 8–10)
+  - [x] 3.1: Define `GraphTransformer` class with `__init__(self, margin_cap: int = DEFAULT_MARGIN_CAP, recency_window_days: int = DEFAULT_RECENCY_WINDOW_DAYS, recency_multiplier: float = DEFAULT_RECENCY_MULTIPLIER) -> None`
+  - [x] 3.2: Implement `build_graph(self, games_df: pd.DataFrame, reference_day_num: int | None = None) -> nx.DiGraph` — delegates to `build_season_graph()` with instance config; returns `nx.DiGraph`
+  - [x] 3.3: Implement `add_game_to_graph(self, graph: nx.DiGraph, w_team_id: int, l_team_id: int, margin: int, day_num: int, reference_day_num: int) -> None` — in-place update for walk-forward incremental use; weight = `min(margin, self._margin_cap)`; apply recency multiplier if `day_num >= (reference_day_num − self._recency_window_days)`; if edge `(l_team_id, w_team_id)` already exists: `graph[l_team_id][w_team_id]["weight"] += weight`; else: `graph.add_edge(l_team_id, w_team_id, weight=weight)`; also add isolated nodes if not present (`graph.add_node(team_id)`)
+  - [x] 3.4: Implement `compute_features(self, graph: nx.DiGraph, pagerank_init: dict[int, float] | None = None) -> pd.DataFrame` — calls all four centrality functions; merges results into a single per-team DataFrame with columns `["team_id", "pagerank", "betweenness_centrality", "hits_hub", "hits_authority", "clustering_coefficient"]`; returns empty DataFrame with these column names if graph has no nodes; all team_ids are integers
+  - [x] 3.5: Implement `transform(self, games_df: pd.DataFrame, reference_day_num: int | None = None, pagerank_init: dict[int, float] | None = None) -> pd.DataFrame` — convenience method: calls `build_graph()` then `compute_features()`; returns empty DataFrame with correct columns if `games_df` is empty
 
-- [ ] Task 4: Export public API from `src/ncaa_eval/transform/__init__.py` (AC: 1–10)
-  - [ ] 4.1: Import and re-export `GraphTransformer`, `build_season_graph`, `compute_pagerank`, `compute_betweenness_centrality`, `compute_hits`, `compute_clustering_coefficient` from `transform/graph.py`
-  - [ ] 4.2: Add all new names to `__all__`
+- [x] Task 4: Export public API from `src/ncaa_eval/transform/__init__.py` (AC: 1–10)
+  - [x] 4.1: Import and re-export `GraphTransformer`, `build_season_graph`, `compute_pagerank`, `compute_betweenness_centrality`, `compute_hits`, `compute_clustering_coefficient` from `transform/graph.py`
+  - [x] 4.2: Add all new names to `__all__`
 
-- [ ] Task 5: Write unit tests in `tests/unit/test_graph.py` (AC: 11)
-  - [ ] 5.1: `test_build_season_graph_edge_direction` — two-game fixture (team 1 beat team 2, team 2 beat team 3); verify graph has edges `(2, 1)` and `(3, 2)` (loser→winner direction), NOT `(1, 2)` or `(2, 3)`
-  - [ ] 5.2: `test_build_season_graph_edge_weight_cap` — blowout game with margin 50; verify edge weight is `min(50, 25) = 25.0`
-  - [ ] 5.3: `test_build_season_graph_edge_weight_exact` — game with margin 10; verify edge weight is `10.0`
-  - [ ] 5.4: `test_build_season_graph_recency_weight` — fixture with two games: one recent (within window), one old; verify recent game edge weight = base_weight × 1.5, old game edge weight = base_weight × 1.0
-  - [ ] 5.5: `test_build_season_graph_parallel_edges_aggregated` — same team pair plays twice (team 1 beats team 2 with margins 10 and 8); verify the single edge weight = 18.0 (sum of both margins)
-  - [ ] 5.6: `test_build_season_graph_empty_input` — empty DataFrame; verify result is an empty `nx.DiGraph` (0 nodes, 0 edges)
-  - [ ] 5.7: `test_compute_pagerank_linear_chain` — four-team linear chain: team 1 beat 2 beat 3 beat 4 (all margin 10); verify team 1 has highest PageRank score, team 4 has lowest; verify dict keys are integers (team_ids)
-  - [ ] 5.8: `test_compute_pagerank_triangle_converges` — three-team cycle (A→B→C→A); verify PageRank converges and returns approximately equal scores for all three teams (within 5% of each other); verify scores sum to approximately 1.0
-  - [ ] 5.9: `test_compute_pagerank_warm_start` — build a cycle graph, compute PageRank once (nstart=None), then compute again with the previous result as nstart; verify both return values are close (within 1e-6) — warm start produces same result as cold start
-  - [ ] 5.10: `test_compute_pagerank_empty_graph` — empty DiGraph; verify returns `{}`
-  - [ ] 5.11: `test_compute_betweenness_linear_chain` — four-team linear chain: 1→2→3→4; verify teams 2 and 3 (bridges) have higher betweenness than teams 1 and 4 (endpoints)
-  - [ ] 5.12: `test_compute_betweenness_isolated_nodes` — graph with isolated nodes (no edges); verify all betweenness scores are 0.0
-  - [ ] 5.13: `test_compute_betweenness_empty_graph` — empty DiGraph; verify returns `{}`
-  - [ ] 5.14: `test_compute_hits_returns_hub_and_authority` — three-node graph; verify `compute_hits()` returns a tuple of two dicts; verify both dicts have the same keys (team_ids)
-  - [ ] 5.15: `test_compute_hits_hub_high_for_loser_of_high_authority` — four-team fixture: team A beat B, C beat A, C beat D (C is high authority); verify team C has higher authority score than teams B/D; verify team D (lost only to high-authority C) has a hub score > 0
-  - [ ] 5.16: `test_compute_hits_empty_edges` — DiGraph with 3 nodes but no edges; verify returns two dicts with 0.0 for all nodes (no exception raised)
-  - [ ] 5.17: `test_compute_clustering_triangle` — three-team cycle (undirected triangle A-B-C); verify all three teams have clustering coefficient 1.0
-  - [ ] 5.18: `test_compute_clustering_linear_chain` — four-team linear chain; verify all teams have clustering coefficient 0.0 (no triangles in a linear chain)
-  - [ ] 5.19: `test_compute_clustering_empty_graph` — empty DiGraph; verify returns `{}`
-  - [ ] 5.20: `test_add_game_to_graph_new_edge` — start with empty DiGraph; add one game; verify graph has edge `(l_team_id, w_team_id)` with correct weight
-  - [ ] 5.21: `test_add_game_to_graph_accumulates_weight` — add same matchup twice; verify edge weight = sum of both weights
-  - [ ] 5.22: `test_add_game_to_graph_recency_multiplier` — add game within recency window; verify weight is multiplied by 1.5
-  - [ ] 5.23: `test_add_game_to_graph_margin_cap` — add game with margin 50; verify edge weight is capped at 25.0
-  - [ ] 5.24: `test_graph_transformer_transform_columns` — triangle fixture; verify `GraphTransformer().transform(games_df)` returns DataFrame with columns `["team_id", "pagerank", "betweenness_centrality", "hits_hub", "hits_authority", "clustering_coefficient"]`
-  - [ ] 5.25: `test_graph_transformer_transform_row_count` — triangle fixture (3 teams); verify transform returns exactly 3 rows (one per team)
-  - [ ] 5.26: `test_graph_transformer_transform_empty_input` — empty games_df; verify transform returns empty DataFrame with the 6 correct columns (no exception)
-  - [ ] 5.27: `test_graph_transformer_compute_features_consistent` — build_graph then compute_features returns same result as transform() in one call
-  - [ ] 5.28: `test_no_iterrows` — grep source of `graph.py` for "iterrows"; verify not found (smoke test for mandate compliance)
+- [x] Task 5: Write unit tests in `tests/unit/test_graph.py` (AC: 11)
+  - [x] 5.1: `test_build_season_graph_edge_direction` — two-game fixture (team 1 beat team 2, team 2 beat team 3); verify graph has edges `(2, 1)` and `(3, 2)` (loser→winner direction), NOT `(1, 2)` or `(2, 3)`
+  - [x] 5.2: `test_build_season_graph_edge_weight_cap` — blowout game with margin 50; verify edge weight is `min(50, 25) = 25.0`
+  - [x] 5.3: `test_build_season_graph_edge_weight_exact` — game with margin 10; verify edge weight is `10.0`
+  - [x] 5.4: `test_build_season_graph_recency_weight` — fixture with two games: one recent (within window), one old; verify recent game edge weight = base_weight × 1.5, old game edge weight = base_weight × 1.0
+  - [x] 5.5: `test_build_season_graph_parallel_edges_aggregated` — same team pair plays twice (team 1 beats team 2 with margins 10 and 8); verify the single edge weight = 18.0 (sum of both margins)
+  - [x] 5.6: `test_build_season_graph_empty_input` — empty DataFrame; verify result is an empty `nx.DiGraph` (0 nodes, 0 edges)
+  - [x] 5.7: `test_compute_pagerank_linear_chain` — four-team linear chain: team 1 beat 2 beat 3 beat 4 (all margin 10); verify team 1 has highest PageRank score, team 4 has lowest; verify dict keys are integers (team_ids)
+  - [x] 5.8: `test_compute_pagerank_triangle_converges` — three-team cycle (A→B→C→A); verify PageRank converges and returns approximately equal scores for all three teams (within 5% of each other); verify scores sum to approximately 1.0
+  - [x] 5.9: `test_compute_pagerank_warm_start` — build a cycle graph, compute PageRank once (nstart=None), then compute again with the previous result as nstart; verify both return values are close (within 1e-6) — warm start produces same result as cold start
+  - [x] 5.10: `test_compute_pagerank_empty_graph` — empty DiGraph; verify returns `{}`
+  - [x] 5.11: `test_compute_betweenness_linear_chain` — four-team linear chain: 1→2→3→4; verify teams 2 and 3 (bridges) have higher betweenness than teams 1 and 4 (endpoints)
+  - [x] 5.12: `test_compute_betweenness_isolated_nodes` — graph with isolated nodes (no edges); verify all betweenness scores are 0.0
+  - [x] 5.13: `test_compute_betweenness_empty_graph` — empty DiGraph; verify returns `{}`
+  - [x] 5.14: `test_compute_hits_returns_hub_and_authority` — three-node graph; verify `compute_hits()` returns a tuple of two dicts; verify both dicts have the same keys (team_ids)
+  - [x] 5.15: `test_compute_hits_hub_high_for_loser_of_high_authority` — four-team fixture: team A beat B, C beat A, C beat D (C is high authority); verify team C has higher authority score than teams B/D; verify team D (lost only to high-authority C) has a hub score > 0
+  - [x] 5.16: `test_compute_hits_empty_edges` — DiGraph with 3 nodes but no edges; verify returns two dicts with 0.0 for all nodes (no exception raised)
+  - [x] 5.17: `test_compute_clustering_triangle` — three-team cycle (undirected triangle A-B-C); verify all three teams have clustering coefficient 1.0
+  - [x] 5.18: `test_compute_clustering_linear_chain` — four-team linear chain; verify all teams have clustering coefficient 0.0 (no triangles in a linear chain)
+  - [x] 5.19: `test_compute_clustering_empty_graph` — empty DiGraph; verify returns `{}`
+  - [x] 5.20: `test_add_game_to_graph_new_edge` — start with empty DiGraph; add one game; verify graph has edge `(l_team_id, w_team_id)` with correct weight
+  - [x] 5.21: `test_add_game_to_graph_accumulates_weight` — add same matchup twice; verify edge weight = sum of both weights
+  - [x] 5.22: `test_add_game_to_graph_recency_multiplier` — add game within recency window; verify weight is multiplied by 1.5
+  - [x] 5.23: `test_add_game_to_graph_margin_cap` — add game with margin 50; verify edge weight is capped at 25.0
+  - [x] 5.24: `test_graph_transformer_transform_columns` — triangle fixture; verify `GraphTransformer().transform(games_df)` returns DataFrame with columns `["team_id", "pagerank", "betweenness_centrality", "hits_hub", "hits_authority", "clustering_coefficient"]`
+  - [x] 5.25: `test_graph_transformer_transform_row_count` — triangle fixture (3 teams); verify transform returns exactly 3 rows (one per team)
+  - [x] 5.26: `test_graph_transformer_transform_empty_input` — empty games_df; verify transform returns empty DataFrame with the 6 correct columns (no exception)
+  - [x] 5.27: `test_graph_transformer_compute_features_consistent` — build_graph then compute_features returns same result as transform() in one call
+  - [x] 5.28: `test_no_iterrows` — grep source of `graph.py` for "iterrows"; verify not found (smoke test for mandate compliance)
 
-- [ ] Task 6: Commit (AC: all)
-  - [ ] 6.1: Stage `src/ncaa_eval/transform/graph.py`, `src/ncaa_eval/transform/__init__.py`, `tests/unit/test_graph.py`
-  - [ ] 6.2: Commit: `feat(transform): implement graph builders and centrality features (Story 4.5)`
-  - [ ] 6.3: Update `_bmad-output/implementation-artifacts/sprint-status.yaml`: `4-5-implement-graph-builders-centrality-features` → `review`
+- [x] Task 6: Commit (AC: all)
+  - [x] 6.1: Stage `src/ncaa_eval/transform/graph.py`, `src/ncaa_eval/transform/__init__.py`, `tests/unit/test_graph.py`
+  - [x] 6.2: Commit: `feat(transform): implement graph builders and centrality features (Story 4.5)`
+  - [x] 6.3: Update `_bmad-output/implementation-artifacts/sprint-status.yaml`: `4-5-implement-graph-builders-centrality-features` → `review`
 
 ## Dev Notes
 
@@ -488,6 +488,28 @@ Claude Sonnet 4.6 (create-story workflow)
 
 ### Debug Log References
 
+- mypy `# type: ignore[return-value]` does not suppress `no-any-return` — must use `# type: ignore[no-any-return]` for nx function returns.
+- Single-game test fixtures with low day_num default to reference_day_num = max(day_num) = same day, so recency window always applies. Tests for cap/exact weight must explicitly pass `reference_day_num=100` to put the game outside the recency window.
+- `hub, auth = nx.hits(...)` return does not need a type ignore — mypy accepts `Any` for the tuple assignment without raising `no-any-return`.
+
 ### Completion Notes List
 
+- Implemented `src/ncaa_eval/transform/graph.py` with all 4 module-level centrality functions (`compute_pagerank`, `compute_betweenness_centrality`, `compute_hits`, `compute_clustering_coefficient`) and `GraphTransformer` class (5 methods: `build_graph`, `add_game_to_graph`, `compute_features`, `transform`, `__init__`).
+- All graph construction is fully vectorized via `nx.from_pandas_edgelist()` — no iterrows.
+- HITS convergence failure guarded with try/except `nx.PowerIterationFailedConvergence`.
+- PageRank warm-start supported via `nstart` parameter.
+- Also added Story 4.4 L3 missing exports (`apply_ot_rescaling`, `compute_ewma_stats`, `compute_momentum`, `compute_per_possession_stats`, `compute_rolling_stats`) to `transform/__init__.py`.
+- 28 unit tests written and passing. 264 total tests pass (no regressions).
+- All quality gates pass: ruff, mypy --strict, pytest.
+
 ### File List
+
+- src/ncaa_eval/transform/graph.py (new)
+- src/ncaa_eval/transform/__init__.py (modified — graph exports + Story 4.4 L3 sequential exports)
+- tests/unit/test_graph.py (new)
+- _bmad-output/implementation-artifacts/4-5-implement-graph-builders-centrality-features.md (modified)
+- _bmad-output/implementation-artifacts/sprint-status.yaml (modified)
+
+## Change Log
+
+- 2026-02-21: Implemented graph builders and centrality features (Story 4.5) — created `graph.py` with `build_season_graph`, `compute_pagerank`, `compute_betweenness_centrality`, `compute_hits`, `compute_clustering_coefficient`, and `GraphTransformer`; wrote 28 unit tests; updated `transform/__init__.py` with graph exports and Story 4.4 L3 missing sequential exports; all quality gates pass (ruff, mypy --strict, 264 tests).

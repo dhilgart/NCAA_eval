@@ -74,7 +74,7 @@ development_status:
   4-2-implement-chronological-data-serving-api: done
   4-3-implement-canonical-team-id-mapping-data-cleaning: done
   4-4-implement-sequential-transformations: done
-  4-5-implement-graph-builders-centrality-features: ready-for-dev
+  4-5-implement-graph-builders-centrality-features: review
   4-6-implement-opponent-adjustments: backlog
   4-7-implement-stateful-feature-serving: backlog
   4-8-implement-dynamic-rating-features-elo-feature-building-block: backlog
