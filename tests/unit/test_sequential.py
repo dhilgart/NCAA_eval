@@ -240,6 +240,25 @@ def test_get_team_season_empty(regular_csv: Path, tourney_csv: Path) -> None:
     assert len(result) == 0
 
 
+@pytest.mark.unit
+@pytest.mark.smoke
+def test_get_season_long_format(regular_csv: Path, tourney_csv: Path) -> None:
+    """get_season_long_format returns all rows for a season sorted by (day_num, team_id)."""
+    loader = DetailedResultsLoader.from_csvs(regular_csv, tourney_csv)
+    df = loader.get_season_long_format(season=2010)
+
+    # 2 regular + 1 tourney game × 2 teams per game = 6 rows
+    assert len(df) == 6
+    # Sorted by day_num ascending
+    assert list(df["day_num"]) == sorted(df["day_num"].tolist())
+    # Within same day_num, sorted by team_id ascending
+    for day in df["day_num"].unique():
+        group = df[df["day_num"] == day]["team_id"].tolist()
+        assert group == sorted(group)
+    # reset_index(drop=True) → index starts at 0
+    assert df.index[0] == 0
+
+
 # ---------------------------------------------------------------------------
 # Tests: apply_ot_rescaling
 # ---------------------------------------------------------------------------
@@ -312,6 +331,15 @@ def test_compute_game_weights_floor() -> None:
     weights = compute_game_weights(day_nums, reference_day_num=ref)
 
     assert abs(float(weights.iloc[0]) - 0.6) < 1e-9
+
+
+@pytest.mark.unit
+@pytest.mark.smoke
+def test_compute_game_weights_empty() -> None:
+    """Empty day_nums returns empty weights Series without error."""
+    weights = compute_game_weights(pd.Series([], dtype=int))
+    assert isinstance(weights, pd.Series)
+    assert len(weights) == 0
 
 
 # ---------------------------------------------------------------------------
@@ -612,3 +640,14 @@ def test_sequential_transformer_preserves_row_count(
     transformer = SequentialTransformer()
     result = transformer.transform(ten_game_team)
     assert len(result) == len(ten_game_team)
+
+
+@pytest.mark.unit
+@pytest.mark.smoke
+def test_sequential_transformer_empty_input() -> None:
+    """transform() on empty DataFrame returns empty DataFrame without error (pre-2003 guard)."""
+    empty_df = pd.DataFrame(columns=["season", "day_num", "team_id", "won", "num_ot", "score"])
+    transformer = SequentialTransformer()
+    result = transformer.transform(empty_df)
+    assert isinstance(result, pd.DataFrame)
+    assert len(result) == 0

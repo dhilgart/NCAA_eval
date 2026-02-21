@@ -276,6 +276,8 @@ def compute_game_weights(
     Returns:
         Series of weights in [0.6, 1.0] for each game.
     """
+    if day_nums.empty:
+        return pd.Series([], dtype=float)
     ref = int(day_nums.max()) if reference_day_num is None else reference_day_num
     days_ago = ref - day_nums
     weight = (1.0 - 0.01 * (days_ago - 40).clip(lower=0)).clip(lower=0.6)

@@ -1,6 +1,6 @@
 # Story 4.4: Implement Sequential Transformations
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -94,6 +94,14 @@ so that I can capture recent team form, efficiency, and trends as predictive fea
   - [x] 9.25: `test_compute_four_factors_zero_fga` — FGA = 0: `efg_pct = NaN` (no exception)
   - [x] 9.26: `test_sequential_transformer_transform_columns` — run `SequentialTransformer().transform(team_games)` on a 10-game fixture; verify all expected column groups exist: streak, rolling_5/10/20/full, ewma_0p15/0p20, momentum, possessions, per100, four factors
   - [x] 9.27: `test_sequential_transformer_preserves_row_count` — output has same number of rows as input
+
+### Review Follow-ups (AI)
+
+- [ ] [AI-Review][MEDIUM] M3: `rolling_full_{stat}` is always computed as unweighted `expanding().mean()` even when time-decay weights are provided — semantically inconsistent with windowed rolling (which IS weighted). Consider adding a `weighted_full` variant, or document the intentional design. [sequential.py:329]
+- [ ] [AI-Review][LOW] L1: Tests import private `_reshape_to_long` directly (`from ncaa_eval.transform.sequential import _reshape_to_long`). Consider making it public or testing its behavior exclusively via `DetailedResultsLoader.from_csvs`. [test_sequential.py:19]
+- [ ] [AI-Review][LOW] L2: `apply_ot_rescaling` input immutability is not explicitly tested — `test_apply_ot_rescaling_regulation` doesn't verify the original DataFrame is unchanged after the call. [test_sequential.py:250]
+- [ ] [AI-Review][LOW] L3: `compute_ewma_stats`, `compute_momentum`, `compute_rolling_stats`, `apply_ot_rescaling`, `compute_per_possession_stats` are not exported from `ncaa_eval.transform.__init__`. Downstream stories 4.7/4.8 will need to import from `ncaa_eval.transform.sequential` directly — consider adding these to `__all__` before Story 4.7. [transform/__init__.py]
+- [ ] [AI-Review][LOW] L4: `opp_score_per100` = `opp_score × 100 / team_possessions` is non-standard (opponent score per OUR possessions). Review whether this feature makes sense when used in a model, or if it should be excluded from per-100 normalization. [sequential.py:467]
 
 - [x] Task 10: Commit (AC: all)
   - [x] 10.1: Stage `src/ncaa_eval/transform/sequential.py`, `src/ncaa_eval/transform/__init__.py`, `tests/unit/test_sequential.py`
@@ -627,12 +635,13 @@ No blocking issues. Two minor mypy/ruff fixes applied during validation:
 
 ### File List
 
-- `src/ncaa_eval/transform/sequential.py` (new)
+- `src/ncaa_eval/transform/sequential.py` (new; modified by code review: added empty guard to `compute_game_weights`)
 - `src/ncaa_eval/transform/__init__.py` (modified)
-- `tests/unit/test_sequential.py` (new)
+- `tests/unit/test_sequential.py` (new; modified by code review: added 3 tests)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified)
 - `_bmad-output/implementation-artifacts/4-4-implement-sequential-transformations.md` (modified — this file)
 
 ### Change Log
 
 - 2026-02-21: Implemented Story 4.4 — sequential feature transformations module. Created `sequential.py` with `DetailedResultsLoader`, `SequentialTransformer`, and 10 module-level helpers (OT rescaling, time-decay weights, rolling stats, EWMA, momentum, streak, possessions, per-possession, four factors). Added 6 public exports to `transform/__init__.py`. Added 27 unit tests covering all ACs. 233 total tests pass; `mypy --strict` and Ruff clean.
+- 2026-02-21: Code review (adversarial). Fixed 3 issues: (H1) added `test_get_season_long_format` — public method was untested in violation of Story 4.3 mandate; (M1) added empty-Series guard to `compute_game_weights` + `test_compute_game_weights_empty`; (M2) added `test_sequential_transformer_empty_input` for empty-DataFrame guard. 4 action items created for M3/L1-L4. 236 total tests pass; all quality gates clean.
