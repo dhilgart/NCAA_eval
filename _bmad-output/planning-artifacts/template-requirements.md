@@ -1456,6 +1456,49 @@ When multiple notebooks contribute numbered sections to the same findings file, 
 Or renumber sequentially when sections are dropped rather than leaving gaps.
 
 *Last Updated: 2026-02-20 (Story 3.1 Code Review — EDA notebook conventions, gitkeep pattern, nbconvert --output-dir, connector behavior verification)*
+
+### `datetime.date.today()` — Capture Once Before Branching ⭐ (Discovered Story 4.2 Code Review)
+
+Any function that validates a date against "today" and then uses "today" in an error message must capture `today` **once**, before the conditional check. Calling `datetime.date.today()` twice — once for comparison and once for the error message — creates a midnight race condition where both calls may return different dates:
+
+```python
+# ❌ Race condition: two calls may return different dates at midnight
+if cutoff_date is not None and cutoff_date > datetime.date.today():
+    today = datetime.date.today()  # ← may return different day!
+    msg = f"cutoff_date {cutoff_date} is after today ({today})"  # contradictory!
+    raise ValueError(msg)
+
+# ✅ Capture once, use consistently
+if cutoff_date is not None:
+    today = datetime.date.today()
+    if cutoff_date > today:
+        msg = f"cutoff_date {cutoff_date} is after today ({today})"
+        raise ValueError(msg)
+```
+
+**General rule:** Any value from `datetime.date.today()`, `datetime.datetime.now()`, `time.time()`, or `uuid.uuid4()` that is used multiple times in the same logical operation must be captured in a variable before the first use.
+
+### `frozen=True` Dataclasses Do NOT Freeze Mutable Fields ⭐ (Discovered Story 4.2 Code Review)
+
+`@dataclass(frozen=True)` prevents attribute *rebinding* but does NOT prevent mutation of mutable field contents:
+
+```python
+@dataclass(frozen=True)
+class SeasonGames:
+    games: list[Game]
+
+season = SeasonGames(year=2024, games=[...], has_tournament=True)
+season.games = []            # ← FrozenInstanceError ✓
+season.games.append(game)    # ← silently succeeds! ✗ (false immutability)
+```
+
+**When to use `list` vs `tuple` in frozen dataclasses:**
+- Use `list[T]` when: callers are expected to consume the data read-only, mutability is acceptable, or changing to `tuple` would break story spec
+- Use `tuple[T, ...]` when: true immutability is required and downstream callers must not modify the collection
+
+**Template pattern:** Document in the class docstring if `frozen=True` only prevents rebinding (e.g., "Note: `games` is a list and can be mutated by callers — do not modify after construction").
+
+*Updated: 2026-02-21 (Story 4.2 Code Review — datetime.today() double-call race condition, frozen dataclass mutable field false-immutability)*
 *Updated: 2026-02-20 (Story 3.2 extension — Epic 4 normalization design requirements from user)*
 *Updated: 2026-02-20 (Story 3.2 Code Review — day-to-round mapping consistency, multi-notebook findings files, story file list completeness, apply-vs-vectorize)*
 *Updated: 2026-02-20 (Story 3.3 Code Review — documentation synthesis story review pattern, ranked list rationale requirement)*

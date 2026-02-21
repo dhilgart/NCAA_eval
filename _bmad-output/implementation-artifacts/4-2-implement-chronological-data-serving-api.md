@@ -1,6 +1,6 @@
 # Story 4.2: Implement Chronological Data Serving API
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -63,6 +63,14 @@ so that I can train models with walk-forward validation without risk of data lea
   - [x] 6.11: Test: empty season (no games in repository) → returns `SeasonGames(year=year, games=[], has_tournament=False)`
 
 - [x] Task 7: Commit (AC: all)
+
+### Review Follow-ups (AI)
+
+- [ ] [AI-Review][LOW] `_effective_date` `date=None` fallback path untested — add test that creates a `Game(date=None)`, saves to repo, and verifies it appears in `get_chronological_season` results sorted by `day_num` fallback. Also verify the hardcoded DayZero approximation `datetime.date(year-1, 11, 1)` is documented as approximate. [serving.py:91-98]
+- [ ] [AI-Review][LOW] `iter_games_by_date` re-sorts already-sorted output via `defaultdict + sorted(keys)` — replace with `itertools.groupby` on the already-sorted `season_games.games` to eliminate redundant sort and extra `_effective_date` calls. [serving.py:217-221]
+- [ ] [AI-Review][LOW] `SeasonGames(frozen=True)` with `games: list[Game]` gives a false immutability promise — `season.games.append(x)` succeeds silently. Consider documenting this limitation or using `tuple[Game, ...]` in a future refactor (API-breaking change; defer to Story 4.X). [serving.py:31-45]
+- [ ] [AI-Review][LOW] `_GAME_DEFAULTS` in test file uses `"season": 2024, "date": datetime.date(2024, 1, 15)` — future tests that override `season` without overriding `date` will silently produce logically inconsistent games. Add a guard or documentation note to `_make_game`. [tests/unit/test_chronological_serving.py:23-42]
+- [ ] [AI-Review][LOW] `_deduplicate_2025` reconstructs `Game` objects via `Game(**row)` where `row` contains numpy types from `df.to_dict(orient="records")` — relies on Pydantic lax coercion. Would break silently if `Game.model_config` adds `strict=True`. Consider documenting this assumption or adding a test with numpy-typed fields. [serving.py:119-127]
   - [x] 7.1: `git add src/ncaa_eval/transform/serving.py src/ncaa_eval/transform/__init__.py tests/unit/test_chronological_serving.py`
   - [x] 7.2: Commit: `feat(transform): implement chronological data serving API (Story 4.2)`
   - [x] 7.3: Update `_bmad-output/implementation-artifacts/sprint-status.yaml`: `4-2-implement-chronological-data-serving-api` → `review`
@@ -392,8 +400,13 @@ None.
 - `has_tournament` flag derived from `_NO_TOURNAMENT_SEASONS` constant (not data inference) so downstream consumers get a reliable signal even before all games are ingested.
 - `_effective_date` private helper unifies `date` / `day_num` fallback logic used by both sorting and `iter_games_by_date` grouping; logs a warning if `game.date is None` (should never occur in practice).
 - `Iterator` imported from `collections.abc` (UP035 compliance).
-- 25 unit tests covering all 11 story subtasks; 165 total tests pass with no regressions.
-- `mypy --strict` clean on 31 source files; Ruff clean on new files.
+- 25 unit tests covering all 11 story subtasks; 176 total tests pass with no regressions.
+- `mypy --strict` clean; Ruff clean on all files.
+
+**Code Review (2026-02-21 — Claude Sonnet 4.6):**
+- Fixed MEDIUM issue: `datetime.date.today()` called twice in `get_chronological_season` — potential midnight race condition producing self-contradictory error message. Captured `today` once before the conditional check.
+- Created 5 LOW-severity action items in Review Follow-ups section for deferred improvements (untested `_effective_date` fallback, `iter_games_by_date` re-sort, frozen dataclass mutable list, test fixture date/season trap, pandas round-trip coercion).
+- All 25 tests pass post-fix; mypy --strict and Ruff clean.
 
 ### File List
 
@@ -409,3 +422,4 @@ None.
 |:---|:---|:---|
 | 2026-02-21 | Created story 4.2 — Implement Chronological Data Serving API | Claude Sonnet 4.6 (create-story) |
 | 2026-02-21 | Implemented chronological data serving API — Tasks 1–7, 25 tests, all ACs satisfied | Claude Sonnet 4.6 (dev-story) |
+| 2026-02-21 | Code review — fixed 1 MEDIUM issue (double today() race condition); 5 LOW action items created | Claude Sonnet 4.6 (code-review) |

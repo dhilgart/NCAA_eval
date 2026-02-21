@@ -174,10 +174,11 @@ class ChronologicalDataServer:
         Raises:
             ValueError: If ``cutoff_date`` is strictly after today's date.
         """
-        if cutoff_date is not None and cutoff_date > datetime.date.today():
+        if cutoff_date is not None:
             today = datetime.date.today()
-            msg = f"Cannot request future game data: cutoff_date {cutoff_date} " f"is after today ({today})"
-            raise ValueError(msg)
+            if cutoff_date > today:
+                msg = f"Cannot request future game data: cutoff_date {cutoff_date} is after today ({today})"
+                raise ValueError(msg)
 
         games = self._repo.get_games(year)
 
