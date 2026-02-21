@@ -169,8 +169,9 @@ def compute_hits(
         logger.warning("HITS failed to converge after %d iterations; returning uniform scores", max_iter)
         n = G.number_of_nodes()
         score = 1.0 / n if n > 0 else 0.0
-        uniform: dict[int, float] = dict.fromkeys(G.nodes(), score)
-        return uniform, uniform
+        hub_uniform: dict[int, float] = dict.fromkeys(G.nodes(), score)
+        auth_uniform: dict[int, float] = dict.fromkeys(G.nodes(), score)
+        return hub_uniform, auth_uniform
     return hub, auth
 
 

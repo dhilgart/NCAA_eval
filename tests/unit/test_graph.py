@@ -295,8 +295,11 @@ def test_compute_hits_hub_high_for_loser_of_high_authority() -> None:
     # Team C (id=3) should have the highest authority
     assert auth[3] >= auth[2], "Team C should have >= authority than team B"
     assert auth[3] >= auth[4], "Team C should have >= authority than team D"
-    # Team D (id=4) lost only to high-authority C → hub score > 0
-    assert hub[4] >= 0.0, "Team D hub score must be non-negative"
+    # Team D (id=4) and team A (id=1) both point to high-authority C → non-zero hub scores
+    # Team B (id=2) points only to A, which has lower authority → lower hub score
+    assert hub[4] > 0.0, "Team D hub score must be positive (points to high-authority C)"
+    assert hub[1] > 0.0, "Team A hub score must be positive (points to high-authority C)"
+    assert hub[4] >= hub[2], "D (points to high-authority C) should have hub >= B (points to A)"
 
 
 @pytest.mark.unit
@@ -312,6 +315,36 @@ def test_compute_hits_empty_edges() -> None:
         assert score == pytest.approx(0.0)
     for score in auth.values():
         assert score == pytest.approx(0.0)
+
+
+@pytest.mark.unit
+@pytest.mark.smoke
+def test_compute_hits_convergence_failure_returns_uniform() -> None:
+    """On PowerIterationFailedConvergence, compute_hits returns uniform 1/n scores.
+
+    Also verifies hub and auth are independent mutable objects (not the same dict).
+    """
+    from unittest.mock import patch
+
+    G: nx.DiGraph = nx.DiGraph()
+    G.add_edges_from([(1, 2), (2, 3), (3, 1)])  # 3-node cycle
+    n = G.number_of_nodes()  # 3
+    expected_score = 1.0 / n
+
+    with patch.object(nx, "hits", side_effect=nx.PowerIterationFailedConvergence(1)):
+        hub, auth = compute_hits(G)
+
+    # Both dicts should cover all nodes with uniform 1/n score
+    assert set(hub.keys()) == {1, 2, 3}
+    assert set(auth.keys()) == {1, 2, 3}
+    for score in hub.values():
+        assert score == pytest.approx(expected_score)
+    for score in auth.values():
+        assert score == pytest.approx(expected_score)
+
+    # Hub and auth must be independent objects — mutating one must not affect the other
+    hub[1] = 999.0
+    assert auth[1] == pytest.approx(expected_score), "hub and auth share the same dict (bug)"
 
 
 # ---------------------------------------------------------------------------
@@ -472,6 +505,7 @@ def test_graph_transformer_compute_features_consistent(triangle_games: pd.DataFr
 
 @pytest.mark.unit
 @pytest.mark.smoke
+@pytest.mark.no_mutation
 def test_no_iterrows() -> None:
     """graph.py must not use iterrows (vectorization mandate)."""
     import pathlib

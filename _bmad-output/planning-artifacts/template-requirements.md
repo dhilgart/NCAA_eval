@@ -1565,3 +1565,53 @@ Since the primary working directory is always set to the project root (e.g., `/h
 **Rule for all agents:** Use `git log`, `git status`, `git diff`, `git add`, `git commit`, etc. directly — never `git -C /path/to/repo log ...`.
 
 **Template action:** In any BMAD workflow instructions that reference git commands, write them without `-C`. If the workflow must specify an absolute path for some reason, use `cd` in a prior step rather than `-C`.
+
+### Source-Scanning Tests Must Be Marked `@pytest.mark.no_mutation` ⭐ (Discovered Story 4.5 Code Review, 2026-02-21)
+
+Any test that reads a source file via `Path(__file__).parent.../src/module.py` to check for banned patterns (e.g., `"iterrows" not in source_text`) will fail under mutmut because `__file__` resolves to the `mutants/` directory. `mutants/src/...` only contains files in `paths_to_mutate`; other source files aren't there.
+
+**Always mark such tests `@pytest.mark.no_mutation`:**
+```python
+@pytest.mark.unit
+@pytest.mark.smoke
+@pytest.mark.no_mutation  # Uses Path(__file__) to find source; incompatible with mutmut
+def test_no_iterrows() -> None:
+    source_path = pathlib.Path(__file__).parent.parent.parent / "src" / "pkg" / "module.py"
+    assert "iterrows" not in source_path.read_text()
+```
+
+**Template action:** Include this reminder in story templates for any `test_no_<banned_pattern>` test.
+
+### Return Independent Dicts in Exception Fallback Paths (Discovered Story 4.5 Code Review, 2026-02-21)
+
+When a function returns multiple dicts (e.g., hub+auth from `compute_hits()`), the exception/fallback path must return **two independent dict objects** — not the same object twice.
+
+```python
+# ❌ Bug: hub and auth are the same object — mutating hub corrupts auth
+uniform = dict.fromkeys(nodes, score)
+return uniform, uniform
+
+# ✅ Correct: two independent dicts
+return dict.fromkeys(nodes, score), dict.fromkeys(nodes, score)
+```
+
+This pattern applies anywhere a function returns multiple collections from a single-object fallback (dicts, lists, etc.).
+
+### Test Convergence Failure Paths with `patch.object` (Discovered Story 4.5 Code Review, 2026-02-21)
+
+Any numeric algorithm with a convergence exception guard (e.g., `except nx.PowerIterationFailedConvergence`) needs an explicit test. Use `unittest.mock.patch.object` to force the exception without constructing a pathological graph:
+
+```python
+from unittest.mock import patch
+
+def test_hits_convergence_failure() -> None:
+    G = nx.DiGraph()
+    G.add_edges_from([(1, 2), (2, 3), (3, 1)])
+    with patch.object(nx, "hits", side_effect=nx.PowerIterationFailedConvergence(1)):
+        hub, auth = compute_hits(G)
+    # verify fallback behavior + that hub/auth are independent objects
+    hub[1] = 999.0
+    assert auth[1] != 999.0
+```
+
+**Template action:** For any function that catches a convergence/iteration exception and returns a fallback, add a `test_<function>_convergence_failure` test to the story's AC list.

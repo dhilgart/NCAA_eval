@@ -1,6 +1,6 @@
 # Story 4.5: Implement Graph Builders & Centrality Features
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -510,6 +510,26 @@ Claude Sonnet 4.6 (create-story workflow)
 - _bmad-output/implementation-artifacts/4-5-implement-graph-builders-centrality-features.md (modified)
 - _bmad-output/implementation-artifacts/sprint-status.yaml (modified)
 
+## Senior Developer Review (AI)
+
+Reviewed 2026-02-21 by Claude Sonnet 4.6 (code-review workflow).
+
+**Outcome:** APPROVED — 4 issues fixed (1 HIGH, 3 MEDIUM)
+
+| Severity | Finding | Fix Applied |
+|----------|---------|-------------|
+| HIGH | `compute_hits()` convergence failure branch (PowerIterationFailedConvergence) had zero test coverage — silent failure mode in walk-forward pipelines | Added `test_compute_hits_convergence_failure_returns_uniform` (test_graph.py) |
+| MEDIUM | `compute_hits()` returned the same mutable dict object for both hub and auth on convergence failure — mutating hub would corrupt auth | Fixed `graph.py:172-173`: return two independent `dict.fromkeys()` objects |
+| MEDIUM | `test_no_iterrows` used `Path(__file__)` navigation but was not marked `@pytest.mark.no_mutation` — would fail with FileNotFoundError under mutmut | Added `@pytest.mark.no_mutation` marker |
+| MEDIUM | `test_compute_hits_hub_high_for_loser_of_high_authority` had a tautological assertion `hub[4] >= 0.0` (always true by construction) | Replaced with `hub[4] > 0.0`, `hub[1] > 0.0`, and `hub[4] >= hub[2]` (meaningful hub signal validation) |
+
+**Low issues (deferred):**
+- L1: `transform()` warm-start path untested through convenience method (underlying path covered via `compute_pagerank(nstart=...)`)
+- L2: Module docstring missing betweenness O(V×E) recomputation caching guidance for Story 4.7
+
+**Quality gate results after fixes:** ruff ✓ · mypy --strict ✓ · 265 tests pass (0 regressions)
+
 ## Change Log
 
 - 2026-02-21: Implemented graph builders and centrality features (Story 4.5) — created `graph.py` with `build_season_graph`, `compute_pagerank`, `compute_betweenness_centrality`, `compute_hits`, `compute_clustering_coefficient`, and `GraphTransformer`; wrote 28 unit tests; updated `transform/__init__.py` with graph exports and Story 4.4 L3 missing sequential exports; all quality gates pass (ruff, mypy --strict, 264 tests).
+- 2026-02-21: Code review — fixed 1 HIGH (HITS convergence failure untested) + 3 MEDIUM issues (shared mutable dict, missing no_mutation marker, tautological assertion); 29 tests now, 265 total.
