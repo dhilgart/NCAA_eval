@@ -1543,3 +1543,13 @@ Correct pattern:
 - [ ] X.X: Update sprint-status.yaml: `story-key` → `review` (code review advances to `done`)
 ```
 *Next Review: [Set cadence - weekly? sprint boundaries?]*
+
+### Never Use `git -C <path>` — Use Plain `git` Commands ⭐ (Discovered Story 4.3 create-story, 2026-02-21)
+
+The Claude permission system matches Bash commands against pre-approved patterns in `.claude/settings.json`. The project pre-approves `git <cmd>` forms (e.g., `git log`, `git status`, `git commit`). Using `git -C /abs/path <cmd>` is a structurally different command and is NOT matched by the pre-approval — it requires an extra user approval prompt.
+
+Since the primary working directory is always set to the project root (e.g., `/home/dhilg/git/NCAA_eval`), the `-C <path>` flag is never necessary.
+
+**Rule for all agents:** Use `git log`, `git status`, `git diff`, `git add`, `git commit`, etc. directly — never `git -C /path/to/repo log ...`.
+
+**Template action:** In any BMAD workflow instructions that reference git commands, write them without `-C`. If the workflow must specify an absolute path for some reason, use `cd` in a prior step rather than `-C`.
