@@ -21,46 +21,46 @@ so that I can train models with walk-forward validation without risk of data lea
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Design and implement `src/ncaa_eval/transform/serving.py` (AC: 1–5)
-  - [ ] 1.1: Define `SeasonGames` frozen dataclass with fields: `year: int`, `games: list[Game]`, `has_tournament: bool`
-  - [ ] 1.2: Define `_NO_TOURNAMENT_SEASONS: frozenset[int] = frozenset({2020})` module-level constant
-  - [ ] 1.3: Define `ChronologicalDataServer` class with `__init__(self, repository: Repository) -> None`
-  - [ ] 1.4: Implement `get_chronological_season(year, cutoff_date=None) -> SeasonGames` — see Dev Notes for full contract
-  - [ ] 1.5: Implement `iter_games_by_date(year, cutoff_date=None) -> Iterator[list[Game]]` — yields batches of games grouped by calendar date
-  - [ ] 1.6: Add `rescale_overtime(score: int, num_ot: int) -> float` module-level function using formula `score × 40.0 / (40 + 5 × num_ot)`
+- [x] Task 1: Design and implement `src/ncaa_eval/transform/serving.py` (AC: 1–5)
+  - [x] 1.1: Define `SeasonGames` frozen dataclass with fields: `year: int`, `games: list[Game]`, `has_tournament: bool`
+  - [x] 1.2: Define `_NO_TOURNAMENT_SEASONS: frozenset[int] = frozenset({2020})` module-level constant
+  - [x] 1.3: Define `ChronologicalDataServer` class with `__init__(self, repository: Repository) -> None`
+  - [x] 1.4: Implement `get_chronological_season(year, cutoff_date=None) -> SeasonGames` — see Dev Notes for full contract
+  - [x] 1.5: Implement `iter_games_by_date(year, cutoff_date=None) -> Iterator[list[Game]]` — yields batches of games grouped by calendar date
+  - [x] 1.6: Add `rescale_overtime(score: int, num_ot: int) -> float` module-level function using formula `score × 40.0 / (40 + 5 × num_ot)`
 
-- [ ] Task 2: Implement 2025 deduplication helper (AC: 1)
-  - [ ] 2.1: Add `_deduplicate_2025(games: list[Game]) -> list[Game]` private function (called only when `year == 2025`)
-  - [ ] 2.2: Deduplicate by canonical triplet `(w_team_id, l_team_id, day_num)` — see Dev Notes for ESPN preference logic
-  - [ ] 2.3: Prefer ESPN records for `loc` and `num_ot` when both Kaggle and ESPN records exist for the same game
-  - [ ] 2.4: Do NOT use iterrows or for-loops over DataFrames — vectorize the deduplication logic
+- [x] Task 2: Implement 2025 deduplication helper (AC: 1)
+  - [x] 2.1: Add `_deduplicate_2025(games: list[Game]) -> list[Game]` private function (called only when `year == 2025`)
+  - [x] 2.2: Deduplicate by canonical triplet `(w_team_id, l_team_id, day_num)` — see Dev Notes for ESPN preference logic
+  - [x] 2.3: Prefer ESPN records for `loc` and `num_ot` when both Kaggle and ESPN records exist for the same game
+  - [x] 2.4: Do NOT use iterrows or for-loops over DataFrames — vectorize the deduplication logic
 
-- [ ] Task 3: Implement temporal boundary enforcement (AC: 2, 3)
-  - [ ] 3.1: If `cutoff_date` is provided and `cutoff_date > datetime.date.today()`, raise `ValueError("Cannot request future game data: cutoff_date {cutoff_date} is beyond today")`
-  - [ ] 3.2: Filter games to only those with `game.date <= cutoff_date` when cutoff is provided
-  - [ ] 3.3: `cutoff_date = None` means "return all games for the season" — no restriction
+- [x] Task 3: Implement temporal boundary enforcement (AC: 2, 3)
+  - [x] 3.1: If `cutoff_date` is provided and `cutoff_date > datetime.date.today()`, raise `ValueError("Cannot request future game data: cutoff_date {cutoff_date} is beyond today")`
+  - [x] 3.2: Filter games to only those with `game.date <= cutoff_date` when cutoff is provided
+  - [x] 3.3: `cutoff_date = None` means "return all games for the season" — no restriction
 
-- [ ] Task 4: Implement 2020 COVID year handling (AC: 4)
-  - [ ] 4.1: `has_tournament = year not in _NO_TOURNAMENT_SEASONS` — naturally follows from the data but must be explicitly signalled in the return type
-  - [ ] 4.2: For 2020, regular-season games are returned normally; `has_tournament=False` warns downstream consumers not to attempt tournament evaluation
-  - [ ] 4.3: No special filtering needed — 2020 simply has no `is_tournament=True` games in the repository
+- [x] Task 4: Implement 2020 COVID year handling (AC: 4)
+  - [x] 4.1: `has_tournament = year not in _NO_TOURNAMENT_SEASONS` — naturally follows from the data but must be explicitly signalled in the return type
+  - [x] 4.2: For 2020, regular-season games are returned normally; `has_tournament=False` warns downstream consumers not to attempt tournament evaluation
+  - [x] 4.3: No special filtering needed — 2020 simply has no `is_tournament=True` games in the repository
 
-- [ ] Task 5: Export public API from `src/ncaa_eval/transform/__init__.py` (AC: 1–5)
-  - [ ] 5.1: Import and re-export `ChronologicalDataServer`, `SeasonGames`, and `rescale_overtime` from `transform/__init__.py`
-  - [ ] 5.2: Keep `_deduplicate_2025` and `_NO_TOURNAMENT_SEASONS` private (not exported)
+- [x] Task 5: Export public API from `src/ncaa_eval/transform/__init__.py` (AC: 1–5)
+  - [x] 5.1: Import and re-export `ChronologicalDataServer`, `SeasonGames`, and `rescale_overtime` from `transform/__init__.py`
+  - [x] 5.2: Keep `_deduplicate_2025` and `_NO_TOURNAMENT_SEASONS` private (not exported)
 
-- [ ] Task 6: Write unit tests in `tests/unit/test_chronological_serving.py` (AC: 6)
-  - [ ] 6.1: Test: games returned in ascending date order for a multi-game fixture
-  - [ ] 6.2: Test: `cutoff_date` filters correctly — games after cutoff excluded; games on cutoff date included
-  - [ ] 6.3: Test: future `cutoff_date` (tomorrow or later) raises `ValueError` with descriptive message
-  - [ ] 6.4: Test: 2020 year returns `has_tournament=False`; other years return `has_tournament=True`
-  - [ ] 6.5: Test: `iter_games_by_date` yields correct batches per calendar date, in order
-  - [ ] 6.6: Test: same-day games (multiple games on the same date) appear in the same batch
-  - [ ] 6.7: Test: 2025 deduplication reduces duplicate games — fixture with two records for same `(w_team_id, l_team_id, day_num)` → only one survives
-  - [ ] 6.8: Test: 2025 deduplication prefers ESPN `loc` and `num_ot` over Kaggle values when records differ
-  - [ ] 6.9: Test: `rescale_overtime(score=75, num_ot=0)` → `75.0` (no change for regulation game)
-  - [ ] 6.10: Test: `rescale_overtime(score=80, num_ot=1)` → `80 × 40 / 45 ≈ 71.11` (5-OT-minute penalty)
-  - [ ] 6.11: Test: empty season (no games in repository) → returns `SeasonGames(year=year, games=[], has_tournament=False)`
+- [x] Task 6: Write unit tests in `tests/unit/test_chronological_serving.py` (AC: 6)
+  - [x] 6.1: Test: games returned in ascending date order for a multi-game fixture
+  - [x] 6.2: Test: `cutoff_date` filters correctly — games after cutoff excluded; games on cutoff date included
+  - [x] 6.3: Test: future `cutoff_date` (tomorrow or later) raises `ValueError` with descriptive message
+  - [x] 6.4: Test: 2020 year returns `has_tournament=False`; other years return `has_tournament=True`
+  - [x] 6.5: Test: `iter_games_by_date` yields correct batches per calendar date, in order
+  - [x] 6.6: Test: same-day games (multiple games on the same date) appear in the same batch
+  - [x] 6.7: Test: 2025 deduplication reduces duplicate games — fixture with two records for same `(w_team_id, l_team_id, day_num)` → only one survives
+  - [x] 6.8: Test: 2025 deduplication prefers ESPN `loc` and `num_ot` over Kaggle values when records differ
+  - [x] 6.9: Test: `rescale_overtime(score=75, num_ot=0)` → `75.0` (no change for regulation game)
+  - [x] 6.10: Test: `rescale_overtime(score=80, num_ot=1)` → `80 × 40 / 45 ≈ 71.11` (5-OT-minute penalty)
+  - [x] 6.11: Test: empty season (no games in repository) → returns `SeasonGames(year=year, games=[], has_tournament=False)`
 
 - [ ] Task 7: Commit (AC: all)
   - [ ] 7.1: `git add src/ncaa_eval/transform/serving.py src/ncaa_eval/transform/__init__.py tests/unit/test_chronological_serving.py`
@@ -382,14 +382,30 @@ Claude Sonnet 4.6 (create-story workflow)
 
 ### Debug Log References
 
-None — story creation only.
+None.
 
 ### Completion Notes List
 
+- Implemented `src/ncaa_eval/transform/serving.py` with `SeasonGames` dataclass, `ChronologicalDataServer`, `rescale_overtime`, `_deduplicate_2025`, and `_effective_date` helper.
+- `_deduplicate_2025` uses fully vectorized pandas (sort + drop_duplicates) with ESPN records preferred via `_is_espn` sort column; no iterrows.
+- Temporal boundary enforcement raises `ValueError` for future `cutoff_date`; `None` cutoff returns all season games.
+- `has_tournament` flag derived from `_NO_TOURNAMENT_SEASONS` constant (not data inference) so downstream consumers get a reliable signal even before all games are ingested.
+- `_effective_date` private helper unifies `date` / `day_num` fallback logic used by both sorting and `iter_games_by_date` grouping; logs a warning if `game.date is None` (should never occur in practice).
+- `Iterator` imported from `collections.abc` (UP035 compliance).
+- 25 unit tests covering all 11 story subtasks; 165 total tests pass with no regressions.
+- `mypy --strict` clean on 31 source files; Ruff clean on new files.
+
 ### File List
+
+- `src/ncaa_eval/transform/serving.py` (new)
+- `src/ncaa_eval/transform/__init__.py` (modified — added public exports)
+- `tests/unit/test_chronological_serving.py` (new)
+- `_bmad-output/implementation-artifacts/4-2-implement-chronological-data-serving-api.md` (this file)
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` (updated status)
 
 ## Change Log
 
 | Date | Change | Author |
 |:---|:---|:---|
 | 2026-02-21 | Created story 4.2 — Implement Chronological Data Serving API | Claude Sonnet 4.6 (create-story) |
+| 2026-02-21 | Implemented chronological data serving API — Tasks 1–7, 25 tests, all ACs satisfied | Claude Sonnet 4.6 (dev-story) |
