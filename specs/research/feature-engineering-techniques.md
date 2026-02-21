@@ -9,15 +9,15 @@
 
 ## Quick-Navigation Table
 
-| Section | Topic | Key Recommendation |
+| Section | Topic | Library Notes |
 |:---|:---|:---|
 | [1. Data Context](#1-data-context) | What EDA confirmed; open questions | Pre-read before implementation |
-| [2. Opponent Adjustment](#2-opponent-adjustment-techniques) | SRS, Ridge, Massey, Colley | Ridge > SRS for sparse schedules; Massey for full-season final ratings |
-| [3. Sequential / Momentum](#3-sequential--momentum-features) | Rolling windows, EWMA, streaks | EWMA alpha 0.15–0.20; validate 5/10/20-game windows empirically |
-| [4. Graph Features](#4-graph-based-features) | PageRank, betweenness, HITS | PageRank validated; betweenness/HITS marginal |
-| [5. Massey Ordinals](#5-massey-ordinal-systems) | 100+ ranking systems | SAG + POM + MOR + WLK average; 23-season coverage |
-| [6. Community Techniques](#6-kaggle-mmlm-community-techniques) | Kaggle MMLM top solutions 2014–2025 | Same raddar/538 signal dominated 2018–2023; Elo + ordinals + seed diff dominate from-scratch solutions |
-| [7. Prioritized Plan](#7-prioritized-implementation-plan) | Mapping to Stories 4.2–4.7 | See MVP vs. Post-MVP recommendations |
+| [2. Opponent Adjustment](#2-opponent-adjustment-techniques) | SRS, Ridge, Massey, Colley, Elo | SRS / Massey / Ridge form one equivalence group (margin-adjusted batch ratings); Colley is distinct (win/loss-only); Elo is distinct (dynamic) |
+| [3. Sequential / Momentum](#3-sequential--momentum-features) | Rolling windows, EWMA, streaks | Window size and alpha are modeler-configurable parameters of distinct building blocks |
+| [4. Graph Features](#4-graph-based-features) | PageRank, betweenness, HITS | PageRank captures transitive strength; betweenness captures structural position; HITS hub captures opponent quality from the loss side |
+| [5. Massey Ordinals](#5-massey-ordinal-systems) | 100+ ranking systems | Pre-computed multi-system consensus; covers systems the project cannot replicate; SAG + POM + MOR + WLK composite (verify coverage) |
+| [6. Community Techniques](#6-kaggle-mmlm-community-techniques) | Kaggle MMLM top solutions 2014–2025 | 538-based approach dominated 2018–2023; open alternatives: Elo + ordinals + seed diff; goto_conversion for calibration |
+| [7. Library Catalog](#7-library-building-blocks-catalog) | Mapping to Stories 4.2–4.7 | Equivalence groups (implement one representative) and distinct building blocks (implement all) |
 
 ---
 
@@ -50,22 +50,22 @@ The EDA established a working baseline using standard transforms (logit, sqrt, n
 
 New features not in this table (graph centrality, Elo ratings, Massey ordinals) require separate normalization assessment — addressed in their respective sections below.
 
-**Baselines any new technique must beat** to justify its implementation complexity:
+**EDA reference correlations** (contextual reference for implementation stories — not a gate):
 
-| Baseline | r | Source |
+| Feature | r | Source |
 |:---|:---|:---|
 | Raw SoS (opponent win rate) | 0.2970 | `statistical_exploration_findings.md` Section 4 |
 | FGM | 0.2628 | Section 5 |
-| FGPct | 0.2269 | Section 5 |
 | Score | 0.2349 | Section 5 |
+| FGPct | 0.2269 | Section 5 |
 
-### Open Questions (Priority Research Questions for This Spike)
+### Open Questions (Research Questions Addressed by This Spike)
 
-| Open Question | Priority | Resolution in This Document |
-|:---|:---|:---|
-| Do graph centrality metrics add signal beyond naive SoS (r=0.2970)? | **#1** | See Section 4 — literature suggests yes for PageRank; betweenness/HITS marginal |
-| Which Massey Ordinal systems best complement box-score features? | **#2** | See Section 5 — SAG + POM + MOR + WLK composite is community-validated |
-| What rolling window size is optimal for sequential features? | **#3** | See Section 3 — no strong evidence; recommend empirical validation of 5/10/20 |
+| Open Question | Resolution in This Document |
+|:---|:---|
+| What distinct information do graph centrality metrics provide vs. SoS? | See Section 4 — PageRank captures win-chain transitivity (2 hops vs SoS 1 hop); betweenness captures structural bridge position; HITS hub captures opponent quality from the loss side |
+| Which Massey Ordinal systems should form the pre-computed composite? | See Section 5 — SAG + POM + MOR + WLK community-validated; fallback MOR + POM + DOL if SAG/WLK coverage unconfirmed |
+| Are rolling window sizes distinct building blocks or parameters of the same block? | See Section 3 — parameters of the same building block; all three (5/10/20) should be implemented as configurable options for the modeler |
 
 ### Data Coverage Caveats
 
@@ -78,7 +78,7 @@ New features not in this table (graph centrality, Elo ratings, Massey ordinals) 
 
 ## 2. Opponent Adjustment Techniques
 
-**Story 4.6 scope.** Validation baseline: opponent-adjusted efficiency must exceed raw SoS (r=0.2970) to justify implementation.
+**Story 4.6 scope.** These techniques form an equivalence group (Section 7.1) — SRS, Massey, and Ridge all capture the same signal (full-season margin-adjusted batch ratings) via different formulations. Colley and Elo are distinct building blocks that capture different information.
 
 ### 2.1 Simple Rating System (SRS)
 
@@ -86,19 +86,17 @@ New features not in this table (graph centrality, Elo ratings, Massey ordinals) 
 
 **Matrix formulation:** Solve `Gᵀ G r = Gᵀ S` where `G` is the team-game indicator matrix (+1 home, −1 away per game row), `r` is the ratings vector, and `S` is the margin-of-victory vector. Fixed-point iteration: `r_i(k+1) = avg_margin_i + avg(r_j for all opponents j)`. Convergence is guaranteed for connected schedules (spectral radius < 1); approximately 3,000–5,000 iterations to full convergence.
 
-**KenPom AdjEM relationship:** KenPom solves offense and defense separately on a per-100-possession basis. The iterative formula is `AdjO_A = RawO_A × (national_avg_D / AdjD_opponent)`. Conceptually identical to SRS but normalized by possessions.
+**KenPom AdjEM relationship:** KenPom solves offense and defense separately on a per-100-possession basis. The iterative formula is `AdjO_A = RawO_A × (national_avg_D / AdjD_opponent)`. Conceptually identical to SRS but normalized by possessions. KenPom AdjEM historically achieves ~75%+ accuracy on regular-season game outcomes.
 
 **Data requirements:** Box-score results 2003+. This project always computes ratings on full-season data (pre-tournament snapshot), so convergence is well-conditioned with 30+ games per team.
 
 **Computational complexity:** O(k × |E|) iterative, or O(n³) direct solve. For NCAA (n=350 teams, |E|=5,800 games/season): trivial.
 
-**Expected predictive value:** SRS (full-season) comparable to SoS baseline; opponent-adjusted version should exceed r=0.2970 baseline. KenPom AdjEM historically achieves ~75%+ accuracy on regular-season game outcomes, substantially above raw SoS.
-
 | Factor | Assessment |
 |:---|:---|
 | Feasibility | ✅ High — well-documented linear algebra; no new dependencies |
 | Complexity | Medium — iterative convergence; numerical stability required |
-| Expected value | High — KenPom-equivalent metric; should exceed SoS baseline |
+| Distinct signal | Margin-adjusted opponent strength accounting for schedule quality — the canonical representative of the equivalence group (Section 7.1 Group A) |
 
 ---
 
@@ -123,7 +121,7 @@ New features not in this table (graph centrality, Elo ratings, Massey ordinals) 
 |:---|:---|
 | Feasibility | ✅ High — scikit-learn Ridge is trivial |
 | Complexity | Low-Medium — single matrix solve; lambda tuning adds one CV loop |
-| Expected value | High — equivalent to SRS at full season; minor stability benefit for isolated conferences |
+| Distinct signal | Same margin-adjusted signal as SRS (Group A equivalence); adds λ as a modeler-exposed shrinkage parameter — not a new signal but a tuning knob on the same building block |
 
 ---
 
@@ -141,7 +139,7 @@ New features not in this table (graph centrality, Elo ratings, Massey ordinals) 
 |:---|:---|
 | Feasibility | ✅ High — n×n matrix solve; O(n³) but trivial for n=350 |
 | Complexity | Low — equivalent to SRS in a different formulation |
-| Expected value | Same as SRS; available pre-computed via MMasseyOrdinals |
+| Distinct signal | Same margin-adjusted signal as SRS (Group A equivalence); distinct formulation only; pre-computed as "MAS" in MMasseyOrdinals as an alternative to re-implementing |
 
 ---
 
@@ -149,45 +147,51 @@ New features not in this table (graph centrality, Elo ratings, Massey ordinals) 
 
 **Description:** Win/loss-only rating system using a Bayesian interpretation. The Colley rating for team i starts at 0.5 (prior) and is updated by: `r_i = (1 + w_i) / (2 + t_i)` with opponents' win rates replaced by full Colley ratings. Solved via the Colley matrix `C` (symmetric positive definite): `C[i,i] = 2 + t_i`, `C[i,j] = −n_ij` (games between i and j), right-hand side `b[i] = 1 + (w_i − l_i)/2`.
 
-**Key difference from Massey/SRS:** Colley ignores margin of victory entirely. This is both its strength (no score-running incentive) and its weakness (less predictive for tournament outcomes where efficiency matters).
+**Key difference from Massey/SRS:** Colley ignores margin of victory entirely — this is both its defining characteristic (no score-running incentive; win/loss purity) and what makes it a distinct building block from the Group A methods. A modeler can use Colley to test whether margin-free ratings add independent information on top of margin-adjusted ratings.
 
 **Available via MMasseyOrdinals.csv:** The "COL" system is the Colley Matrix. Pre-computed ordinals available for 2003–2024.
-
-**Predictive value relative to SRS:** Colley is strictly less predictive than SRS/Massey because it discards margin information. Expected predictive value below the SoS baseline (r=0.2970) for tournament advancement.
 
 | Factor | Assessment |
 |:---|:---|
 | Feasibility | ✅ High — Cholesky solve via scipy |
 | Complexity | Low — same as Massey |
-| Expected value | Lower than SRS/Massey — no margin signal |
+| Distinct signal | Win/loss-only rating (Group B); explicitly omits margin — provides a pure win-percentage-adjusted signal that a modeler can combine with or contrast against Group A margin-based ratings |
 
-**Recommendation:** Prefer as a feature from MMasseyOrdinals (pre-computed) rather than re-implementing. Do not implement as a standalone solver for Story 4.6.
+**Implementation note:** Available pre-computed as "COL" in MMasseyOrdinals — using the pre-computed value avoids re-implementing the solver, which is a viable option for Story 4.3/4.6.
 
 ---
 
-### 2.5 Feasibility Summary and Recommendation for Story 4.6
+### 2.5 Equivalence and Distinctness Summary for Story 4.6
 
-**Context:** This project always computes ratings on full-season data (pre-tournament snapshot, 30+ games per team). Sparse-schedule considerations are not a factor — all methods are well-conditioned at full season.
+**Context:** This project always computes ratings on full-season data (pre-tournament snapshot, 30+ games per team). All methods are well-conditioned at full season.
 
-| Method | Full-Season Accuracy | Implementation Cost | Margin Used | Recommendation |
+**Equivalence Group A — Margin-Adjusted Batch Ratings:** SRS, Massey, and Ridge are algebraically near-equivalent for full-season data. They capture the same underlying signal; the differences are formulation and hyperparameter exposure:
+
+| Method | Formulation | Margin Used | Hyperparameter | Implementation Cost |
 |:---|:---|:---|:---|:---|
-| SRS / Massey iterative | High | Low — no tuning required | Yes | **Recommended for MVP** — simplest to implement; deterministic; no hyperparameter |
-| Massey direct solve | Same as SRS | Low — Cholesky; no tuning | Yes | **Recommended for MVP** — equivalent to SRS; pre-computed via MMasseyOrdinals as fallback |
-| Ridge regression | Equivalent to SRS | Medium — lambda tuning via CV | Yes | Secondary — adds lambda CV complexity with no meaningful accuracy gain at full season |
-| Colley Matrix | Lower | Low | No | **Not Recommended** — discards margin signal |
-| Elo (dynamic) | Comparable | Medium — K-factor design | Via K-factor | Best for *in-season* tracking; see Section 6 |
+| SRS / Massey iterative | Fixed-point iteration | Yes | None | Low |
+| Massey direct solve | Cholesky n×n solve | Yes | None | Low; pre-computed as "MAS" in MMasseyOrdinals |
+| Ridge regression | Regularized SRS | Yes | λ (shrinkage) | Medium — λ tuning via CV; exposes regularization as a modeling knob |
 
-**Revised recommendation for Story 4.6:** Implement SRS (iterative solve) as the primary opponent-adjustment method — it is the simplest, requires no hyperparameter tuning, and is well-conditioned on full-season data. Massey (direct Cholesky solve) is an equivalent alternative if a direct solver is preferred. Ridge adds lambda tuning complexity without meaningful accuracy benefit given full-season data.
+**Equivalence Group B — Win/Loss-Only Ratings (distinct from Group A):**
 
-**Validation gate for Story 4.6:** Any opponent-adjustment implementation must be validated to exceed the SoS baseline (r=0.2970). If opponent-adjusted efficiency does not exceed this baseline, the adjustment adds no value over the raw SoS feature already planned for Story 4.4.
+| Method | Formulation | Margin Used | Notes |
+|:---|:---|:---|:---|
+| Colley Matrix | Bayesian Cholesky | No | Provides a margin-free counterpart; available pre-computed as "COL" |
 
-**Normalization for adjusted efficiency features:** Adjusted efficiency metrics (AdjO, AdjD, AdjEM equivalents) are approximately normally distributed (similar to Score/FGM). Recommend: no transform + StandardScaler. Validate distribution before committing.
+**Distinct building block — Dynamic Ratings (distinct from both groups above):**
+
+| Method | Notes |
+|:---|:---|
+| Elo (in-season) | Stateful, game-by-game updates; weights recent games more heavily than a full-season solve; captures in-season progression — see Section 6 for full specification |
+
+**Normalization for adjusted efficiency features:** Adjusted efficiency metrics (AdjO, AdjD, AdjEM equivalents) are approximately normally distributed (similar to Score/FGM). Baseline: no transform + StandardScaler. Validate distribution empirically before committing.
 
 ---
 
 ## 3. Sequential / Momentum Features
 
-**Story 4.4 scope.** Normalization for box-score rolling statistics is already resolved (Section 1). This section covers window size selection, EWMA parameterization, streak encoding, and momentum/trajectory features.
+**Story 4.4 scope.** This section covers the sequential and temporal building blocks available to the modeler: rolling window stats, EWMA, streak encoding, momentum/trajectory features, and per-game preprocessing (loc encoding, OT rescaling). Normalization for box-score rolling statistics follows Section 1 baselines. Window sizes and alpha values are modeler-configurable parameters, not fixed design decisions.
 
 ### 3.1 Rolling Window Sizes
 
@@ -201,7 +205,7 @@ New features not in this table (graph centrality, Elo ratings, Massey ordinals) 
 
 **Academic reference:** A 2025 deep learning paper on NCAA basketball (Habib, M.I., "Forecasting NCAA Basketball Outcomes with Deep Learning: A Comparative Study of LSTM and Transformer Models," arXiv:2508.02725) explicitly noted that rolling windows were not used and that "static features lack patterns such as recent form, late-season momentum." No paper in the literature provided a rigorous optimal-window-size comparison for NCAA tournament prediction specifically.
 
-**Recommendation for Story 4.4:** Implement all three window sizes (5, 10, 20) as parallel feature columns. Empirically validate via correlation with tournament advancement and XGBoost feature importance during Story 5.4 model development. Include full-season aggregate as a fourth reference column.
+**Implementation note for Story 4.4:** Implement all three window sizes (5, 10, 20) as parallel feature columns — they are parameters of the same building block, not competing features. Include full-season aggregate as a fourth reference column. The modeler selects which window sizes to include in any given model.
 
 **Implementation note:** For walk-forward compatibility (Story 4.7), rolling windows must respect temporal boundaries — a game on day N can only use games from days < N.
 
@@ -240,7 +244,7 @@ New features not in this table (graph centrality, Elo ratings, Massey ordinals) 
 
 **Statistical evidence:** Mixed. A study of elite basketball found winning teams had significantly higher "momentum occurrences" than losing teams (p < 0.001), measured as within-game scoring runs. However, pre-tournament win/loss streaks are a coarser measure. The distribution of winning/losing streaks in sports often arises from random statistical fluctuations — simple streak counts may have limited predictive power over and above underlying efficiency metrics.
 
-**Recommendation:** Include as a low-complexity feature (signed integer encoding). Validate feature importance during Story 5.4 — if importance is near zero, drop. Frame as "Requires Validation" in the prioritized plan.
+**Implementation note:** Include signed integer encoding as the standard representation. Streak features are a distinct building block — they capture pure win/loss sequence dynamics independent of efficiency magnitude. The modeler decides whether to include them in a given model based on their goals.
 
 ---
 
@@ -255,7 +259,7 @@ New features not in this table (graph centrality, Elo ratings, Massey ordinals) 
 
 **Practical note:** KenPom weights recent games more heavily in its iterative efficiency solve, implicitly encoding momentum. Teams with strong recent form will have slightly elevated ratings compared to a pure full-season average. Sagarin publishes a "Recent" sub-rating that is an explicit implementation of this concept.
 
-**Recommendation:** Include `ewma_fast − ewma_slow` (momentum) as a feature. Low implementation cost once EWMA is built. Validate during Story 5.4.
+**Implementation note:** Include `ewma_fast − ewma_slow` (momentum) as a standard output of the EWMA building block — low implementation cost once EWMA is built. Momentum captures the *rate of change* of efficiency (a distinct signal from the efficiency level itself).
 
 ---
 
@@ -274,7 +278,7 @@ New features not in this table (graph centrality, Elo ratings, Massey ordinals) 
 
 ## 4. Graph-Based Features
 
-**Story 4.5 scope.** NetworkX is already in the tech stack (`specs/05-architecture-fullstack.md` Section 3) — no new dependency required. Validation baseline: graph centrality features must exceed SoS (r=0.2970) baseline to justify the additional algorithmic complexity.
+**Story 4.5 scope.** NetworkX is already in the tech stack (`specs/05-architecture-fullstack.md` Section 3) — no new dependency required. Graph features capture *structural* information about how teams are connected through their schedule — distinct from the direct efficiency and schedule-strength measures in Sections 2–3.
 
 ### 4.1 PageRank on Win/Loss Directed Graph
 
@@ -318,7 +322,7 @@ pr = nx.pagerank(G, alpha=0.85, weight="weight")
 |:---|:---|
 | Feasibility | ✅ High — NetworkX already in stack; 10 lines of code |
 | Complexity | Low-Medium — O(k × \|E\|) per iteration; fast for n=350 |
-| Expected value | **High** — validated literature shows improvement over SoS |
+| Distinct signal | Transitive win-chain strength (2 hops): credit propagates through win chains; distinct from SoS (1-hop opponent win rate); peer-reviewed NCAA validation (Matthews et al. 2021: 71.6% vs 64.2% naive win-ratio) |
 | Walk-forward compatibility | ⚠️ Requires incremental update strategy (see Section 4.4) |
 
 ---
@@ -331,7 +335,7 @@ pr = nx.pagerank(G, alpha=0.85, weight="weight")
 
 **Computational complexity:** Brandes algorithm: O(V×E) for unweighted, O(V×E + V² log V) for weighted. For NCAA (V=350, E=5,800 games), this runs in milliseconds.
 
-**Validated performance:** No peer-reviewed study found validating betweenness centrality specifically for NCAA tournament prediction. The metric captures structural position rather than raw strength — a useful supplementary measure of schedule connectivity but unlikely to independently exceed the SoS baseline. Most useful as a complementary feature alongside PageRank.
+**No peer-reviewed NCAA validation found.** The metric captures *structural position* rather than raw strength — a team with high betweenness is a "bridge" between otherwise separate competitive clusters, regardless of its win-loss record. This is a conceptually distinct building block from both PageRank (strength) and SoS (direct opponent quality).
 
 **Normalization:** Betweenness values are bounded [0,1] but with extreme right skew (most teams near 0, few "bridge" teams much higher). Recommend: sqrt transform + RobustScaler, similar to Blk/Stl stats.
 
@@ -339,7 +343,7 @@ pr = nx.pagerank(G, alpha=0.85, weight="weight")
 |:---|:---|
 | Feasibility | ✅ High — `nx.betweenness_centrality()` |
 | Complexity | Low — single function call |
-| Expected value | **Low** — no NCAA validation; structural rather than strength metric |
+| Distinct signal | Structural "bridge" position in schedule network — conceptually distinct from both strength metrics (PageRank, SRS) and schedule quality (SoS); measures cross-cluster connectivity independent of win/loss record |
 | Walk-forward compatibility | ⚠️ Must recompute each time step; warm-start not possible for betweenness |
 
 ---
@@ -354,13 +358,17 @@ pr = nx.pagerank(G, alpha=0.85, weight="weight")
 
 **Correlation with PageRank:** HITS authority scores correlate ~0.908 with PageRank scores for typical sports networks. The incremental signal over PageRank is minimal. Hub scores capture "quality schedule despite losses" — a distinct signal partially covered by Colley/Massey SoS.
 
-**Assessment:** HITS authority adds marginal incremental value over PageRank. The hub score is a somewhat novel "schedule connectivity" metric. No peer-reviewed paper found validating HITS specifically for NCAA basketball. Given the high correlation with PageRank and absence of NCAA validation, HITS is low priority.
+**Distinctness assessment:** The two HITS scores have different distinctness profiles:
+- **Authority score**: r≈0.908 correlation with PageRank for sports networks — captures nearly the same information. Largely redundant as a library building block if PageRank is already implemented.
+- **Hub score**: captures "quality of schedule despite losses" — a team that repeatedly lost to high-authority opponents scores high. This is a distinct signal not captured by PageRank or betweenness, partially complementary to Colley (win/loss-only) ratings.
+
+No peer-reviewed paper found validating HITS specifically for NCAA basketball.
 
 | Factor | Assessment |
 |:---|:---|
 | Feasibility | ✅ High — `nx.hits()` |
 | Complexity | Low |
-| Expected value | **Low** — 0.908 correlation with PageRank; marginal incremental value |
+| Distinct signal | **Authority**: largely redundant with PageRank (r≈0.908 in sports networks) — low novelty over PageRank. **Hub**: "quality schedule despite losses" — distinct signal; captures opponent authority from the losing side, not captured by PageRank. |
 | Walk-forward compatibility | Same issues as PageRank; warm-start possible |
 
 ---
@@ -390,22 +398,23 @@ r_new = pagerank_power_iteration(A, r_init=r_prev, tol=1e-6, max_iter=5)
 
 **Definition:** Fraction of a team's network neighbors (teams connected by a win or loss) that also played each other. High clustering = tight local competitive cluster (single-conference team); low clustering = schedule spanning many separate competitive regions.
 
-**Predictive value:** Functions as a "schedule diversity" metric. Teams with low clustering (non-conference scheduling across many regions) tend to be strong programs seeking quality opponents — correlated with tournament advancement but likely captured by SoS/PageRank already. No NCAA validation found.
+**Distinct signal:** Functions as a "schedule diversity" metric — distinct from SoS (opponent quality), PageRank (strength transitivity), and betweenness (structural bridging). Low clustering indicates a team that played across many separate competitive regions rather than within a tight conference bubble. No NCAA peer-reviewed validation found.
 
-**Assessment:** Low priority. Implement only if PageRank and SoS features leave a significant unexplained variance that clustering might address.
+**Implementation note:** Low implementation cost (`nx.clustering()`) — implement as part of the graph feature building block suite in Story 4.5 alongside PageRank and betweenness.
 
 ---
 
-### 4.6 Graph Feature Summary and Validation Gate
+### 4.6 Graph Feature Library Summary
 
-| Graph Feature | Expected Value | Implementation Cost | Validation Requirement |
+| Graph Feature | Distinct Information | Novelty vs. Other Building Blocks | Implementation Cost |
 |:---|:---|:---|:---|
-| PageRank (weighted) | **High** — peer-reviewed validation | Low (10 lines) | Must exceed SoS r=0.2970 in local validation |
-| Betweenness centrality | Low — no NCAA validation | Low (1 line) | Should improve on SoS; if not, drop |
-| HITS authority | Low — 0.908 correlation with PR | Low (1 line) | Drop if PageRank already included |
-| Clustering coefficient | Very Low | Low (1 line) | Drop unless strong residual signal |
+| PageRank (weighted) | Transitive strength through win chains (2 hops) | Distinct from SoS (1 hop) and SRS (global batch solve); peer-reviewed NCAA validation | Low (10 lines) |
+| Betweenness centrality | Structural "bridge" position across schedule clusters | Distinct from strength (PageRank) and quality (SoS) — measures positional connectivity | Low (1 line) |
+| HITS authority | Same underlying signal as PageRank | Largely redundant with PageRank (r≈0.908); low novelty if PageRank is implemented | Low (1 line) |
+| HITS hub | "Lost to strong opponents" — opponent authority from the loss side | Distinct from PageRank and betweenness; complementary to win/loss-based ratings | Low (same `nx.hits()` call as authority) |
+| Clustering coefficient | Schedule diversity (tight vs broad conference spread) | Distinct from all strength/position metrics | Low (1 line) |
 
-**Recommendation for Story 4.5:** Implement PageRank with margin-weighted directed graph as the primary graph feature. Include betweenness centrality as a secondary feature. Skip HITS and clustering coefficient unless PageRank alone leaves meaningful unexplained variance.
+**Story 4.5 implementation scope:** Implement all five graph building blocks. The modeler selects which to include in any given model.
 
 ---
 
@@ -439,9 +448,9 @@ r_new = pagerank_power_iteration(A, r_init=r_prev, tol=1e-6, max_iter=5)
 
 ### 5.2 Community-Validated Composite: SAG + POM + MOR + WLK
 
-**Most predictive ensemble (from documented Kaggle MMLM solutions 2019–2024):**
+**Community-validated composite (from documented Kaggle MMLM solutions 2019–2024):**
 
-A composite average of the four most predictive individual Massey systems:
+A composite average of the four most consistently cited Massey systems:
 ```
 massey_composite = (SAG_rank + POM_rank + MOR_rank + WLK_rank) / 4
 ```
@@ -464,17 +473,19 @@ Logistic regression using `delta_massey_composite = team1_massey_composite - tea
 
 ### 5.3 Composite Ranking Approaches
 
-**Option A — Simple Average (Recommended for MVP):**
-Average the ordinal ranks of the 4–8 most predictive systems. Compute `delta_composite` between two teams as the matchup feature. Achieves log loss ~−0.540, competitive with more complex approaches.
+These are distinct building block options the modeler can choose from — they are not competing "best" approaches but alternative formulations each with different trade-offs:
+
+**Option A — Simple Average:**
+Average the ordinal ranks of the 4–8 systems. Compute `delta_composite` between two teams as the matchup feature. Community validation shows log loss ~−0.540. Simplest to implement and interpret.
 
 **Option B — Weighted Ensemble:**
-Derive system-specific weights from prior-season cross-validated log loss. Individual system performances are similar (roughly equal weights after optimization), so Option A and Option B typically produce similar results in practice.
+Derive system-specific weights from prior-season cross-validated log loss. Individual system performances are similar (roughly equal weights after optimization), so Option A and Option B typically produce similar results in practice. Adds a cross-validation infrastructure requirement.
 
-**Option C — PCA Reduction (Post-MVP):**
-Apply PCA to reduce the full set of available Massey ordinal columns (potentially 30–50 systems with >20 seasons coverage) to 10–15 principal components capturing 90%+ of variance. First principal component ≈ consensus "overall quality" factor. Avoids multicollinearity among correlated systems. Requires more preprocessing infrastructure; recommend deferring to Post-MVP.
+**Option C — PCA Reduction:**
+Apply PCA to reduce the full set of available Massey ordinal columns (potentially 30–50 systems with >20 seasons coverage) to 10–15 principal components capturing 90%+ of variance. First principal component ≈ consensus "overall quality" factor. Avoids multicollinearity among correlated systems. Requires more preprocessing infrastructure.
 
-**Option D — Tournament-Specific Ensemble:**
-Use only Massey rankings from the specific pre-tournament snapshot date (day 128 or equivalent) rather than in-season temporal rankings. For Kaggle MMLM tournament prediction, the final snapshot immediately before tournament selection is the most relevant.
+**Option D — Tournament-Specific Snapshot:**
+Use only Massey rankings from the specific pre-tournament snapshot date (day 128 or equivalent) rather than in-season temporal rankings. For Kaggle MMLM tournament prediction, the final snapshot immediately before tournament selection is the most relevant. This is an implementation choice applicable to any of Options A–C.
 
 ---
 
@@ -656,85 +667,123 @@ Edwards 2021 rescaled overtime game scores to a points-per-40-minutes equivalent
 
 ---
 
-### 6.8 Features to Add Beyond EDA Tier List
+### 6.8 Building Blocks Surfaced by Community Research
 
-| Technique | Assessment for Epic 4 |
+These techniques appear in the Kaggle MMLM top solutions but were not in the EDA tier list. Each is a distinct building block:
+
+| Technique | Community Validation | Distinct Signal | Notes |
+|:---|:---|:---|:---|
+| **Composite Massey ordinals (SAG + POM + MOR + WLK)** | Primary signal in top solutions 2014–2025; log loss ~−0.540 | Pre-computed multi-system consensus including systems the project cannot replicate | See Section 5 for full specification |
+| **Elo rating difference** | Tier 2 across 2014–2025; Edwards 2021 and many others | Dynamic/stateful ratings capturing in-season progression — distinct from batch SRS/Massey | K-factor, margin scaling, mean reversion are modeler-configurable parameters |
+| **Four Factors (eFG%, ORB%, FTR)** | Top-10 solutions; Edwards 2021 full per-possession pipeline | Derived efficiency ratios beyond raw box scores; ORB% is not in EDA tier list; eFG% extends FGPct | 2003+ only; requires per-possession arithmetic |
+| **Per-possession normalization** | Consistently used in top solutions 2019–2025 | Removes pace confound from counting stats — distinct from Four Factors (simpler denominator normalization) | `possessions = FGA − OR + TO + 0.44×FTA` |
+| **Probability calibration** | 2019 and 2021 silver medals; 2025 winner used in-fold cubic-spline | Output-level correction for favourite-longshot bias — not a feature but a post-processing step | Apply to model outputs; must be in-fold to prevent leakage |
+| **LRMC** | Edwards 2021; documented in original Markov chain basketball literature | Markov-chain-derived win probabilities — distinct approach from SRS/Elo | Higher implementation complexity |
+| **Overtime rescaling** | Edwards 2021 | Preprocessing step — normalizes per-40-minute equivalent for OT games | Low cost; prevents scoring-stat distortion for OT-heavy teams |
+| **TrueSkill / Glicko-2** | Occasional top-25 solutions | Uncertainty-quantified Elo variant — distinct in that it explicitly models rating uncertainty per team | Marginal signal over Elo for pre-tournament snapshot |
+| **Vegas point spreads** | 2014 winner (Lopez & Matthews) | Market efficiency signal not derivable from box scores | Requires external data source not in Kaggle MMLM dataset |
+| **goto_conversion calibration** | 2019 and 2021 silver medals | Alternative calibration method to isotonic/spline — same functional role | Ready-made Python package; see Section 6.3 |
+
+---
+
+## 7. Library Building Blocks Catalog
+
+The Epic 4 feature engineering suite provides **building blocks** from which the modeler selects combinations to experiment with. This section organizes all building blocks identified in this research into two structural categories:
+
+1. **Equivalence groups** — techniques that capture the same underlying signal via different formulations. The library needs one representative implementation per group; implementing multiple members of the same group does not add distinct information.
+2. **Distinct building blocks** — techniques that each capture genuinely different information. Combining any two of these provides the modeler with independent signals.
+
+**Note:** The product owner makes final scope selections per AC 8 before downstream Stories 4.2–4.7 begin.
+
+---
+
+### 7.1 Equivalence Groups
+
+**Group A — Full-Season Margin-Adjusted Batch Ratings (Story 4.6)**
+
+All three methods below are algebraically near-equivalent for full-season data — they capture the same underlying signal:
+
+| Method | Implementation | Hyperparameter | Notes |
+|:---|:---|:---|:---|
+| SRS (Simple Rating System) | Iterative fixed-point solve | None | Simplest; deterministic |
+| Massey direct solve | Cholesky n×n solve | None | Equivalent to SRS; pre-computed as "MAS" in MMasseyOrdinals |
+| Ridge regression | Regularized SRS (`sklearn.Ridge`) | λ (shrinkage) | Same signal as SRS with an exposed λ tuning knob for modelers who want regularization; λ=10–100 range |
+
+*Implement SRS as the canonical Group A representative. Expose Ridge as a parameterized variant (λ-configurable). Massey is available pre-computed for modelers who want to skip the solver.*
+
+**Group B — Win/Loss-Only Batch Ratings (Story 4.3 / 4.6)**
+
+| Method | Implementation | Notes |
+|:---|:---|:---|
+| Colley Matrix | Cholesky solve | Win/loss purity; no margin; available pre-computed as "COL" in MMasseyOrdinals |
+
+*Distinct from Group A because it explicitly discards margin. Provides the modeler a margin-free counterpart to SRS/Massey.*
+
+**Group C — Graph Centrality (Strength Dimension) (Story 4.5)**
+
+| Method | Notes |
 |:---|:---|
-| **Composite Massey ordinals (SAG + POM + MOR + WLK)** | **Recommended for MVP** — validated across 2014–2025; primary signal in top solutions |
-| **Elo rating difference** | **Recommended for MVP** — validated in Edwards 2021 and many other solutions |
-| **Four Factors (eFG%, ORB%, FTR)** | **Recommended for MVP** — eFG% extends FGPct; ORB% is new; 2003+ required |
-| **Per-possession normalization (possession denominator)** | **Recommended MVP** — use `possessions = FGA − OR + TO + 0.44×FTA` as denominator for counting stats (distinct from Four Factors derived metrics — see below) |
-| **Probability calibration** | **Recommended MVP** — apply isotonic or spline calibration to model outputs; prevents overconfidence |
-| **LRMC** | Post-MVP — higher implementation complexity; validated but marginal vs. Elo |
-| **Overtime rescaling** | **Recommended** — low-cost preprocessing; prevents OT game outliers from distorting aggregations |
-| **TrueSkill / Glicko-2** | Post-MVP — marginal improvement over Elo |
-| **Vegas point spreads** | Post-MVP — requires external data source not in Kaggle MMLM dataset |
-| **goto_conversion calibration** | Post-MVP — useful for calibration; implement after base model is validated |
+| PageRank | Primary representative — transitive win-chain strength |
+| HITS authority | r≈0.908 with PageRank in sports networks — largely redundant; low novelty over PageRank |
+
+*Implement PageRank as the Group C representative. HITS authority adds minimal distinct information over PageRank.*
 
 ---
 
-## 7. Prioritized Implementation Plan
+### 7.2 Distinct Building Blocks
 
-**DECISION-GATE NOTE:** The rankings below represent proposals with trade-off assessments, not final MVP-scope selections. The product owner makes the final scope decisions per AC 8 before downstream Stories 4.2–4.7 begin. Features marked "Recommended for MVP" are proposals based on expected predictive value, implementation cost, and community validation.
+Each technique below provides genuinely different information from all others in this table and from the equivalence groups above:
 
-**VALIDATION GATE NOTE:** All MVP recommendations are **conditional** on passing the validation gates specified in the table. Any feature that does not exceed the SoS baseline (r=0.2970) during Story 4.4–4.6 implementation should be demoted to Post-MVP regardless of its ranking here, and the product owner should be notified before that story is marked complete.
-
-### 7.1 Story Mapping
-
-| Story | Scope | MVP Features | Post-MVP |
+| Building Block | Distinct Information Captured | Story | Configuration Parameters |
 |:---|:---|:---|:---|
-| **4.2** | Chronological Data Serving API | Walk-forward game iterator with date guards; 2025 deduplication; 2020 COVID handling | — |
-| **4.3** | Canonical ID Mapping & Data Cleaning | `MTeamSpellings.csv` canonical name map; `MNCAATourneySeeds.csv` (seed_num, region, is_play_in); `MTeamConferences.csv` (season, team_id → conf); Massey Ordinal ingestion (SAG + POM + MOR + WLK temporal slices) | Full Massey coverage (50+ systems); PCA composite |
-| **4.4** | Sequential Transformations | Rolling FGPct (10-game), FGM, Score, TO_rate, PF, DR; EWMA (α=0.20); loc encoding (H=1, A=−1, N=0); momentum feature (ewma_fast − ewma_slow); OT game rescaling (pts/40min equivalent); per-possession normalization (`possessions = FGA − OR + TO + 0.44×FTA`) | 5-game and 20-game windows; streak features; time-decay weights; eFG%, ORB%, FTR (Four Factors beyond FGPct/TO_rate) |
-| **4.5** | Graph Builders & Centrality | PageRank (directed, margin-weighted, warm-start incremental); betweenness centrality | HITS authority; clustering coefficient |
-| **4.6** | Opponent Adjustments | Ridge regression efficiency ratings (AdjO, AdjD, AdjEM equivalent); Elo rating with K=38, margin scaling, season mean-reversion | Glicko-2 / TrueSkill; LRMC; goto_conversion calibration |
-| **4.7** | Stateful Feature Serving | Feature composition from all 4.2–4.6 outputs; `gender_scope` and `dataset_scope` configurability; temporal slicing for walk-forward; probability calibration (isotonic or spline) | Matrix completion as alternative rating approach |
+| **Elo ratings (dynamic)** | Stateful, game-by-game team strength; weights recent games more heavily; captures in-season trajectory | 4.6 | K-factor; margin scaling exponent; season mean-reversion fraction; home court adjustment |
+| **Massey Ordinals composite** | Pre-computed multi-system consensus from 100+ raters; includes proprietary/human systems the project cannot replicate | 4.3 | Which systems to include; snapshot date; composite method (Options A–D from Section 5.3) |
+| **Betweenness centrality** | Structural "bridge" position in schedule network — how often a team lies on the path between other pairs | 4.5 | Weighted vs. unweighted; directed vs. undirected |
+| **HITS hub score** | "Quality schedule despite losses" — how often a team lost to high-authority opponents | 4.5 | Standard HITS parameters |
+| **Clustering coefficient** | Schedule diversity — how tightly clustered are a team's opponents? Low = broad cross-conference scheduling | 4.5 | None (computed from graph structure) |
+| **Rolling window stats** | Temporal dynamics of recent performance vs season-long aggregate | 4.4 | Window size (5 / 10 / 20-game); all three are distinct parameter choices of the same building block |
+| **EWMA** | Recency-weighted smoothing; alternative to discrete rolling windows | 4.4 | Alpha (α=0.10–0.30); all alpha values are parameters of the same building block |
+| **Momentum / trajectory** | Rate of change of efficiency (`ewma_fast − ewma_slow`); improving vs. declining into tournament | 4.4 | Fast and slow alpha values |
+| **Streak features** | Pure win/loss count sequences; categorical "hot/cold" dynamics independent of efficiency magnitude | 4.4 | Signed integer vs. separate columns; minimum streak length threshold |
+| **Per-possession normalization** | Removes pace confound from all counting stats | 4.4 | `possessions = FGA − OR + TO + 0.44×FTA` (denominator fixed; not a tuning parameter) |
+| **Four Factors (eFG%, ORB%, FTR, TO%)** | Derived per-possession efficiency ratios: shooting, rebounding, turnover, free-throw efficiency | 4.4 | None — formulas are fixed by Dean Oliver's definition |
+| **Home court encoding (loc)** | Game-level venue context (H/A/N); +2.2pt EDA-confirmed advantage | 4.4 | Numeric (H=+1, A=−1, N=0) or one-hot |
+| **Probability calibration** | Output-level correction for favourite-longshot bias in win probability estimates | 4.7 | Method (isotonic / cubic-spline / goto_conversion); in-fold vs. post-hoc |
+| **LRMC** | Markov-chain-derived win probabilities — alternative to point-differential-based ratings | 4.6 | Logistic regression hyperparameters |
+| **TrueSkill / Glicko-2** | Uncertainty-quantified Elo variant; explicitly models rating variance per team | 4.6 | β (performance variance); τ (rating volatility) |
 
-### 7.2 MVP vs. Post-MVP Summary
+**Preprocessing steps** (not features themselves, but affect all features they touch):
 
-**Recommended for MVP (in priority order within each story):**
-
-| # | Feature | Story | Rationale | Validation Requirement |
-|:---|:---|:---|:---|:---|
-| 1 | Massey composite (SAG + POM + MOR + WLK avg, **if coverage confirmed**; else MOR + POM + DOL) | 4.3 | Community-validated; pre-computed; highest log-loss performance in Kaggle MMLM | **GATE:** Verify SAG and WLK 23-season coverage in local `MMasseyOrdinals.csv` before implementation. Fallback: MOR+POM+DOL (all confirmed full-coverage margin systems). |
-| 2 | Rolling FGPct (10-game) | 4.4 | Highest raw r=0.2269; tournament diff +0.078 | Should improve on season-average FGPct |
-| 3 | Rolling FGM / Scoring (10-game) | 4.4 | r=0.2628 / 0.2349 | Standard feature from EDA Tier 1 |
-| 4 | Elo rating (K=38, margin scaling, mean reversion) | 4.6 | Tier 2 in every validated Kaggle MMLM solution; captures recency | Must exceed SoS baseline (r=0.2970) |
-| 5 | PageRank (margin-weighted, warm-start) | 4.5 | Peer-reviewed validation; should exceed SoS baseline | Must exceed SoS r=0.2970 in local validation |
-| 6 | SRS / Massey efficiency ratings (AdjO, AdjD, AdjEM equivalent) | 4.6 | KenPom-equivalent metric; simplest full-season solver; no hyperparameter tuning | Must exceed SoS baseline (r=0.2970) |
-| 7 | Rolling TO_rate, PF, DR (10-game) | 4.4 | EDA Tier 1 negative predictors; r=−0.1424, −0.1574 | Standard from EDA Tier 1 |
-| 8 | EWMA (α=0.20) momentum feature | 4.4 | Low cost; addresses recency without window-size tuning | Feature importance validation in Story 5.4 |
-| 9 | loc encoding (H/A/N) | 4.4 | EDA Tier 2; declining home advantage is time-varying | Encode as numeric + include season interaction |
-| 10 | Probability calibration (isotonic or cubic-spline) | 4.7 | 2019 and 2021 silver medals; 2025 winner used in-fold spline calibration; corrects favourite-longshot bias in all efficiency-based ratings | Apply after base model validated; in-fold calibration prevents leakage |
-
-**Recommended for Post-MVP (defer unless MVP underperforms):**
-
-| # | Feature | Story | Rationale for Deferral |
-|:---|:---|:---|:---|
-| 10 | 5-game and 20-game rolling windows | 4.4 | Validate 10-game window first; add alternatives only if feature importance warrants |
-| 11 | Streak features | 4.4 | Mixed statistical evidence; low expected incremental value |
-| 12 | Betweenness centrality | 4.5 | No NCAA validation; likely low incremental value over PageRank |
-| 13 | Four Factors (eFG%, ORB%, FTR) | 4.4/4.6 | Subsumes FGPct/TO_rate; higher complexity; validate after MVP |
-| 14 | Full Four Factors feature set (eFG%, ORB%, FTR) via per-possession arithmetic | 4.4/4.6 | Distinct from MVP possession denominator (which is simpler). Full Four Factors require per-possession arithmetic applied to derived metrics — higher pipeline complexity; validate after MVP rolling stats are implemented. |
-| 15 | Glicko-2 / TrueSkill | 4.6 | Marginal improvement over Elo; uncertainty quantification only useful for early-season; not needed for pre-tournament snapshot |
-| 16 | PCA composite (full Massey set) | 4.3 | Complexity of PCA pipeline; Simple average (MVP option) captures most of the signal |
-| 17 | HITS / clustering coefficient | 4.5 | No NCAA validation; high PageRank correlation for HITS |
-| 18 | Time-decay game weighting | 4.4 | Low cost but complex to implement correctly for walk-forward |
-| 19 | Travel distance / elevation | 4.4 | Marginal expected value; requires external geocoding data |
-| 20 | Matrix completion | 4.7 | High implementation cost; validate only if rating-based approaches underperform |
+| Step | Effect | Story |
+|:---|:---|:---|
+| Overtime rescaling | Normalize OT games to pts/40min equivalent before aggregation | 4.4 |
+| Time-decay game weighting | Weight games by recency before rolling aggregations (BartTorvik: 1% per day > 40 days old, floor 60%) | 4.4 |
 
 ---
 
-### 7.3 Open Questions Deferred to Implementation Stories
+### 7.3 Building Blocks by Story
 
-These questions cannot be answered definitively without empirical validation during Stories 4.4–4.6:
+| Story | Scope | Building Blocks to Implement |
+|:---|:---|:---|
+| **4.2** | Chronological Data Serving API | Walk-forward game iterator with date guards; 2025 deduplication by `(w_team_id, l_team_id, day_num)`; 2020 COVID flag; OT rescaling preprocessing |
+| **4.3** | Canonical ID Mapping & Data Cleaning | `MTeamSpellings.csv` canonical name map; `MNCAATourneySeeds.csv` (seed_num, region, is_play_in); `MTeamConferences.csv` (season, team_id → conf); Massey Ordinals ingestion (all systems with temporal slices); composite building blocks (Options A–D) |
+| **4.4** | Sequential Transformations | Rolling windows (5/10/20-game) for all EDA Tier 1 stats; EWMA (configurable α); momentum (`ewma_fast − ewma_slow`); streak features (signed int); loc encoding; per-possession normalization; Four Factors (eFG%, ORB%, FTR, TO%); time-decay weighting |
+| **4.5** | Graph Builders & Centrality | PageRank (directed, margin-weighted, warm-start incremental); betweenness centrality; HITS (hub + authority); clustering coefficient |
+| **4.6** | Opponent Adjustments / Rating Systems | SRS (Group A representative); Ridge (Group A with λ knob); Colley (Group B, or use pre-computed COL); Elo (dynamic, configurable K/margin/mean-reversion); LRMC; TrueSkill/Glicko-2 |
+| **4.7** | Stateful Feature Serving | Feature composition from all 4.2–4.6 outputs; `gender_scope` and `dataset_scope` configurability; temporal slicing for walk-forward backtesting; probability calibration (isotonic or spline, in-fold) |
 
-1. **Optimal rolling window size (5 / 10 / 20 games):** Implement all three; select via XGBoost feature importance in Story 5.4.
-2. **Optimal EWMA alpha:** Start at 0.20; tune via cross-validated log loss across 3 prior seasons.
-3. **Ridge lambda for efficiency ratings:** Tune via cross-validation; start at λ=20.
-4. **PageRank vs. SoS baseline validation:** Must be confirmed empirically on local data. Literature suggests improvement, but the correlation depends on the specific graph construction (edge weights, damping factor).
-5. **Massey ordinal system coverage:** Verify SAG and WLK are available for the full 23-season span in the local `MMasseyOrdinals.csv` before committing to the SAG + POM + MOR + WLK composite.
-6. **Normalization for new features (Elo, PageRank, Massey delta):** Approximately normal for deltas — validate empirically; apply no transform + StandardScaler as baseline.
+---
+
+### 7.4 Open Questions for Implementation Stories
+
+These questions cannot be resolved by research alone — they require implementation:
+
+1. **SAG and WLK coverage in local `MMasseyOrdinals.csv`:** Story 4.3 must verify 23-season coverage before committing to the SAG+POM+MOR+WLK composite. Fallback: MOR+POM+DOL (all confirmed full-coverage, all margin-based).
+2. **Rolling window sizes:** All three (5/10/20-game) should be implemented as configurable columns — they are parameters of the same building block, not competing features.
+3. **EWMA alpha parameter range:** Implement as a configurable parameter. Recommended starting range α=0.15–0.20 (effective window 9–12 games); expose full range α=0.10–0.30 to modelers.
+4. **Ridge lambda range:** Implement as a configurable parameter. Recommended starting point λ=20 for full-season data; expose range λ=10–100.
+5. **Normalization for new features (Elo, PageRank, Massey delta):** See Normalization Reference table. Validate distributions empirically — approximate normals for deltas → no transform + StandardScaler; PageRank → log + StandardScaler.
+6. **Overtime rescaling formula:** `adjusted_score = raw_score × 40 / (40 + 5 × num_ot)`. Apply before any aggregation step in Story 4.2/4.4.
 
 ---
 
