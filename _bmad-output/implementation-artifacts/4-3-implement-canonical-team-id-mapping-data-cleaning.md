@@ -1,6 +1,6 @@
 # Story 4.3: Implement Canonical Team ID Mapping & Data Cleaning
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -30,76 +30,76 @@ so that features are computed on consistent, clean data and all pre-computed mul
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Design and implement `src/ncaa_eval/transform/normalization.py` with all public classes (AC: 1–10)
-  - [ ] 1.1: Define `TourneySeed` frozen dataclass with fields: `season: int`, `team_id: int`, `seed_str: str`, `region: str`, `seed_num: int`, `is_play_in: bool`
-  - [ ] 1.2: Implement `parse_seed(season: int, team_id: int, seed_str: str) -> TourneySeed` module-level function — parse region/seed_num/is_play_in from the raw seed string (e.g., "W01" → region="W", seed_num=1, is_play_in=False; "X11a" → is_play_in=True)
-  - [ ] 1.3: Define `CoverageGateResult` frozen dataclass: `primary_systems: list[str]`, `fallback_used: bool`, `fallback_reason: str`, `recommended_systems: list[str]`
-  - [ ] 1.4: Implement `TeamNameNormalizer` class — wraps the spelling → TeamID lookup with case-insensitive matching and warning on misses
-  - [ ] 1.5: Implement `TourneySeedTable` class — wraps `(season, team_id)` → `TourneySeed` lookup
-  - [ ] 1.6: Implement `ConferenceLookup` class — wraps `(season, team_id)` → `conf_abbrev` lookup
-  - [ ] 1.7: Implement `MasseyOrdinalsStore` class — DataFrame-backed store with temporal filtering, coverage gate, and composite computation methods
+- [x] Task 1: Design and implement `src/ncaa_eval/transform/normalization.py` with all public classes (AC: 1–10)
+  - [x] 1.1: Define `TourneySeed` frozen dataclass with fields: `season: int`, `team_id: int`, `seed_str: str`, `region: str`, `seed_num: int`, `is_play_in: bool`
+  - [x] 1.2: Implement `parse_seed(season: int, team_id: int, seed_str: str) -> TourneySeed` module-level function — parse region/seed_num/is_play_in from the raw seed string (e.g., "W01" → region="W", seed_num=1, is_play_in=False; "X11a" → is_play_in=True)
+  - [x] 1.3: Define `CoverageGateResult` frozen dataclass: `primary_systems: list[str]`, `fallback_used: bool`, `fallback_reason: str`, `recommended_systems: list[str]`
+  - [x] 1.4: Implement `TeamNameNormalizer` class — wraps the spelling → TeamID lookup with case-insensitive matching and warning on misses
+  - [x] 1.5: Implement `TourneySeedTable` class — wraps `(season, team_id)` → `TourneySeed` lookup
+  - [x] 1.6: Implement `ConferenceLookup` class — wraps `(season, team_id)` → `conf_abbrev` lookup
+  - [x] 1.7: Implement `MasseyOrdinalsStore` class — DataFrame-backed store with temporal filtering, coverage gate, and composite computation methods
 
-- [ ] Task 2: Implement `TeamNameNormalizer` class (AC: 1–3)
-  - [ ] 2.1: `__init__(self, spellings: dict[str, int]) -> None` — accepts pre-lowercased spelling → TeamID dict
-  - [ ] 2.2: `classmethod from_csv(cls, path: Path) -> TeamNameNormalizer` — reads `MTeamSpellings.csv`, lowercases `TeamNameSpelling`, builds dict
-  - [ ] 2.3: `normalize(self, name: str) -> int | None` — looks up `name.lower()` in dict; on miss, logs WARNING with any close matches found via simple prefix search; returns None on miss
-  - [ ] 2.4: Idempotency: pure lookup — calling `normalize(name)` twice returns the same value
-  - [ ] 2.5: No iterrows — use `dict(zip(df["TeamNameSpelling"].str.lower(), df["TeamID"].astype(int)))` for vectorized construction
+- [x] Task 2: Implement `TeamNameNormalizer` class (AC: 1–3)
+  - [x] 2.1: `__init__(self, spellings: dict[str, int]) -> None` — accepts pre-lowercased spelling → TeamID dict
+  - [x] 2.2: `classmethod from_csv(cls, path: Path) -> TeamNameNormalizer` — reads `MTeamSpellings.csv`, lowercases `TeamNameSpelling`, builds dict
+  - [x] 2.3: `normalize(self, name: str) -> int | None` — looks up `name.lower()` in dict; on miss, logs WARNING with any close matches found via simple prefix search; returns None on miss
+  - [x] 2.4: Idempotency: pure lookup — calling `normalize(name)` twice returns the same value
+  - [x] 2.5: No iterrows — use `dict(zip(df["TeamNameSpelling"].str.lower(), df["TeamID"].astype(int)))` for vectorized construction
 
-- [ ] Task 3: Implement `TourneySeedTable` class (AC: 4)
-  - [ ] 3.1: `__init__(self, seeds: dict[tuple[int, int], TourneySeed]) -> None` — key is `(season, team_id)`
-  - [ ] 3.2: `classmethod from_csv(cls, path: Path) -> TourneySeedTable` — reads `MNCAATourneySeeds.csv`, applies `parse_seed()` to each row using vectorized pandas operations (no iterrows)
-  - [ ] 3.3: `get(self, season: int, team_id: int) -> TourneySeed | None` — returns structured seed or None
-  - [ ] 3.4: `all_seeds(self, season: int | None = None) -> list[TourneySeed]` — returns all seeds, optionally filtered to season
+- [x] Task 3: Implement `TourneySeedTable` class (AC: 4)
+  - [x] 3.1: `__init__(self, seeds: dict[tuple[int, int], TourneySeed]) -> None` — key is `(season, team_id)`
+  - [x] 3.2: `classmethod from_csv(cls, path: Path) -> TourneySeedTable` — reads `MNCAATourneySeeds.csv`, applies `parse_seed()` to each row using vectorized pandas operations (no iterrows)
+  - [x] 3.3: `get(self, season: int, team_id: int) -> TourneySeed | None` — returns structured seed or None
+  - [x] 3.4: `all_seeds(self, season: int | None = None) -> list[TourneySeed]` — returns all seeds, optionally filtered to season
 
-- [ ] Task 4: Implement `ConferenceLookup` class (AC: 5)
-  - [ ] 4.1: `__init__(self, lookup: dict[tuple[int, int], str]) -> None` — key is `(season, team_id)`, value is `conf_abbrev`
-  - [ ] 4.2: `classmethod from_csv(cls, path: Path) -> ConferenceLookup` — reads `MTeamConferences.csv` using vectorized dict construction
-  - [ ] 4.3: `get(self, season: int, team_id: int) -> str | None` — returns conf abbreviation or None
+- [x] Task 4: Implement `ConferenceLookup` class (AC: 5)
+  - [x] 4.1: `__init__(self, lookup: dict[tuple[int, int], str]) -> None` — key is `(season, team_id)`, value is `conf_abbrev`
+  - [x] 4.2: `classmethod from_csv(cls, path: Path) -> ConferenceLookup` — reads `MTeamConferences.csv` using vectorized dict construction
+  - [x] 4.3: `get(self, season: int, team_id: int) -> str | None` — returns conf abbreviation or None
 
-- [ ] Task 5: Implement `MasseyOrdinalsStore` class (AC: 6–10)
-  - [ ] 5.1: `__init__(self, df: pd.DataFrame) -> None` — stores raw DataFrame with columns `[Season, RankingDayNum, SystemName, TeamID, OrdinalRank]`
-  - [ ] 5.2: `classmethod from_csv(cls, path: Path) -> MasseyOrdinalsStore` — reads `MMasseyOrdinals.csv` with proper dtypes
-  - [ ] 5.3: `run_coverage_gate(self) -> CoverageGateResult` — checks SAG and WLK for all seasons 2003–2025; returns structured result with `recommended_systems` list and `fallback_used` flag
-  - [ ] 5.4: `get_snapshot(self, season: int, day_num: int, systems: list[str] | None = None) -> pd.DataFrame` — returns ordinals for all teams where `RankingDayNum ≤ day_num`; pivots to wide format `{TeamID, system_1, system_2, ...}`; uses last available `RankingDayNum` per (season, system, team) before the cutoff
-  - [ ] 5.5: `composite_simple_average(self, season: int, day_num: int, systems: list[str]) -> pd.Series` — Option A: mean of ordinal ranks across specified systems per team; index is TeamID
-  - [ ] 5.6: `composite_weighted(self, season: int, day_num: int, weights: dict[str, float]) -> pd.Series` — Option B: weighted average using caller-supplied weights; normalizes weights to sum to 1
-  - [ ] 5.7: `composite_pca(self, season: int, day_num: int, n_components: int | None = None, min_variance: float = 0.90) -> pd.DataFrame` — Option C: PCA of all available systems; `n_components=None` auto-selects to capture `min_variance` of total variance; returns `DataFrame` with columns `PC1, PC2, ...` indexed by TeamID
-  - [ ] 5.8: `pre_tournament_snapshot(self, season: int, systems: list[str] | None = None) -> pd.DataFrame` — Option D: uses only ordinals from last `RankingDayNum ≤ 128` per system per season; returns same format as `get_snapshot`
-  - [ ] 5.9: `normalize_rank_delta(self, snapshot: pd.DataFrame, team_a: int, team_b: int, system: str) -> float` — rank delta for matchup: `snapshot.loc[team_a, system] - snapshot.loc[team_b, system]`; positive means team_a ranked worse (higher rank number = worse)
-  - [ ] 5.10: `normalize_percentile(self, season: int, day_num: int, system: str) -> pd.Series` — per-season percentile: `OrdinalRank / n_teams`; index is TeamID; uses `get_snapshot` internally
-  - [ ] 5.11: `normalize_zscore(self, season: int, day_num: int, system: str) -> pd.Series` — z-score per season: `(rank - mean_rank) / std_rank`; index is TeamID
+- [x] Task 5: Implement `MasseyOrdinalsStore` class (AC: 6–10)
+  - [x] 5.1: `__init__(self, df: pd.DataFrame) -> None` — stores raw DataFrame with columns `[Season, RankingDayNum, SystemName, TeamID, OrdinalRank]`
+  - [x] 5.2: `classmethod from_csv(cls, path: Path) -> MasseyOrdinalsStore` — reads `MMasseyOrdinals.csv` with proper dtypes
+  - [x] 5.3: `run_coverage_gate(self) -> CoverageGateResult` — checks SAG and WLK for all seasons 2003–2025; returns structured result with `recommended_systems` list and `fallback_used` flag
+  - [x] 5.4: `get_snapshot(self, season: int, day_num: int, systems: list[str] | None = None) -> pd.DataFrame` — returns ordinals for all teams where `RankingDayNum ≤ day_num`; pivots to wide format `{TeamID, system_1, system_2, ...}`; uses last available `RankingDayNum` per (season, system, team) before the cutoff
+  - [x] 5.5: `composite_simple_average(self, season: int, day_num: int, systems: list[str]) -> pd.Series` — Option A: mean of ordinal ranks across specified systems per team; index is TeamID
+  - [x] 5.6: `composite_weighted(self, season: int, day_num: int, weights: dict[str, float]) -> pd.Series` — Option B: weighted average using caller-supplied weights; normalizes weights to sum to 1
+  - [x] 5.7: `composite_pca(self, season: int, day_num: int, n_components: int | None = None, min_variance: float = 0.90) -> pd.DataFrame` — Option C: PCA of all available systems; `n_components=None` auto-selects to capture `min_variance` of total variance; returns `DataFrame` with columns `PC1, PC2, ...` indexed by TeamID
+  - [x] 5.8: `pre_tournament_snapshot(self, season: int, systems: list[str] | None = None) -> pd.DataFrame` — Option D: uses only ordinals from last `RankingDayNum ≤ 128` per system per season; returns same format as `get_snapshot`
+  - [x] 5.9: `normalize_rank_delta(self, snapshot: pd.DataFrame, team_a: int, team_b: int, system: str) -> float` — rank delta for matchup: `snapshot.loc[team_a, system] - snapshot.loc[team_b, system]`; positive means team_a ranked worse (higher rank number = worse)
+  - [x] 5.10: `normalize_percentile(self, season: int, day_num: int, system: str) -> pd.Series` — per-season percentile: `OrdinalRank / n_teams`; index is TeamID; uses `get_snapshot` internally
+  - [x] 5.11: `normalize_zscore(self, season: int, day_num: int, system: str) -> pd.Series` — z-score per season: `(rank - mean_rank) / std_rank`; index is TeamID
 
-- [ ] Task 6: Export public API from `src/ncaa_eval/transform/__init__.py` (AC: 1–10)
-  - [ ] 6.1: Import and re-export `TeamNameNormalizer`, `TourneySeed`, `TourneySeedTable`, `ConferenceLookup`, `MasseyOrdinalsStore`, `CoverageGateResult`, `parse_seed` from `transform/__init__.py`
-  - [ ] 6.2: Keep `_MASSEY_GATE_SYSTEMS`, `_FALLBACK_SYSTEMS`, `_MASSEY_FIRST_SEASON`, `_MASSEY_LAST_SEASON` private constants in `normalization.py`
+- [x] Task 6: Export public API from `src/ncaa_eval/transform/__init__.py` (AC: 1–10)
+  - [x] 6.1: Import and re-export `TeamNameNormalizer`, `TourneySeed`, `TourneySeedTable`, `ConferenceLookup`, `MasseyOrdinalsStore`, `CoverageGateResult`, `parse_seed` from `transform/__init__.py`
+  - [x] 6.2: Keep `_MASSEY_GATE_SYSTEMS`, `_FALLBACK_SYSTEMS`, `_MASSEY_FIRST_SEASON`, `_MASSEY_LAST_SEASON` private constants in `normalization.py`
 
-- [ ] Task 7: Write unit tests in `tests/unit/test_normalization.py` (AC: 11)
-  - [ ] 7.1: Test `parse_seed`: "W01" → region="W", seed_num=1, is_play_in=False
-  - [ ] 7.2: Test `parse_seed`: "X16a" → region="X", seed_num=16, is_play_in=True
-  - [ ] 7.3: Test `parse_seed`: "Y11b" → is_play_in=True, seed_num=11
-  - [ ] 7.4: Test `TourneySeedTable.from_csv`: loads fixture CSV, returns correct `TourneySeed` for known (season, team_id)
-  - [ ] 7.5: Test `TourneySeedTable.get`: returns None for unknown (season, team_id)
-  - [ ] 7.6: Test `TeamNameNormalizer.normalize`: exact match (case-insensitive) returns correct TeamID
-  - [ ] 7.7: Test `TeamNameNormalizer.normalize`: known name variant (e.g., "UNLV" → TeamID for "Nevada Las Vegas") resolves correctly
-  - [ ] 7.8: Test `TeamNameNormalizer.normalize`: unknown name returns None (verifies no exception raised)
-  - [ ] 7.9: Test `TeamNameNormalizer` idempotency: calling `normalize(name)` twice returns same value
-  - [ ] 7.10: Test `ConferenceLookup.get`: returns correct conference for known (season, team_id)
-  - [ ] 7.11: Test `ConferenceLookup.get`: returns None for missing (season, team_id)
-  - [ ] 7.12: Test `MasseyOrdinalsStore.run_coverage_gate` with fixture data containing SAG+WLK for all seasons → `fallback_used=False`, `recommended_systems` includes SAG/WLK
-  - [ ] 7.13: Test `MasseyOrdinalsStore.run_coverage_gate` with fixture data missing WLK for some seasons → `fallback_used=True`, `recommended_systems` = MOR+POM+DOL
-  - [ ] 7.14: Test `MasseyOrdinalsStore.get_snapshot` temporal filtering: only returns ordinals with `RankingDayNum ≤ day_num`
-  - [ ] 7.15: Test `MasseyOrdinalsStore.get_snapshot` uses last-available RankingDayNum per (system, team) before cutoff
-  - [ ] 7.16: Test `MasseyOrdinalsStore.composite_simple_average`: fixture with 2 systems, 3 teams → correct mean per team
-  - [ ] 7.17: Test `MasseyOrdinalsStore.composite_weighted`: correct weighted average with known weights
-  - [ ] 7.18: Test `MasseyOrdinalsStore.pre_tournament_snapshot`: uses only `RankingDayNum ≤ 128`; does NOT use day 135 ordinals
-  - [ ] 7.19: Test `MasseyOrdinalsStore.normalize_percentile`: returns values in [0, 1] range
-  - [ ] 7.20: Test `MasseyOrdinalsStore.normalize_zscore`: mean ≈ 0, std ≈ 1 over fixture data
+- [x] Task 7: Write unit tests in `tests/unit/test_normalization.py` (AC: 11)
+  - [x] 7.1: Test `parse_seed`: "W01" → region="W", seed_num=1, is_play_in=False
+  - [x] 7.2: Test `parse_seed`: "X16a" → region="X", seed_num=16, is_play_in=True
+  - [x] 7.3: Test `parse_seed`: "Y11b" → is_play_in=True, seed_num=11
+  - [x] 7.4: Test `TourneySeedTable.from_csv`: loads fixture CSV, returns correct `TourneySeed` for known (season, team_id)
+  - [x] 7.5: Test `TourneySeedTable.get`: returns None for unknown (season, team_id)
+  - [x] 7.6: Test `TeamNameNormalizer.normalize`: exact match (case-insensitive) returns correct TeamID
+  - [x] 7.7: Test `TeamNameNormalizer.normalize`: known name variant (e.g., "UNLV" → TeamID for "Nevada Las Vegas") resolves correctly
+  - [x] 7.8: Test `TeamNameNormalizer.normalize`: unknown name returns None (verifies no exception raised)
+  - [x] 7.9: Test `TeamNameNormalizer` idempotency: calling `normalize(name)` twice returns same value
+  - [x] 7.10: Test `ConferenceLookup.get`: returns correct conference for known (season, team_id)
+  - [x] 7.11: Test `ConferenceLookup.get`: returns None for missing (season, team_id)
+  - [x] 7.12: Test `MasseyOrdinalsStore.run_coverage_gate` with fixture data containing SAG+WLK for all seasons → `fallback_used=False`, `recommended_systems` includes SAG/WLK
+  - [x] 7.13: Test `MasseyOrdinalsStore.run_coverage_gate` with fixture data missing WLK for some seasons → `fallback_used=True`, `recommended_systems` = MOR+POM+DOL
+  - [x] 7.14: Test `MasseyOrdinalsStore.get_snapshot` temporal filtering: only returns ordinals with `RankingDayNum ≤ day_num`
+  - [x] 7.15: Test `MasseyOrdinalsStore.get_snapshot` uses last-available RankingDayNum per (system, team) before cutoff
+  - [x] 7.16: Test `MasseyOrdinalsStore.composite_simple_average`: fixture with 2 systems, 3 teams → correct mean per team
+  - [x] 7.17: Test `MasseyOrdinalsStore.composite_weighted`: correct weighted average with known weights
+  - [x] 7.18: Test `MasseyOrdinalsStore.pre_tournament_snapshot`: uses only `RankingDayNum ≤ 128`; does NOT use day 135 ordinals
+  - [x] 7.19: Test `MasseyOrdinalsStore.normalize_percentile`: returns values in [0, 1] range
+  - [x] 7.20: Test `MasseyOrdinalsStore.normalize_zscore`: mean ≈ 0, std ≈ 1 over fixture data
 
-- [ ] Task 8: Commit (AC: all)
-  - [ ] 8.1: `git add src/ncaa_eval/transform/normalization.py src/ncaa_eval/transform/__init__.py tests/unit/test_normalization.py`
-  - [ ] 8.2: Commit: `feat(transform): implement canonical team ID mapping and data cleaning (Story 4.3)`
-  - [ ] 8.3: Update `_bmad-output/implementation-artifacts/sprint-status.yaml`: `4-3-implement-canonical-team-id-mapping-data-cleaning` → `review`
+- [x] Task 8: Commit (AC: all)
+  - [x] 8.1: `git add src/ncaa_eval/transform/normalization.py src/ncaa_eval/transform/__init__.py tests/unit/test_normalization.py`
+  - [x] 8.2: Commit: `feat(transform): implement canonical team ID mapping and data cleaning (Story 4.3)`
+  - [x] 8.3: Update `_bmad-output/implementation-artifacts/sprint-status.yaml`: `4-3-implement-canonical-team-id-mapping-data-cleaning` → `review`
 
 ## Dev Notes
 
@@ -542,10 +542,26 @@ None.
 
 ### Completion Notes List
 
+- Implemented all four lookup classes (`TeamNameNormalizer`, `TourneySeedTable`, `ConferenceLookup`, `MasseyOrdinalsStore`) plus `TourneySeed`, `CoverageGateResult` frozen dataclasses and `parse_seed` module-level function in `src/ncaa_eval/transform/normalization.py`.
+- `CoverageGateResult` and `TourneySeed` use `tuple[str, ...]` for sequence fields (immutability-correct per 4.2 LOW review item).
+- `MasseyOrdinalsStore.get_snapshot` uses `groupby + idxmax` pattern for correct last-available temporal filtering — no iterrows.
+- `TourneySeedTable.from_csv` uses `itertuples` (not `iterrows`) for string-parsing dict construction; documented in code why this is acceptable.
+- `composite_pca` imports sklearn locally to avoid top-level `# type: ignore` propagation.
+- Warning capture test uses `unittest.mock.patch("ncaa_eval.transform.normalization.logger")` instead of `caplog` because `ncaa_eval` logger has `propagate=False` (set by `configure_logging()` in `utils/logger.py`), so caplog can't intercept it.
+- 26 unit tests: 201 total suite tests pass, zero regressions.
+- ruff clean, mypy --strict clean (33 source files).
+
 ### File List
+
+- `src/ncaa_eval/transform/normalization.py` (new)
+- `src/ncaa_eval/transform/__init__.py` (modified — added normalization exports)
+- `tests/unit/test_normalization.py` (new)
+- `_bmad-output/implementation-artifacts/4-3-implement-canonical-team-id-mapping-data-cleaning.md` (this file)
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` (status updated to review)
 
 ## Change Log
 
 | Date | Change | Author |
 |:---|:---|:---|
 | 2026-02-21 | Created story 4.3 — Implement Canonical Team ID Mapping & Data Cleaning | Claude Sonnet 4.6 (create-story) |
+| 2026-02-21 | Implemented normalization.py, updated transform/__init__.py, wrote 26 unit tests; all quality gates pass | Claude Sonnet 4.6 (dev-story) |
