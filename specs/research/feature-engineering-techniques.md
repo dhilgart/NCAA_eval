@@ -2,7 +2,7 @@
 
 **Date:** 2026-02-20
 **Story:** 4.1 (Spike) — Research Feature Engineering Techniques
-**Status:** Complete — Pending Product Owner Approval (AC 8)
+**Status:** Complete — Approved by Product Owner (AC 8 satisfied)
 **Author:** Dev Agent (Claude Sonnet 4.6)
 
 ---
@@ -562,7 +562,7 @@ The `goto_conversion` adjustment corrects for the "favourite-longshot bias" inhe
 - **Correction:** `goto_conversion` adjusts win probabilities toward favorites by correcting the favourite-longshot bias present in betting-odds-derived probabilities.
 - **Result:** Won silver medal in both 2019 and 2021 using this approach on top of 538 ratings.
 
-**Implication:** Any efficiency-based rating system (including our SRS / ridge regression implementation in Story 4.6) may systematically underrate dominant teams. Calibration of probability outputs is critical — plain logistic regression on rating differences may need isotonic regression or spline calibration (as used by the 2025 winner: cubic-spline calibration in-fold).
+**Implication:** Any efficiency-based rating system (including our SRS / Massey implementation in Story 4.6) may systematically underrate dominant teams. Calibration of probability outputs is critical — plain logistic regression on rating differences may need isotonic regression or spline calibration (as used by the 2025 winner: cubic-spline calibration in-fold).
 
 ---
 
@@ -693,7 +693,7 @@ The Epic 4 feature engineering suite provides **building blocks** from which the
 1. **Equivalence groups** — techniques that capture the same underlying signal via different formulations. The library needs one representative implementation per group; implementing multiple members of the same group does not add distinct information.
 2. **Distinct building blocks** — techniques that each capture genuinely different information. Combining any two of these provides the modeler with independent signals.
 
-**Note:** The product owner makes final scope selections per AC 8 before downstream Stories 4.2–4.7 begin.
+**Note:** The product owner has reviewed and approved this catalog (AC 8 satisfied). The structure below reflects the approved scope: implement one representative per equivalence group; implement all distinct building blocks. The modeler selects which building blocks to activate per model during Stories 5–6.
 
 ---
 
@@ -726,7 +726,7 @@ All three methods below are algebraically near-equivalent for full-season data �
 | PageRank | Primary representative — transitive win-chain strength |
 | HITS authority | r≈0.908 with PageRank in sports networks — largely redundant; low novelty over PageRank |
 
-*Implement PageRank as the Group C representative. HITS authority adds minimal distinct information over PageRank.*
+*Implement PageRank as the Group C representative. HITS authority adds minimal distinct information over PageRank (r≈0.908) — but `nx.hits()` computes both hub and authority scores in one call with no added cost. Expose both scores; HITS hub is a distinct building block (Section 7.2). The modeler decides whether to use the authority score.*
 
 ---
 

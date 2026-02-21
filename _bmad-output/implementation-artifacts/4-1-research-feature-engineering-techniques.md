@@ -17,7 +17,7 @@ so that I can make informed decisions about which transformations to implement b
 3. **And** graph-based features are surveyed (PageRank, betweenness centrality, clustering coefficient).
 4. **And** Kaggle March Machine Learning Mania discussion boards are reviewed for community-proven techniques.
 5. **And** each technique is assessed for feasibility, complexity, and expected predictive value.
-6. **And** a prioritized implementation plan is documented, aligned with Stories 4.2–4.7 scope.
+6. **And** a Library Building Blocks Catalog is documented, organized by equivalence groups (implement one representative per group) and distinct building blocks (implement all; modeler selects per model), aligned with Stories 4.2–4.7 scope.
 7. **And** the findings are committed as `specs/research/feature-engineering-techniques.md`.
 8. **And** the product owner reviews the spike findings and approves the prioritized implementation plan before downstream Stories 4.2–4.7 begin. *(Decision-gate: the spike produces recommendations; the product owner makes the final MVP-scope selections.)*
 
@@ -71,7 +71,7 @@ so that I can make informed decisions about which transformations to implement b
   - [x] 7.5: Section 4 — Graph Feature survey with centrality comparison vs. SoS baseline
   - [x] 7.6: Section 5 — Massey Ordinal analysis and recommendation
   - [x] 7.7: Section 6 — Community Techniques from Kaggle MMLM review
-  - [x] 7.8: Section 7 — Prioritized Implementation Plan mapping each technique to Story 4.2–4.7 and flagging which are MVP vs. post-MVP
+  - [x] 7.8: Section 7 — Library Building Blocks Catalog mapping each technique to Story 4.2–4.7 via equivalence groups and distinct building blocks (product owner restructured from MVP/post-MVP to modeler-selects model)
   - [x] 7.9: DO NOT make final MVP-scope selections — present ranked options with trade-offs for product owner review (see AC 8)
 
 - [x] Task 8: Commit & Gate (AC: 7, 8)
@@ -130,7 +130,7 @@ Any new technique must justify its complexity by exceeding these empirical basel
 | Scoring (WScore) | r = 0.2349 | Section 5 |
 | PF (negative) | r = -0.1574 | Section 5 |
 
-Graph centrality features (PageRank, betweenness) must be validated to exceed r=0.2970 before being recommended for Story 4.5. Opponent-adjusted efficiency must exceed r=0.2970 before being recommended for Story 4.6.
+EDA baselines (SoS r=0.2970, FGM r=0.2628, etc.) are **contextual references**, not implementation gates. The research document (`specs/research/feature-engineering-techniques.md` Section 1) explicitly frames these as "not a gate" — all building blocks in Section 7 are in scope per product owner approval; the modeler decides which to include per model based on empirical validation in downstream stories.
 
 ### Data Source Context for Research
 
@@ -270,7 +270,7 @@ None — pure documentation spike; no code execution required.
 - Loaded all 4 required pre-spike context documents (Tasks 1.1–1.4)
 - Researched opponent adjustment techniques: SRS, ridge regression, Massey method, Colley — ridge regression recommended for MVP due to best sparse-schedule handling
 - Researched sequential/momentum features: rolling windows (5/10/20 games), EWMA (α=0.15–0.20), streaks, trajectory — empirical validation deferred to Story 4.4
-- Researched graph features: PageRank on directed W→L graph validated in peer-reviewed literature (71.6% accuracy, above SoS baseline); betweenness/HITS marginal
+- Researched graph features: PageRank on directed W→L graph validated in peer-reviewed literature (71.6% accuracy, above SoS baseline); betweenness provides distinct structural-bridge signal; HITS hub captures opponent quality from the loss side; clustering coefficient captures schedule diversity. All five graph building blocks are in Story 4.5 scope (product owner decision — implement all, modeler selects per model)
 - Reviewed Kaggle MMLM community solutions 2014–2025 (year-by-year) via secondary sources (Medium writeups, mlcontests.com, public GitHub repositories): FiveThirtyEight 538 ratings dominated 2018–2023; SAG+POM+MOR+WLK composite is the validated open alternative; Elo with margin scaling and per-possession normalization (Four Factors) are Tier 2 features across top solutions. NOTE: Kaggle discussion boards themselves returned only JavaScript (authentication required); AC 4 was fulfilled through secondary sources — direct board threads not accessed.
 - Key new finding from Kaggle review: Probability calibration (isotonic/spline) is used by winners (2025 winner: cubic-spline in-fold); overtime rescaling to pts/40min recommended for preprocessing
 - Researched Massey Ordinal systems: SAG+POM+MOR+WLK validated composite; PCA reduction deferred to Post-MVP; temporal slicing of `RankingDayNum` field required for walk-forward compatibility
@@ -287,3 +287,5 @@ specs/research/feature-engineering-techniques.md
 |:---|:---|:---|
 | 2026-02-20 | Created feature-engineering-techniques.md — 7-section research document covering opponent adjustment, sequential, graph, Massey ordinal, and Kaggle MMLM techniques; year-by-year Kaggle MMLM review 2014–2025; prioritized implementation plan for Stories 4.2–4.7 | Claude Sonnet 4.6 (dev-story) |
 | 2026-02-20 | Code review fixes (9 issues, 5 fixed): corrected arxiv:2508.02725 year (2024→2025, paper confirmed real); added SAG/WLK coverage gate with MOR+POM+DOL fallback; replaced iterrows PageRank example with nx.from_pandas_edgelist() per no-iterrows mandate; clarified Task 8.3 sprint-status target (review, not done); added Kaggle boards access limitation to completion notes; disambiguated per-possession MVP vs Four Factors Post-MVP; added probability calibration to MVP list; added validation gate conditional note; fixed 2021 attribution uncertainty. | Claude Sonnet 4.6 (code-review) |
+| 2026-02-20 | Product owner structural rewrite: Section 7 restructured from MVP/Post-MVP Prioritized Implementation Plan to Library Building Blocks Catalog (equivalence groups + distinct building blocks); validation gate changed from "must exceed r=0.2970 before recommending" to "contextual reference — not a gate"; Section 4.6 expanded Story 4.5 scope to implement all five graph building blocks (was PageRank + betweenness only); normalization baseline marked as open for investigation (was "already resolved"). AC 6 updated in story file to match delivered artifact. | Volty (product owner) |
+| 2026-02-21 | Code re-review fixes (8 issues): updated research doc status header to "Approved"; updated AC 6 text to match Library Building Blocks Catalog structure; added this change log entry for the structural rewrite; aligned story Dev Notes validation gate with "not a gate" language in research doc; updated completion notes to reflect "implement all five graph building blocks"; updated Section 7 intro note to reflect PO has already approved scope; changed Section 6.3 "SRS / ridge regression" to "SRS / Massey"; added HITS authority clarifying note to Group C in Section 7.1. | Claude Sonnet 4.6 (code-review) |
