@@ -73,7 +73,7 @@ development_status:
   4-1-research-feature-engineering-techniques: done
   4-2-implement-chronological-data-serving-api: done
   4-3-implement-canonical-team-id-mapping-data-cleaning: done
-  4-4-implement-sequential-transformations: ready-for-dev
+  4-4-implement-sequential-transformations: review
   4-5-implement-graph-builders-centrality-features: backlog
   4-6-implement-opponent-adjustments: backlog
   4-7-implement-stateful-feature-serving: backlog

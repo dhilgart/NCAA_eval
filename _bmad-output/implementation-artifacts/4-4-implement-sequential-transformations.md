@@ -1,6 +1,6 @@
 # Story 4.4: Implement Sequential Transformations
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -28,77 +28,77 @@ so that I can capture recent team form, efficiency, and trends as predictive fea
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `src/ncaa_eval/transform/sequential.py` with constants and `DetailedResultsLoader` (AC: 1–12)
-  - [ ] 1.1: Add module header with `from __future__ import annotations`, imports, and module-level logger
-  - [ ] 1.2: Define `_COUNTING_STATS: tuple[str, ...]` constant — the per-team box-score columns computed from the long-format reshape: `("fgm", "fga", "fgm3", "fga3", "ftm", "fta", "oreb", "dreb", "ast", "to", "stl", "blk", "pf", "score", "opp_score")`
-  - [ ] 1.3: Define `_LONG_COLS: tuple[str, ...]` — all columns present in the long-format team-perspective DataFrame: `("season", "day_num", "team_id", "opp_id", "won", "loc_encoded", "num_ot", "is_tournament", "score", "opp_score", "fgm", "fga", "fgm3", "fga3", "ftm", "fta", "oreb", "dreb", "ast", "to", "stl", "blk", "pf", "opp_oreb", "opp_dreb")`
-  - [ ] 1.4: Implement `DetailedResultsLoader` class — wraps a combined long-format DataFrame
-  - [ ] 1.5: `classmethod from_csvs(cls, regular_path: Path, tourney_path: Path) -> DetailedResultsLoader` — loads both CSVs (each with columns Season,DayNum,WTeamID,WScore,LTeamID,LScore,WLoc,NumOT,WFGM,...,LPF), reshapes to long format (vectorized rename+concat, no iterrows), adds `is_tournament` flag (False for regular, True for tourney)
-  - [ ] 1.6: Implement `_reshape_to_long(df: pd.DataFrame, is_tournament: bool) -> pd.DataFrame` module-level helper — uses `pd.concat` of winner-side and loser-side renames; loc_encoded for winner: H→+1, A→-1, N→0; for loser: H→-1, A→+1, N→0
-  - [ ] 1.7: `get_season_long_format(self, season: int) -> pd.DataFrame` — returns all games for a season (regular + tourney) in long format sorted by `(day_num, team_id)`
-  - [ ] 1.8: `get_team_season(self, team_id: int, season: int) -> pd.DataFrame` — returns all games for one team in one season, sorted by `day_num`; returns empty DataFrame if team or season not found
+- [x] Task 1: Create `src/ncaa_eval/transform/sequential.py` with constants and `DetailedResultsLoader` (AC: 1–12)
+  - [x] 1.1: Add module header with `from __future__ import annotations`, imports, and module-level logger
+  - [x] 1.2: Define `_COUNTING_STATS: tuple[str, ...]` constant — the per-team box-score columns computed from the long-format reshape: `("fgm", "fga", "fgm3", "fga3", "ftm", "fta", "oreb", "dreb", "ast", "to", "stl", "blk", "pf", "score", "opp_score")`
+  - [x] 1.3: Define `_LONG_COLS: tuple[str, ...]` — all columns present in the long-format team-perspective DataFrame: `("season", "day_num", "team_id", "opp_id", "won", "loc_encoded", "num_ot", "is_tournament", "score", "opp_score", "fgm", "fga", "fgm3", "fga3", "ftm", "fta", "oreb", "dreb", "ast", "to", "stl", "blk", "pf", "opp_oreb", "opp_dreb")`
+  - [x] 1.4: Implement `DetailedResultsLoader` class — wraps a combined long-format DataFrame
+  - [x] 1.5: `classmethod from_csvs(cls, regular_path: Path, tourney_path: Path) -> DetailedResultsLoader` — loads both CSVs (each with columns Season,DayNum,WTeamID,WScore,LTeamID,LScore,WLoc,NumOT,WFGM,...,LPF), reshapes to long format (vectorized rename+concat, no iterrows), adds `is_tournament` flag (False for regular, True for tourney)
+  - [x] 1.6: Implement `_reshape_to_long(df: pd.DataFrame, is_tournament: bool) -> pd.DataFrame` module-level helper — uses `pd.concat` of winner-side and loser-side renames; loc_encoded for winner: H→+1, A→-1, N→0; for loser: H→-1, A→+1, N→0
+  - [x] 1.7: `get_season_long_format(self, season: int) -> pd.DataFrame` — returns all games for a season (regular + tourney) in long format sorted by `(day_num, team_id)`
+  - [x] 1.8: `get_team_season(self, team_id: int, season: int) -> pd.DataFrame` — returns all games for one team in one season, sorted by `day_num`; returns empty DataFrame if team or season not found
 
-- [ ] Task 2: Implement OT rescaling and time-decay weighting helpers (AC: 7, 8)
-  - [ ] 2.1: Implement `apply_ot_rescaling(team_games: pd.DataFrame, stats: tuple[str, ...] = _COUNTING_STATS) -> pd.DataFrame` — applies `rescale_overtime(score, num_ot)` formula vectorized to all counting stats: `df[stats] = df[stats].div(df["num_ot"].mul(5).add(40).div(40), axis=0)` (equivalent to `stat × 40 / (40 + 5 × num_ot)`); returns a copy, does not modify in-place
-  - [ ] 2.2: Implement `compute_game_weights(day_nums: pd.Series, reference_day_num: int | None = None) -> pd.Series` — BartTorvik decay: `days_ago = reference - day_num` where reference defaults to `day_nums.max()`; `weight = (1 - 0.01 * max(0, days_ago - 40)).clip(lower=0.6)`; fully vectorized using pandas clip
+- [x] Task 2: Implement OT rescaling and time-decay weighting helpers (AC: 7, 8)
+  - [x] 2.1: Implement `apply_ot_rescaling(team_games: pd.DataFrame, stats: tuple[str, ...] = _COUNTING_STATS) -> pd.DataFrame` — applies `rescale_overtime(score, num_ot)` formula vectorized to all counting stats: `df[stats] = df[stats].div(df["num_ot"].mul(5).add(40).div(40), axis=0)` (equivalent to `stat × 40 / (40 + 5 × num_ot)`); returns a copy, does not modify in-place
+  - [x] 2.2: Implement `compute_game_weights(day_nums: pd.Series, reference_day_num: int | None = None) -> pd.Series` — BartTorvik decay: `days_ago = reference - day_num` where reference defaults to `day_nums.max()`; `weight = (1 - 0.01 * max(0, days_ago - 40)).clip(lower=0.6)`; fully vectorized using pandas clip
 
-- [ ] Task 3: Implement rolling window features (AC: 1, 2, 3, 12)
-  - [ ] 3.1: Implement `compute_rolling_stats(team_games: pd.DataFrame, windows: list[int], stats: tuple[str, ...], weights: pd.Series | None = None) -> pd.DataFrame` — for each window and stat, compute `rolling(window, min_periods=1).mean()`; if `weights` provided, compute weighted rolling mean using: `(stat × weight).rolling(w, min_periods=1).sum() / weight.rolling(w, min_periods=1).sum()`; output column names: `rolling_{w}_{stat}` (e.g., `rolling_5_score`, `rolling_10_fgm`); also include `rolling_full_{stat}` (expanding mean = full-season aggregate)
+- [x] Task 3: Implement rolling window features (AC: 1, 2, 3, 12)
+  - [x] 3.1: Implement `compute_rolling_stats(team_games: pd.DataFrame, windows: list[int], stats: tuple[str, ...], weights: pd.Series | None = None) -> pd.DataFrame` — for each window and stat, compute `rolling(window, min_periods=1).mean()`; if `weights` provided, compute weighted rolling mean using: `(stat × weight).rolling(w, min_periods=1).sum() / weight.rolling(w, min_periods=1).sum()`; output column names: `rolling_{w}_{stat}` (e.g., `rolling_5_score`, `rolling_10_fgm`); also include `rolling_full_{stat}` (expanding mean = full-season aggregate)
 
-- [ ] Task 4: Implement EWMA and momentum features (AC: 4, 5)
-  - [ ] 4.1: Implement `compute_ewma_stats(team_games: pd.DataFrame, alphas: list[float], stats: tuple[str, ...]) -> pd.DataFrame` — uses `df[stats].ewm(alpha=α, adjust=False).mean()`; output column names: `ewma_{alpha_str}_{stat}` where `alpha_str = str(α).replace(".", "p")` (e.g., `ewma_0p15_score`, `ewma_0p20_fgm`); one alpha = one set of columns; the modeler selects which alpha to use
-  - [ ] 4.2: Implement `compute_momentum(team_games: pd.DataFrame, alpha_fast: float, alpha_slow: float, stats: tuple[str, ...]) -> pd.DataFrame` — `momentum_{stat} = ewma(fast) − ewma(slow)` for each stat; output column names: `momentum_{stat}` (e.g., `momentum_score`); uses `pd.DataFrame.ewm(alpha=α, adjust=False).mean()` internally
+- [x] Task 4: Implement EWMA and momentum features (AC: 4, 5)
+  - [x] 4.1: Implement `compute_ewma_stats(team_games: pd.DataFrame, alphas: list[float], stats: tuple[str, ...]) -> pd.DataFrame` — uses `df[stats].ewm(alpha=α, adjust=False).mean()`; output column names: `ewma_{alpha_str}_{stat}` where `alpha_str = str(α).replace(".", "p")` (e.g., `ewma_0p15_score`, `ewma_0p20_fgm`); one alpha = one set of columns; the modeler selects which alpha to use
+  - [x] 4.2: Implement `compute_momentum(team_games: pd.DataFrame, alpha_fast: float, alpha_slow: float, stats: tuple[str, ...]) -> pd.DataFrame` — `momentum_{stat} = ewma(fast) − ewma(slow)` for each stat; output column names: `momentum_{stat}` (e.g., `momentum_score`); uses `pd.DataFrame.ewm(alpha=α, adjust=False).mean()` internally
 
-- [ ] Task 5: Implement streak features (AC: 6)
-  - [ ] 5.1: Implement `compute_streak(won: pd.Series) -> pd.Series` — signed integer encoding; positive for win streaks, negative for loss streaks; vectorized using `(won != won.shift()).cumsum()` to group consecutive identical outcomes, then `groupby.cumcount() + 1` for streak length, then `.where(won, -streak_len)`; output Series named `"streak"`
+- [x] Task 5: Implement streak features (AC: 6)
+  - [x] 5.1: Implement `compute_streak(won: pd.Series) -> pd.Series` — signed integer encoding; positive for win streaks, negative for loss streaks; vectorized using `(won != won.shift()).cumsum()` to group consecutive identical outcomes, then `groupby.cumcount() + 1` for streak length, then `.where(won, -streak_len)`; output Series named `"streak"`
 
-- [ ] Task 6: Implement per-possession normalization and Four Factors (AC: 9, 10)
-  - [ ] 6.1: Implement `compute_possessions(team_games: pd.DataFrame) -> pd.Series` — `FGA − OR + TO + 0.44 × FTA`; returns a Series named `"possessions"`; guard: replace zero values with `np.nan` (use `pd.Series.replace(0, np.nan)`) to prevent division-by-zero in downstream normalization
-  - [ ] 6.2: Implement `compute_per_possession_stats(team_games: pd.DataFrame, stats: tuple[str, ...], possessions: pd.Series) -> pd.DataFrame` — divides each stat column by possessions; output column names: `{stat}_per100` (multiply by 100 for interpretability: `stat × 100 / possessions`); e.g., `fgm_per100`
-  - [ ] 6.3: Implement `compute_four_factors(team_games: pd.DataFrame, possessions: pd.Series) -> pd.DataFrame` — computes: `efg_pct = (fgm + 0.5 × fgm3) / fga`, `orb_pct = oreb / (oreb + opp_dreb)`, `ftr = fta / fga`, `to_pct = to / possessions`; output DataFrame with columns `["efg_pct", "orb_pct", "ftr", "to_pct"]`; guard all denominators against zero (return NaN when denominator is zero)
+- [x] Task 6: Implement per-possession normalization and Four Factors (AC: 9, 10)
+  - [x] 6.1: Implement `compute_possessions(team_games: pd.DataFrame) -> pd.Series` — `FGA − OR + TO + 0.44 × FTA`; returns a Series named `"possessions"`; guard: replace zero values with `np.nan` (use `pd.Series.replace(0, np.nan)`) to prevent division-by-zero in downstream normalization
+  - [x] 6.2: Implement `compute_per_possession_stats(team_games: pd.DataFrame, stats: tuple[str, ...], possessions: pd.Series) -> pd.DataFrame` — divides each stat column by possessions; output column names: `{stat}_per100` (multiply by 100 for interpretability: `stat × 100 / possessions`); e.g., `fgm_per100`
+  - [x] 6.3: Implement `compute_four_factors(team_games: pd.DataFrame, possessions: pd.Series) -> pd.DataFrame` — computes: `efg_pct = (fgm + 0.5 × fgm3) / fga`, `orb_pct = oreb / (oreb + opp_dreb)`, `ftr = fta / fga`, `to_pct = to / possessions`; output DataFrame with columns `["efg_pct", "orb_pct", "ftr", "to_pct"]`; guard all denominators against zero (return NaN when denominator is zero)
 
-- [ ] Task 7: Implement top-level `SequentialTransformer` class (AC: 1–12)
-  - [ ] 7.1: Define `SequentialTransformer` class with `__init__(self, windows: list[int] | None = None, alphas: list[float] | None = None, alpha_fast: float = 0.20, alpha_slow: float = 0.10, stats: tuple[str, ...] | None = None) -> None`; defaults: `windows=[5, 10, 20]`, `alphas=[0.15, 0.20]`, `stats=_COUNTING_STATS`
-  - [ ] 7.2: Implement `transform(self, team_games: pd.DataFrame, reference_day_num: int | None = None) -> pd.DataFrame` — orchestrates all feature computation steps in order: (1) OT rescaling, (2) time-decay weights, (3) rolling stats (with weights), (4) EWMA, (5) momentum, (6) streak, (7) possessions + per-possession, (8) four factors; returns a new DataFrame with all feature columns appended to the original columns; preserves input row order
-  - [ ] 7.3: Ensure returned DataFrame has `"streak"` column, all `"rolling_N_stat"` columns, all `"ewma_alpha_stat"` columns, all `"momentum_stat"` columns, `"possessions"`, all `"stat_per100"` columns, and four-factor columns `["efg_pct", "orb_pct", "ftr", "to_pct"]`
+- [x] Task 7: Implement top-level `SequentialTransformer` class (AC: 1–12)
+  - [x] 7.1: Define `SequentialTransformer` class with `__init__(self, windows: list[int] | None = None, alphas: list[float] | None = None, alpha_fast: float = 0.20, alpha_slow: float = 0.10, stats: tuple[str, ...] | None = None) -> None`; defaults: `windows=[5, 10, 20]`, `alphas=[0.15, 0.20]`, `stats=_COUNTING_STATS`
+  - [x] 7.2: Implement `transform(self, team_games: pd.DataFrame, reference_day_num: int | None = None) -> pd.DataFrame` — orchestrates all feature computation steps in order: (1) OT rescaling, (2) time-decay weights, (3) rolling stats (with weights), (4) EWMA, (5) momentum, (6) streak, (7) possessions + per-possession, (8) four factors; returns a new DataFrame with all feature columns appended to the original columns; preserves input row order
+  - [x] 7.3: Ensure returned DataFrame has `"streak"` column, all `"rolling_N_stat"` columns, all `"ewma_alpha_stat"` columns, all `"momentum_stat"` columns, `"possessions"`, all `"stat_per100"` columns, and four-factor columns `["efg_pct", "orb_pct", "ftr", "to_pct"]`
 
-- [ ] Task 8: Export public API from `src/ncaa_eval/transform/__init__.py` (AC: 1–12)
-  - [ ] 8.1: Import and re-export `DetailedResultsLoader`, `SequentialTransformer`, `compute_streak`, `compute_possessions`, `compute_four_factors`, `compute_game_weights` from `transform/__init__.py`
-  - [ ] 8.2: Add all new names to `__all__`
+- [x] Task 8: Export public API from `src/ncaa_eval/transform/__init__.py` (AC: 1–12)
+  - [x] 8.1: Import and re-export `DetailedResultsLoader`, `SequentialTransformer`, `compute_streak`, `compute_possessions`, `compute_four_factors`, `compute_game_weights` from `transform/__init__.py`
+  - [x] 8.2: Add all new names to `__all__`
 
-- [ ] Task 9: Write unit tests in `tests/unit/test_sequential.py` (AC: 13)
-  - [ ] 9.1: `test_reshape_to_long_winner_row` — fixture CSV with one game (WLoc=H), verify winner row has `loc_encoded=+1`, `won=True`, correct `fgm` value from WFGM column
-  - [ ] 9.2: `test_reshape_to_long_loser_row` — same fixture, verify loser row has `loc_encoded=-1`, `won=False`, correct `fgm` value from LFGM column
-  - [ ] 9.3: `test_reshape_to_long_neutral` — WLoc=N: winner row `loc_encoded=0`, loser row `loc_encoded=0`
-  - [ ] 9.4: `test_detailed_results_loader_from_csvs` — fixture with 2 regular-season games + 1 tourney game; verify row count = `(2+1) × 2 = 6`; verify `is_tournament` flags
-  - [ ] 9.5: `test_get_team_season_sorted` — verify returned DataFrame is sorted by `day_num` ascending
-  - [ ] 9.6: `test_get_team_season_empty` — unknown `team_id` returns empty DataFrame (no exception)
-  - [ ] 9.7: `test_apply_ot_rescaling_regulation` — `num_ot=0`: scores unchanged (`40/40 = 1.0` multiplier)
-  - [ ] 9.8: `test_apply_ot_rescaling_one_ot` — `num_ot=1`: score rescaled to `score × 40/45`
-  - [ ] 9.9: `test_compute_game_weights_no_decay` — game played 0 days ago: weight = 1.0; game 40 days ago: weight = 1.0; game 41 days ago: weight = 0.99
-  - [ ] 9.10: `test_compute_game_weights_floor` — game 140 days ago: weight = 0.6 (floor enforced)
-  - [ ] 9.11: `test_rolling_stats_window_5` — 10-game fixture; verify `rolling_5_score` at position 0 = score[0], at position 4 = mean(score[0:5])
-  - [ ] 9.12: `test_rolling_stats_min_periods` — single-game team history: `rolling_5_score` is not NaN (min_periods=1)
-  - [ ] 9.13: `test_rolling_full_is_expanding_mean` — `rolling_full_score` at each row equals `score.expanding().mean()` to that row
-  - [ ] 9.14: `test_rolling_no_future_leakage` — for position i, `rolling_5_score` only uses games at positions ≤ i (not i+1)
-  - [ ] 9.15: `test_ewma_stats_alpha` — 5-game fixture; verify `ewma_0p20_score` at row 1 equals `alpha × score[1] + (1-alpha) × score[0]` (with `adjust=False`)
-  - [ ] 9.16: `test_compute_momentum_positive_improving` — increasing score series: `momentum_score` is positive (fast ewma > slow ewma as recent games are higher)
-  - [ ] 9.17: `test_compute_streak_win_streak` — 3 consecutive wins: streak = +3 at position 2
-  - [ ] 9.18: `test_compute_streak_loss_streak` — 3 consecutive losses: streak = -3 at position 2
-  - [ ] 9.19: `test_compute_streak_reset` — WWLWW: streaks are +1, +2, -1, +1, +2
-  - [ ] 9.20: `test_compute_possessions_formula` — known FGA, OR, TO, FTA values → verify `possessions = FGA - OR + TO + 0.44 × FTA`
-  - [ ] 9.21: `test_compute_possessions_zero_guard` — if possessions = 0 for a row, result is NaN (no ZeroDivisionError downstream)
-  - [ ] 9.22: `test_compute_per_possession_stats` — known score and possessions → verify `score_per100 = score × 100 / possessions`
-  - [ ] 9.23: `test_compute_four_factors_efg` — known FGM, FGM3, FGA → verify `efg_pct = (FGM + 0.5×FGM3) / FGA`
-  - [ ] 9.24: `test_compute_four_factors_orb` — known oreb, opp_dreb → verify `orb_pct = oreb / (oreb + opp_dreb)`
-  - [ ] 9.25: `test_compute_four_factors_zero_fga` — FGA = 0: `efg_pct = NaN` (no exception)
-  - [ ] 9.26: `test_sequential_transformer_transform_columns` — run `SequentialTransformer().transform(team_games)` on a 10-game fixture; verify all expected column groups exist: streak, rolling_5/10/20/full, ewma_0p15/0p20, momentum, possessions, per100, four factors
-  - [ ] 9.27: `test_sequential_transformer_preserves_row_count` — output has same number of rows as input
+- [x] Task 9: Write unit tests in `tests/unit/test_sequential.py` (AC: 13)
+  - [x] 9.1: `test_reshape_to_long_winner_row` — fixture CSV with one game (WLoc=H), verify winner row has `loc_encoded=+1`, `won=True`, correct `fgm` value from WFGM column
+  - [x] 9.2: `test_reshape_to_long_loser_row` — same fixture, verify loser row has `loc_encoded=-1`, `won=False`, correct `fgm` value from LFGM column
+  - [x] 9.3: `test_reshape_to_long_neutral` — WLoc=N: winner row `loc_encoded=0`, loser row `loc_encoded=0`
+  - [x] 9.4: `test_detailed_results_loader_from_csvs` — fixture with 2 regular-season games + 1 tourney game; verify row count = `(2+1) × 2 = 6`; verify `is_tournament` flags
+  - [x] 9.5: `test_get_team_season_sorted` — verify returned DataFrame is sorted by `day_num` ascending
+  - [x] 9.6: `test_get_team_season_empty` — unknown `team_id` returns empty DataFrame (no exception)
+  - [x] 9.7: `test_apply_ot_rescaling_regulation` — `num_ot=0`: scores unchanged (`40/40 = 1.0` multiplier)
+  - [x] 9.8: `test_apply_ot_rescaling_one_ot` — `num_ot=1`: score rescaled to `score × 40/45`
+  - [x] 9.9: `test_compute_game_weights_no_decay` — game played 0 days ago: weight = 1.0; game 40 days ago: weight = 1.0; game 41 days ago: weight = 0.99
+  - [x] 9.10: `test_compute_game_weights_floor` — game 140 days ago: weight = 0.6 (floor enforced)
+  - [x] 9.11: `test_rolling_stats_window_5` — 10-game fixture; verify `rolling_5_score` at position 0 = score[0], at position 4 = mean(score[0:5])
+  - [x] 9.12: `test_rolling_stats_min_periods` — single-game team history: `rolling_5_score` is not NaN (min_periods=1)
+  - [x] 9.13: `test_rolling_full_is_expanding_mean` — `rolling_full_score` at each row equals `score.expanding().mean()` to that row
+  - [x] 9.14: `test_rolling_no_future_leakage` — for position i, `rolling_5_score` only uses games at positions ≤ i (not i+1)
+  - [x] 9.15: `test_ewma_stats_alpha` — 5-game fixture; verify `ewma_0p20_score` at row 1 equals `alpha × score[1] + (1-alpha) × score[0]` (with `adjust=False`)
+  - [x] 9.16: `test_compute_momentum_positive_improving` — increasing score series: `momentum_score` is positive (fast ewma > slow ewma as recent games are higher)
+  - [x] 9.17: `test_compute_streak_win_streak` — 3 consecutive wins: streak = +3 at position 2
+  - [x] 9.18: `test_compute_streak_loss_streak` — 3 consecutive losses: streak = -3 at position 2
+  - [x] 9.19: `test_compute_streak_reset` — WWLWW: streaks are +1, +2, -1, +1, +2
+  - [x] 9.20: `test_compute_possessions_formula` — known FGA, OR, TO, FTA values → verify `possessions = FGA - OR + TO + 0.44 × FTA`
+  - [x] 9.21: `test_compute_possessions_zero_guard` — if possessions = 0 for a row, result is NaN (no ZeroDivisionError downstream)
+  - [x] 9.22: `test_compute_per_possession_stats` — known score and possessions → verify `score_per100 = score × 100 / possessions`
+  - [x] 9.23: `test_compute_four_factors_efg` — known FGM, FGM3, FGA → verify `efg_pct = (FGM + 0.5×FGM3) / FGA`
+  - [x] 9.24: `test_compute_four_factors_orb` — known oreb, opp_dreb → verify `orb_pct = oreb / (oreb + opp_dreb)`
+  - [x] 9.25: `test_compute_four_factors_zero_fga` — FGA = 0: `efg_pct = NaN` (no exception)
+  - [x] 9.26: `test_sequential_transformer_transform_columns` — run `SequentialTransformer().transform(team_games)` on a 10-game fixture; verify all expected column groups exist: streak, rolling_5/10/20/full, ewma_0p15/0p20, momentum, possessions, per100, four factors
+  - [x] 9.27: `test_sequential_transformer_preserves_row_count` — output has same number of rows as input
 
-- [ ] Task 10: Commit (AC: all)
-  - [ ] 10.1: Stage `src/ncaa_eval/transform/sequential.py`, `src/ncaa_eval/transform/__init__.py`, `tests/unit/test_sequential.py`
-  - [ ] 10.2: Commit: `feat(transform): implement sequential transformations (Story 4.4)`
-  - [ ] 10.3: Update `_bmad-output/implementation-artifacts/sprint-status.yaml`: `4-4-implement-sequential-transformations` → `review`
+- [x] Task 10: Commit (AC: all)
+  - [x] 10.1: Stage `src/ncaa_eval/transform/sequential.py`, `src/ncaa_eval/transform/__init__.py`, `tests/unit/test_sequential.py`
+  - [x] 10.2: Commit: `feat(transform): implement sequential transformations (Story 4.4)`
+  - [x] 10.3: Update `_bmad-output/implementation-artifacts/sprint-status.yaml`: `4-4-implement-sequential-transformations` → `review`
 
 ## Dev Notes
 
@@ -598,10 +598,41 @@ POETRY_VIRTUALENVS_CREATE=false conda run -n ncaa_eval pytest tests/unit/test_se
 
 ### Agent Model Used
 
-Claude Sonnet 4.6 (create-story workflow)
+Claude Sonnet 4.6 (create-story workflow); Claude Sonnet 4.6 (dev-story implementation)
 
 ### Debug Log References
 
+No blocking issues. Two minor mypy/ruff fixes applied during validation:
+1. Removed unused `import numpy as np` (Ruff F401) — numpy not needed since pandas `.clip()` and `float("nan")` cover all operations.
+2. Added `# type: ignore[import-untyped]` to `import pandas as pd` in test file (mypy strict compliance).
+
 ### Completion Notes List
 
+- Implemented `sequential.py` with all required functions and classes:
+  - `_reshape_to_long()` — vectorized W/L wide-to-long reshape (no iterrows)
+  - `DetailedResultsLoader` — CSV loader with `from_csvs()`, `get_season_long_format()`, `get_team_season()`
+  - `apply_ot_rescaling()` — BartTorvik stat normalization (40/(40+5×OT))
+  - `compute_game_weights()` — BartTorvik time-decay (1% per day after 40 days, 60% floor)
+  - `compute_rolling_stats()` — rolling windows (configurable sizes) with optional time-decay weighting; `rolling_full_*` expanding mean
+  - `compute_ewma_stats()` — EWMA with `adjust=False`; column names use "p" for decimal point
+  - `compute_momentum()` — fast EWMA minus slow EWMA per stat
+  - `compute_streak()` — signed integer streak via cumsum-based vectorized grouping
+  - `compute_possessions()` — FGA − OR + TO + 0.44×FTA with zero-guard
+  - `compute_per_possession_stats()` — per-100-possessions normalization
+  - `compute_four_factors()` — eFG%, ORB%, FTR, TO% with zero-denomination guards
+  - `SequentialTransformer` — orchestrates all 8 steps in correct temporal order
+- Updated `transform/__init__.py` with 6 new public exports
+- Written 27 unit tests (all pass); 233 total tests pass (no regressions)
+- All quality gates pass: `mypy --strict`, Ruff, full pytest suite
+
 ### File List
+
+- `src/ncaa_eval/transform/sequential.py` (new)
+- `src/ncaa_eval/transform/__init__.py` (modified)
+- `tests/unit/test_sequential.py` (new)
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified)
+- `_bmad-output/implementation-artifacts/4-4-implement-sequential-transformations.md` (modified — this file)
+
+### Change Log
+
+- 2026-02-21: Implemented Story 4.4 — sequential feature transformations module. Created `sequential.py` with `DetailedResultsLoader`, `SequentialTransformer`, and 10 module-level helpers (OT rescaling, time-decay weights, rolling stats, EWMA, momentum, streak, possessions, per-possession, four factors). Added 6 public exports to `transform/__init__.py`. Added 27 unit tests covering all ACs. 233 total tests pass; `mypy --strict` and Ruff clean.
