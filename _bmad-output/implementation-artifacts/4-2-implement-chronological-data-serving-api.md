@@ -1,6 +1,6 @@
 # Story 4.2: Implement Chronological Data Serving API
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -62,10 +62,10 @@ so that I can train models with walk-forward validation without risk of data lea
   - [x] 6.10: Test: `rescale_overtime(score=80, num_ot=1)` → `80 × 40 / 45 ≈ 71.11` (5-OT-minute penalty)
   - [x] 6.11: Test: empty season (no games in repository) → returns `SeasonGames(year=year, games=[], has_tournament=False)`
 
-- [ ] Task 7: Commit (AC: all)
-  - [ ] 7.1: `git add src/ncaa_eval/transform/serving.py src/ncaa_eval/transform/__init__.py tests/unit/test_chronological_serving.py`
-  - [ ] 7.2: Commit: `feat(transform): implement chronological data serving API (Story 4.2)`
-  - [ ] 7.3: Update `_bmad-output/implementation-artifacts/sprint-status.yaml`: `4-2-implement-chronological-data-serving-api` → `review`
+- [x] Task 7: Commit (AC: all)
+  - [x] 7.1: `git add src/ncaa_eval/transform/serving.py src/ncaa_eval/transform/__init__.py tests/unit/test_chronological_serving.py`
+  - [x] 7.2: Commit: `feat(transform): implement chronological data serving API (Story 4.2)`
+  - [x] 7.3: Update `_bmad-output/implementation-artifacts/sprint-status.yaml`: `4-2-implement-chronological-data-serving-api` → `review`
 
 ## Dev Notes
 
