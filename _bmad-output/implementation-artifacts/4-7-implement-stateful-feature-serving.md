@@ -1,6 +1,6 @@
 # Story 4.7: Implement Stateful Feature Serving
 
-Status: review
+Status: done
 
 ## Story
 
@@ -238,6 +238,13 @@ Claude Opus 4.6
 - Task 5: Implemented `IsotonicCalibrator` (sklearn IsotonicRegression wrapper) and `SigmoidCalibrator` (Platt scaling) with fit/transform interface. `goto_conversion` assessed — not applicable (bookmaker overround removal ≠ model calibration). 10 unit tests in `test_calibration.py`.
 - Task 7: 8 integration tests: temporal integrity (ordinal slicing per game day_num, seed-only-for-seeded), calibration leakage prevention (disjoint data, different training → different calibration), matchup delta symmetry (ordinal delta, seed_diff negation), batch/stateful equivalence (metadata + ordinal features match).
 - Task 8: Added FeatureBlock, FeatureConfig, StatefulFeatureServer, IsotonicCalibrator, SigmoidCalibrator to `__init__.py` exports. Full test suite: 330 tests pass, ruff clean.
+- Code Review (Claude Sonnet 4.6, 2026-02-22): 2 HIGH + 4 MEDIUM + 3 LOW findings. 4 issues fixed automatically:
+  - H2/M1/M2 FIXED: Refactored `_serve_batch` and `_serve_stateful` to (1) pre-index batch rating DataFrames by team_id once (`_build_batch_indexed`), eliminating O(N×G) `set_index` calls; (2) cache `_resolve_ordinal_systems()` result above the game loop, eliminating O(N) `run_coverage_gate()` scans; (3) extracted `_append_per_game_columns_batch`, `_build_game_row`, `_collect_rating_vals` helpers to reduce cyclomatic complexity (was 15/11, now under 10). Replaced `df.at[idx, col]` cell writes with list-accumulate-then-assign pattern.
+  - M3 FIXED: Rewrote `_serve_stateful` docstring to accurately describe the mode (chronological iteration, not "accumulating state").
+  - M4 FIXED: Added `test_monotonicity` and `test_boundary_inputs_clipped` to `TestSigmoidCalibrator`. Total tests: 332.
+  - H1 NOTED: `gender_scope`/`dataset_scope` stored but not passed to `ChronologicalDataServer`. Acceptable per story intent ("parameter presence future-proofs the API"); wiring to data server is Epic 5 work.
+  - L1 NOTED: `_empty_frame()` minimal column set — low-impact, deferred.
+  - L2 NOTED: Scope tests are attribute-only — consequence of H1 not being wired.
 
 ### File List
 - `src/ncaa_eval/transform/feature_serving.py` (new)

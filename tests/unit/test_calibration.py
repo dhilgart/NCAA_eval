@@ -132,3 +132,26 @@ class TestSigmoidCalibrator:
         assert len(result) == 50
         assert np.all(result >= 0.0)
         assert np.all(result <= 1.0)
+
+    def test_monotonicity(self) -> None:
+        """Sigmoid (logistic) calibration must preserve monotone ordering."""
+        cal = SigmoidCalibrator()
+        y_true = np.array([0, 0, 0, 1, 1, 1, 1, 1])
+        y_prob = np.array([0.1, 0.15, 0.25, 0.6, 0.65, 0.7, 0.8, 0.9])
+        cal.fit(y_true, y_prob)
+
+        sorted_probs = np.linspace(0.05, 0.95, 20)
+        result = cal.transform(sorted_probs)
+        diffs = np.diff(result)
+        assert np.all(diffs >= -1e-10), f"Non-monotonic sigmoid output: {result}"
+
+    def test_boundary_inputs_clipped(self) -> None:
+        """Exact 0.0 and 1.0 inputs are clipped to avoid log(0) errors."""
+        cal = SigmoidCalibrator()
+        cal.fit(np.array([0, 1]), np.array([0.3, 0.7]))
+
+        # Should not raise; clipping prevents log(0)
+        result = cal.transform(np.array([0.0, 0.5, 1.0]))
+        assert len(result) == 3
+        assert np.all(result >= 0.0)
+        assert np.all(result <= 1.0)
