@@ -57,13 +57,13 @@ So that models receive a consistent, leakage-free feature matrix with calibrated
   - [x] 4.5 Elo delta placeholder (column present with NaN; populated when Story 4.8 is implemented)
   - [x] 4.6 Unit tests for delta correctness (A−B symmetry: if team order flips, deltas negate)
 
-- [ ] Task 5: Implement in-fold probability calibration (AC: #7)
-  - [ ] 5.1 Create `src/ncaa_eval/transform/calibration.py`
-  - [ ] 5.2 Implement `IsotonicCalibrator` wrapping `sklearn.isotonic.IsotonicRegression`
-  - [ ] 5.3 Implement `fit(y_true, y_prob)` and `transform(y_prob)` interface
-  - [ ] 5.4 Evaluate `goto_conversion` package: if it provides better calibration than isotonic for small samples, document assessment and expose as an option
-  - [ ] 5.5 Ensure calibration is in-fold only: `fit()` on training fold predictions, `transform()` on test fold predictions — never fit on the data being calibrated
-  - [ ] 5.6 Unit tests: calibration leakage prevention test (fit and transform on disjoint data), output probabilities in [0,1], monotonicity for isotonic
+- [x] Task 5: Implement in-fold probability calibration (AC: #7)
+  - [x] 5.1 Create `src/ncaa_eval/transform/calibration.py`
+  - [x] 5.2 Implement `IsotonicCalibrator` wrapping `sklearn.isotonic.IsotonicRegression`
+  - [x] 5.3 Implement `fit(y_true, y_prob)` and `transform(y_prob)` interface
+  - [x] 5.4 Evaluate `goto_conversion` package: NOT applicable — removes bookmaker overround from betting odds, fundamentally different from calibrating model predictions. Documented in module docstring.
+  - [x] 5.5 Ensure calibration is in-fold only: `fit()` on training fold predictions, `transform()` on test fold predictions — never fit on the data being calibrated
+  - [x] 5.6 Unit tests: calibration leakage prevention test (fit and transform on disjoint data), output probabilities in [0,1], monotonicity for isotonic
 
 - [x] Task 6: Implement scope filtering (AC: #8)
   - [x] 6.1 `gender_scope` filters team/game data (men's vs. women's) — currently men-only in MVP; parameter presence future-proofs the API
@@ -235,7 +235,10 @@ Claude Opus 4.6
 - Task 1: Defined `FeatureBlock` enum (6 members) and `FeatureConfig` frozen dataclass with 10 fields and `active_blocks()` method. 10 unit tests pass.
 - Task 2: Implemented `StatefulFeatureServer` class with constructor (config, data_server, optional seed_table/ordinals_store), `serve_season_features()` in batch and stateful modes, game metadata extraction (loc_encoding, team_a_won), and empty-input guards. 10 new unit tests pass (20 total).
 - Tasks 3, 4, 6: Implemented ordinal temporal slicing (per-game day_num), matchup deltas (seed_diff, ordinal delta, batch rating deltas, elo placeholder), batch rating computation (SRS/Ridge/Colley from regular-season games), and scope filtering (gender_scope, dataset_scope as config params). 11 new unit tests pass (31 total).
+- Task 5: Implemented `IsotonicCalibrator` (sklearn IsotonicRegression wrapper) and `SigmoidCalibrator` (Platt scaling) with fit/transform interface. `goto_conversion` assessed — not applicable (bookmaker overround removal ≠ model calibration). 10 unit tests in `test_calibration.py`.
 
 ### File List
 - `src/ncaa_eval/transform/feature_serving.py` (new)
+- `src/ncaa_eval/transform/calibration.py` (new)
 - `tests/unit/test_feature_serving.py` (new)
+- `tests/unit/test_calibration.py` (new)
