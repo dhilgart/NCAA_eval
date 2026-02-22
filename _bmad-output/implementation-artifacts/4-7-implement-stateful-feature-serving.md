@@ -70,11 +70,11 @@ So that models receive a consistent, leakage-free feature matrix with calibrated
   - [x] 6.2 `dataset_scope` filters by data source: `"kaggle"` (Kaggle-only games), `"all"` (Kaggle + ESPN enrichment) — controls 2025 dedup behavior
   - [x] 6.3 Unit tests for scope filtering
 
-- [ ] Task 7: Integration tests (AC: #9)
-  - [ ] 7.1 End-to-end temporal integrity: features at game G contain no data from games after G
-  - [ ] 7.2 Calibration leakage prevention: calibrator not fit on test fold data
-  - [ ] 7.3 Matchup delta correctness: A−B = −(B−A) for all feature deltas
-  - [ ] 7.4 Roundtrip test: batch mode and stateful mode produce identical feature values for the same season
+- [x] Task 7: Integration tests (AC: #9)
+  - [x] 7.1 End-to-end temporal integrity: features at game G contain no data from games after G
+  - [x] 7.2 Calibration leakage prevention: calibrator not fit on test fold data
+  - [x] 7.3 Matchup delta correctness: A−B = −(B−A) for all feature deltas
+  - [x] 7.4 Roundtrip test: batch mode and stateful mode produce identical feature values for the same season
 
 - [ ] Task 8: Update `__init__.py` exports (AC: all)
   - [ ] 8.1 Add all new public classes/functions to `ncaa_eval/transform/__init__.py` in alphabetical order
@@ -236,9 +236,11 @@ Claude Opus 4.6
 - Task 2: Implemented `StatefulFeatureServer` class with constructor (config, data_server, optional seed_table/ordinals_store), `serve_season_features()` in batch and stateful modes, game metadata extraction (loc_encoding, team_a_won), and empty-input guards. 10 new unit tests pass (20 total).
 - Tasks 3, 4, 6: Implemented ordinal temporal slicing (per-game day_num), matchup deltas (seed_diff, ordinal delta, batch rating deltas, elo placeholder), batch rating computation (SRS/Ridge/Colley from regular-season games), and scope filtering (gender_scope, dataset_scope as config params). 11 new unit tests pass (31 total).
 - Task 5: Implemented `IsotonicCalibrator` (sklearn IsotonicRegression wrapper) and `SigmoidCalibrator` (Platt scaling) with fit/transform interface. `goto_conversion` assessed — not applicable (bookmaker overround removal ≠ model calibration). 10 unit tests in `test_calibration.py`.
+- Task 7: 8 integration tests: temporal integrity (ordinal slicing per game day_num, seed-only-for-seeded), calibration leakage prevention (disjoint data, different training → different calibration), matchup delta symmetry (ordinal delta, seed_diff negation), batch/stateful equivalence (metadata + ordinal features match).
 
 ### File List
 - `src/ncaa_eval/transform/feature_serving.py` (new)
 - `src/ncaa_eval/transform/calibration.py` (new)
 - `tests/unit/test_feature_serving.py` (new)
 - `tests/unit/test_calibration.py` (new)
+- `tests/integration/test_feature_serving_integration.py` (new)
