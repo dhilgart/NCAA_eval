@@ -30,11 +30,11 @@ So that models receive a consistent, leakage-free feature matrix with calibrated
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Define `FeatureConfig` dataclass (AC: #1, #4, #8)
-  - [ ] 1.1 Create `src/ncaa_eval/transform/feature_serving.py`
-  - [ ] 1.2 Define `FeatureConfig` frozen dataclass with fields: `sequential_windows`, `ewma_alphas`, `graph_features_enabled`, `batch_rating_types`, `ordinal_systems`, `ordinal_composite`, `matchup_deltas`, `gender_scope`, `dataset_scope`, `calibration_method`
-  - [ ] 1.3 Define `FeatureBlock` enum: `SEQUENTIAL`, `GRAPH`, `BATCH_RATING`, `ORDINAL`, `SEED`, `ELO` (Elo placeholder for Story 4.8)
-  - [ ] 1.4 Unit tests for config validation and defaults
+- [x] Task 1: Define `FeatureConfig` dataclass (AC: #1, #4, #8)
+  - [x] 1.1 Create `src/ncaa_eval/transform/feature_serving.py`
+  - [x] 1.2 Define `FeatureConfig` frozen dataclass with fields: `sequential_windows`, `ewma_alphas`, `graph_features_enabled`, `batch_rating_types`, `ordinal_systems`, `ordinal_composite`, `matchup_deltas`, `gender_scope`, `dataset_scope`, `calibration_method`
+  - [x] 1.3 Define `FeatureBlock` enum: `SEQUENTIAL`, `GRAPH`, `BATCH_RATING`, `ORDINAL`, `SEED`, `ELO` (Elo placeholder for Story 4.8)
+  - [x] 1.4 Unit tests for config validation and defaults
 
 - [ ] Task 2: Implement `StatefulFeatureServer` core class (AC: #1, #2, #3, #4)
   - [ ] 2.1 Constructor accepts `FeatureConfig`, `ChronologicalDataServer`, data lookup objects (normalization tables, CSV paths)
@@ -227,9 +227,13 @@ For any game G at date D:
 ## Dev Agent Record
 
 ### Agent Model Used
+Claude Opus 4.6
 
 ### Debug Log References
 
 ### Completion Notes List
+- Task 1: Defined `FeatureBlock` enum (6 members) and `FeatureConfig` frozen dataclass with 10 fields and `active_blocks()` method. 10 unit tests pass.
 
 ### File List
+- `src/ncaa_eval/transform/feature_serving.py` (new)
+- `tests/unit/test_feature_serving.py` (new)
