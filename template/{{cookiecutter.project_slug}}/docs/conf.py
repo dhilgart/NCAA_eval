@@ -6,7 +6,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 project = "{{ cookiecutter.project_slug }}"
-copyright = "2026, {{ cookiecutter.author_name }}"
+copyright = "{{ cookiecutter.copyright_year }}, {{ cookiecutter.author_name }}"
 author = "{{ cookiecutter.author_name }}"
 release = "0.1.0"
 

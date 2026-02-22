@@ -25,6 +25,7 @@ DEFAULT_CONTEXT = {
     "open_source_license": "MIT",
     "use_bmad": "y",
     "bmad_user_name": "Test Author",
+    "copyright_year": "2099",
 }
 
 
@@ -156,6 +157,14 @@ class TestTemplateGeneration:
         assert "Test Project" in content
         assert "from __future__ import annotations" in content
 
+    def test_copyright_year_parameterized(self, tmp_path: Path) -> None:
+        """Verify copyright_year is substituted in LICENSE and Sphinx conf.py."""
+        project = _generate_project(tmp_path)
+        license_content = (project / "LICENSE").read_text()
+        assert "2099" in license_content
+        conf_content = (project / "docs" / "conf.py").read_text()
+        assert "2099" in conf_content
+
 
 @pytest.mark.integration
 @pytest.mark.slow
@@ -163,10 +172,14 @@ class TestTemplateBmadToggle:
     """Test BMAD integration toggle."""
 
     def test_bmad_included_when_enabled(self, tmp_path: Path) -> None:
-        """Verify BMAD directories exist when use_bmad=y."""
+        """Verify BMAD directories exist and config is parameterized when use_bmad=y."""
         project = _generate_project(tmp_path, {"use_bmad": "y"})
-        assert (project / "_bmad" / "bmm" / "config.yaml").is_file()
+        config_path = project / "_bmad" / "bmm" / "config.yaml"
+        assert config_path.is_file()
         assert (project / "_bmad-output").is_dir()
+        config_content = config_path.read_text()
+        assert "Test Project" in config_content
+        assert "Test Author" in config_content
 
     def test_bmad_excluded_when_disabled(self, tmp_path: Path) -> None:
         """Verify BMAD directories removed when use_bmad=n."""
@@ -195,6 +208,15 @@ class TestTemplateLicenseToggle:
         )
         content = (project / "LICENSE").read_text()
         assert "GNU GENERAL PUBLIC LICENSE" in content
+
+    def test_apache_license(self, tmp_path: Path) -> None:
+        """Verify Apache 2.0 license is generated."""
+        project = _generate_project(
+            tmp_path,
+            {"open_source_license": "Apache Software License 2.0"},
+        )
+        content = (project / "LICENSE").read_text()
+        assert "Apache License" in content
 
     def test_no_license(self, tmp_path: Path) -> None:
         """Verify LICENSE removed when None selected."""

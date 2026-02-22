@@ -24,7 +24,7 @@ jobs:
 
       - name: Run pre-commit hooks
         run: |
-          SKIP=no-commit-to-branch,commitizen-branch poetry run pre-commit run --all-files
+          SKIP=no-commit-to-branch,commitizen,commitizen-branch poetry run pre-commit run --all-files
 
       - name: Run full test suite with coverage
         run: |

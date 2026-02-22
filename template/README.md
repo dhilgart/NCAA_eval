@@ -53,6 +53,7 @@ cruft create /path/to/template
 | `open_source_license` | `MIT` | License type (MIT, GPLv3, Apache 2.0, or None) |
 | `use_bmad` | `y` | Include BMAD AI dev framework integration |
 | `bmad_user_name` | (auto) | BMAD display name (defaults to author_name) |
+| `copyright_year` | `2026` | Copyright year for LICENSE and Sphinx docs |
 
 ## After Generation
 

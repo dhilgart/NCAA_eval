@@ -108,6 +108,7 @@ source = ["src/{{ cookiecutter.project_slug }}"]
 
 [tool.coverage.report]
 show_missing = true
+fail_under = 80
 exclude_lines = [
     'pragma: no cover',
     'def __repr__',

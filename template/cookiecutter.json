@@ -8,5 +8,6 @@
   "python_version_min": "3.12",
   "open_source_license": ["MIT", "GNU General Public License v3", "Apache Software License 2.0", "None"],
   "use_bmad": "y",
-  "bmad_user_name": "{{ cookiecutter.author_name }}"
+  "bmad_user_name": "{{ cookiecutter.author_name }}",
+  "copyright_year": "2026"
 }

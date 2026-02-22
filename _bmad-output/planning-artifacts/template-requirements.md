@@ -220,6 +220,46 @@ jobs:
 
 **When to use `if: always()`:** Add this when the dependent job should run even if the upstream job was skipped (e.g., when the `if:` condition on `bump-version` is false, GitHub marks skipped jobs as "failed" for `needs:` purposes by default).
 
+#### CI SKIP List Must Include `commitizen`, Not Just `commitizen-branch` ⭐ (Discovered Story 8.1 Code Review 2nd Pass)
+
+The `commitizen` hook validates the LAST commit message format. In CI, this fails when the HEAD commit message is non-conventional (e.g., a merge commit or automated bump commit). The typical CI SKIP list only includes `commitizen-branch` (which validates branch name format) — but `commitizen` itself must also be skipped.
+
+```yaml
+# ❌ Incomplete: commitizen still validates HEAD commit message in CI
+SKIP=no-commit-to-branch,commitizen-branch poetry run pre-commit run --all-files
+
+# ✅ Complete: both commitizen hooks skipped in CI
+SKIP=no-commit-to-branch,commitizen,commitizen-branch poetry run pre-commit run --all-files
+```
+
+**Template Action:** The `python-check.yaml` in the template already uses the complete SKIP list.
+
+#### Template Copyright Year: Use a Variable, Not a Hardcoded Year ⭐ (Discovered Story 8.1 Code Review 2nd Pass)
+
+Cookiecutter templates that hardcode the year (e.g., `Copyright (c) 2026`) become incorrect for projects created in future years. Cookiecutter does not support dynamic expressions like `now().year` without extensions.
+
+**Recommended pattern:** Add `copyright_year` as a user-overridable variable in `cookiecutter.json`:
+
+```json
+{
+  "copyright_year": "2026"
+}
+```
+
+Users can override at generation time; the default is the template creation year. Both `LICENSE` and `docs/conf.py` reference `{{ cookiecutter.copyright_year }}`.
+
+#### Template `[tool.coverage.report]` Must Include `fail_under` ⭐ (Discovered Story 8.1 Code Review 2nd Pass)
+
+Without `fail_under`, the coverage tool reports coverage but never actually **fails the CI job** when coverage drops below the target. The 4-tier quality pipeline's promise of enforced coverage gates requires this setting.
+
+```toml
+[tool.coverage.report]
+show_missing = true
+fail_under = 80  # CI fails if total coverage < 80%
+```
+
+**Template Action:** Already included in the template's `pyproject.toml` as of Story 8.1.
+
 #### Ruff Rule Selection: Use Explicit Codes, Not Prefixes ⭐ (Discovered Story 1.4 Code Review Round 2)
 
 `extend-select = ["PLR09"]` in Ruff selects the ENTIRE PLR09xx family, including rules with Ruff defaults that were never configured or documented:
