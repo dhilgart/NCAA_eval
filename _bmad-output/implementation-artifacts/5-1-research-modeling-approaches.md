@@ -1,6 +1,6 @@
 # Story 5.1: Research Modeling Approaches
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -30,54 +30,54 @@ So that I can ensure the Model ABC supports all viable approaches and select the
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Survey Kaggle MMLM solutions and published writeups (AC: #1, #3, #4)
-  - [ ] 1.1 Search for top solution writeups from 2014–2025 competitions (Medium, mlcontests.com, GitHub, personal blogs)
-  - [ ] 1.2 Document model types used by top finishers: what architectures, what features, what calibration methods
-  - [ ] 1.3 Identify recurring patterns across winning solutions (which approaches consistently place well)
-  - [ ] 1.4 Document any competition-specific quirks (metric changes: LogLoss → Brier, men's+women's combined in 2023)
+- [x] Task 1: Survey Kaggle MMLM solutions and published writeups (AC: #1, #3, #4)
+  - [x] 1.1 Search for top solution writeups from 2014–2025 competitions (Medium, mlcontests.com, GitHub, personal blogs)
+  - [x] 1.2 Document model types used by top finishers: what architectures, what features, what calibration methods
+  - [x] 1.3 Identify recurring patterns across winning solutions (which approaches consistently place well)
+  - [x] 1.4 Document any competition-specific quirks (metric changes: LogLoss → Brier, men's+women's combined in 2023)
 
-- [ ] Task 2: Catalogue stateful model approaches (AC: #2)
-  - [ ] 2.1 Document Elo variants: standard, margin-scaled (Silver/SBCB), variable-K, home-court adjusted
-  - [ ] 2.2 Document Glicko-2: RD (Rating Deviation) and volatility parameters, uncertainty quantification
-  - [ ] 2.3 Document TrueSkill: factor graph approach, Gaussian belief propagation
-  - [ ] 2.4 Document any novel custom rating systems found in community solutions
-  - [ ] 2.5 Compare: what distinct signal does each provide beyond Elo? (reference Post-MVP Backlog items for TrueSkill/Glicko-2)
+- [x] Task 2: Catalogue stateful model approaches (AC: #2)
+  - [x] 2.1 Document Elo variants: standard, margin-scaled (Silver/SBCB), variable-K, home-court adjusted
+  - [x] 2.2 Document Glicko-2: RD (Rating Deviation) and volatility parameters, uncertainty quantification
+  - [x] 2.3 Document TrueSkill: factor graph approach, Gaussian belief propagation
+  - [x] 2.4 Document any novel custom rating systems found in community solutions
+  - [x] 2.5 Compare: what distinct signal does each provide beyond Elo? (reference Post-MVP Backlog items for TrueSkill/Glicko-2)
 
-- [ ] Task 3: Catalogue stateless model approaches (AC: #3)
-  - [ ] 3.1 Document XGBoost: hyperparameter ranges, feature importance, calibration approaches used in NCAA context
-  - [ ] 3.2 Document LightGBM/CatBoost: when preferred over XGBoost, performance comparisons
-  - [ ] 3.3 Document logistic regression: Bayesian logistic regression (Landgraf 2017 winner), regularized variants
-  - [ ] 3.4 Document neural network approaches: LSTM (temporal game sequences), Transformer architectures
-  - [ ] 3.5 Document ensemble/stacking: how top solutions combine multiple model outputs
+- [x] Task 3: Catalogue stateless model approaches (AC: #3)
+  - [x] 3.1 Document XGBoost: hyperparameter ranges, feature importance, calibration approaches used in NCAA context
+  - [x] 3.2 Document LightGBM/CatBoost: when preferred over XGBoost, performance comparisons
+  - [x] 3.3 Document logistic regression: Bayesian logistic regression (Landgraf 2017 winner), regularized variants
+  - [x] 3.4 Document neural network approaches: LSTM (temporal game sequences), Transformer architectures
+  - [x] 3.5 Document ensemble/stacking: how top solutions combine multiple model outputs
 
-- [ ] Task 4: Document hybrid approaches (AC: #4)
-  - [ ] 4.1 Document Elo-as-feature pattern (already implemented as Story 4.8 building block → Story 5.3 model wrapper → XGBoost in 5.4)
-  - [ ] 4.2 Document ordinal composite features + gradient boosting (maze508 2023 gold: top-10 rating systems → XGBoost)
-  - [ ] 4.3 Document stacking/blending architectures (model outputs as meta-features)
-  - [ ] 4.4 Document game-theory/meta-modeling (Landgraf 2017: modeling competitors' submissions)
+- [x] Task 4: Document hybrid approaches (AC: #4)
+  - [x] 4.1 Document Elo-as-feature pattern (already implemented as Story 4.8 building block → Story 5.3 model wrapper → XGBoost in 5.4)
+  - [x] 4.2 Document ordinal composite features + gradient boosting (maze508 2023 gold: top-10 rating systems → XGBoost)
+  - [x] 4.3 Document stacking/blending architectures (model outputs as meta-features)
+  - [x] 4.4 Document game-theory/meta-modeling (Landgraf 2017: modeling competitors' submissions)
 
-- [ ] Task 5: Derive Model ABC interface requirements (AC: #5)
-  - [ ] 5.1 Define the minimal interface that supports ALL catalogued approaches
-  - [ ] 5.2 Distinguish stateful vs. stateless contract requirements
-  - [ ] 5.3 Define persistence requirements (`save`/`load` for model state + hyperparameters)
-  - [ ] 5.4 Define plugin-registry requirements (register by name, runtime discovery)
-  - [ ] 5.5 Define hyperparameter configuration schema (Pydantic validation for config dicts)
-  - [ ] 5.6 Define prediction output contract (calibrated probabilities, not raw scores)
-  - [ ] 5.7 Consider scikit-learn Estimator/Predictor interface compatibility
+- [x] Task 5: Derive Model ABC interface requirements (AC: #5)
+  - [x] 5.1 Define the minimal interface that supports ALL catalogued approaches
+  - [x] 5.2 Distinguish stateful vs. stateless contract requirements
+  - [x] 5.3 Define persistence requirements (`save`/`load` for model state + hyperparameters)
+  - [x] 5.4 Define plugin-registry requirements (register by name, runtime discovery)
+  - [x] 5.5 Define hyperparameter configuration schema (Pydantic validation for config dicts)
+  - [x] 5.6 Define prediction output contract (calibrated probabilities, not raw scores)
+  - [x] 5.7 Consider scikit-learn Estimator/Predictor interface compatibility
 
-- [ ] Task 6: Recommend reference implementations (AC: #6)
-  - [ ] 6.1 Recommend stateful reference model (Elo) with rationale (proven baseline, reuses EloFeatureEngine from Story 4.8)
-  - [ ] 6.2 Recommend stateless reference model (XGBoost) with rationale (most successful in competition, tabular data standard)
-  - [ ] 6.3 Assess whether LightGBM or neural net should be a third reference model or deferred to Post-MVP
-  - [ ] 6.4 Document recommended hyperparameter ranges for each reference model
+- [x] Task 6: Recommend reference implementations (AC: #6)
+  - [x] 6.1 Recommend stateful reference model (Elo) with rationale (proven baseline, reuses EloFeatureEngine from Story 4.8)
+  - [x] 6.2 Recommend stateless reference model (XGBoost) with rationale (most successful in competition, tabular data standard)
+  - [x] 6.3 Assess whether LightGBM or neural net should be a third reference model or deferred to Post-MVP
+  - [x] 6.4 Document recommended hyperparameter ranges for each reference model
 
-- [ ] Task 7: Write research document and commit (AC: #7, #8, #9)
-  - [ ] 7.1 Write `specs/research/modeling-approaches.md` with all findings
-  - [ ] 7.2 Include a "Scope Recommendation" section with options for PO decision
-  - [ ] 7.3 Include a "Model ABC Interface Specification" section for Story 5.2 consumption
-  - [ ] 7.4 Include an "Equivalence Groups" analysis (which models are redundant vs. distinct)
-  - [ ] 7.5 Commit research document
-  - [ ] 7.6 Update sprint-status.yaml: `5-1-research-modeling-approaches` → `review`
+- [x] Task 7: Write research document and commit (AC: #7, #8, #9)
+  - [x] 7.1 Write `specs/research/modeling-approaches.md` with all findings
+  - [x] 7.2 Include a "Scope Recommendation" section with options for PO decision
+  - [x] 7.3 Include a "Model ABC Interface Specification" section for Story 5.2 consumption
+  - [x] 7.4 Include an "Equivalence Groups" analysis (which models are redundant vs. distinct)
+  - [x] 7.5 Commit research document
+  - [x] 7.6 Update sprint-status.yaml: `5-1-research-modeling-approaches` → `review`
 
 ## Dev Notes
 
@@ -217,10 +217,32 @@ These are already in `pyproject.toml` and available in the conda env — the res
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+No debug issues encountered — this is a research-only spike with no production code.
+
 ### Completion Notes List
 
+- **Task 1 (Survey):** Compiled year-by-year solution summary for 2014–2025 Kaggle MMLM competitions from secondary sources (Medium writeups, mlcontests.com, personal blogs, public GitHub repos). Identified 5 recurring patterns: feature quality > model complexity, Elo/ratings + GBDT as dominant pattern, calibration as first-class concern, 538 era ending, and competition quirks. Documented model type frequency across top solutions.
+- **Task 2 (Stateful Catalogue):** Documented Elo (with all Silver/SBCB parameters already in EloConfig), Glicko-2 (RD + volatility), TrueSkill (factor graphs), LRMC (Markov chains), and mixed-effects models. Assessed each for distinct signal beyond Elo — concluded Glicko-2/TrueSkill provide marginal signal for full-season snapshots; deferred to Post-MVP.
+- **Task 3 (Stateless Catalogue):** Documented XGBoost (with competition-validated hyperparameter ranges), LightGBM, CatBoost, logistic regression (standard + Bayesian), neural networks (LSTM/Transformer per arXiv:2508.02725), and random forest/SVM. Key finding: neural nets underperform GBDT on small NCAA tabular data; tree-based models still outperform deep learning on tabular data (NeurIPS 2022 finding).
+- **Task 4 (Hybrid Approaches):** Documented Elo-as-feature pattern (already implemented in pipeline), ordinal composites + GBDT (maze508 2023), stacking/blending architectures, and game-theory meta-modeling (Landgraf 2017). The Elo-as-feature → XGBoost pattern is already the project's architecture.
+- **Task 5 (Model ABC):** Derived dual-contract ABC design: `StatefulModel` (per-game update) + `StatelessModel` (batch train), both extending a common `Model` parent. Proposed Pydantic-based config schema, decorator-based plugin registry, and JSON/UBJSON persistence. Justified NOT inheriting from sklearn BaseEstimator (walk-forward doesn't fit sklearn Pipeline).
+- **Task 6 (Recommendations):** Recommended Elo as stateful reference (Story 5.3) and XGBoost as stateless reference (Story 5.4). Assessed LightGBM, CatBoost, and neural nets as Post-MVP. Documented hyperparameter ranges for both reference models.
+- **Task 7 (Document + Commit):** Wrote comprehensive research document at `specs/research/modeling-approaches.md` with 8 sections including Scope Recommendation (3 options for PO), Model ABC Interface Specification (for Story 5.2), and Equivalence Groups analysis.
+
+### Implementation Plan
+
+N/A — research spike; no production code.
+
 ### File List
+
+- `specs/research/modeling-approaches.md` (NEW) — comprehensive research document
+- `_bmad-output/implementation-artifacts/5-1-research-modeling-approaches.md` (MODIFIED) — story file updated with task completion, Dev Agent Record
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` (MODIFIED) — status: ready-for-dev → review
+
+### Change Log
+
+- 2026-02-22: Created `specs/research/modeling-approaches.md` with complete survey of modeling approaches for NCAA tournament prediction. 8 sections covering: MMLM solution survey (2014–2025), stateful model catalogue (Elo, Glicko-2, TrueSkill), stateless model catalogue (XGBoost, LightGBM, LR, neural nets), hybrid approaches, Model ABC interface requirements, reference model recommendations, equivalence groups, and scope recommendation for PO decision.
