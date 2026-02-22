@@ -61,7 +61,10 @@ Multiple silver medals were won via calibration improvements alone (goto_convers
 **Pattern 4: The 538 era is over.**
 FiveThirtyEight's NCAA ratings powered winning solutions from 2018–2023, but the 538 NCAA model was discontinued. From 2024+, competitors must build their own rating systems or use Massey ordinals as the equivalent consensus signal. This project's feature pipeline (Epic 4) already provides the building blocks.
 
-**Pattern 5: Competition-specific quirks shape strategy.**
+**Pattern 5: Luck plays a significant role in tournament prediction.**
+Matthews & Lopez (2014 winners) simulated the tournament 10,000 times and estimated their winning entry had only ~12% probability of winning the competition even under the most optimistic modeling assumptions. This highlights that single-tournament evaluation is noisy — multi-year backtesting (Leave-One-Tournament-Out, Story 6.2) is essential for reliable model comparison.
+
+**Pattern 6: Competition-specific quirks shape strategy.**
 - **2023+: Brier Score** replaced LogLoss, changing optimal calibration targets
 - **2023+: Men's + Women's combined** doubled the submission size and added a gender dimension
 - **2017: Meta-strategy** (Landgraf modeled competitors' submissions) — a competition-specific trick, not transferable to pure prediction
@@ -335,9 +338,15 @@ A 2025 arXiv paper compared LSTM and Transformer architectures for NCAA tourname
 
 **Features used:** GLM team quality metrics, Elo ratings, seed differences, box-score stats — similar to the tabular features this project already computes.
 
-**Deep learning approaches found in research (non-competition):**
-- **Combinatorial Fusion Analysis (CFA):** Four diverse neural network architectures (CNN, RNN, feedforward, residual) combined via CFA to merge predictions (ResearchGate, Advancing NCAA March Madness Forecasts).
-- **GitHub implementations:** Multiple educational repos (wdg3/march-madness-2017, ZChipman/Predicting_March_Madness) using simple feedforward and LSTM networks.
+**Architecture details (arXiv:2508.02725):**
+- LSTM: 32 hidden units, dropout 0.5, dense 16 ReLU units, Adam optimizer (lr=1e-3), batch size 128, early stopping (patience=10)
+- Transformer: multi-head attention (2 heads, d=64), 2 feedforward layers (64 units), dropout 0.5, Adam (lr=1e-4), 100 epochs
+- Feature ablation: GLM quality most impactful (removing costs −0.049 AUC), Elo second (−0.045 AUC), box scores moderate (−0.021 AUC), seed diff smallest (−0.012 AUC)
+
+**Deep learning in competition (non-winning):**
+- **Forseth (2017, 4th place):** Used a neural network (Theano) trained on raw data alongside a logistic regression on modified Massey ratings. Averaged both model predictions. Unperturbed predictions would have placed ~25th (top 5%), proving both model quality and strategy matter.
+- **Combinatorial Fusion Analysis (Alfatemi et al., 2024):** Four diverse neural architectures (CNN, RNN, feedforward, residual) combined via CFA to merge predictions.
+- **GitHub implementations:** Multiple educational repos using simple feedforward and LSTM networks.
 
 **Why neural networks underperform for NCAA prediction in competitions:**
 1. **Small data:** ~2,000 tournament games since 2003. Neural networks excel with millions of samples; GBDT is the standard for small tabular datasets.
