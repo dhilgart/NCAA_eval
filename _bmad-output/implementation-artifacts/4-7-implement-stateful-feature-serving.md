@@ -1,6 +1,6 @@
 # Story 4.7: Implement Stateful Feature Serving
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -76,9 +76,9 @@ So that models receive a consistent, leakage-free feature matrix with calibrated
   - [x] 7.3 Matchup delta correctness: A−B = −(B−A) for all feature deltas
   - [x] 7.4 Roundtrip test: batch mode and stateful mode produce identical feature values for the same season
 
-- [ ] Task 8: Update `__init__.py` exports (AC: all)
-  - [ ] 8.1 Add all new public classes/functions to `ncaa_eval/transform/__init__.py` in alphabetical order
-  - [ ] 8.2 Run `mypy --strict`, `ruff check`, full `pytest` to verify no regressions
+- [x] Task 8: Update `__init__.py` exports (AC: all)
+  - [x] 8.1 Add all new public classes/functions to `ncaa_eval/transform/__init__.py` in alphabetical order
+  - [x] 8.2 Run `mypy --strict`, `ruff check`, full `pytest` to verify no regressions
 
 ## Dev Notes
 
@@ -237,6 +237,7 @@ Claude Opus 4.6
 - Tasks 3, 4, 6: Implemented ordinal temporal slicing (per-game day_num), matchup deltas (seed_diff, ordinal delta, batch rating deltas, elo placeholder), batch rating computation (SRS/Ridge/Colley from regular-season games), and scope filtering (gender_scope, dataset_scope as config params). 11 new unit tests pass (31 total).
 - Task 5: Implemented `IsotonicCalibrator` (sklearn IsotonicRegression wrapper) and `SigmoidCalibrator` (Platt scaling) with fit/transform interface. `goto_conversion` assessed — not applicable (bookmaker overround removal ≠ model calibration). 10 unit tests in `test_calibration.py`.
 - Task 7: 8 integration tests: temporal integrity (ordinal slicing per game day_num, seed-only-for-seeded), calibration leakage prevention (disjoint data, different training → different calibration), matchup delta symmetry (ordinal delta, seed_diff negation), batch/stateful equivalence (metadata + ordinal features match).
+- Task 8: Added FeatureBlock, FeatureConfig, StatefulFeatureServer, IsotonicCalibrator, SigmoidCalibrator to `__init__.py` exports. Full test suite: 330 tests pass, ruff clean.
 
 ### File List
 - `src/ncaa_eval/transform/feature_serving.py` (new)
@@ -244,3 +245,4 @@ Claude Opus 4.6
 - `tests/unit/test_feature_serving.py` (new)
 - `tests/unit/test_calibration.py` (new)
 - `tests/integration/test_feature_serving_integration.py` (new)
+- `src/ncaa_eval/transform/__init__.py` (modified)
