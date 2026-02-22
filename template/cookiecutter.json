@@ -1,0 +1,12 @@
+{
+  "project_name": "My Project",
+  "project_slug": "{{ cookiecutter.project_name.lower().replace(' ', '_').replace('-', '_') }}",
+  "project_description": "A short description of your project",
+  "author_name": "Your Name",
+  "author_email": "you@example.com",
+  "github_username": "your-github-username",
+  "python_version_min": "3.12",
+  "open_source_license": ["MIT", "GNU General Public License v3", "Apache Software License 2.0", "None"],
+  "use_bmad": "y",
+  "bmad_user_name": "{{ cookiecutter.author_name }}"
+}

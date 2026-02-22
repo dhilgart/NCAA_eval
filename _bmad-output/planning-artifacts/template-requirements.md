@@ -182,6 +182,44 @@ When migrating pre-commit hooks from one toolchain to another (e.g., Pipenv/invo
 
 **CI Python version MUST match pyproject.toml** — using Python 3.10 in CI when the project requires `>=3.12` causes subtle breakage (mypy strict mode, syntax errors, f-string features).
 
+#### Pin GitHub Actions Third-Party Actions to Tags, Not Branches ⭐ (Discovered Story 8.1 Code Review)
+
+Using `@master` for a GitHub Action (e.g., `commitizen-tools/commitizen-action@master`) is a reproducibility and security anti-pattern. Any push to the upstream repo's master branch silently changes the behavior for all downstream consumers.
+
+```yaml
+# ❌ Unpinned — any upstream push can break your CI silently
+- uses: commitizen-tools/commitizen-action@master
+
+# ✅ Pinned to major version tag — stable, auditable
+- uses: commitizen-tools/commitizen-action@v2
+```
+
+**Template Action:** All GitHub Actions in the template must use version-tagged refs (`@v2`, `@v4`, etc.), never `@master` or `@main`.
+
+#### Multi-Job Workflows: Declare Job Dependencies with `needs:` ⭐ (Discovered Story 8.1 Code Review)
+
+In a multi-job GitHub Actions workflow (e.g., `bump-version` + `publish-github-page`), jobs run **in parallel by default**. If `publish-github-page` deploys docs that depend on a version bump from `bump-version`, a race condition exists: docs may be built from pre-bump state.
+
+```yaml
+# ❌ Race condition: both jobs start simultaneously
+jobs:
+  bump-version:
+    ...
+  publish-github-page:   # Runs in parallel with bump-version
+    ...
+
+# ✅ Sequential: docs build only after version is bumped
+jobs:
+  bump-version:
+    ...
+  publish-github-page:
+    needs: bump-version    # Wait for bump-version to complete
+    if: always()           # Still run docs even if bump was skipped
+    ...
+```
+
+**When to use `if: always()`:** Add this when the dependent job should run even if the upstream job was skipped (e.g., when the `if:` condition on `bump-version` is false, GitHub marks skipped jobs as "failed" for `needs:` purposes by default).
+
 #### Ruff Rule Selection: Use Explicit Codes, Not Prefixes ⭐ (Discovered Story 1.4 Code Review Round 2)
 
 `extend-select = ["PLR09"]` in Ruff selects the ENTIRE PLR09xx family, including rules with Ruff defaults that were never configured or documented:

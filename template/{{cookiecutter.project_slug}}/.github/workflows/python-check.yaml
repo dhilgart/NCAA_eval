@@ -1,0 +1,31 @@
+name: New pull request received
+
+on: [pull_request, workflow_dispatch]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python {{ cookiecutter.python_version_min }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: "{{ cookiecutter.python_version_min }}"
+
+      - name: Install Poetry
+        run: pip install poetry
+
+      - name: Install dependencies
+        run: poetry install --with dev
+
+      - name: Run pre-commit hooks
+        run: |
+          SKIP=no-commit-to-branch,commitizen-branch poetry run pre-commit run --all-files
+
+      - name: Run full test suite with coverage
+        run: |
+          poetry run pytest --cov=src/{{ cookiecutter.project_slug }} --cov-report=term-missing

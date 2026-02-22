@@ -1,0 +1,58 @@
+name: main branch updated
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  bump-version:
+    if: "!startsWith(github.event.head_commit.message, 'bump:')"
+    runs-on: ubuntu-latest
+    name: "Bump version and create changelog with commitizen"
+    permissions:
+      contents: write
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create bump and changelog
+        uses: commitizen-tools/commitizen-action@v2
+        with:
+          github_token: {% raw %}${{ secrets.GITHUB_TOKEN }}{% endraw %}
+          branch: main
+
+  publish-github-page:
+    needs: bump-version
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python {{ cookiecutter.python_version_min }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: "{{ cookiecutter.python_version_min }}"
+
+      - name: Install Poetry
+        run: pip install poetry
+
+      - name: Install dependencies
+        run: poetry install --with dev
+
+      - name: Build docs
+        run: poetry run nox -s docs
+
+      - name: Push documentation to Github Page
+        uses: peaceiris/actions-gh-pages@v3.8.0
+        with:
+          github_token: {% raw %}${{ secrets.GITHUB_TOKEN }}{% endraw %}
+          publish_branch: gh-pages
+          publish_dir: ./docs/_build/html

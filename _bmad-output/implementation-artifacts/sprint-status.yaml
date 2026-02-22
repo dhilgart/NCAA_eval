@@ -113,6 +113,6 @@ development_status:
   epic-7-retrospective: optional
 
   # Epic 8: Template & Knowledge Transfer
-  epic-8: backlog
-  8-1-create-cookie-cutter-template: ready-for-dev
+  epic-8: in-progress
+  8-1-create-cookie-cutter-template: done
   epic-8-retrospective: optional

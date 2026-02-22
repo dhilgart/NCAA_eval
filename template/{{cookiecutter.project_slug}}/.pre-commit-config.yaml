@@ -21,14 +21,11 @@ repos:
       - id: trailing-whitespace
         args: [--markdown-linebreak-ext=md]
       - id: debug-statements
-        exclude: ^template/
       - id: no-commit-to-branch
       - id: check-merge-conflict
       - id: check-toml
       - id: check-yaml
-        exclude: ^template/
       - id: detect-private-key
-
 
   - repo: https://github.com/commitizen-tools/commitizen
     rev: v3.29.0
@@ -52,14 +49,12 @@ repos:
         name: ruff-lint
         args: [--fix]
         types: [python]
-        exclude: ^template/
       - id: ruff-format
         name: ruff-format
         types: [python]
-        exclude: ^template/
 
-  # Type Checking: Mypy (local hook so poetry virtualenv is used - required for
-  # type-checking tests that import the local ncaa_eval package)
+  # Type Checking: Mypy (local hook so Poetry virtualenv is used — required for
+  # type-checking tests that import the local package)
   - repo: local
     hooks:
       - id: mypy

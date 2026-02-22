@@ -1,27 +1,13 @@
 [tool.poetry]
-name = "ncaa-eval"
-version = "0.3.0"
-description = "Evaluator for self-evaluation of NCAA March Mania Kaggle Competition models"
-authors = ["Dan Hilgart <dhilgart@gmail.com>"]
+name = "{{ cookiecutter.project_slug }}"
+version = "0.1.0"
+description = "{{ cookiecutter.project_description }}"
+authors = ["{{ cookiecutter.author_name }} <{{ cookiecutter.author_email }}>"]
 readme = "README.md"
-packages = [{include = "ncaa_eval", from = "src"}]
+packages = [{include = "{{ cookiecutter.project_slug }}", from = "src"}]
 
 [tool.poetry.dependencies]
-python = ">=3.12,<4.0"
-pandas = "*"
-numpy = "*"
-pandera = "*"
-xgboost = "*"
-scikit-learn = "*"
-networkx = "*"
-joblib = "*"
-plotly = "*"
-streamlit = "*"
-pydantic = "^2.12.5"
-pyarrow = "^23.0.1"
-kaggle = "^2.0.0"
-cbbpy = "^2.1.2"
-typer = {version = ">=0.15,<2", extras = ["all"]}
+python = ">={{ cookiecutter.python_version_min }},<4.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "*"
@@ -38,9 +24,6 @@ edgetest = "*"
 sphinx = "*"
 furo = "*"
 myst-parser = "*"
-jupyterlab = ">=4.0,<5"
-cookiecutter = "*"
-cruft = "*"
 
 [build-system]
 requires = ["poetry-core"]
@@ -48,28 +31,22 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.mypy]
 strict = true
-files = ["src/ncaa_eval", "tests", "sync.py"]
-plugins = ["pydantic.mypy"]
+files = ["src/{{ cookiecutter.project_slug }}", "tests", "noxfile.py"]
 follow_imports = "silent"
 warn_redundant_casts = true
 warn_unused_ignores = true
 warn_unused_configs = true
-
-[tool.pydantic-mypy]
-init_typed = true
-init_forbid_extra = true
-warn_required_dynamic_aliases = true
 
 [tool.ruff]
 line-length = 110
 
 [tool.ruff.lint]
 extend-select = [
-    "I",      # Missing required import (auto-fixable)
-    "UP",     # Pyupgrade
-    "PT",     # flake8-pytest-style rules
-    "TID25",  # flake8-tidy-imports rules
-    "C90",    # McCabe complexity
+    "I",        # Missing required import (auto-fixable)
+    "UP",       # Pyupgrade
+    "PT",       # flake8-pytest-style rules
+    "TID25",    # flake8-tidy-imports rules
+    "C90",      # McCabe complexity
     "PLR0911",  # Too many return statements (configured: max-returns = 6)
     "PLR0912",  # Too many branches (configured: max-branches = 12)
     "PLR0913",  # Too many arguments (configured: max-args = 5)
@@ -90,17 +67,11 @@ known-first-party = ["tests"]
 convention = "google"
 
 [tool.ruff.lint.mccabe]
-# PEP 20: "Simple is better than complex"
-# Max cyclomatic complexity per function
 max-complexity = 10
 
 [tool.ruff.lint.pylint]
-# PEP 20: "Explicit is better than implicit"
-# Max arguments per function
 max-args = 5
-# Max branches in a function
 max-branches = 12
-# Max return statements in a function
 max-returns = 6
 
 [tool.pytest.ini_options]
@@ -133,7 +104,7 @@ markers = [
 
 [tool.coverage.run]
 branch = true
-source = ["src/ncaa_eval"]
+source = ["src/{{ cookiecutter.project_slug }}"]
 
 [tool.coverage.report]
 show_missing = true
@@ -151,14 +122,16 @@ omit = ['env/*', 'venv/*', '*/virtualenv/*', '*/virtualenvs/*', '*/tests/*']
 [tool.edgetest]
 extras = []
 
-[[tool.edgetest.envs]]
-name = "latest"
-upgrade = ["pandas", "numpy", "pandera", "scikit-learn", "xgboost", "networkx", "joblib"]
-command = "pytest tests/ -m smoke --tb=short -q"
+# Add environments to test against latest dependency versions:
+# [[tool.edgetest.envs]]
+# name = "latest"
+# upgrade = ["package1", "package2"]
+# command = "pytest tests/ -m smoke --tb=short -q"
+
 
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "0.3.0"
+version = "0.1.0"
 tag_format = "$version"
 version_files = ["pyproject.toml:version", "docs/conf.py:release"]
 
@@ -190,28 +163,8 @@ ignore = [
     "tests/**",
     # Lock files (not part of distribution)
     "poetry.lock",
-    # Application stubs (dashboard app, data placeholders)
-    "dashboard/**",
-    "data/**",
-    # Data pipeline CLI (not part of the installed package)
-    "sync.py",
 ]
 
 [tool.mutmut]
-# Mutation testing targets — Tier 1 priority: evaluation module
-# Extend as modules are implemented:
-# paths_to_mutate = ["src/ncaa_eval/evaluation/", "src/ncaa_eval/model/"]
-paths_to_mutate = ["src/ncaa_eval/evaluation/", "src/ncaa_eval/ingest/"]
-# Exclude tests incompatible with mutmut's mutants/ directory:
-# - @pytest.mark.no_mutation: use Path(__file__) for project root (resolves incorrectly)
-# - test_logger.py: imports ncaa_eval.utils which isn't in the mutant copy
-# Using both -m marker exclusion and --ignore for import-level failures.
-pytest_add_cli_args_test_selection = ["tests/", "-m", "not no_mutation", "--ignore=tests/unit/test_logger.py"]
-# Optional: only mutate lines covered by tests (faster runs):
-# mutate_only_covered_lines = true
-#
-# Workflow commands:
-#   mutmut run                      # Run mutation testing
-#   mutmut results                  # Review results summary
-#   mutmut show <mutant-id>         # Inspect a surviving mutant
-#   mutmut run --paths-to-mutate=src/ncaa_eval/evaluation/metrics.py  # Target a file
+paths_to_mutate = ["src/{{ cookiecutter.project_slug }}/"]
+pytest_add_cli_args_test_selection = ["tests/", "-m", "not no_mutation"]
