@@ -2,6 +2,15 @@
 
 from __future__ import annotations
 
+from ncaa_eval.transform.calibration import (
+    IsotonicCalibrator,
+    SigmoidCalibrator,
+)
+from ncaa_eval.transform.feature_serving import (
+    FeatureBlock,
+    FeatureConfig,
+    StatefulFeatureServer,
+)
 from ncaa_eval.transform.graph import (
     GraphTransformer,
     build_season_graph,
@@ -50,10 +59,15 @@ __all__ = [
     "ConferenceLookup",
     "CoverageGateResult",
     "DetailedResultsLoader",
+    "FeatureBlock",
+    "FeatureConfig",
     "GraphTransformer",
+    "IsotonicCalibrator",
     "MasseyOrdinalsStore",
     "SeasonGames",
     "SequentialTransformer",
+    "SigmoidCalibrator",
+    "StatefulFeatureServer",
     "TeamNameNormalizer",
     "TourneySeed",
     "TourneySeedTable",
