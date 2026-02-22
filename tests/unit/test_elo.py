@@ -202,6 +202,52 @@ class TestEloMarginScaling:
         expected = 25**0.85
         assert engine._margin_multiplier(50) == pytest.approx(expected)
 
+    def test_margin_multiplier_zero_floored_to_one(self) -> None:
+        """Zero margin is floored to 1 to prevent zero rating changes."""
+        engine = EloFeatureEngine(EloConfig())
+        # margin=0 → floored to 1 → 1^0.85 = 1.0
+        assert engine._margin_multiplier(0) == pytest.approx(1.0**0.85)
+        assert engine._margin_multiplier(0) > 0.0
+
+    def test_zero_margin_game_still_updates_ratings(self) -> None:
+        """A zero-margin (tie-score) game must still update both teams' ratings."""
+        engine = EloFeatureEngine(EloConfig())
+        engine.update_game(101, 102, 60, 60, "N", False)
+        # Ratings should have moved (non-zero update)
+        assert engine.get_rating(101) != 1500.0
+        assert engine.get_rating(102) != 1500.0
+
+
+class TestEloOTRescaling:
+    """Tests for OT score rescaling in margin computation (AC dev notes)."""
+
+    def test_ot_game_margin_is_rescaled(self) -> None:
+        """OT game should use OT-adjusted margin, not raw scores.
+
+        rescale_overtime formula: adjusted = raw × 40 / (40 + 5 × num_ot)
+        A 1-OT game with scores (90, 80) → adjusted margin ≈ (80-71.11) = lower.
+        Without rescaling the raw margin would be 10; with rescaling it's smaller.
+        """
+        # Regulation game with margin=10 (90-80)
+        engine_reg = EloFeatureEngine(EloConfig())
+        engine_reg.update_game(101, 102, 90, 80, "N", False, num_ot=0)
+        change_reg = abs(engine_reg.get_rating(101) - 1500.0)
+
+        # 1-OT game with same raw scores → OT-adjusted margin < 10
+        engine_ot = EloFeatureEngine(EloConfig())
+        engine_ot.update_game(101, 102, 90, 80, "N", False, num_ot=1)
+        change_ot = abs(engine_ot.get_rating(101) - 1500.0)
+
+        # OT-rescaled margin is smaller → smaller K_eff → smaller rating change
+        assert change_ot < change_reg
+
+    def test_ot_game_rating_still_updates(self) -> None:
+        """OT game must still produce a non-zero rating change."""
+        engine = EloFeatureEngine(EloConfig())
+        engine.update_game(101, 102, 75, 70, "N", False, num_ot=2)
+        assert engine.get_rating(101) != 1500.0
+        assert engine.get_rating(102) != 1500.0
+
 
 class TestEloHomeCourt:
     """Tests for home-court adjustment."""
@@ -278,6 +324,50 @@ class TestEloVariableK:
         engine = EloFeatureEngine(EloConfig(early_game_threshold=100))
         k = engine._effective_k(101, is_tournament=True)
         assert k == 47.5
+
+    def test_k_transition_at_threshold_boundary_in_update_game(self) -> None:
+        """Game #threshold uses K_early; game #threshold+1 uses K_regular.
+
+        Validates the K-factor selection is actually reflected in rating
+        changes during update_game(), not just via _effective_k() in isolation.
+        """
+        # Use threshold=2: games 0,1 use K_early=56; game 2+ uses K_regular=38
+        cfg = EloConfig(early_game_threshold=2, k_early=56, k_regular=38)
+
+        # Measure change from game 1 (early K=56): team 101 has 0 games played
+        engine_early = EloFeatureEngine(cfg)
+        engine_early.update_game(101, 999, 75, 60, "N", False)
+        change_early = abs(engine_early.get_rating(101) - 1500.0)
+
+        # Measure change from game 3 (regular K=38): team 101 has 2 games played
+        # Reset with same opponent ratings to isolate K-factor effect
+        engine_reg = EloFeatureEngine(cfg)
+        engine_reg.update_game(101, 999, 75, 60, "N", False)  # game 1: early K
+        engine_reg.update_game(101, 999, 75, 60, "N", False)  # game 2: early K
+        # Reset ratings to 1500 to isolate K factor (same rating gap = same expected)
+        engine_reg._ratings = {101: 1500.0, 999: 1500.0}
+        pre = engine_reg.get_rating(101)
+        engine_reg.update_game(101, 999, 75, 60, "N", False)  # game 3: regular K
+        change_regular = abs(engine_reg.get_rating(101) - pre)
+
+        # Early K (56) produces larger change than regular K (38) for same game result
+        assert change_early > change_regular
+
+    def test_tournament_k_applied_in_update_game(self) -> None:
+        """Tournament game with early-phase team uses K_tournament in update_game()."""
+        # K_tournament=47.5 < K_early=56 — tournament game at early phase uses tournament K
+        cfg = EloConfig(k_early=56, k_regular=38, k_tournament=47.5, early_game_threshold=100)
+
+        engine_tourn = EloFeatureEngine(cfg)
+        engine_tourn.update_game(101, 102, 75, 60, "N", True)  # tournament game
+        change_tourn = abs(engine_tourn.get_rating(101) - 1500.0)
+
+        engine_early = EloFeatureEngine(cfg)
+        engine_early.update_game(101, 102, 75, 60, "N", False)  # non-tournament
+        change_early = abs(engine_early.get_rating(101) - 1500.0)
+
+        # K_tournament (47.5) < K_early (56) → tournament game produces smaller change
+        assert change_tourn < change_early
 
 
 # ── Task 3: Season management tests ─────────────────────────────────────────

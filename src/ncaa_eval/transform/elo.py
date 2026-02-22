@@ -284,6 +284,12 @@ class EloFeatureEngine:
         return self._config.k_regular
 
     def _margin_multiplier(self, margin: int) -> float:
-        """Compute margin-of-victory multiplier: ``min(margin, max)^exponent``."""
+        """Compute margin-of-victory multiplier: ``min(margin, max)^exponent``.
+
+        A floor of 1 is applied before exponentiation so that an OT-rescaled
+        margin that rounds to zero (near-tie) still produces a non-zero rating
+        update, consistent with the Silver/SBCB formula intent.
+        """
         capped = min(abs(margin), self._config.max_margin)
-        return float(capped**self._config.margin_exponent)
+        floored = max(1, capped)
+        return float(floored**self._config.margin_exponent)

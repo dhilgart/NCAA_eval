@@ -524,6 +524,25 @@ class StatefulFeatureServer:
         }
 
     def _empty_frame(self) -> pd.DataFrame:
-        """Return an empty DataFrame with the correct column set."""
-        cols = list(_META_COLUMNS) + ["delta_elo"]
+        """Return an empty DataFrame with the correct column set.
+
+        Includes all columns that would appear in a non-empty season for the
+        current active feature blocks, so downstream code can rely on column
+        presence regardless of whether a season has games.
+        """
+        active = self.config.active_blocks()
+        cols: list[str] = list(_META_COLUMNS)
+
+        if FeatureBlock.ORDINAL in active:
+            cols += ["ordinal_composite_a", "ordinal_composite_b", "delta_ordinal_composite"]
+        if FeatureBlock.SEED in active:
+            cols += ["seed_num_a", "seed_num_b", "seed_diff"]
+        if FeatureBlock.BATCH_RATING in active:
+            for rt in self.config.batch_rating_types:
+                cols += [f"{rt}_a", f"{rt}_b", f"delta_{rt}"]
+        if FeatureBlock.ELO in active:
+            cols += ["elo_a", "elo_b"]
+
+        # delta_elo always present for backward compatibility
+        cols.append("delta_elo")
         return pd.DataFrame(columns=cols)

@@ -1,6 +1,6 @@
 # Story 4.8: Implement Dynamic Rating Features (Elo Feature Building Block)
 
-Status: review
+Status: done
 
 ## Story
 
@@ -242,6 +242,7 @@ Claude Opus 4.6
 ### Change Log
 
 - 2026-02-22: Implemented Story 4.8 — Elo feature building block with full test coverage (46 new unit tests + 10 integration tests). All acceptance criteria satisfied.
+- 2026-02-22: Code review — fixed 1 critical (iterrows violation), 3 high (empty_frame column gap, zero-margin edge case, K-factor boundary coverage), 4 medium (OT margin test, double-reversion test, multi-season stateful test, tournament K end-to-end test). Added 10 new tests (398 total). Status → done.
 
 ### File List
 
@@ -252,3 +253,7 @@ Claude Opus 4.6
 - `tests/unit/test_feature_serving.py` (modified) — 10 new Elo integration tests
 - `tests/integration/test_elo_integration.py` (new) — 10 integration tests
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified) — status update
+- `src/ncaa_eval/transform/elo.py` (modified) — zero-margin floor guard in _margin_multiplier
+- `src/ncaa_eval/transform/feature_serving.py` (modified) — _empty_frame() now includes all active-block columns
+- `tests/unit/test_elo.py` (modified) — 5 new tests: zero-margin, OT rescaling, K-factor boundary in update_game, tournament K end-to-end
+- `tests/integration/test_elo_integration.py` (modified) — iterrows() replaced; 5 new tests: double-reversion guard, multi-season stateful mode
