@@ -321,3 +321,248 @@ class TestStatefulFeatureServerStatefulMode:
         )
         with pytest.raises(ValueError, match="mode"):
             server.serve_season_features(2023, mode="invalid")
+
+
+# ── Task 3: Ordinal temporal slicing tests ──────────────────────────────────
+
+
+def _mock_ordinals_store() -> MagicMock:
+    """Create a mock MasseyOrdinalsStore with temporal filtering behavior."""
+    from ncaa_eval.transform.normalization import MasseyOrdinalsStore
+
+    store = MagicMock(spec=MasseyOrdinalsStore)
+
+    def _composite_simple_average(season: int, day_num: int, systems: list[str]) -> pd.Series:
+        """Return ordinal composite scores that vary by day_num."""
+        # Early-season: team 101=10, 102=20, etc.
+        # Later: team 101=5, 102=15, etc. (lower is better)
+        offset = 0 if day_num < 50 else -5
+        data: dict[int, float] = {}
+        for i in range(10):
+            tid = 101 + i
+            data[tid] = float(10 + i * 10 + offset)
+        return pd.Series(data, name="ordinal_composite")
+
+    store.composite_simple_average.side_effect = _composite_simple_average
+
+    gate_result = MagicMock()
+    gate_result.recommended_systems = ("SAG", "POM", "MOR", "WLK")
+    store.run_coverage_gate.return_value = gate_result
+
+    return store
+
+
+class TestOrdinalTemporalSlicing:
+    """Tests for Massey ordinal temporal slicing (Task 3 / AC #5)."""
+
+    def test_ordinal_features_use_game_day_num(self) -> None:
+        """Each game gets ordinals sliced at its own day_num, not global."""
+        game_early = _make_game(game_id="1", day_num=30, w_team_id=101, l_team_id=102)
+        game_late = _make_game(game_id="2", day_num=60, w_team_id=101, l_team_id=102)
+        ds = _mock_data_server([game_early, game_late])
+        ordinals = _mock_ordinals_store()
+
+        cfg = FeatureConfig(
+            sequential_windows=(),
+            ewma_alphas=(),
+            graph_features_enabled=False,
+            batch_rating_types=(),
+            ordinal_composite="simple_average",
+            matchup_deltas=False,
+            calibration_method=None,
+        )
+        server = StatefulFeatureServer(
+            config=cfg,
+            data_server=ds,
+            ordinals_store=ordinals,
+        )
+        server.serve_season_features(2023, mode="batch")
+
+        # Verify composite_simple_average was called with each game's day_num
+        calls = ordinals.composite_simple_average.call_args_list
+        day_nums_called = [c[0][1] for c in calls]
+        assert 30 in day_nums_called
+        assert 60 in day_nums_called
+
+    def test_ordinal_features_present_when_enabled(self) -> None:
+        games = [_make_game(day_num=50, w_team_id=101, l_team_id=102)]
+        ds = _mock_data_server(games)
+        ordinals = _mock_ordinals_store()
+
+        cfg = FeatureConfig(
+            sequential_windows=(),
+            ewma_alphas=(),
+            graph_features_enabled=False,
+            batch_rating_types=(),
+            ordinal_composite="simple_average",
+            matchup_deltas=False,
+            calibration_method=None,
+        )
+        server = StatefulFeatureServer(
+            config=cfg,
+            data_server=ds,
+            ordinals_store=ordinals,
+        )
+        result = server.serve_season_features(2023, mode="batch")
+        assert "ordinal_composite_a" in result.columns
+        assert "ordinal_composite_b" in result.columns
+
+    def test_ordinal_disabled_no_columns(self) -> None:
+        games = [_make_game()]
+        ds = _mock_data_server(games)
+        cfg = _minimal_config()  # ordinal_composite=None
+        server = StatefulFeatureServer(config=cfg, data_server=ds)
+        result = server.serve_season_features(2023, mode="batch")
+        assert "ordinal_composite_a" not in result.columns
+
+
+# ── Task 4: Matchup-level feature tests ─────────────────────────────────────
+
+
+class TestMatchupDeltas:
+    """Tests for matchup-level delta computation (Task 4 / AC #6)."""
+
+    def test_seed_diff_tournament_game(self) -> None:
+        """seed_diff = seed_num_A − seed_num_B for tournament games."""
+        from ncaa_eval.transform.normalization import TourneySeed, TourneySeedTable
+
+        game = _make_game(
+            w_team_id=101,
+            l_team_id=102,
+            is_tournament=True,
+            day_num=135,
+        )
+        ds = _mock_data_server([game])
+
+        # team 101 = 1 seed, team 102 = 8 seed
+        seeds = TourneySeedTable(
+            {
+                (2023, 101): TourneySeed(2023, 101, "W01", "W", 1, False),
+                (2023, 102): TourneySeed(2023, 102, "W08", "W", 8, False),
+            }
+        )
+
+        cfg = FeatureConfig(
+            sequential_windows=(),
+            ewma_alphas=(),
+            graph_features_enabled=False,
+            batch_rating_types=(),
+            ordinal_composite=None,
+            matchup_deltas=True,
+            calibration_method=None,
+        )
+        server = StatefulFeatureServer(
+            config=cfg,
+            data_server=ds,
+            seed_table=seeds,
+        )
+        result = server.serve_season_features(2023, mode="batch")
+        assert "seed_diff" in result.columns
+        assert result.iloc[0]["seed_diff"] == 1 - 8  # = -7
+
+    def test_seed_diff_nan_for_regular_season(self) -> None:
+        """seed_diff is NaN for non-tournament games."""
+        game = _make_game(is_tournament=False)
+        ds = _mock_data_server([game])
+        cfg = FeatureConfig(
+            sequential_windows=(),
+            ewma_alphas=(),
+            graph_features_enabled=False,
+            batch_rating_types=(),
+            ordinal_composite=None,
+            matchup_deltas=True,
+            calibration_method=None,
+        )
+        server = StatefulFeatureServer(config=cfg, data_server=ds)
+        result = server.serve_season_features(2023, mode="batch")
+        assert pd.isna(result.iloc[0]["seed_diff"])
+
+    def test_elo_delta_always_nan(self) -> None:
+        """delta_elo is NaN until Story 4.8."""
+        game = _make_game()
+        ds = _mock_data_server([game])
+        cfg = _minimal_config()
+        server = StatefulFeatureServer(config=cfg, data_server=ds)
+        result = server.serve_season_features(2023, mode="batch")
+        assert "delta_elo" in result.columns
+        assert pd.isna(result.iloc[0]["delta_elo"])
+
+    def test_ordinal_delta_when_matchup_enabled(self) -> None:
+        """Ordinal deltas computed when both ordinals and matchup_deltas enabled."""
+        game = _make_game(day_num=50, w_team_id=101, l_team_id=102)
+        ds = _mock_data_server([game])
+        ordinals = _mock_ordinals_store()
+
+        cfg = FeatureConfig(
+            sequential_windows=(),
+            ewma_alphas=(),
+            graph_features_enabled=False,
+            batch_rating_types=(),
+            ordinal_composite="simple_average",
+            matchup_deltas=True,
+            calibration_method=None,
+        )
+        server = StatefulFeatureServer(
+            config=cfg,
+            data_server=ds,
+            ordinals_store=ordinals,
+        )
+        result = server.serve_season_features(2023, mode="batch")
+        assert "delta_ordinal_composite" in result.columns
+        # ordinal for 101 = 5 (after offset), 102 = 15
+        # delta = 5 - 15 = -10
+        assert result.iloc[0]["delta_ordinal_composite"] == pytest.approx(-10.0)
+
+    def test_batch_rating_deltas(self) -> None:
+        """Batch rating deltas are computed when both are enabled."""
+        # Create games involving teams 101, 102 (enough for SRS/Ridge/Colley)
+        games = [
+            _make_game(game_id="1", day_num=10, w_team_id=101, l_team_id=102),
+            _make_game(game_id="2", day_num=15, w_team_id=102, l_team_id=103),
+            _make_game(game_id="3", day_num=20, w_team_id=101, l_team_id=103),
+        ]
+        ds = _mock_data_server(games)
+
+        cfg = FeatureConfig(
+            sequential_windows=(),
+            ewma_alphas=(),
+            graph_features_enabled=False,
+            batch_rating_types=("srs", "ridge", "colley"),
+            ordinal_composite=None,
+            matchup_deltas=True,
+            calibration_method=None,
+        )
+        server = StatefulFeatureServer(config=cfg, data_server=ds)
+        result = server.serve_season_features(2023, mode="batch")
+
+        for col in ("delta_srs", "delta_ridge", "delta_colley"):
+            assert col in result.columns, f"Missing column: {col}"
+
+
+# ── Task 6: Scope filtering tests ───────────────────────────────────────────
+
+
+class TestScopeFiltering:
+    """Tests for gender_scope and dataset_scope parameters (Task 6 / AC #8)."""
+
+    def test_gender_scope_stored(self) -> None:
+        cfg = FeatureConfig(gender_scope="M")
+        assert cfg.gender_scope == "M"
+        cfg_w = FeatureConfig(gender_scope="W")
+        assert cfg_w.gender_scope == "W"
+
+    def test_dataset_scope_stored(self) -> None:
+        cfg = FeatureConfig(dataset_scope="kaggle")
+        assert cfg.dataset_scope == "kaggle"
+        cfg_all = FeatureConfig(dataset_scope="all")
+        assert cfg_all.dataset_scope == "all"
+
+    def test_scope_passed_to_server(self) -> None:
+        """Scope parameters are accessible on the server's config."""
+        ds = _mock_data_server([])
+        server = StatefulFeatureServer(
+            config=FeatureConfig(gender_scope="W", dataset_scope="all"),
+            data_server=ds,
+        )
+        assert server.config.gender_scope == "W"
+        assert server.config.dataset_scope == "all"

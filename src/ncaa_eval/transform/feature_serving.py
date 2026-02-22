@@ -120,6 +120,20 @@ _META_COLUMNS: tuple[str, ...] = (
     "team_a_won",
 )
 
+# Batch rating type → module function name
+_BATCH_RATING_FUNCS: dict[str, str] = {
+    "srs": "compute_srs_ratings",
+    "ridge": "compute_ridge_ratings",
+    "colley": "compute_colley_ratings",
+}
+
+# Batch rating type → column name in the returned DataFrame
+_BATCH_RATING_COLS: dict[str, str] = {
+    "srs": "srs_rating",
+    "ridge": "ridge_rating",
+    "colley": "colley_rating",
+}
+
 
 # ── StatefulFeatureServer ────────────────────────────────────────────────────
 
@@ -201,8 +215,41 @@ class StatefulFeatureServer:
         rows = self._build_game_metadata(games)
         df = pd.DataFrame(rows)
 
-        # Placeholder: feature columns added by Tasks 3-6
-        # Add Elo placeholder column
+        active = self.config.active_blocks()
+
+        # Batch ratings (season-level, from regular-season games only)
+        batch_ratings: dict[str, pd.DataFrame] = {}
+        if FeatureBlock.BATCH_RATING in active:
+            batch_ratings = self._compute_batch_ratings(games)
+
+        # Per-game features
+        for idx, game in enumerate(games):
+            # Ordinal features
+            if FeatureBlock.ORDINAL in active:
+                ord_a, ord_b = self._get_ordinal_values(game)
+                df.at[idx, "ordinal_composite_a"] = ord_a
+                df.at[idx, "ordinal_composite_b"] = ord_b
+
+            # Seed features
+            if FeatureBlock.SEED in active:
+                seed_a, seed_b = self._get_seed_nums(game)
+                df.at[idx, "seed_num_a"] = seed_a
+                df.at[idx, "seed_num_b"] = seed_b
+
+            # Batch rating per-team values
+            if FeatureBlock.BATCH_RATING in active:
+                for rating_type in self.config.batch_rating_types:
+                    col = _BATCH_RATING_COLS.get(rating_type, f"{rating_type}_rating")
+                    rating_df = batch_ratings.get(rating_type)
+                    val_a, val_b = self._lookup_rating(rating_df, game.w_team_id, game.l_team_id, col)
+                    df.at[idx, f"{rating_type}_a"] = val_a
+                    df.at[idx, f"{rating_type}_b"] = val_b
+
+        # Compute matchup deltas
+        if self.config.matchup_deltas:
+            df = self._compute_matchup_deltas(df, active)
+
+        # Elo placeholder (always present)
         df["delta_elo"] = np.nan
 
         return df
@@ -211,14 +258,171 @@ class StatefulFeatureServer:
 
     def _serve_stateful(self, year: int, games: list[Game]) -> pd.DataFrame:
         """Compute features game-by-game, accumulating state (stateful mode)."""
+        active = self.config.active_blocks()
         result_rows: list[dict[str, object]] = []
+
+        # Batch ratings are pre-computed once for stateful mode too
+        batch_ratings: dict[str, pd.DataFrame] = {}
+        if FeatureBlock.BATCH_RATING in active:
+            batch_ratings = self._compute_batch_ratings(games)
+
         for game in games:
             row = self._game_to_metadata_dict(game)
-            # Placeholder: stateful feature accumulation (Tasks 3-6)
+
+            # Ordinal features
+            if FeatureBlock.ORDINAL in active:
+                ord_a, ord_b = self._get_ordinal_values(game)
+                row["ordinal_composite_a"] = ord_a
+                row["ordinal_composite_b"] = ord_b
+
+            # Seed features
+            if FeatureBlock.SEED in active:
+                seed_a, seed_b = self._get_seed_nums(game)
+                row["seed_num_a"] = seed_a
+                row["seed_num_b"] = seed_b
+
+            # Batch rating per-team values
+            if FeatureBlock.BATCH_RATING in active:
+                for rating_type in self.config.batch_rating_types:
+                    col = _BATCH_RATING_COLS.get(rating_type, f"{rating_type}_rating")
+                    rating_df = batch_ratings.get(rating_type)
+                    val_a, val_b = self._lookup_rating(rating_df, game.w_team_id, game.l_team_id, col)
+                    row[f"{rating_type}_a"] = val_a
+                    row[f"{rating_type}_b"] = val_b
+
             row["delta_elo"] = np.nan
             result_rows.append(row)
 
-        return pd.DataFrame(result_rows)
+        df = pd.DataFrame(result_rows)
+
+        # Compute matchup deltas
+        if self.config.matchup_deltas and not df.empty:
+            df = self._compute_matchup_deltas(df, active)
+
+        return df
+
+    # ── Internal: ordinal features (Task 3) ──────────────────────────────
+
+    def _get_ordinal_values(self, game: Game) -> tuple[float, float]:
+        """Get ordinal composite values for both teams at game's day_num.
+
+        Returns (ordinal_a, ordinal_b) where a=w_team_id, b=l_team_id.
+        """
+        if self._ordinals_store is None:
+            return (np.nan, np.nan)
+
+        systems = self._resolve_ordinal_systems()
+        composite = self._ordinals_store.composite_simple_average(game.season, game.day_num, systems)
+
+        val_a = composite.get(game.w_team_id, np.nan)
+        val_b = composite.get(game.l_team_id, np.nan)
+        return (float(val_a), float(val_b))
+
+    def _resolve_ordinal_systems(self) -> list[str]:
+        """Determine which ordinal systems to use."""
+        if self.config.ordinal_systems is not None:
+            return list(self.config.ordinal_systems)
+        # Use coverage-gate recommended systems
+        if self._ordinals_store is not None:
+            gate = self._ordinals_store.run_coverage_gate()
+            return list(gate.recommended_systems)
+        return []
+
+    # ── Internal: seed features (Task 4) ─────────────────────────────────
+
+    def _get_seed_nums(self, game: Game) -> tuple[float, float]:
+        """Get seed numbers for both teams. NaN if not in tournament or unseeded."""
+        if self._seed_table is None:
+            return (np.nan, np.nan)
+        seed_a = self._seed_table.get(game.season, game.w_team_id)
+        seed_b = self._seed_table.get(game.season, game.l_team_id)
+        return (
+            float(seed_a.seed_num) if seed_a is not None else np.nan,
+            float(seed_b.seed_num) if seed_b is not None else np.nan,
+        )
+
+    # ── Internal: batch ratings ──────────────────────────────────────────
+
+    def _compute_batch_ratings(self, games: list[Game]) -> dict[str, pd.DataFrame]:
+        """Compute batch ratings from regular-season games only."""
+        from ncaa_eval.transform.opponent import (
+            compute_colley_ratings,
+            compute_ridge_ratings,
+            compute_srs_ratings,
+        )
+
+        # Filter to regular-season games for batch rating computation
+        reg_games = [g for g in games if not g.is_tournament]
+        if not reg_games:
+            return {}
+
+        # Build DataFrame in the format batch solvers expect
+        games_df = pd.DataFrame(
+            [
+                {
+                    "w_team_id": g.w_team_id,
+                    "l_team_id": g.l_team_id,
+                    "w_score": g.w_score,
+                    "l_score": g.l_score,
+                }
+                for g in reg_games
+            ]
+        )
+
+        funcs = {
+            "srs": compute_srs_ratings,
+            "ridge": compute_ridge_ratings,
+            "colley": compute_colley_ratings,
+        }
+
+        results: dict[str, pd.DataFrame] = {}
+        for rating_type in self.config.batch_rating_types:
+            func = funcs.get(rating_type)
+            if func is not None:
+                results[rating_type] = func(games_df)  # type: ignore[operator]
+            else:
+                logger.warning("Unknown batch rating type: %s", rating_type)
+
+        return results
+
+    @staticmethod
+    def _lookup_rating(
+        rating_df: pd.DataFrame | None,
+        team_a_id: int,
+        team_b_id: int,
+        col: str,
+    ) -> tuple[float, float]:
+        """Look up rating values for two teams from a rating DataFrame."""
+        if rating_df is None or rating_df.empty:
+            return (np.nan, np.nan)
+        indexed = rating_df.set_index("team_id")
+        val_a = indexed[col].get(team_a_id, np.nan)
+        val_b = indexed[col].get(team_b_id, np.nan)
+        return (float(val_a), float(val_b))
+
+    # ── Internal: matchup deltas (Task 4) ────────────────────────────────
+
+    def _compute_matchup_deltas(self, df: pd.DataFrame, active: frozenset[FeatureBlock]) -> pd.DataFrame:
+        """Compute team_A − team_B deltas for all active features."""
+        # Seed differential
+        if FeatureBlock.SEED in active and "seed_num_a" in df.columns:
+            df["seed_diff"] = df["seed_num_a"] - df["seed_num_b"]
+        elif self.config.matchup_deltas:
+            df["seed_diff"] = np.nan
+
+        # Ordinal composite delta
+        if FeatureBlock.ORDINAL in active and "ordinal_composite_a" in df.columns:
+            df["delta_ordinal_composite"] = df["ordinal_composite_a"] - df["ordinal_composite_b"]
+
+        # Batch rating deltas
+        if FeatureBlock.BATCH_RATING in active:
+            for rating_type in self.config.batch_rating_types:
+                col_a = f"{rating_type}_a"
+                col_b = f"{rating_type}_b"
+                if col_a in df.columns:
+                    df[f"delta_{rating_type}"] = df[col_a] - df[col_b]
+
+        return df
 
     # ── Internal: metadata extraction ────────────────────────────────────
 
