@@ -1634,3 +1634,45 @@ def test_hits_convergence_failure() -> None:
 ```
 
 **Template action:** For any function that catches a convergence/iteration exception and returns a fallback, add a `test_<function>_convergence_failure` test to the story's AC list.
+
+### Interface Pseudocode in Research Spikes Must Be Import-Complete (Discovered Story 5.1 Code Review, 2026-02-22)
+
+When a research spike document defines an ABC interface with pseudocode, the import block must be **complete and correct**. Downstream story dev agents will copy-paste this pseudocode as the starting point for their implementation. Missing imports are copy-paste traps that cause runtime errors or `mypy --strict` failures.
+
+**Checklist for interface pseudocode in research docs:**
+- [ ] All types used in signatures have corresponding imports (`Path`, `pd.DataFrame`, `pd.Series`, `Any`, etc.)
+- [ ] `from __future__ import annotations` is the first import (required by project convention)
+- [ ] `from pathlib import Path` if any method signatures accept or return paths
+- [ ] All abstract methods on a parent ABC are either overridden or explicitly given a concrete implementation with a clear `NotImplementedError` in subclasses
+
+**Discovered in Story 5.1:** `Model.save(path: Path)` was used without `from pathlib import Path` in the pseudocode imports.
+
+### Dual-ABC Patterns: Document Evaluation Pipeline Dispatch Before Implementation (Discovered Story 5.1 Code Review, 2026-02-22)
+
+When a research spike proposes a dual-ABC architecture (e.g., `StatefulModel` with per-game `predict(id_a, id_b)` vs. `StatelessModel` with batch `predict_proba(X)`), the document **must** show how a caller polymorphically dispatches across both types. Without this, the evaluation pipeline (which must call predictions uniformly) has no spec to follow and will either duplicate the dispatch logic inconsistently or stall in Story design.
+
+**Template pattern:** Add a `## Evaluation Pipeline Dispatch` subsection to the ABC interface section of any dual-contract design, showing an `isinstance`-dispatch snippet:
+
+```python
+if isinstance(model, StatefulModel):
+    return model.predict(team_a_id, team_b_id)
+elif isinstance(model, StatelessModel):
+    return model.predict_proba(X_test)
+```
+
+**Discovered in Story 5.1:** The dual-contract ABC was specified but no dispatch guidance was provided; added in code review (Section 5.3 of `specs/research/modeling-approaches.md`).
+
+### Spike Story Post-PO SM Task Must Be an Explicit Task (Not Just an AC) (Discovered Story 5.1 Code Review, 2026-02-22)
+
+AC 8 of Story 5.1 (post-PO SM downstream update) was present as an acceptance criterion but had no corresponding task in the Tasks section. This violates the Story 4.1 SM retrospective pattern in template-requirements.md (see "Spike story post-PO-approval checklist" in BMAD Workflow Preferences). The task must explicitly exist so the SM has a tracked work item to complete.
+
+**Template pattern:** All spike stories must include as the **last task**:
+```
+- [ ] Task N: Post-PO SM downstream update (AC: #N) — SM WORK, NOT DEV WORK
+  - [ ] N.1 After PO approves spike findings, SM updates downstream story descriptions in epics.md
+  - [ ] N.2 SM adds new story placeholders as needed
+  - [ ] N.3 SM moves deferred items to Post-MVP Backlog
+  - [ ] N.4 SM updates sprint-status.yaml: `story-key` → `done` (only after all post-PO work complete)
+```
+
+**Discovered in Story 5.1 Code Review, 2026-02-22.** Prior retrospective about AC existence discovered in Story 4.1 SM work (2026-02-21).

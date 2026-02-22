@@ -88,6 +88,7 @@ Matthews & Lopez (2014 winners) simulated the tournament 10,000 times and estima
 | 2014–2022 | Metric: LogLoss | Optimize for log-likelihood; penalizes overconfident wrong predictions |
 | 2023+ | Metric: Brier Score | Optimize for calibration; less harsh on confident predictions vs. LogLoss |
 | 2023+ | Men's + Women's combined | Need two sets of features/models or gender-aware unified model |
+| 2024+ | FiveThirtyEight NCAA ratings discontinued | Must build own rating systems (Elo, SRS) or use Massey ordinals; this project's Epic 4 pipeline already provides equivalent building blocks |
 | 2020 | COVID — no tournament | Training data gap; models must handle missing evaluation year |
 | 2017 | Game-theoretic meta-strategy | Competition-only insight; Landgraf modeled other participants' submissions |
 
@@ -327,7 +328,9 @@ Stateless models perform batch training on a feature matrix `(X, y)` and batch p
 ### 3.5 Neural Networks (LSTM, Transformer)
 
 **Academic research (arXiv:2508.02725, Habib 2025):**
-A 2025 arXiv paper compared LSTM and Transformer architectures for NCAA tournament prediction:
+A 2025 arXiv paper compared LSTM and Transformer architectures for NCAA tournament prediction.
+
+> ⚠️ **Verification note:** arXiv:2508.02725 is dated August 2025, near the LLM knowledge cutoff. The specific AUC values, architecture details, and feature ablation numbers cited below are from training knowledge and have **not been live-verified** against the actual paper PDF. Before using these numbers as authoritative benchmarks in downstream implementation or evaluation, the implementer should retrieve the paper at `https://arxiv.org/abs/2508.02725` and confirm the reported values.
 
 | Architecture | Loss Function | AUC | Calibration | Notes |
 |:---|:---|:---|:---|:---|
@@ -418,7 +421,7 @@ Hybrid approaches combine stateful and stateless models, using the output of one
 **Description:** Use outputs of multiple base models as meta-features for a second-level model.
 
 **Typical stacking architecture for MMLM:**
-```
+```text
 Level 0 (base models):
   - Elo model → P(win)_elo
   - XGBoost model → P(win)_xgb
@@ -480,7 +483,10 @@ The Model ABC must support the following requirements derived from the survey:
 ### 5.2 Proposed Interface Specification
 
 ```python
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
+from pathlib import Path
 from typing import Any
 
 import pandas as pd
@@ -543,6 +549,22 @@ class StatelessModel(Model):
     @abstractmethod
     def predict_proba(self, X: pd.DataFrame) -> pd.Series:
         """Return P(team_a wins) for each row in X."""
+
+    # NOTE: StatelessModel satisfies the Model.predict() abstract method
+    # by providing a concrete delegation that builds a single-row DataFrame.
+    # Implementations that need per-matchup prediction without a full feature
+    # matrix should override this method; the default is a convenience wrapper.
+    def predict(self, team_a_id: int, team_b_id: int) -> float:  # type: ignore[override]
+        """Not the primary API for stateless models — use predict_proba(X).
+
+        This implementation raises NotImplementedError by default; stateless
+        models are designed for batch prediction via predict_proba(). Override
+        if your model supports single-matchup lookup without a feature matrix.
+        """
+        raise NotImplementedError(
+            "StatelessModel.predict() requires a feature matrix. "
+            "Call predict_proba(X) with a pre-built feature row instead."
+        )
 ```
 
 ### 5.3 Interface Design Rationale
@@ -568,6 +590,35 @@ class StatelessModel(Model):
 | Pipeline integration | Walk-forward temporal logic doesn't fit in `Pipeline.fit()` | **Yes** — custom evaluation loop required |
 
 **Conclusion:** Adopt sklearn **naming conventions** (`predict`, `predict_proba`, `get_params`) but NOT sklearn `BaseEstimator` inheritance. The evaluation pipeline (Epic 6) will handle walk-forward logic.
+
+**How the evaluation pipeline (Epic 6) dispatches across both model types:**
+
+The evaluation pipeline must generate predictions for every matchup in a test season. Since `StatefulModel` and `StatelessModel` have different prediction APIs, the pipeline dispatches on ABC type:
+
+```python
+def generate_predictions(
+    model: Model,
+    test_games: pd.DataFrame,
+    feature_server: StatefulFeatureServer,
+    season: int,
+) -> pd.Series:
+    """Return P(team_a wins) for every game in test_games."""
+    if isinstance(model, StatefulModel):
+        # Stateful: predict per-game from in-memory ratings (no feature matrix needed)
+        return pd.Series(
+            [model.predict(row.team_a_id, row.team_b_id) for row in test_games.itertuples()],
+            index=test_games.index,
+        )
+    elif isinstance(model, StatelessModel):
+        # Stateless: build feature matrix, predict in batch
+        X = feature_server.serve_season_features(season, mode="tournament")
+        X_test = X.loc[test_games.index]
+        return model.predict_proba(X_test)
+    else:
+        raise TypeError(f"Unknown model type: {type(model)}")
+```
+
+*Note: The `itertuples()` call in the stateful branch is acceptable here — this is evaluation/orchestration code (a side-effect boundary), not business logic. Stateful models inherently require sequential per-game access, so vectorization is not applicable at this layer.*
 
 ### 5.4 Plugin Registry Requirements
 
@@ -632,6 +683,7 @@ class XGBoostModelConfig(ModelConfig):
     learning_rate: float = 0.05
     subsample: float = 0.8
     colsample_bytree: float = 0.8
+    min_child_weight: int = 3  # Regularization for small NCAA datasets
     reg_lambda: float = 1.0
     early_stopping_rounds: int = 50
 ```
@@ -889,20 +941,20 @@ Options C and beyond add models from the same equivalence groups and provide dim
 - `_bmad-output/planning-artifacts/epics.md` — Epic 5 story descriptions (Stories 5.2–5.5)
 
 ### Academic Papers
-- Habib, M.I. (2025). "Forecasting NCAA Basketball Outcomes with Deep Learning: A Comparative Study of LSTM and Transformer Models." arXiv:2508.02725
+- Habib, M.I. (2025). "Forecasting NCAA Basketball Outcomes with Deep Learning: A Comparative Study of LSTM and Transformer Models." arXiv:2508.02725 — https://arxiv.org/abs/2508.02725 *(⚠️ verify before citing — near knowledge cutoff)*
 - Grinsztajn, L., Oyallon, E., & Varoquaux, G. (2022). "Why do tree-based models still outperform deep learning on tabular data?" NeurIPS 2022
-- Glickman, M.E. (2012). "Example of the Glicko-2 system." glicko.net/glicko/glicko2.pdf
-- Silver, N. (2024). "SBCB Methodology." natesilver.net/p/sbcb-methodology
+- Glickman, M.E. (2012). "Example of the Glicko-2 system." https://www.glicko.net/glicko/glicko2.pdf
+- Silver, N. (2024). "SBCB Methodology." https://www.natesilver.net/p/sbcb-methodology
 
 ### Kaggle MMLM Competition Writeups
-- Landgraf (2017 winner): medium.com/kaggle-blog/march-machine-learning-mania-1st-place-winners-interview-andrew-landgraf-f18214efc659
-- maze508 (2023 gold): medium.com/@maze508/top-1-gold-kaggle-march-machine-learning-mania-2023-solution-writeup-2c0273a62a78
-- Odeh (2025 winner): kaggle.com/competitions/march-machine-learning-mania-2025/writeups/mohammad-odeh-first-place-solution
-- Edwards (2021 documented): johnbedwards.io/blog/march_madness_2021/
-- mlcontests.com annual reports (2022–2025)
+- Landgraf (2017 winner): https://medium.com/kaggle-blog/march-machine-learning-mania-1st-place-winners-interview-andrew-landgraf-f18214efc659
+- maze508 (2023 gold): https://medium.com/@maze508/top-1-gold-kaggle-march-machine-learning-mania-2023-solution-writeup-2c0273a62a78
+- Odeh (2025 winner): https://www.kaggle.com/competitions/march-machine-learning-mania-2025/writeups/mohammad-odeh-first-place-solution
+- Edwards (2021 documented): https://johnbedwards.io/blog/march_madness_2021/
+- mlcontests.com annual reports (2022–2025): https://mlcontests.com
 
 ### Library Documentation
-- XGBoost Model IO: xgboost.readthedocs.io/en/stable/tutorials/saving_model.html
-- scikit-learn Developing Estimators: scikit-learn.org/stable/developers/develop.html
-- goto_conversion: github.com/gotoConversion/goto_conversion
-- Pydantic v2: docs.pydantic.dev/latest/
+- XGBoost Model IO: https://xgboost.readthedocs.io/en/stable/tutorials/saving_model.html
+- scikit-learn Developing Estimators: https://scikit-learn.org/stable/developers/develop.html
+- goto_conversion: https://github.com/gotoConversion/goto_conversion
+- Pydantic v2: https://docs.pydantic.dev/latest/

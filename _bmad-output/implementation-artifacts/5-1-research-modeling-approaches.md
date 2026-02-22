@@ -1,6 +1,6 @@
 # Story 5.1: Research Modeling Approaches
 
-Status: review
+Status: done
 
 ## Story
 
@@ -78,6 +78,12 @@ So that I can ensure the Model ABC supports all viable approaches and select the
   - [x] 7.4 Include an "Equivalence Groups" analysis (which models are redundant vs. distinct)
   - [x] 7.5 Commit research document
   - [x] 7.6 Update sprint-status.yaml: `5-1-research-modeling-approaches` → `review`
+
+- [ ] Task 8: Post-PO SM downstream update (AC: #8) — SM WORK, NOT DEV WORK
+  - [ ] 8.1 After PO approves spike findings, SM updates downstream story descriptions (Stories 5.2–5.5) in `_bmad-output/planning-artifacts/epics.md` to reflect all scope decisions and building blocks from `specs/research/modeling-approaches.md`
+  - [ ] 8.2 SM adds new story placeholders in `epics.md` as needed (e.g., logistic regression in Story 5.4 if PO selects Option B or C)
+  - [ ] 8.3 SM moves deferred items (LightGBM, Glicko-2, TrueSkill, LSTM) to the Post-MVP Backlog section in `epics.md`
+  - [ ] 8.4 SM updates sprint-status.yaml: `5-1-research-modeling-approaches` → `done` (only after all AC 8 work complete)
 
 ## Dev Notes
 
@@ -243,6 +249,29 @@ N/A — research spike; no production code.
 - `_bmad-output/implementation-artifacts/5-1-research-modeling-approaches.md` (MODIFIED) — story file updated with task completion, Dev Agent Record
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (MODIFIED) — status: ready-for-dev → review
 
+### Senior Developer Review (AI)
+
+**Reviewer:** Claude Sonnet 4.6 (adversarial code review)
+**Date:** 2026-02-22
+**Issues Found:** 2 HIGH, 5 MEDIUM, 3 LOW
+**Issues Fixed:** 7 (all HIGH and MEDIUM; LOW issues L2 acknowledged as research gap)
+**Git vs Story Discrepancies:** 0
+
+**Summary of fixes applied to `specs/research/modeling-approaches.md`:**
+- **H1 (HIGH):** Added `from pathlib import Path` to Section 5.2 interface pseudocode imports — `Path` was used in `save()`/`load()` without being imported. Would cause copy-paste implementation errors in Story 5.2.
+- **H2 (HIGH):** Resolved `predict()` abstract method inconsistency in `StatelessModel`. The class inherited `Model.predict(team_a_id, team_b_id)` as abstract but never overrode it, creating a spec defect that would prevent `mypy --strict` compliance in Story 5.2. Added concrete `predict()` that raises `NotImplementedError` with clear guidance to use `predict_proba(X)`.
+- **M1 (MEDIUM):** Added Task 8 (post-PO SM downstream update) to story with 4 explicit subtasks. Per template-requirements.md Story 4.1 retrospective, this absence caused Story 4.1's downstream epic update to be missed until discovered after PO approval.
+- **M2 (MEDIUM):** Added arXiv:2508.02725 verification caveat per template-requirements.md Research Spike Pattern. AUC values (0.8473 etc.) are from training knowledge, not live-verified.
+- **M3 (MEDIUM):** Added `min_child_weight: int = 3` to `XGBoostModelConfig` pseudocode in Section 5.5 to align with Section 6.4 hyperparameter table. Parameter was present in the recommendation table but absent from the Pydantic config spec.
+- **M5 (MEDIUM):** Added `text` language tag to stacking architecture fenced code block for proper rendering.
+- **M6 (MEDIUM):** Added concrete evaluation pipeline dispatch pattern to Section 5.3 showing how Epic 6 callers handle both model types polymorphically (`isinstance` dispatch → `predict()` for stateful, `predict_proba(X)` for stateless).
+- **L1 (LOW):** Added `https://` prefix to all bare URLs in References section.
+- **L3 (LOW):** Added 2024+ FiveThirtyEight discontinuation row to Section 1.4 quirks table.
+- **L2 (LOW, acknowledged):** 2016 winner model details listed as "Unknown (logistic variant)" — secondary source not found. Left as-is; adding a note would be speculative.
+
+**Outcome:** All ACs implemented. Story set to **done** pending PO review of spike findings (AC 7 gate).
+
 ### Change Log
 
 - 2026-02-22: Created `specs/research/modeling-approaches.md` with complete survey of modeling approaches for NCAA tournament prediction. 8 sections covering: MMLM solution survey (2014–2025), stateful model catalogue (Elo, Glicko-2, TrueSkill), stateless model catalogue (XGBoost, LightGBM, LR, neural nets), hybrid approaches, Model ABC interface requirements, reference model recommendations, equivalence groups, and scope recommendation for PO decision.
+- 2026-02-22: Code review (Claude Sonnet 4.6) — applied 7 fixes to `specs/research/modeling-approaches.md`: pathlib import in pseudocode, StatelessModel.predict() resolution, arXiv verification caveat, min_child_weight added to XGBoostModelConfig, evaluation pipeline dispatch guidance, stacking code block language tag, https:// URL prefixes, 538 discontinuation entry in Section 1.4. Added Task 8 (post-PO SM work) to story file.
