@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.0 (2026-02-22)
+
+### Feat
+
+- **transform**: Elo feature building block with walk-forward temporal safety (#24)
+
 ## 0.3.0 (2026-02-22)
 
 ### Feat
