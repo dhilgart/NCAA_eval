@@ -257,7 +257,7 @@ def test_all_methods_return_correct_schema() -> None:
 
     srs = BatchRatingSolver().compute_srs(df)
     assert list(srs.columns) == ["team_id", "srs_rating"]
-    assert srs["team_id"].dtype in (np.dtype("int64"), np.dtype("int32"), object)
+    assert pd.api.types.is_integer_dtype(srs["team_id"])
     assert srs["srs_rating"].dtype == np.float64
     assert len(srs) == unique_teams
 

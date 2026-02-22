@@ -53,13 +53,13 @@ class BatchRatingSolver:
         if games_df.empty:
             return pd.DataFrame(columns=["team_id", "srs_rating"])
 
-        teams, idx, w_idx, l_idx = _build_team_index(games_df)
+        teams, _, w_idx, l_idx = _build_team_index(games_df)
         n = len(teams)
 
         raw_margins = (games_df["w_score"] - games_df["l_score"]).to_numpy(dtype=float)
         margins = np.minimum(raw_margins, float(self._margin_cap))
 
-        net_margin, n_games, avg_margin, A_norm = _build_srs_matrices(n, w_idx, l_idx, margins)
+        _, _, avg_margin, A_norm = _build_srs_matrices(n, w_idx, l_idx, margins)
 
         # Fixed-point iteration: r = avg_margin + A_norm @ r
         r: npt.NDArray[np.float64] = np.zeros(n)
@@ -69,6 +69,11 @@ class BatchRatingSolver:
                 r = r_new
                 break
             r = r_new
+        else:
+            logger.warning(
+                "SRS did not converge after %d iterations; ratings may be inaccurate",
+                self._srs_max_iter,
+            )
 
         # Zero-center ratings (enforces unique solution)
         r -= float(np.mean(r))
@@ -88,7 +93,7 @@ class BatchRatingSolver:
         if games_df.empty:
             return pd.DataFrame(columns=["team_id", "ridge_rating"])
 
-        teams, idx, w_idx, l_idx = _build_team_index(games_df)
+        teams, _, w_idx, l_idx = _build_team_index(games_df)
         n = len(teams)
         n_games = len(games_df)
 
@@ -120,7 +125,7 @@ class BatchRatingSolver:
         if games_df.empty:
             return pd.DataFrame(columns=["team_id", "colley_rating"])
 
-        teams, idx, w_idx, l_idx = _build_team_index(games_df)
+        teams, _, w_idx, l_idx = _build_team_index(games_df)
         n = len(teams)
 
         # Build C and b (vectorized)

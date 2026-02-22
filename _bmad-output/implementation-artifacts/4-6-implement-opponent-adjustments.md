@@ -1,6 +1,6 @@
 # Story 4.6: Implement Batch Opponent Adjustment Rating Systems
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -467,10 +467,29 @@ Claude Sonnet 4.6 (create-story workflow, dev-story workflow)
   - Bottom SRS teams align correctly with worst MAS ranks (1254 @ rank 363, 1216 @ rank 362)
 - ✅ **Task 5**: All quality gates passed — ruff, mypy --strict, pytest 16/16 + 265/265 regression tests green. Story committed.
 
+### Senior Developer Review (AI)
+
+**Date:** 2026-02-21
+**Reviewer:** Claude Sonnet 4.6 (code-review workflow)
+**Outcome:** APPROVED — all HIGH and MEDIUM issues fixed
+
+**Issues Found and Fixed (5 total):**
+- 🔴 **H1 FIXED** — Silent SRS non-convergence: added `for...else` clause to log `logger.warning("SRS did not converge after %d iterations")` when `srs_max_iter` exhausted without reaching convergence tolerance. (`opponent.py:66-79`)
+- 🟡 **M1 FIXED** — `__all__` ordering violation in `transform/__init__.py`: `compute_possessions` was after `compute_ridge_ratings`; restored alphabetical order. (`__init__.py:72-75`)
+- 🟡 **M2 FIXED** — Unused `idx` dict returned from `_build_team_index` in all 3 callers: replaced `teams, idx, w_idx, l_idx` with `teams, _, w_idx, l_idx`. (`opponent.py:56, 91, 123`)
+- 🟡 **M3 FIXED** — Unused `net_margin`/`n_games` from `_build_srs_matrices` in `compute_srs`: replaced `net_margin, n_games, avg_margin, A_norm` with `_, _, avg_margin, A_norm`. (`opponent.py:62`)
+- 🟡 **M4 FIXED** — Test schema dtype check too permissive (`object` was allowed for `team_id`): replaced with `pd.api.types.is_integer_dtype()`. (`test_opponent.py:260`)
+
+**Low issues (not fixed — noted for awareness):**
+- 🟢 **L1** — `_build_team_index` uses `.tolist()` before set creation (minor inefficiency vs `.unique()`). Acceptable for readability; no fix needed.
+
+**Quality gates post-fix:** ruff ✅ · mypy --strict ✅ · pytest 281/281 ✅
+
 ### File List
 
-- `src/ncaa_eval/transform/opponent.py` (new)
-- `src/ncaa_eval/transform/__init__.py` (modified — added opponent exports)
-- `tests/unit/test_opponent.py` (new)
+- `src/ncaa_eval/transform/opponent.py` (new + review fixes)
+- `src/ncaa_eval/transform/__init__.py` (modified — added opponent exports, fixed __all__ ordering)
+- `tests/unit/test_opponent.py` (new + review fix: tighter dtype assertion)
 - `_bmad-output/implementation-artifacts/4-6-implement-opponent-adjustments.md` (modified — this story file)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified — status → review)
+- `_bmad-output/planning-artifacts/template-requirements.md` (modified — Story 4.6 learnings added)

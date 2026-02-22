@@ -75,7 +75,7 @@ development_status:
   4-3-implement-canonical-team-id-mapping-data-cleaning: done
   4-4-implement-sequential-transformations: done
   4-5-implement-graph-builders-centrality-features: done
-  4-6-implement-opponent-adjustments: review
+  4-6-implement-opponent-adjustments: done
   4-7-implement-stateful-feature-serving: backlog
   4-8-implement-dynamic-rating-features-elo-feature-building-block: backlog
   epic-4-retrospective: optional
