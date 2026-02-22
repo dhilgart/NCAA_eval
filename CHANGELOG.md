@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.0 (2026-02-22)
+
+### Feat
+
+- **transform**: implement stateful feature serving layer (Story 4.7) (#23)
+
 ## 0.2.0 (2026-02-19)
 
 ### Feat
