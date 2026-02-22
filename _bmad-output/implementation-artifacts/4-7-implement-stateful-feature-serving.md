@@ -36,13 +36,13 @@ So that models receive a consistent, leakage-free feature matrix with calibrated
   - [x] 1.3 Define `FeatureBlock` enum: `SEQUENTIAL`, `GRAPH`, `BATCH_RATING`, `ORDINAL`, `SEED`, `ELO` (Elo placeholder for Story 4.8)
   - [x] 1.4 Unit tests for config validation and defaults
 
-- [ ] Task 2: Implement `StatefulFeatureServer` core class (AC: #1, #2, #3, #4)
-  - [ ] 2.1 Constructor accepts `FeatureConfig`, `ChronologicalDataServer`, data lookup objects (normalization tables, CSV paths)
-  - [ ] 2.2 Implement `serve_season_features(year, mode="batch"|"stateful")` returning a `pd.DataFrame` with one row per game and all configured feature columns
-  - [ ] 2.3 Batch mode: compute all features for the full season at once (for stateless models like XGBoost)
-  - [ ] 2.4 Stateful mode: yield feature rows game-by-game via iterator, accumulating state (graph, sequential) incrementally
-  - [ ] 2.5 Internal orchestration order: load games → compute sequential features → compute graph features → load batch ratings → load ordinals → assemble matchup deltas
-  - [ ] 2.6 Unit tests for both consumption modes
+- [x] Task 2: Implement `StatefulFeatureServer` core class (AC: #1, #2, #3, #4)
+  - [x] 2.1 Constructor accepts `FeatureConfig`, `ChronologicalDataServer`, data lookup objects (normalization tables, CSV paths)
+  - [x] 2.2 Implement `serve_season_features(year, mode="batch"|"stateful")` returning a `pd.DataFrame` with one row per game and all configured feature columns
+  - [x] 2.3 Batch mode: compute all features for the full season at once (for stateless models like XGBoost)
+  - [x] 2.4 Stateful mode: yield feature rows game-by-game via iterator, accumulating state (graph, sequential) incrementally
+  - [x] 2.5 Internal orchestration order: load games → compute sequential features → compute graph features → load batch ratings → load ordinals → assemble matchup deltas
+  - [x] 2.6 Unit tests for both consumption modes
 
 - [ ] Task 3: Implement Massey ordinal temporal slicing (AC: #5)
   - [ ] 3.1 Use `MasseyOrdinalsStore.get_snapshot(season, day_num)` — this already filters by `RankingDayNum ≤ day_num` (implemented in Story 4.3)
@@ -233,6 +233,7 @@ Claude Opus 4.6
 
 ### Completion Notes List
 - Task 1: Defined `FeatureBlock` enum (6 members) and `FeatureConfig` frozen dataclass with 10 fields and `active_blocks()` method. 10 unit tests pass.
+- Task 2: Implemented `StatefulFeatureServer` class with constructor (config, data_server, optional seed_table/ordinals_store), `serve_season_features()` in batch and stateful modes, game metadata extraction (loc_encoding, team_a_won), and empty-input guards. 10 new unit tests pass (20 total).
 
 ### File List
 - `src/ncaa_eval/transform/feature_serving.py` (new)
