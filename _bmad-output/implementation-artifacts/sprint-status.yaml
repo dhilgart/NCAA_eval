@@ -77,7 +77,7 @@ development_status:
   4-5-implement-graph-builders-centrality-features: done
   4-6-implement-opponent-adjustments: done
   4-7-implement-stateful-feature-serving: done
-  4-8-implement-dynamic-rating-features-elo-feature-building-block: in-progress
+  4-8-implement-dynamic-rating-features-elo-feature-building-block: review
   epic-4-retrospective: optional
 
   # Epic 5: Core Modeling Framework

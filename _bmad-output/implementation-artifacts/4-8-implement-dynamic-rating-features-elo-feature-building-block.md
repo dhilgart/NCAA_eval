@@ -1,6 +1,6 @@
 # Story 4.8: Implement Dynamic Rating Features (Elo Feature Building Block)
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -32,57 +32,57 @@ So that I can capture in-season trajectory and momentum in addition to the full-
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Implement `EloConfig` frozen dataclass (AC: #1, #2, #3, #4, #5)
-  - [ ] 1.1 Create `src/ncaa_eval/transform/elo.py`
-  - [ ] 1.2 Define `EloConfig` frozen dataclass with fields: `initial_rating`, `k_early`, `k_regular`, `k_tournament`, `early_game_threshold`, `margin_exponent`, `max_margin`, `home_advantage_elo`, `mean_reversion_fraction`
-  - [ ] 1.3 Sensible defaults: `initial_rating=1500`, `k_early=56`, `k_regular=38`, `k_tournament=47.5`, `early_game_threshold=20`, `margin_exponent=0.85`, `max_margin=25`, `home_advantage_elo=3.5`, `mean_reversion_fraction=0.25`
-  - [ ] 1.4 Unit tests for config defaults and frozen immutability
+- [x] Task 1: Implement `EloConfig` frozen dataclass (AC: #1, #2, #3, #4, #5)
+  - [x] 1.1 Create `src/ncaa_eval/transform/elo.py`
+  - [x] 1.2 Define `EloConfig` frozen dataclass with fields: `initial_rating`, `k_early`, `k_regular`, `k_tournament`, `early_game_threshold`, `margin_exponent`, `max_margin`, `home_advantage_elo`, `mean_reversion_fraction`
+  - [x] 1.3 Sensible defaults: `initial_rating=1500`, `k_early=56`, `k_regular=38`, `k_tournament=47.5`, `early_game_threshold=20`, `margin_exponent=0.85`, `max_margin=25`, `home_advantage_elo=3.5`, `mean_reversion_fraction=0.25`
+  - [x] 1.4 Unit tests for config defaults and frozen immutability
 
-- [ ] Task 2: Implement `EloFeatureEngine` core class (AC: #1, #2, #3, #4, #7)
-  - [ ] 2.1 Constructor accepts `EloConfig` and optional `ConferenceLookup`
-  - [ ] 2.2 Internal state: `_ratings: dict[int, float]` mapping `team_id → current_elo`; `_game_counts: dict[int, int]` mapping `team_id → games_played_this_season`
-  - [ ] 2.3 Implement `expected_score(rating_a: float, rating_b: float) -> float` — logistic function `1 / (1 + 10^((r_b − r_a)/400))`
-  - [ ] 2.4 Implement `_effective_k(team_id: int, is_tournament: bool) -> float` — variable K based on game count and tournament flag
-  - [ ] 2.5 Implement `_margin_multiplier(margin: int) -> float` — `min(margin, max_margin)^margin_exponent`
-  - [ ] 2.6 Implement `update_game(w_team_id, l_team_id, w_score, l_score, loc, is_tournament) -> tuple[float, float]` — returns (elo_w_before, elo_l_before) for feature use BEFORE updating ratings
-  - [ ] 2.7 Implement `get_rating(team_id: int) -> float` — returns current rating (or initial_rating if unseen)
-  - [ ] 2.8 Unit tests: basic update, expected score symmetry, margin scaling effect, home court effect, variable K transitions
+- [x] Task 2: Implement `EloFeatureEngine` core class (AC: #1, #2, #3, #4, #7)
+  - [x] 2.1 Constructor accepts `EloConfig` and optional `ConferenceLookup`
+  - [x] 2.2 Internal state: `_ratings: dict[int, float]` mapping `team_id → current_elo`; `_game_counts: dict[int, int]` mapping `team_id → games_played_this_season`
+  - [x] 2.3 Implement `expected_score(rating_a: float, rating_b: float) -> float` — logistic function `1 / (1 + 10^((r_b − r_a)/400))`
+  - [x] 2.4 Implement `_effective_k(team_id: int, is_tournament: bool) -> float` — variable K based on game count and tournament flag
+  - [x] 2.5 Implement `_margin_multiplier(margin: int) -> float` — `min(margin, max_margin)^margin_exponent`
+  - [x] 2.6 Implement `update_game(w_team_id, l_team_id, w_score, l_score, loc, is_tournament) -> tuple[float, float]` — returns (elo_w_before, elo_l_before) for feature use BEFORE updating ratings
+  - [x] 2.7 Implement `get_rating(team_id: int) -> float` — returns current rating (or initial_rating if unseen)
+  - [x] 2.8 Unit tests: basic update, expected score symmetry, margin scaling effect, home court effect, variable K transitions
 
-- [ ] Task 3: Implement season management (AC: #5, #7)
-  - [ ] 3.1 Implement `apply_season_mean_reversion(season: int) -> None` — regress each team toward conference mean; no-op if no `ConferenceLookup`
-  - [ ] 3.2 Conference mean computation: group teams by conference, compute mean Elo per conference, regress each team's rating by `fraction × (conference_mean − current_rating)` toward conference mean
-  - [ ] 3.3 Implement `reset_game_counts() -> None` — reset per-team game counts for new season (K-factor depends on season game count)
-  - [ ] 3.4 Implement `start_new_season(season: int) -> None` — orchestrates: `apply_season_mean_reversion(season)` then `reset_game_counts()`
-  - [ ] 3.5 Teams with no conference info (e.g., first appearance): regress toward global mean
-  - [ ] 3.6 Unit tests: mean reversion correctness, conference grouping, global fallback, game count reset
+- [x] Task 3: Implement season management (AC: #5, #7)
+  - [x] 3.1 Implement `apply_season_mean_reversion(season: int) -> None` — regress each team toward conference mean; no-op if no `ConferenceLookup`
+  - [x] 3.2 Conference mean computation: group teams by conference, compute mean Elo per conference, regress each team's rating by `fraction × (conference_mean − current_rating)` toward conference mean
+  - [x] 3.3 Implement `reset_game_counts() -> None` — reset per-team game counts for new season (K-factor depends on season game count)
+  - [x] 3.4 Implement `start_new_season(season: int) -> None` — orchestrates: `apply_season_mean_reversion(season)` then `reset_game_counts()`
+  - [x] 3.5 Teams with no conference info (e.g., first appearance): regress toward global mean
+  - [x] 3.6 Unit tests: mean reversion correctness, conference grouping, global fallback, game count reset
 
-- [ ] Task 4: Implement snapshot and bulk processing (AC: #6, #7)
-  - [ ] 4.1 Implement `get_all_ratings() -> dict[int, float]` — returns copy of current ratings dict
-  - [ ] 4.2 Implement `process_season(games: list[Game], season: int) -> pd.DataFrame` — processes all games for a season in chronological order, returns DataFrame with columns `[game_id, elo_w_before, elo_l_before]`
-  - [ ] 4.3 `process_season` calls `start_new_season(season)` at the beginning if prior-season ratings exist
-  - [ ] 4.4 Unit tests: snapshot correctness, process_season output schema, multi-season continuity
+- [x] Task 4: Implement snapshot and bulk processing (AC: #6, #7)
+  - [x] 4.1 Implement `get_all_ratings() -> dict[int, float]` — returns copy of current ratings dict
+  - [x] 4.2 Implement `process_season(games: list[Game], season: int) -> pd.DataFrame` — processes all games for a season in chronological order, returns DataFrame with columns `[game_id, elo_w_before, elo_l_before]`
+  - [x] 4.3 `process_season` calls `start_new_season(season)` at the beginning if prior-season ratings exist
+  - [x] 4.4 Unit tests: snapshot correctness, process_season output schema, multi-season continuity
 
-- [ ] Task 5: Integrate with `FeatureConfig` and `StatefulFeatureServer` (AC: #8)
-  - [ ] 5.1 Add `elo_enabled: bool = False` and `elo_config: EloConfig | None = None` fields to `FeatureConfig`
-  - [ ] 5.2 Update `FeatureConfig.active_blocks()`: include `FeatureBlock.ELO` when `elo_enabled` is True
-  - [ ] 5.3 Update `StatefulFeatureServer.__init__()`: accept optional `elo_engine: EloFeatureEngine | None` parameter
-  - [ ] 5.4 Update `_serve_batch()`: if ELO active, run `elo_engine.process_season()` and populate `elo_a`/`elo_b` columns, then compute `delta_elo` in `_compute_matchup_deltas()`
-  - [ ] 5.5 Update `_serve_stateful()`: if ELO active, call `elo_engine.update_game()` per game, using the **before** ratings for feature values
-  - [ ] 5.6 Update `_build_game_row()`: add `elo_a`/`elo_b` from engine state before game update
-  - [ ] 5.7 Update `_compute_matchup_deltas()`: compute `delta_elo = elo_a − elo_b` when ELO active
-  - [ ] 5.8 Remove `np.nan` placeholder assignments for `delta_elo` in both modes when ELO is active; keep `np.nan` when ELO is disabled
-  - [ ] 5.9 Update `_empty_frame()` if needed
-  - [ ] 5.10 Unit tests: feature serving with Elo enabled vs disabled, delta_elo values populated
+- [x] Task 5: Integrate with `FeatureConfig` and `StatefulFeatureServer` (AC: #8)
+  - [x] 5.1 Add `elo_enabled: bool = False` and `elo_config: EloConfig | None = None` fields to `FeatureConfig`
+  - [x] 5.2 Update `FeatureConfig.active_blocks()`: include `FeatureBlock.ELO` when `elo_enabled` is True
+  - [x] 5.3 Update `StatefulFeatureServer.__init__()`: accept optional `elo_engine: EloFeatureEngine | None` parameter
+  - [x] 5.4 Update `_serve_batch()`: if ELO active, run `elo_engine.process_season()` and populate `elo_a`/`elo_b` columns, then compute `delta_elo` in `_compute_matchup_deltas()`
+  - [x] 5.5 Update `_serve_stateful()`: if ELO active, call `elo_engine.update_game()` per game, using the **before** ratings for feature values
+  - [x] 5.6 Update `_build_game_row()`: add `elo_a`/`elo_b` from engine state before game update
+  - [x] 5.7 Update `_compute_matchup_deltas()`: compute `delta_elo = elo_a − elo_b` when ELO active
+  - [x] 5.8 Remove `np.nan` placeholder assignments for `delta_elo` in both modes when ELO is active; keep `np.nan` when ELO is disabled
+  - [x] 5.9 Update `_empty_frame()` if needed
+  - [x] 5.10 Unit tests: feature serving with Elo enabled vs disabled, delta_elo values populated
 
-- [ ] Task 6: Integration tests (AC: #7, #9)
-  - [ ] 6.1 Walk-forward temporal integrity: Elo rating for game at day_num D reflects only games with day_num < D
-  - [ ] 6.2 Multi-season continuity: ratings carry forward across seasons with mean-reversion
-  - [ ] 6.3 Batch/stateful equivalence: both modes produce identical `delta_elo` values for the same season
-  - [ ] 6.4 Feature serving round-trip: `StatefulFeatureServer` with Elo enabled produces non-NaN `delta_elo`
+- [x] Task 6: Integration tests (AC: #7, #9)
+  - [x] 6.1 Walk-forward temporal integrity: Elo rating for game at day_num D reflects only games with day_num < D
+  - [x] 6.2 Multi-season continuity: ratings carry forward across seasons with mean-reversion
+  - [x] 6.3 Batch/stateful equivalence: both modes produce identical `delta_elo` values for the same season
+  - [x] 6.4 Feature serving round-trip: `StatefulFeatureServer` with Elo enabled produces non-NaN `delta_elo`
 
-- [ ] Task 7: Update `__init__.py` exports (AC: all)
-  - [ ] 7.1 Add `EloConfig`, `EloFeatureEngine` to `ncaa_eval/transform/__init__.py` imports and `__all__`
-  - [ ] 7.2 Run `mypy --strict`, `ruff check`, full `pytest` to verify no regressions
+- [x] Task 7: Update `__init__.py` exports (AC: all)
+  - [x] 7.1 Add `EloConfig`, `EloFeatureEngine` to `ncaa_eval/transform/__init__.py` imports and `__all__`
+  - [x] 7.2 Run `mypy --strict`, `ruff check`, full `pytest` to verify no regressions
 
 ## Dev Notes
 
@@ -226,10 +226,29 @@ The `Game` objects from `ChronologicalDataServer` already have raw scores. Apply
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+- Home-court test direction: Initially wrote tests expecting home-win to give less credit, but AC #4 literally says "subtract from home team's effective rating" which lowers expected score → bigger surprise → more credit. Tests corrected to match AC spec.
+
 ### Completion Notes List
 
+- **Tasks 1-4**: Implemented `EloConfig` frozen dataclass and `EloFeatureEngine` in `src/ncaa_eval/transform/elo.py`. Engine supports: logistic expected score, variable K-factor (early/regular/tournament), margin-of-victory scaling with configurable cap and exponent, home-court adjustment via effective rating subtraction, season mean-reversion toward conference mean (with global mean fallback), OT score rescaling via `rescale_overtime()`, and bulk `process_season()` returning before-ratings. 36 unit tests.
+- **Task 5**: Integrated Elo into `StatefulFeatureServer` — added `elo_enabled`/`elo_config` to `FeatureConfig`, `elo_engine` parameter to server, wired both batch mode (via `process_season()`) and stateful mode (via `update_game()` per game), computed `delta_elo` in `_compute_matchup_deltas()`. Backward-compatible: `delta_elo = np.nan` when Elo disabled. 10 new unit tests in `test_feature_serving.py`.
+- **Task 6**: 10 integration tests validating walk-forward temporal integrity, multi-season continuity with conference mean-reversion, batch/stateful mode equivalence for `delta_elo`, and feature serving round-trip.
+- **Task 7**: Exported `EloConfig` and `EloFeatureEngine` from `transform/__init__.py`. Full suite: 388 tests pass, mypy --strict clean (47 files), ruff clean.
+
+### Change Log
+
+- 2026-02-22: Implemented Story 4.8 — Elo feature building block with full test coverage (46 new unit tests + 10 integration tests). All acceptance criteria satisfied.
+
 ### File List
+
+- `src/ncaa_eval/transform/elo.py` (new) — EloConfig, EloFeatureEngine
+- `src/ncaa_eval/transform/feature_serving.py` (modified) — FeatureConfig elo_enabled/elo_config, StatefulFeatureServer elo_engine integration
+- `src/ncaa_eval/transform/__init__.py` (modified) — EloConfig, EloFeatureEngine exports
+- `tests/unit/test_elo.py` (new) — 36 unit tests for Elo engine
+- `tests/unit/test_feature_serving.py` (modified) — 10 new Elo integration tests
+- `tests/integration/test_elo_integration.py` (new) — 10 integration tests
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified) — status update
