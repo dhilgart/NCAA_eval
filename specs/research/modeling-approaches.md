@@ -492,6 +492,8 @@ from typing import Any
 import pandas as pd
 from pydantic import BaseModel as PydanticBaseModel
 
+from ncaa_eval.ingest.schema import Game  # noqa: TC001 — used in StatefulModel.update() signature
+
 
 class ModelConfig(PydanticBaseModel):
     """Base config validated by Pydantic. Subclassed per model."""
@@ -554,7 +556,7 @@ class StatelessModel(Model):
     # by providing a concrete delegation that builds a single-row DataFrame.
     # Implementations that need per-matchup prediction without a full feature
     # matrix should override this method; the default is a convenience wrapper.
-    def predict(self, team_a_id: int, team_b_id: int) -> float:  # type: ignore[override]
+    def predict(self, team_a_id: int, team_b_id: int) -> float:
         """Not the primary API for stateless models — use predict_proba(X).
 
         This implementation raises NotImplementedError by default; stateless
@@ -596,6 +598,13 @@ class StatelessModel(Model):
 The evaluation pipeline must generate predictions for every matchup in a test season. Since `StatefulModel` and `StatelessModel` have different prediction APIs, the pipeline dispatches on ABC type:
 
 ```python
+from __future__ import annotations
+
+import pandas as pd
+
+from ncaa_eval.transform.feature_serving import StatefulFeatureServer
+
+
 def generate_predictions(
     model: Model,
     test_games: pd.DataFrame,
@@ -625,18 +634,25 @@ def generate_predictions(
 **Registry design:**
 
 ```python
+from __future__ import annotations
+
+from collections.abc import Callable
+
 _MODEL_REGISTRY: dict[str, type[Model]] = {}
 
-def register_model(name: str):
+
+def register_model(name: str) -> Callable[[type[Model]], type[Model]]:
     """Decorator to register a model class by name."""
     def decorator(cls: type[Model]) -> type[Model]:
         _MODEL_REGISTRY[name] = cls
         return cls
     return decorator
 
+
 def get_model(name: str) -> type[Model]:
     """Look up a registered model class by name."""
     ...
+
 
 def list_models() -> list[str]:
     """Return all registered model names."""
@@ -671,6 +687,7 @@ class EloModelConfig(ModelConfig):
     k_early: float = 56.0
     k_regular: float = 38.0
     k_tournament: float = 47.5
+    early_game_threshold: int = 20  # Games before K transitions from k_early → k_regular
     margin_exponent: float = 0.85
     max_margin: int = 25
     home_advantage_elo: float = 3.5
@@ -741,8 +758,8 @@ All models output **calibrated probabilities**:
 - `predict(team_a, team_b)` → `EloFeatureEngine.expected_score(r_a, r_b)`
 - `update(game)` → `EloFeatureEngine.update_game(...)`
 - `start_season(season)` → `EloFeatureEngine.start_new_season(season)`
-- `save()` → JSON dump of ratings dict + config
-- `load()` → reconstruct from JSON
+- `save(path)` → JSON dump of ratings dict + config to `path`
+- `load(path)` → reconstruct from JSON at `path` (class method)
 
 ### 6.2 Stateless Reference: XGBoost (Story 5.4)
 
@@ -757,8 +774,8 @@ All models output **calibrated probabilities**:
 - Create `XGBoostModel(StatelessModel)` wrapping `xgboost.XGBClassifier`
 - `train(X, y)` → `XGBClassifier.fit(X, y, eval_set=..., early_stopping_rounds=...)`
 - `predict_proba(X)` → `XGBClassifier.predict_proba(X)[:, 1]`
-- `save()` → `booster.save_model("model.ubj")` + config JSON
-- `load()` → `XGBClassifier.load_model("model.ubj")` + config JSON
+- `save()` → `clf.save_model("model.ubj")` + config JSON (instance method on `XGBClassifier`)
+- `load()` → `clf = XGBClassifier(); clf.load_model("model.ubj")` — `load_model` is an instance method, NOT a class method; instantiate first, then call
 
 **Recommended hyperparameter ranges:**
 

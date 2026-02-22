@@ -1,6 +1,6 @@
 # Story 5.1: Research Modeling Approaches
 
-Status: done
+Status: review
 
 ## Story
 
@@ -249,7 +249,7 @@ N/A — research spike; no production code.
 - `_bmad-output/implementation-artifacts/5-1-research-modeling-approaches.md` (MODIFIED) — story file updated with task completion, Dev Agent Record
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (MODIFIED) — status: ready-for-dev → review
 
-### Senior Developer Review (AI)
+### Senior Developer Review (AI) — Round 1
 
 **Reviewer:** Claude Sonnet 4.6 (adversarial code review)
 **Date:** 2026-02-22
@@ -269,9 +269,30 @@ N/A — research spike; no production code.
 - **L3 (LOW):** Added 2024+ FiveThirtyEight discontinuation row to Section 1.4 quirks table.
 - **L2 (LOW, acknowledged):** 2016 winner model details listed as "Unknown (logistic variant)" — secondary source not found. Left as-is; adding a note would be speculative.
 
-**Outcome:** All ACs implemented. Story set to **done** pending PO review of spike findings (AC 7 gate).
+**Round 1 Outcome:** All ACs implemented. Story status set to `review` — awaiting PO decision gate (AC 7) and SM downstream update (AC 8).
+
+### Senior Developer Review (AI) — Round 2
+
+**Reviewer:** Claude Sonnet 4.6 (adversarial code review — second pass)
+**Date:** 2026-02-22
+**Issues Found:** 3 HIGH, 3 MEDIUM, 2 LOW
+**Issues Fixed:** 6 (all HIGH and MEDIUM; LOW issues L1 also fixed for clarity)
+**Git vs Story Discrepancies:** 0
+
+**Summary of fixes applied:**
+- **H1 (HIGH):** Added `from ncaa_eval.ingest.schema import Game` to Section 5.2 ABC pseudocode — `Game` was used in `StatefulModel.update(self, game: Game)` without being imported. Round 1 added `Path` but missed `Game`. Same class of copy-paste trap.
+- **H2 (HIGH):** Added import block to Section 5.3 evaluation dispatch pseudocode — `StatefulFeatureServer` was used as a type annotation without `from ncaa_eval.transform.feature_serving import StatefulFeatureServer`. Story 6 dev agents will copy this pattern.
+- **H3 (HIGH):** Corrected sprint-status from `done` → `review`. Round 1 set sprint-status to `done` but AC 7 (PO gate) has not been passed and Task 8 (SM work) is entirely unchecked. Per Task 7.6/8.4 in the story, `review` is correct until PO approves and SM completes AC 8.
+- **M1 (MEDIUM):** Added `early_game_threshold: int = 20` to `EloModelConfig` pseudocode in Section 5.5 — parameter exists in actual `EloConfig` but was omitted from the Pydantic config spec. Story 5.3 dev agents wrapping `EloFeatureEngine` need this to achieve parameter parity.
+- **M2 (MEDIUM):** Corrected `XGBClassifier.load_model()` API reference in Section 6.2 — `load_model` is an instance method (not a class method). Corrected to `clf = XGBClassifier(); clf.load_model("model.ubj")`.
+- **M3 (MEDIUM):** Added `Callable` return type annotation to `register_model` decorator in Section 5.4 — missing type would cause `mypy --strict` `[no-untyped-def]` failure in Story 5.2.
+- **L1 (LOW):** Added `path` parameter to Section 6.1 Elo `save()`/`load()` implementation notes — inconsistency with ABC signature would confuse Story 5.3 dev agent.
+- **L2 (LOW):** Removed misleading `# type: ignore[override]` from `StatelessModel.predict()` — mypy does not flag this as an override error; the comment was incorrect and would confuse Story 5.2 dev agents.
+
+**Round 2 Outcome:** Story set to `review`. All ACs remain implemented. Pseudocode is now import-complete and API-accurate across both rounds of review. Awaiting PO decision gate (AC 7) and SM downstream update (AC 8).
 
 ### Change Log
 
 - 2026-02-22: Created `specs/research/modeling-approaches.md` with complete survey of modeling approaches for NCAA tournament prediction. 8 sections covering: MMLM solution survey (2014–2025), stateful model catalogue (Elo, Glicko-2, TrueSkill), stateless model catalogue (XGBoost, LightGBM, LR, neural nets), hybrid approaches, Model ABC interface requirements, reference model recommendations, equivalence groups, and scope recommendation for PO decision.
-- 2026-02-22: Code review (Claude Sonnet 4.6) — applied 7 fixes to `specs/research/modeling-approaches.md`: pathlib import in pseudocode, StatelessModel.predict() resolution, arXiv verification caveat, min_child_weight added to XGBoostModelConfig, evaluation pipeline dispatch guidance, stacking code block language tag, https:// URL prefixes, 538 discontinuation entry in Section 1.4. Added Task 8 (post-PO SM work) to story file.
+- 2026-02-22: Code review round 1 (Claude Sonnet 4.6) — applied 7 fixes to `specs/research/modeling-approaches.md`: pathlib import in pseudocode, StatelessModel.predict() resolution, arXiv verification caveat, min_child_weight added to XGBoostModelConfig, evaluation pipeline dispatch guidance, stacking code block language tag, https:// URL prefixes, 538 discontinuation entry in Section 1.4. Added Task 8 (post-PO SM work) to story file.
+- 2026-02-22: Code review round 2 (Claude Sonnet 4.6) — applied 6 fixes to `specs/research/modeling-approaches.md`: Game import in Section 5.2 ABC pseudocode, StatefulFeatureServer import in Section 5.3 dispatch pseudocode, early_game_threshold added to EloModelConfig (Section 5.5), XGBClassifier.load_model() API correction (Section 6.2), Callable return type on register_model (Section 5.4), save(path)/load(path) consistency in Section 6.1, removed misleading type: ignore[override] comment. Corrected sprint-status from `done` → `review` (PO gate not yet passed).

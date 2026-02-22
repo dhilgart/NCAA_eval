@@ -1643,9 +1643,15 @@ When a research spike document defines an ABC interface with pseudocode, the imp
 - [ ] All types used in signatures have corresponding imports (`Path`, `pd.DataFrame`, `pd.Series`, `Any`, etc.)
 - [ ] `from __future__ import annotations` is the first import (required by project convention)
 - [ ] `from pathlib import Path` if any method signatures accept or return paths
+- [ ] Domain types (e.g., `Game`, `Team`, `Season` from `ncaa_eval.ingest.schema`) imported if used in abstract method signatures
+- [ ] **Check EVERY code block independently** — imports in one block do not carry to a separate code block later in the document
+- [ ] Decorator factories have return type annotations (e.g., `register_model() -> Callable[...]`) — `mypy --strict` fails on unannotated functions
+- [ ] API references match the actual library's method style (e.g., `XGBClassifier.load_model` is instance method, not class method)
 - [ ] All abstract methods on a parent ABC are either overridden or explicitly given a concrete implementation with a clear `NotImplementedError` in subclasses
+- [ ] `type: ignore[X]` comments are only included if `mypy --strict` actually raises that error code — spurious ignores mislead implementors
 
-**Discovered in Story 5.1:** `Model.save(path: Path)` was used without `from pathlib import Path` in the pseudocode imports.
+**Discovered in Story 5.1 Round 1:** `Model.save(path: Path)` was used without `from pathlib import Path`.
+**Discovered in Story 5.1 Round 2:** `StatefulModel.update(game: Game)` used without `from ncaa_eval.ingest.schema import Game`; `StatefulFeatureServer` type annotation in separate dispatch code block had no import; `register_model` decorator missing `Callable` return type; `XGBClassifier.load_model()` incorrectly documented as class method; spurious `# type: ignore[override]` on `StatelessModel.predict()`.
 
 ### Dual-ABC Patterns: Document Evaluation Pipeline Dispatch Before Implementation (Discovered Story 5.1 Code Review, 2026-02-22)
 
@@ -1676,3 +1682,13 @@ AC 8 of Story 5.1 (post-PO SM downstream update) was present as an acceptance cr
 ```
 
 **Discovered in Story 5.1 Code Review, 2026-02-22.** Prior retrospective about AC existence discovered in Story 4.1 SM work (2026-02-21).
+
+### Code Review Must Not Advance Sprint-Status Past `review` for Open PO Gates (Discovered Story 5.1 Code Review Round 2, 2026-02-22)
+
+When a spike story has a **PO decision gate AC** (e.g., "PO reviews and approves scope"), the code review agent must set sprint-status to `review`, NOT `done`. The story should not advance to `done` until:
+1. The PO has reviewed and approved the spike findings (PO gate AC)
+2. The SM has completed the downstream epic update (post-PO SM AC)
+
+**Failure mode:** Round 1 review of Story 5.1 found "All ACs implemented" and set sprint-status → `done`, but AC 7 (PO gate) was explicitly unfulfilled. The sprint-status had to be reverted to `review` in Round 2.
+
+**Rule:** If any AC contains the phrase "product owner reviews", "PO approves", "decision gate", or similar, the code review agent MUST leave the story in `review` state regardless of how many other ACs are satisfied. Advancing to `done` requires human PO action, not agent action.
