@@ -19,6 +19,12 @@ from ncaa_eval.transform.normalization import (
     TourneySeedTable,
     parse_seed,
 )
+from ncaa_eval.transform.opponent import (
+    BatchRatingSolver,
+    compute_colley_ratings,
+    compute_ridge_ratings,
+    compute_srs_ratings,
+)
 from ncaa_eval.transform.sequential import (
     DetailedResultsLoader,
     SequentialTransformer,
@@ -39,6 +45,7 @@ from ncaa_eval.transform.serving import (
 )
 
 __all__ = [
+    "BatchRatingSolver",
     "ChronologicalDataServer",
     "ConferenceLookup",
     "CoverageGateResult",
@@ -54,6 +61,7 @@ __all__ = [
     "build_season_graph",
     "compute_betweenness_centrality",
     "compute_clustering_coefficient",
+    "compute_colley_ratings",
     "compute_ewma_stats",
     "compute_four_factors",
     "compute_game_weights",
@@ -61,8 +69,10 @@ __all__ = [
     "compute_momentum",
     "compute_pagerank",
     "compute_per_possession_stats",
+    "compute_ridge_ratings",
     "compute_possessions",
     "compute_rolling_stats",
+    "compute_srs_ratings",
     "compute_streak",
     "parse_seed",
     "rescale_overtime",

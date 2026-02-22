@@ -1,6 +1,6 @@
 # Story 4.6: Implement Batch Opponent Adjustment Rating Systems
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -30,49 +30,49 @@ so that I can generate features that account for schedule strength and quality o
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `src/ncaa_eval/transform/opponent.py` — module header, constants, class, and module-level convenience functions (AC: 1–7)
-  - [ ] 1.1: Module header: `from __future__ import annotations`, imports (`logging`, `numpy as np`, `pandas as pd`, `Ridge` from sklearn), module-level logger
-  - [ ] 1.2: Define constants: `DEFAULT_MARGIN_CAP: int = 25`, `DEFAULT_RIDGE_LAMBDA: float = 20.0`, `DEFAULT_SRS_MAX_ITER: int = 10_000`, `_SRS_CONVERGENCE_TOL: float = 1e-6`
-  - [ ] 1.3: Implement `BatchRatingSolver` class with `__init__(self, margin_cap, ridge_lambda, srs_max_iter)` — all keyword-only with defaults; stores `self._margin_cap`, `self._ridge_lambda`, `self._srs_max_iter`
-  - [ ] 1.4: Implement `BatchRatingSolver.compute_srs(self, games_df: pd.DataFrame) -> pd.DataFrame` — full SRS solver; returns DataFrame with columns `["team_id", "srs_rating"]`; see Dev Notes for vectorized implementation; empty-input guard returns empty DataFrame with correct columns
-  - [ ] 1.5: Implement `BatchRatingSolver.compute_ridge(self, games_df: pd.DataFrame) -> pd.DataFrame` — Ridge regression solver; returns DataFrame with columns `["team_id", "ridge_rating"]`; empty-input guard
-  - [ ] 1.6: Implement `BatchRatingSolver.compute_colley(self, games_df: pd.DataFrame) -> pd.DataFrame` — Colley Matrix solver; returns DataFrame with columns `["team_id", "colley_rating"]`; empty-input guard
-  - [ ] 1.7: Implement module-level convenience functions `compute_srs_ratings(games_df, *, margin_cap, max_iter)`, `compute_ridge_ratings(games_df, *, lam, margin_cap)`, `compute_colley_ratings(games_df)` — create a `BatchRatingSolver` instance with the given config and call the corresponding method; these are the primary exported public API
+- [x] Task 1: Create `src/ncaa_eval/transform/opponent.py` — module header, constants, class, and module-level convenience functions (AC: 1–7)
+  - [x] 1.1: Module header: `from __future__ import annotations`, imports (`logging`, `numpy as np`, `pandas as pd`, `Ridge` from sklearn), module-level logger
+  - [x] 1.2: Define constants: `DEFAULT_MARGIN_CAP: int = 25`, `DEFAULT_RIDGE_LAMBDA: float = 20.0`, `DEFAULT_SRS_MAX_ITER: int = 10_000`, `_SRS_CONVERGENCE_TOL: float = 1e-6`
+  - [x] 1.3: Implement `BatchRatingSolver` class with `__init__(self, margin_cap, ridge_lambda, srs_max_iter)` — all keyword-only with defaults; stores `self._margin_cap`, `self._ridge_lambda`, `self._srs_max_iter`
+  - [x] 1.4: Implement `BatchRatingSolver.compute_srs(self, games_df: pd.DataFrame) -> pd.DataFrame` — full SRS solver; returns DataFrame with columns `["team_id", "srs_rating"]`; see Dev Notes for vectorized implementation; empty-input guard returns empty DataFrame with correct columns
+  - [x] 1.5: Implement `BatchRatingSolver.compute_ridge(self, games_df: pd.DataFrame) -> pd.DataFrame` — Ridge regression solver; returns DataFrame with columns `["team_id", "ridge_rating"]`; empty-input guard
+  - [x] 1.6: Implement `BatchRatingSolver.compute_colley(self, games_df: pd.DataFrame) -> pd.DataFrame` — Colley Matrix solver; returns DataFrame with columns `["team_id", "colley_rating"]`; empty-input guard
+  - [x] 1.7: Implement module-level convenience functions `compute_srs_ratings(games_df, *, margin_cap, max_iter)`, `compute_ridge_ratings(games_df, *, lam, margin_cap)`, `compute_colley_ratings(games_df)` — create a `BatchRatingSolver` instance with the given config and call the corresponding method; these are the primary exported public API
 
-- [ ] Task 2: Export public API from `src/ncaa_eval/transform/__init__.py` (AC: 1–8)
-  - [ ] 2.1: Import and re-export `BatchRatingSolver`, `compute_srs_ratings`, `compute_ridge_ratings`, `compute_colley_ratings` from `transform/opponent.py`
-  - [ ] 2.2: Add all new names to `__all__`
+- [x] Task 2: Export public API from `src/ncaa_eval/transform/__init__.py` (AC: 1–8)
+  - [x] 2.1: Import and re-export `BatchRatingSolver`, `compute_srs_ratings`, `compute_ridge_ratings`, `compute_colley_ratings` from `transform/opponent.py`
+  - [x] 2.2: Add all new names to `__all__`
 
-- [ ] Task 3: Write unit tests in `tests/unit/test_opponent.py` (AC: 8)
-  - [ ] 3.1: `test_srs_linear_chain_ordering` — 4-team linear chain (team 1 beat 2 beat 3 beat 4, each margin 10); verify `srs_rating[1] > srs_rating[2] > srs_rating[3] > srs_rating[4]`
-  - [ ] 3.2: `test_srs_convergence_assertion` — 6-team balanced round-robin; compute SRS once, then again; verify results are within 1e-4 (deterministic convergence assertion)
-  - [ ] 3.3: `test_srs_symmetric_wins_equal_ratings` — team A beat B (margin 10), B beat A (margin 10); verify `srs_rating[A] ≈ srs_rating[B]` within 1e-6 (symmetric schedule → identical ratings)
-  - [ ] 3.4: `test_srs_margin_cap_applied` — blowout fixture (margin 100); verify SRS with `margin_cap=25` produces same result as SRS on a fixture with margin capped at 25 pre-call (cap is applied inside the solver)
-  - [ ] 3.5: `test_srs_ratings_sum_to_zero` — any connected fixture; verify `sum(srs_ratings) ≈ 0.0` within 1e-4 (ratings are zero-centered by convention)
-  - [ ] 3.6: `test_srs_empty_input` — empty DataFrame; verify returns empty DataFrame with columns `["team_id", "srs_rating"]` (no exception)
-  - [ ] 3.7: `test_ridge_lambda_high_shrinks_ratings` — same fixture with `lam=1.0` vs `lam=100.0`; verify `mean(abs(ridge_rating[lam=100])) < mean(abs(ridge_rating[lam=1]))` (higher λ → ratings closer to zero)
-  - [ ] 3.8: `test_ridge_lambda_sensitivity_ordering_preserved` — same fixture at two λ values; verify team ranking order (by rating value) is the same (λ affects magnitude, not direction of ratings)
-  - [ ] 3.9: `test_ridge_empty_input` — empty DataFrame; verify returns empty DataFrame with columns `["team_id", "ridge_rating"]` (no exception)
-  - [ ] 3.10: `test_colley_ignores_margin` — two fixtures: same wins/losses but different margins (team A beat B by 5 in fixture 1, by 50 in fixture 2); verify `colley_rating` is IDENTICAL between fixtures (win/loss only)
-  - [ ] 3.11: `test_colley_win_loss_ratio_reflected` — team A wins 8 of 10 games vs team B wins 2 of 10 games (same opponents); verify `colley_rating[A] > colley_rating[B]`
-  - [ ] 3.12: `test_colley_ratings_bounded` — verify all Colley ratings in fixture are within [0, 1] (guaranteed by Colley construction)
-  - [ ] 3.13: `test_colley_empty_input` — empty DataFrame; verify returns empty DataFrame with columns `["team_id", "colley_rating"]` (no exception)
-  - [ ] 3.14: `test_all_methods_return_correct_schema` — verify each method returns a DataFrame with `team_id` column (int dtype) and method-specific rating column (float dtype); row count equals number of unique teams in fixture
-  - [ ] 3.15: `test_convenience_functions_match_class_methods` — verify `compute_srs_ratings(df)` produces same result as `BatchRatingSolver().compute_srs(df)` for the same fixture
-  - [ ] 3.16: `@pytest.mark.no_mutation` `test_no_iterrows` — verify `opponent.py` source does not contain "iterrows" (uses `Path(__file__)` navigation — must be `no_mutation` marked)
+- [x] Task 3: Write unit tests in `tests/unit/test_opponent.py` (AC: 8)
+  - [x] 3.1: `test_srs_linear_chain_ordering` — 4-team linear chain (team 1 beat 2 beat 3 beat 4, each margin 10); verify `srs_rating[1] > srs_rating[2] > srs_rating[3] > srs_rating[4]`
+  - [x] 3.2: `test_srs_convergence_assertion` — 6-team balanced round-robin; compute SRS once, then again; verify results are within 1e-4 (deterministic convergence assertion)
+  - [x] 3.3: `test_srs_symmetric_wins_equal_ratings` — team A beat B (margin 10), B beat A (margin 10); verify `srs_rating[A] ≈ srs_rating[B]` within 1e-6 (symmetric schedule → identical ratings)
+  - [x] 3.4: `test_srs_margin_cap_applied` — blowout fixture (margin 100); verify SRS with `margin_cap=25` produces same result as SRS on a fixture with margin capped at 25 pre-call (cap is applied inside the solver)
+  - [x] 3.5: `test_srs_ratings_sum_to_zero` — any connected fixture; verify `sum(srs_ratings) ≈ 0.0` within 1e-4 (ratings are zero-centered by convention)
+  - [x] 3.6: `test_srs_empty_input` — empty DataFrame; verify returns empty DataFrame with columns `["team_id", "srs_rating"]` (no exception)
+  - [x] 3.7: `test_ridge_lambda_high_shrinks_ratings` — same fixture with `lam=1.0` vs `lam=100.0`; verify `mean(abs(ridge_rating[lam=100])) < mean(abs(ridge_rating[lam=1]))` (higher λ → ratings closer to zero)
+  - [x] 3.8: `test_ridge_lambda_sensitivity_ordering_preserved` — same fixture at two λ values; verify team ranking order (by rating value) is the same (λ affects magnitude, not direction of ratings)
+  - [x] 3.9: `test_ridge_empty_input` — empty DataFrame; verify returns empty DataFrame with columns `["team_id", "ridge_rating"]` (no exception)
+  - [x] 3.10: `test_colley_ignores_margin` — two fixtures: same wins/losses but different margins (team A beat B by 5 in fixture 1, by 50 in fixture 2); verify `colley_rating` is IDENTICAL between fixtures (win/loss only)
+  - [x] 3.11: `test_colley_win_loss_ratio_reflected` — team A wins 8 of 10 games vs team B wins 2 of 10 games (same opponents); verify `colley_rating[A] > colley_rating[B]`
+  - [x] 3.12: `test_colley_ratings_bounded` — verify all Colley ratings in fixture are within [0, 1] (guaranteed by Colley construction)
+  - [x] 3.13: `test_colley_empty_input` — empty DataFrame; verify returns empty DataFrame with columns `["team_id", "colley_rating"]` (no exception)
+  - [x] 3.14: `test_all_methods_return_correct_schema` — verify each method returns a DataFrame with `team_id` column (int dtype) and method-specific rating column (float dtype); row count equals number of unique teams in fixture
+  - [x] 3.15: `test_convenience_functions_match_class_methods` — verify `compute_srs_ratings(df)` produces same result as `BatchRatingSolver().compute_srs(df)` for the same fixture
+  - [x] 3.16: `@pytest.mark.no_mutation` `test_no_iterrows` — verify `opponent.py` source does not contain "iterrows" (uses `Path(__file__)` navigation — must be `no_mutation` marked)
 
-- [ ] Task 4: Manual sanity-check validation against MAS ordinals (AC: 6)
-  - [ ] 4.1: Load a full season (e.g., 2023) compact game data from Parquet; filter to `is_tournament == False`; run `compute_srs_ratings()`
-  - [ ] 4.2: Load MAS ordinals for 2023 via `MasseyOrdinalsStore.filter_by_day(day_num=128, systems=["MAS"])`; extract pre-tournament snapshot
-  - [ ] 4.3: Compute Spearman rank correlation between SRS ratings (higher = better) and MAS ordinals (lower rank = better, so invert); verify correlation ≥ 0.85
-  - [ ] 4.4: Document results in Dev Agent Record completion notes
+- [x] Task 4: Manual sanity-check validation against MAS ordinals (AC: 6)
+  - [x] 4.1: Load a full season (e.g., 2023) compact game data from Parquet; filter to `is_tournament == False`; run `compute_srs_ratings()`
+  - [x] 4.2: Load MAS ordinals for 2023 via `MasseyOrdinalsStore.pre_tournament_snapshot(season=2023, systems=["MAS"])`; extract pre-tournament snapshot
+  - [x] 4.3: Compute Spearman rank correlation between SRS ratings (higher = better) and MAS ordinals (lower rank = better, so invert); verify correlation ≥ 0.85
+  - [x] 4.4: Document results in Dev Agent Record completion notes
 
-- [ ] Task 5: Quality gates and commit (AC: all)
-  - [ ] 5.1: Run `POETRY_VIRTUALENVS_CREATE=false conda run -n ncaa_eval ruff check .`
-  - [ ] 5.2: Run `POETRY_VIRTUALENVS_CREATE=false conda run -n ncaa_eval mypy --strict src/ncaa_eval tests`
-  - [ ] 5.3: Run `POETRY_VIRTUALENVS_CREATE=false conda run -n ncaa_eval pytest tests/unit/test_opponent.py -v`
-  - [ ] 5.4: Commit: `feat(transform): implement batch opponent adjustment rating systems (Story 4.6)`
-  - [ ] 5.5: Update `_bmad-output/implementation-artifacts/sprint-status.yaml`: `4-6-implement-opponent-adjustments` → `review`
+- [x] Task 5: Quality gates and commit (AC: all)
+  - [x] 5.1: Run `POETRY_VIRTUALENVS_CREATE=false conda run -n ncaa_eval ruff check .`
+  - [x] 5.2: Run `POETRY_VIRTUALENVS_CREATE=false conda run -n ncaa_eval mypy --strict src/ncaa_eval tests`
+  - [x] 5.3: Run `POETRY_VIRTUALENVS_CREATE=false conda run -n ncaa_eval pytest tests/unit/test_opponent.py -v`
+  - [x] 5.4: Commit: `feat(transform): implement batch opponent adjustment rating systems (Story 4.6)`
+  - [x] 5.5: Update `_bmad-output/implementation-artifacts/sprint-status.yaml`: `4-6-implement-opponent-adjustments` → `review`
 
 ## Dev Notes
 
@@ -436,10 +436,41 @@ POETRY_VIRTUALENVS_CREATE=false conda run -n ncaa_eval pytest tests/unit/test_op
 
 ### Agent Model Used
 
-Claude Sonnet 4.6 (create-story workflow)
+Claude Sonnet 4.6 (create-story workflow, dev-story workflow)
 
 ### Debug Log References
 
+**mypy type annotation fixes (numpy 2.x / sklearn 1.8):**
+- `numpy` ships py.typed — do NOT use `# type: ignore[import-untyped]` on numpy import
+- `pandas` does NOT ship py.typed — MUST use `# type: ignore[import-untyped]` on both src and test imports
+- `sklearn.linear_model.Ridge` lacks stubs — MUST use `# type: ignore[import-untyped]` on sklearn import
+- `sklearn 1.8` `Ridge.coef_` is always ndarray after fit; no `# type: ignore[union-attr]` needed
+- `np.linalg.solve` / `np.linalg.lstsq` return `ndarray[..., floating[Any]]` not `ndarray[..., float64]` — use `# type: ignore[assignment]` on the assignment line
+- `_build_srs_matrices()` helper extracted to reduce cyclomatic complexity of `compute_srs`
+- `_build_team_index()` helper extracts common team index building logic shared by all three solvers
+
+**ruff import ordering:**
+- `from __future__ import annotations` must immediately precede stdlib imports (no blank line)
+- Local imports from `ncaa_eval.*` are sorted alphabetically by module name within the transform package
+
 ### Completion Notes List
 
+- ✅ **Task 1**: Implemented `BatchRatingSolver` with `compute_srs`, `compute_ridge`, `compute_colley` methods + 3 module-level convenience functions. All vectorized via `np.add.at` scatter and matrix operations — no `iterrows` or Python loops over game rows.
+- ✅ **Task 2**: Exported `BatchRatingSolver`, `compute_srs_ratings`, `compute_ridge_ratings`, `compute_colley_ratings` from `transform/__init__.py` and added to `__all__`.
+- ✅ **Task 3**: 16 unit tests written and passing in `tests/unit/test_opponent.py`. All 3 solvers covered: SRS (6 tests), Ridge (3 tests), Colley (4 tests), cross-method schema/API (3 tests).
+- ✅ **Task 4 — MAS Sanity Check (2023 season)**:
+  - 5,602 regular-season games (filtered `is_tournament == False`)
+  - SRS computed for 363 teams
+  - Spearman rank correlation with pre-tournament MAS ordinals (day_num ≤ 128): **r = 0.9859** (p = 3.37e-282)
+  - Threshold ≥ 0.85: **PASS** (significantly exceeds expectation)
+  - Top SRS teams (team_ids): 1417 (SRS 20.0, MAS rank 4), 1104 (SRS 19.7, MAS rank 3), 1222 (SRS 19.2, MAS rank 1)
+  - Bottom SRS teams align correctly with worst MAS ranks (1254 @ rank 363, 1216 @ rank 362)
+- ✅ **Task 5**: All quality gates passed — ruff, mypy --strict, pytest 16/16 + 265/265 regression tests green. Story committed.
+
 ### File List
+
+- `src/ncaa_eval/transform/opponent.py` (new)
+- `src/ncaa_eval/transform/__init__.py` (modified — added opponent exports)
+- `tests/unit/test_opponent.py` (new)
+- `_bmad-output/implementation-artifacts/4-6-implement-opponent-adjustments.md` (modified — this story file)
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified — status → review)
