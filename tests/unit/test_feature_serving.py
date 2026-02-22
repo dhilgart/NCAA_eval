@@ -94,7 +94,7 @@ class TestFeatureConfig:
         assert FeatureBlock.BATCH_RATING in blocks
         assert FeatureBlock.ORDINAL in blocks
         assert FeatureBlock.SEED in blocks
-        # ELO is always excluded (placeholder for 4.8)
+        # ELO excluded by default (elo_enabled=False)
         assert FeatureBlock.ELO not in blocks
 
     def test_active_blocks_graph_disabled(self) -> None:
@@ -566,3 +566,132 @@ class TestScopeFiltering:
         )
         assert server.config.gender_scope == "W"
         assert server.config.dataset_scope == "all"
+
+
+# ── Task 5 (Story 4.8): Elo feature serving integration tests ───────────────
+
+
+class TestEloFeatureConfig:
+    """Tests for elo_enabled and elo_config fields on FeatureConfig."""
+
+    def test_elo_disabled_by_default(self) -> None:
+        cfg = FeatureConfig()
+        assert cfg.elo_enabled is False
+        assert cfg.elo_config is None
+
+    def test_elo_enabled_in_active_blocks(self) -> None:
+        cfg = FeatureConfig(elo_enabled=True)
+        blocks = cfg.active_blocks()
+        assert FeatureBlock.ELO in blocks
+
+    def test_elo_disabled_not_in_active_blocks(self) -> None:
+        cfg = FeatureConfig(elo_enabled=False)
+        blocks = cfg.active_blocks()
+        assert FeatureBlock.ELO not in blocks
+
+    def test_elo_config_stored(self) -> None:
+        from ncaa_eval.transform.elo import EloConfig
+
+        ecfg = EloConfig(initial_rating=1400)
+        cfg = FeatureConfig(elo_enabled=True, elo_config=ecfg)
+        assert cfg.elo_config is not None
+        assert cfg.elo_config.initial_rating == 1400
+
+
+class TestEloFeatureServing:
+    """Tests for StatefulFeatureServer with Elo enabled."""
+
+    def _elo_config(self) -> FeatureConfig:
+        return FeatureConfig(
+            sequential_windows=(),
+            ewma_alphas=(),
+            graph_features_enabled=False,
+            batch_rating_types=(),
+            ordinal_composite=None,
+            matchup_deltas=True,
+            calibration_method=None,
+            elo_enabled=True,
+        )
+
+    def test_batch_mode_has_elo_columns(self) -> None:
+        from ncaa_eval.transform.elo import EloConfig, EloFeatureEngine
+
+        games = _make_games(3)
+        ds = _mock_data_server(games)
+        engine = EloFeatureEngine(EloConfig())
+        server = StatefulFeatureServer(
+            config=self._elo_config(),
+            data_server=ds,
+            elo_engine=engine,
+        )
+        result = server.serve_season_features(2023, mode="batch")
+        assert "elo_a" in result.columns
+        assert "elo_b" in result.columns
+        assert "delta_elo" in result.columns
+
+    def test_batch_mode_delta_elo_is_numeric(self) -> None:
+        from ncaa_eval.transform.elo import EloConfig, EloFeatureEngine
+
+        games = _make_games(3)
+        ds = _mock_data_server(games)
+        engine = EloFeatureEngine(EloConfig())
+        server = StatefulFeatureServer(
+            config=self._elo_config(),
+            data_server=ds,
+            elo_engine=engine,
+        )
+        result = server.serve_season_features(2023, mode="batch")
+        # delta_elo should be non-NaN (actual Elo values, not placeholder)
+        assert not pd.isna(result.iloc[0]["delta_elo"])
+
+    def test_stateful_mode_has_elo_columns(self) -> None:
+        from ncaa_eval.transform.elo import EloConfig, EloFeatureEngine
+
+        games = _make_games(3)
+        ds = _mock_data_server(games)
+        engine = EloFeatureEngine(EloConfig())
+        server = StatefulFeatureServer(
+            config=self._elo_config(),
+            data_server=ds,
+            elo_engine=engine,
+        )
+        result = server.serve_season_features(2023, mode="stateful")
+        assert "elo_a" in result.columns
+        assert "elo_b" in result.columns
+        assert "delta_elo" in result.columns
+        assert not pd.isna(result.iloc[0]["delta_elo"])
+
+    def test_elo_disabled_delta_elo_is_nan(self) -> None:
+        """When elo_enabled=False, delta_elo should still be NaN."""
+        games = _make_games(3)
+        ds = _mock_data_server(games)
+        cfg = _minimal_config()
+        server = StatefulFeatureServer(config=cfg, data_server=ds)
+        result = server.serve_season_features(2023, mode="batch")
+        assert "delta_elo" in result.columns
+        assert pd.isna(result.iloc[0]["delta_elo"])
+
+    def test_elo_disabled_stateful_delta_elo_is_nan(self) -> None:
+        games = _make_games(3)
+        ds = _mock_data_server(games)
+        cfg = _minimal_config()
+        server = StatefulFeatureServer(config=cfg, data_server=ds)
+        result = server.serve_season_features(2023, mode="stateful")
+        assert "delta_elo" in result.columns
+        assert pd.isna(result.iloc[0]["delta_elo"])
+
+    def test_first_game_elo_is_initial(self) -> None:
+        """First game: both teams start at initial_rating → delta_elo = 0."""
+        from ncaa_eval.transform.elo import EloConfig, EloFeatureEngine
+
+        game = _make_game(game_id="1", w_team_id=101, l_team_id=102)
+        ds = _mock_data_server([game])
+        engine = EloFeatureEngine(EloConfig())
+        server = StatefulFeatureServer(
+            config=self._elo_config(),
+            data_server=ds,
+            elo_engine=engine,
+        )
+        result = server.serve_season_features(2023, mode="batch")
+        # Both teams start at 1500 → delta = 0
+        assert result.iloc[0]["delta_elo"] == pytest.approx(0.0)

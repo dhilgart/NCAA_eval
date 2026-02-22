@@ -18,6 +18,7 @@ from ncaa_eval.transform.serving import ChronologicalDataServer
 
 if TYPE_CHECKING:
     from ncaa_eval.ingest.schema import Game
+    from ncaa_eval.transform.elo import EloConfig, EloFeatureEngine
     from ncaa_eval.transform.normalization import (
         MasseyOrdinalsStore,
         TourneySeedTable,
@@ -84,12 +85,11 @@ class FeatureConfig:
     gender_scope: str = field(default="M")
     dataset_scope: str = field(default="kaggle")
     calibration_method: str | None = "isotonic"
+    elo_enabled: bool = False
+    elo_config: EloConfig | None = field(default=None)
 
     def active_blocks(self) -> frozenset[FeatureBlock]:
-        """Return the set of feature blocks that are currently enabled.
-
-        ELO is always excluded (placeholder until Story 4.8).
-        """
+        """Return the set of feature blocks that are currently enabled."""
         blocks: set[FeatureBlock] = set()
 
         if self.sequential_windows:
@@ -102,6 +102,8 @@ class FeatureConfig:
             blocks.add(FeatureBlock.ORDINAL)
         # Seed is always active (NaN for non-tournament games)
         blocks.add(FeatureBlock.SEED)
+        if self.elo_enabled:
+            blocks.add(FeatureBlock.ELO)
 
         return frozenset(blocks)
 
@@ -158,6 +160,8 @@ class StatefulFeatureServer:
         Tournament seed lookup table (optional; needed for seed features).
     ordinals_store
         Massey ordinals store (optional; needed for ordinal features).
+    elo_engine
+        Elo feature engine (optional; needed when ``elo_enabled=True``).
     """
 
     def __init__(
@@ -167,11 +171,13 @@ class StatefulFeatureServer:
         *,
         seed_table: TourneySeedTable | None = None,
         ordinals_store: MasseyOrdinalsStore | None = None,
+        elo_engine: EloFeatureEngine | None = None,
     ) -> None:
         self.config = config
         self._data_server = data_server
         self._seed_table = seed_table
         self._ordinals_store = ordinals_store
+        self._elo_engine = elo_engine
 
     # ── Public API ───────────────────────────────────────────────────────
 
@@ -220,9 +226,18 @@ class StatefulFeatureServer:
 
         df = self._append_per_game_columns_batch(df, games, active, batch_indexed, ordinal_systems)
 
+        # Elo feature block
+        if FeatureBlock.ELO in active and self._elo_engine is not None:
+            elo_df = self._elo_engine.process_season(games, year)
+            df["elo_a"] = elo_df["elo_w_before"].to_list()
+            df["elo_b"] = elo_df["elo_l_before"].to_list()
+
         if self.config.matchup_deltas:
             df = self._compute_matchup_deltas(df, active)
-        df["delta_elo"] = np.nan
+
+        # Ensure delta_elo is always present (NaN when ELO disabled)
+        if "delta_elo" not in df.columns:
+            df["delta_elo"] = np.nan
         return df
 
     def _append_per_game_columns_batch(
@@ -274,18 +289,42 @@ class StatefulFeatureServer:
 
         Batch ratings are pre-computed from regular-season games (no leakage
         because they use only data before the tournament).  Ordinals are sliced
-        per-game at each game's ``day_num``.  Incremental graph/Elo state
-        accumulation is a placeholder for Story 4.8.
+        per-game at each game's ``day_num``.  Elo ratings are updated
+        incrementally per game when the ELO block is active.
         """
         active = self.config.active_blocks()
         batch_indexed = self._build_batch_indexed(games, active)
         ordinal_systems = self._resolve_ordinal_systems() if FeatureBlock.ORDINAL in active else []
+        elo_active = FeatureBlock.ELO in active and self._elo_engine is not None
 
-        result_rows = [self._build_game_row(game, active, batch_indexed, ordinal_systems) for game in games]
+        # Apply season mean-reversion if Elo engine has prior ratings
+        if elo_active and self._elo_engine is not None and self._elo_engine._ratings:
+            self._elo_engine.start_new_season(year)
+
+        result_rows: list[dict[str, object]] = []
+        for game in games:
+            row = self._build_game_row(game, active, batch_indexed, ordinal_systems)
+            if elo_active and self._elo_engine is not None:
+                elo_w, elo_l = self._elo_engine.update_game(
+                    w_team_id=game.w_team_id,
+                    l_team_id=game.l_team_id,
+                    w_score=game.w_score,
+                    l_score=game.l_score,
+                    loc=game.loc,
+                    is_tournament=game.is_tournament,
+                    num_ot=game.num_ot,
+                )
+                row["elo_a"] = elo_w
+                row["elo_b"] = elo_l
+            result_rows.append(row)
         df = pd.DataFrame(result_rows)
 
         if self.config.matchup_deltas and not df.empty:
             df = self._compute_matchup_deltas(df, active)
+
+        # Ensure delta_elo is always present (NaN when ELO disabled)
+        if "delta_elo" not in df.columns:
+            df["delta_elo"] = np.nan
         return df
 
     def _build_game_row(
@@ -314,7 +353,7 @@ class StatefulFeatureServer:
                 row[f"{rating_type}_b"] = (
                     float(series.get(game.l_team_id, np.nan)) if series is not None else np.nan
                 )
-        row["delta_elo"] = np.nan
+        # Note: elo_a/elo_b added by _serve_stateful() caller when ELO active
         return row
 
     # ── Internal: ordinal features (Task 3) ──────────────────────────────
@@ -457,6 +496,10 @@ class StatefulFeatureServer:
                 if col_a in df.columns:
                     df[f"delta_{rating_type}"] = df[col_a] - df[col_b]
 
+        # Elo delta
+        if FeatureBlock.ELO in active and "elo_a" in df.columns:
+            df["delta_elo"] = df["elo_a"] - df["elo_b"]
+
         return df
 
     # ── Internal: metadata extraction ────────────────────────────────────
@@ -481,6 +524,25 @@ class StatefulFeatureServer:
         }
 
     def _empty_frame(self) -> pd.DataFrame:
-        """Return an empty DataFrame with the correct column set."""
-        cols = list(_META_COLUMNS) + ["delta_elo"]
+        """Return an empty DataFrame with the correct column set.
+
+        Includes all columns that would appear in a non-empty season for the
+        current active feature blocks, so downstream code can rely on column
+        presence regardless of whether a season has games.
+        """
+        active = self.config.active_blocks()
+        cols: list[str] = list(_META_COLUMNS)
+
+        if FeatureBlock.ORDINAL in active:
+            cols += ["ordinal_composite_a", "ordinal_composite_b", "delta_ordinal_composite"]
+        if FeatureBlock.SEED in active:
+            cols += ["seed_num_a", "seed_num_b", "seed_diff"]
+        if FeatureBlock.BATCH_RATING in active:
+            for rt in self.config.batch_rating_types:
+                cols += [f"{rt}_a", f"{rt}_b", f"delta_{rt}"]
+        if FeatureBlock.ELO in active:
+            cols += ["elo_a", "elo_b"]
+
+        # delta_elo always present for backward compatibility
+        cols.append("delta_elo")
         return pd.DataFrame(columns=cols)

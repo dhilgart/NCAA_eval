@@ -6,6 +6,10 @@ from ncaa_eval.transform.calibration import (
     IsotonicCalibrator,
     SigmoidCalibrator,
 )
+from ncaa_eval.transform.elo import (
+    EloConfig,
+    EloFeatureEngine,
+)
 from ncaa_eval.transform.feature_serving import (
     FeatureBlock,
     FeatureConfig,
@@ -59,6 +63,8 @@ __all__ = [
     "ConferenceLookup",
     "CoverageGateResult",
     "DetailedResultsLoader",
+    "EloConfig",
+    "EloFeatureEngine",
     "FeatureBlock",
     "FeatureConfig",
     "GraphTransformer",
