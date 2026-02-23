@@ -438,6 +438,39 @@ assert best_iteration is not None, "Expected best_iteration to be set (early sto
 assert best_iteration < 500, f"Early stopping should fire before 500; got {best_iteration}"
 ```
 
+### Testable CLI Orchestration: Pass Console as Parameter ⭐ (Discovered Story 5.5 Code Review)
+
+When a CLI orchestration function (`run_training`, `run_evaluation`, etc.) uses `rich.console.Console` for terminal output, accept it as an **optional parameter** rather than using a module-level singleton. This keeps the function pure (no hidden I/O state) and lets tests suppress output.
+
+```python
+# ❌ Anti-pattern: module-level Console — sprays to stdout in unit tests
+console = Console()
+
+def run_training(...) -> ModelRun:
+    console.print("Training...")  # Uncapturable in unit tests
+
+# ✅ Correct: Console as optional parameter with sensible default
+def run_training(..., console: Console | None = None) -> ModelRun:
+    _console = console or Console()
+    _console.print("Training...")  # Tests pass Console(quiet=True) to suppress
+```
+
+**Rationale:** Module-level `Console()` instances are side-effectful singletons. Functional design rule requires side effects pushed to edges — the CLI entry point creates and passes the Console; the pipeline function remains testable.
+
+### `TYPE_CHECKING` Empty Block Is a Ruff Blind Spot ⭐ (Discovered Story 5.5 Code Review)
+
+Ruff does **not** flag an `if TYPE_CHECKING: pass` block with nothing meaningful inside it. This scaffold artifact can survive into production, polluting the import list with an unused `TYPE_CHECKING` import and misleading future readers.
+
+```python
+# ❌ Invisible to ruff — must be caught in code review
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    pass  # Ruff sees this as valid; no F401, no warning
+```
+
+**Rule:** During code review, always scan for `if TYPE_CHECKING:` blocks containing only `pass` — they are dead code and should be removed along with the `TYPE_CHECKING` import.
+
 ### CI/CD Integration
 - 4-tier quality gates: Pre-commit (< 10s) → PR/CI (full) → AI review → Owner review
 - Pre-commit: lint, format, type-check, smoke tests
