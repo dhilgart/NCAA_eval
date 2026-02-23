@@ -1,6 +1,6 @@
 # Story 5.5: Implement Model Run Tracking & Training CLI
 
-Status: review
+Status: done
 
 ## Story
 
@@ -349,3 +349,10 @@ Claude Opus 4.6
 ### Change Log
 
 - 2026-02-23: Implemented model run tracking (ModelRun, Prediction, RunStore) and training CLI (`python -m ncaa_eval.cli train`) with Rich progress bars and results summary. 17 new tests (13 unit + 4 integration), 496 total passing.
+- 2026-02-23: Code review fixes applied (6 issues fixed, 497 tests passing):
+  - [H1] Removed dead `if TYPE_CHECKING: pass` block and unused `TYPE_CHECKING` import from `train.py`
+  - [H2] Strengthened `test_train_logistic_regression` to assert `model_type`, `start_year`, `end_year` in persisted run
+  - [M2] Added `test_load_predictions_missing_raises` to cover `RunStore.load_predictions()` error path
+  - [M4] Changed `run_training()` to accept `console: Console | None = None` parameter instead of module-level singleton
+  - [L2] Deduplicated `_feature_cols()` call — computed once before train, reused for tournament prediction
+  - [L4] Added `start_year > end_year` validation guard in `train` CLI command with clear error message

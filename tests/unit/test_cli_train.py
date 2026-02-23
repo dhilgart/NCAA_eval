@@ -67,7 +67,7 @@ class TestCLITrain:
         _mock_serve_season_features,
     )
     def test_train_logistic_regression(self, tmp_path: Path) -> None:
-        """CLI invocation with logistic_regression produces output files."""
+        """CLI invocation with logistic_regression creates a run with correct model_type."""
         data_dir = tmp_path / "data"
         data_dir.mkdir()
         output_dir = tmp_path / "output"
@@ -90,6 +90,14 @@ class TestCLITrain:
             ],
         )
         assert result.exit_code == 0, f"CLI failed: {result.output}"
+
+        # Verify the persisted run records the correct model_type and year range
+        store = RunStore(base_path=output_dir)
+        runs = store.list_runs()
+        assert len(runs) == 1
+        assert runs[0].model_type == "logistic_regression"
+        assert runs[0].start_year == 2020
+        assert runs[0].end_year == 2021
 
     # -----------------------------------------------------------------------
     # Task 6.2: CLI produces run.json and predictions.parquet output files

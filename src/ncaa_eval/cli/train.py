@@ -10,7 +10,6 @@ from __future__ import annotations
 import subprocess
 import uuid
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import pandas as pd  # type: ignore[import-untyped]
 from rich.console import Console
@@ -22,11 +21,6 @@ from ncaa_eval.model.base import Model, StatefulModel
 from ncaa_eval.model.tracking import ModelRun, Prediction, RunStore
 from ncaa_eval.transform.feature_serving import FeatureConfig, StatefulFeatureServer
 from ncaa_eval.transform.serving import ChronologicalDataServer
-
-if TYPE_CHECKING:
-    pass
-
-console = Console()
 
 # Metadata columns that must be stripped before feeding stateless models.
 METADATA_COLS = frozenset(
@@ -74,6 +68,7 @@ def run_training(  # noqa: PLR0913
     data_dir: Path,
     output_dir: Path,
     model_name: str,
+    console: Console | None = None,
 ) -> ModelRun:
     """Execute the full train → predict → persist pipeline.
 
@@ -89,12 +84,18 @@ def run_training(  # noqa: PLR0913
         Path where run artifacts are persisted.
     model_name
         Registered plugin name (used in the ModelRun record).
+    console
+        Rich Console instance for terminal output.  Defaults to a fresh
+        ``Console()`` so callers (e.g. tests) can suppress output by
+        passing ``Console(quiet=True)``.
 
     Returns
     -------
     ModelRun
         The persisted run metadata record.
     """
+    _console = console or Console()
+
     repo = ParquetRepository(base_path=data_dir)
     data_server = ChronologicalDataServer(repo)
     feature_config = FeatureConfig(
@@ -122,7 +123,7 @@ def run_training(  # noqa: PLR0913
             progress.advance(task)
 
     if not season_frames:
-        console.print("[yellow]No game data found for the specified year range.[/yellow]")
+        _console.print("[yellow]No game data found for the specified year range.[/yellow]")
         run_id = str(uuid.uuid4())
         run = ModelRun(
             run_id=run_id,
@@ -145,20 +146,22 @@ def run_training(  # noqa: PLR0913
     # -- Label balance warning --
     label_mean = y.mean()
     if label_mean > 0.95 or label_mean < 0.05:
-        console.print(
+        _console.print(
             f"[yellow]Warning: labels are heavily imbalanced "
             f"(mean={label_mean:.3f}). Consider randomising team assignment "
             f"or adjusting scale_pos_weight.[/yellow]"
         )
 
+    # -- Compute feature columns once (reused for both training and prediction) --
+    feat_cols = _feature_cols(combined)
+
     # -- Train --
-    console.print(f"Training [bold]{model_name}[/bold] on seasons {start_year}–{end_year}...")
+    _console.print(f"Training [bold]{model_name}[/bold] on seasons {start_year}–{end_year}...")
     if is_stateful:
         # Stateful models need full DataFrame (metadata + features)
         model.fit(combined, y)
     else:
         # Stateless models need only feature columns
-        feat_cols = _feature_cols(combined)
         model.fit(combined[feat_cols], y)
 
     # -- Generate predictions on tournament games --
@@ -170,7 +173,6 @@ def run_training(  # noqa: PLR0913
         if is_stateful:
             probs = model.predict_proba(tourney)
         else:
-            feat_cols = _feature_cols(tourney)
             probs = model.predict_proba(tourney[feat_cols])
 
         for idx, prob in probs.items():
@@ -209,6 +211,6 @@ def run_training(  # noqa: PLR0913
     table.add_row("Games trained", str(len(combined)))
     table.add_row("Tournament predictions", str(len(predictions)))
     table.add_row("Git hash", run.git_hash)
-    console.print(table)
+    _console.print(table)
 
     return run

@@ -209,6 +209,12 @@ class TestRunStore:
         with pytest.raises(FileNotFoundError):
             store.load_run("nonexistent-run")
 
+    def test_load_predictions_missing_raises(self, tmp_path: Path) -> None:
+        """load_predictions raises FileNotFoundError for unknown run IDs."""
+        store = RunStore(base_path=tmp_path)
+        with pytest.raises(FileNotFoundError):
+            store.load_predictions("nonexistent-run")
+
     def test_save_creates_run_json(self, tmp_path: Path) -> None:
         store = RunStore(base_path=tmp_path)
         run = ModelRun(

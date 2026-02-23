@@ -50,6 +50,10 @@ def train(  # noqa: PLR0913
     config: Path | None = typer.Option(None, "--config", help="Path to JSON config override"),
 ) -> None:
     """Train a model on NCAA basketball data and persist run artifacts."""
+    if start_year > end_year:
+        console.print(f"[red]Error: --start-year ({start_year}) must be ≤ --end-year ({end_year})[/red]")
+        raise typer.Exit(code=1)
+
     try:
         model_cls = get_model(model)
     except ModelNotFoundError:
