@@ -24,20 +24,20 @@ So that I can implement custom models that plug into the training and evaluation
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `ModelConfig` base class (AC: #5)
-  - [ ] 1.1 Define `ModelConfig(PydanticBaseModel)` with `model_name: str` in `src/ncaa_eval/model/base.py`
-  - [ ] 1.2 Verify Pydantic v2 JSON serialization round-trip
+- [x] Task 1: Create `ModelConfig` base class (AC: #5)
+  - [x] 1.1 Define `ModelConfig(PydanticBaseModel)` with `model_name: str` in `src/ncaa_eval/model/base.py`
+  - [x] 1.2 Verify Pydantic v2 JSON serialization round-trip
 
-- [ ] Task 2: Create `Model` ABC (AC: #1, #2, #3, #4)
-  - [ ] 2.1 Define `Model(ABC)` with abstract methods: `fit`, `predict_proba`, `save`, `load`, `get_config`
-  - [ ] 2.2 Ensure `load` is `@classmethod @abstractmethod` returning `Self`
-  - [ ] 2.3 Verify `mypy --strict` passes on the ABC definition
+- [x] Task 2: Create `Model` ABC (AC: #1, #2, #3, #4)
+  - [x] 2.1 Define `Model(ABC)` with abstract methods: `fit`, `predict_proba`, `save`, `load`, `get_config`
+  - [x] 2.2 Ensure `load` is `@classmethod @abstractmethod` returning `Self`
+  - [x] 2.3 Verify `mypy --strict` passes on the ABC definition
 
-- [ ] Task 3: Create `StatefulModel` subclass (AC: #6)
-  - [ ] 3.1 Implement concrete `fit(X, y)` template method — reconstruct `Game` objects from X columns, iterate sequentially calling `start_season()` at season boundaries and `update()` per game
-  - [ ] 3.2 Implement concrete `_to_games(X, y) -> list[Game]` — map DataFrame columns to `Game` fields; this is a concrete method on `StatefulModel`, NOT abstract
-  - [ ] 3.3 Implement concrete `predict_proba(X)` template — iterate rows with `itertuples()`, call `_predict_one(team_a_id, team_b_id)` per row
-  - [ ] 3.4 Define abstract hooks: `_predict_one`, `update`, `start_season`, `get_state`, `set_state`
+- [x] Task 3: Create `StatefulModel` subclass (AC: #6)
+  - [x] 3.1 Implement concrete `fit(X, y)` template method — reconstruct `Game` objects from X columns, iterate sequentially calling `start_season()` at season boundaries and `update()` per game
+  - [x] 3.2 Implement concrete `_to_games(X, y) -> list[Game]` — map DataFrame columns to `Game` fields; this is a concrete method on `StatefulModel`, NOT abstract
+  - [x] 3.3 Implement concrete `predict_proba(X)` template — iterate rows with `itertuples()`, call `_predict_one(team_a_id, team_b_id)` per row
+  - [x] 3.4 Define abstract hooks: `_predict_one`, `update`, `start_season`, `get_state`, `set_state`
 
 - [ ] Task 4: Create plugin registry (AC: #8)
   - [ ] 4.1 Implement `_MODEL_REGISTRY` dict, `@register_model("name")` decorator, `get_model(name)`, `list_models()` in `src/ncaa_eval/model/registry.py`
@@ -223,10 +223,15 @@ class Game(BaseModel):
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
 ### Completion Notes List
 
+- Tasks 1-3: Created `ModelConfig`, `Model` ABC, and `StatefulModel` in `base.py`. All 13 unit tests pass covering: config validation/serialization, ABC enforcement, `_to_games()` reconstruction, `fit()` season boundaries, `predict_proba()` dispatch, and `get_state`/`set_state` round-trip.
+
 ### File List
+
+- `src/ncaa_eval/model/base.py` (new)
+- `tests/unit/test_model_base.py` (new)
