@@ -1,6 +1,6 @@
 # Story 5.1: Research Modeling Approaches
 
-Status: review
+Status: done
 
 ## Story
 
@@ -22,9 +22,9 @@ So that I can ensure the Model ABC supports all viable approaches and select the
 
 6. **Reference Models Recommended** — Reference models to implement first (Stories 5.3 and 5.4) are recommended with rationale, including which approaches are most proven for NCAA prediction and most useful as templates.
 
-7. **PO Decision Gate** — The product owner reviews the spike findings and approves which modeling approaches to include in the MVP scope before downstream stories (5.2–5.5) begin implementation.
+7. **PO Decision Gate** — The product owner reviews the spike findings and approves which modeling approaches to include in the MVP scope before downstream stories (5.2–5.5) begin implementation. ✅ **PO approved Option A (2026-02-23): Model ABC + Elo (Story 5.3) + XGBoost (Story 5.4); all other models are user-space extensions.**
 
-8. **Post-PO SM Downstream Update** — After PO approval of the spike findings, the SM updates the downstream story descriptions in `epics.md` to incorporate all building blocks and scope decisions from the research document — adding new story placeholders as needed and moving deferred items to the Post-MVP Backlog.
+8. **Post-PO SM Downstream Update** — After PO approval of the spike findings, the SM updates the downstream story descriptions in `epics.md` to incorporate all building blocks and scope decisions from the research document — adding new story placeholders as needed and moving deferred items to the Post-MVP Backlog. ✅ **Completed 2026-02-23.**
 
 9. **Research Document Committed** — The findings are committed as `specs/research/modeling-approaches.md`.
 
@@ -79,11 +79,11 @@ So that I can ensure the Model ABC supports all viable approaches and select the
   - [x] 7.5 Commit research document
   - [x] 7.6 Update sprint-status.yaml: `5-1-research-modeling-approaches` → `review`
 
-- [ ] Task 8: Post-PO SM downstream update (AC: #8) — SM WORK, NOT DEV WORK
-  - [ ] 8.1 After PO approves spike findings, SM updates downstream story descriptions (Stories 5.2–5.5) in `_bmad-output/planning-artifacts/epics.md` to reflect all scope decisions and building blocks from `specs/research/modeling-approaches.md`
-  - [ ] 8.2 SM adds new story placeholders in `epics.md` as needed (e.g., logistic regression in Story 5.4 if PO selects Option B or C)
-  - [ ] 8.3 SM moves deferred items (LightGBM, Glicko-2, TrueSkill, LSTM) to the Post-MVP Backlog section in `epics.md`
-  - [ ] 8.4 SM updates sprint-status.yaml: `5-1-research-modeling-approaches` → `done` (only after all AC 8 work complete)
+- [x] Task 8: Post-PO SM downstream update (AC: #8) — SM WORK, NOT DEV WORK
+  - [x] 8.1 After PO approves spike findings, SM updates downstream story descriptions (Stories 5.2–5.5) in `_bmad-output/planning-artifacts/epics.md` to reflect all scope decisions and building blocks from `specs/research/modeling-approaches.md`
+  - [x] 8.2 SM adds new Post-MVP Backlog entries for deferred models (LightGBM, CatBoost, Glicko-2, TrueSkill, LSTM/Transformer, Bayesian LR) — no new in-repo story placeholders needed (Option A scope is Model ABC + Elo + XGBoost; all other models are user-space extensions)
+  - [x] 8.3 SM moves deferred model items (LightGBM, Glicko-2, TrueSkill, LSTM, CatBoost, Bayesian LR) to the Post-MVP Backlog section in `epics.md` with implementation guidance
+  - [x] 8.4 SM updates sprint-status.yaml: `5-1-research-modeling-approaches` → `done`
 
 ## Dev Notes
 
@@ -318,3 +318,4 @@ N/A — research spike; no production code.
 - 2026-02-22: Code review round 1 (Claude Sonnet 4.6) — applied 7 fixes to `specs/research/modeling-approaches.md`: pathlib import in pseudocode, StatelessModel.predict() resolution, arXiv verification caveat, min_child_weight added to XGBoostModelConfig, evaluation pipeline dispatch guidance, stacking code block language tag, https:// URL prefixes, 538 discontinuation entry in Section 1.4. Added Task 8 (post-PO SM work) to story file.
 - 2026-02-22: Code review round 2 (Claude Sonnet 4.6) — applied 6 fixes to `specs/research/modeling-approaches.md`: Game import in Section 5.2 ABC pseudocode, StatefulFeatureServer import in Section 5.3 dispatch pseudocode, early_game_threshold added to EloModelConfig (Section 5.5), XGBClassifier.load_model() API correction (Section 6.2), Callable return type on register_model (Section 5.4), save(path)/load(path) consistency in Section 6.1, removed misleading type: ignore[override] comment. Corrected sprint-status from `done` → `review` (PO gate not yet passed).
 - 2026-02-23: Code review round 3 (Claude Sonnet 4.6) — applied 5 fixes to `specs/research/modeling-approaches.md`: Added Model+StatefulModel imports to Section 5.3 dispatch pseudocode (missed by Round 2 H2), added reg_alpha to XGBoostModelConfig (Section 5.5) and XGBoost hyperparameter table (Section 6.4), added early_game_threshold to Elo hyperparameter table (Section 6.4; was added to Section 5.5 in Round 2 but not propagated), replaced _to_games() ellipsis body with NotImplementedError + concrete-method clarification, changed load() return type from "Model" to Self (typing.Self, Python 3.12 native, PEP 673).
+- 2026-02-23: PO approved Option A scope — Model ABC + Elo (Story 5.3) + XGBoost (Story 5.4); all other models are user-space extensions. SM updated downstream Stories 5.2–5.5 in epics.md with research-verified interface (fit/predict_proba, Self on load, EloModelConfig, XGBoostModelConfig, no StatelessModel subclass, LR as test fixture). Added 5 Post-MVP Backlog entries for deferred model plugins (LightGBM, CatBoost, Glicko-2/TrueSkill, LSTM/Transformer, Bayesian LR). Sprint-status updated to `done`.
