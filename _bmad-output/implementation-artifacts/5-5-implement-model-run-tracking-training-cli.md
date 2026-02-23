@@ -34,22 +34,22 @@ So that I can reproduce results, compare runs, and train models from the termina
   - [x] 2.5 `load_predictions(run_id: str) -> pd.DataFrame` — reads `predictions.parquet`
   - [x] 2.6 `list_runs() -> list[ModelRun]` — scans `runs/` directory for all `run.json` files
 
-- [ ] Task 3: Implement training pipeline function (AC: #1, #5, #6, #7)
-  - [ ] 3.1 Create `src/ncaa_eval/cli/__init__.py` (make it a package)
-  - [ ] 3.2 Create `src/ncaa_eval/cli/train.py` with the `train()` function that orchestrates: model instantiation via `get_model()`, feature serving via `StatefulFeatureServer`, and model training via `model.fit(X, y)`
-  - [ ] 3.3 For stateful models (Elo): iterate seasons chronologically, call `model.fit(X, y)` once with all seasons concatenated (StatefulModel.fit() handles per-game iteration internally)
-  - [ ] 3.4 For stateless models (XGBoost): build combined feature matrix across all training seasons, call `model.fit(X, y)` once
-  - [ ] 3.5 Generate predictions on tournament games for each season within the training range
-  - [ ] 3.6 Create ModelRun record with git hash via `subprocess.run(["git", "rev-parse", "--short", "HEAD"])`
-  - [ ] 3.7 Display progress via `rich.progress.Progress` (track season-by-season progress)
-  - [ ] 3.8 Print results summary via `rich.console.Console` and `rich.table.Table`
+- [x] Task 3: Implement training pipeline function (AC: #1, #5, #6, #7)
+  - [x] 3.1 Create `src/ncaa_eval/cli/__init__.py` (make it a package)
+  - [x] 3.2 Create `src/ncaa_eval/cli/train.py` with the `train()` function that orchestrates: model instantiation via `get_model()`, feature serving via `StatefulFeatureServer`, and model training via `model.fit(X, y)`
+  - [x] 3.3 For stateful models (Elo): iterate seasons chronologically, call `model.fit(X, y)` once with all seasons concatenated (StatefulModel.fit() handles per-game iteration internally)
+  - [x] 3.4 For stateless models (XGBoost): build combined feature matrix across all training seasons, call `model.fit(X, y)` once
+  - [x] 3.5 Generate predictions on tournament games for each season within the training range
+  - [x] 3.6 Create ModelRun record with git hash via `subprocess.run(["git", "rev-parse", "--short", "HEAD"])`
+  - [x] 3.7 Display progress via `rich.progress.Progress` (track season-by-season progress)
+  - [x] 3.8 Print results summary via `rich.console.Console` and `rich.table.Table`
 
-- [ ] Task 4: Implement Typer CLI entry point (AC: #1, #7)
-  - [ ] 4.1 Create `src/ncaa_eval/cli/main.py` with the Typer app and `train` command
-  - [ ] 4.2 Add `src/ncaa_eval/cli/__main__.py` to support `python -m ncaa_eval.cli`
-  - [ ] 4.3 CLI options: `--model` (required, str), `--start-year` (int, default 2015), `--end-year` (int, default 2025), `--data-dir` (Path, default "data/"), `--output-dir` (Path, default "data/"), `--config` (optional Path to JSON config override)
-  - [ ] 4.4 Validate `--model` against `list_models()` and print available models on error
-  - [ ] 4.5 Instantiate model via `get_model(name)` with optional config override from `--config`
+- [x] Task 4: Implement Typer CLI entry point (AC: #1, #7)
+  - [x] 4.1 Create `src/ncaa_eval/cli/main.py` with the Typer app and `train` command
+  - [x] 4.2 Add `src/ncaa_eval/cli/__main__.py` to support `python -m ncaa_eval.cli`
+  - [x] 4.3 CLI options: `--model` (required, str), `--start-year` (int, default 2015), `--end-year` (int, default 2025), `--data-dir` (Path, default "data/"), `--output-dir` (Path, default "data/"), `--config` (optional Path to JSON config override)
+  - [x] 4.4 Validate `--model` against `list_models()` and print available models on error
+  - [x] 4.5 Instantiate model via `get_model(name)` with optional config override from `--config`
 
 - [x] Task 5: Write unit tests for tracking entities (AC: #2, #3, #4)
   - [x] 5.1 Test `ModelRun` creation with all fields
@@ -60,11 +60,11 @@ So that I can reproduce results, compare runs, and train models from the termina
   - [x] 5.6 Test `RunStore.list_runs()` discovers saved runs
   - [x] 5.7 Test `RunStore.load_run()` raises `FileNotFoundError` on missing run
 
-- [ ] Task 6: Write integration tests for CLI (AC: #1, #8)
-  - [ ] 6.1 Test CLI `train` command with `"logistic_regression"` model on synthetic data (fastest model for testing)
-  - [ ] 6.2 Test CLI produces `run.json` and `predictions.parquet` output files
-  - [ ] 6.3 Test CLI with invalid `--model` name prints error with available models
-  - [ ] 6.4 Test CLI with `--config` override applies custom hyperparameters
+- [x] Task 6: Write integration tests for CLI (AC: #1, #8)
+  - [x] 6.1 Test CLI `train` command with `"logistic_regression"` model on synthetic data (fastest model for testing)
+  - [x] 6.2 Test CLI produces `run.json` and `predictions.parquet` output files
+  - [x] 6.3 Test CLI with invalid `--model` name prints error with available models
+  - [x] 6.4 Test CLI with `--config` override applies custom hyperparameters
 
 - [ ] Task 7: Run quality gates (AC: all)
   - [ ] 7.1 `ruff check src/ tests/` passes
