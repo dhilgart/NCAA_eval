@@ -21,18 +21,18 @@ So that I can reproduce results, compare runs, and train models from the termina
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Define `ModelRun` and `Prediction` data entities (AC: #2, #3)
-  - [ ] 1.1 Create `src/ncaa_eval/model/tracking.py` with `ModelRun(BaseModel)` and `Prediction(BaseModel)` Pydantic models
-  - [ ] 1.2 `ModelRun` fields: `run_id: str` (UUID4 string), `model_type: str`, `hyperparameters: dict[str, Any]`, `timestamp: datetime`, `git_hash: str`, `start_year: int`, `end_year: int`, `prediction_count: int`
-  - [ ] 1.3 `Prediction` fields: `run_id: str`, `game_id: str`, `season: int`, `team_a_id: int`, `team_b_id: int`, `pred_win_prob: float` (constrained to [0.0, 1.0])
+- [x] Task 1: Define `ModelRun` and `Prediction` data entities (AC: #2, #3)
+  - [x] 1.1 Create `src/ncaa_eval/model/tracking.py` with `ModelRun(BaseModel)` and `Prediction(BaseModel)` Pydantic models
+  - [x] 1.2 `ModelRun` fields: `run_id: str` (UUID4 string), `model_type: str`, `hyperparameters: dict[str, Any]`, `timestamp: datetime`, `git_hash: str`, `start_year: int`, `end_year: int`, `prediction_count: int`
+  - [x] 1.3 `Prediction` fields: `run_id: str`, `game_id: str`, `season: int`, `team_a_id: int`, `team_b_id: int`, `pred_win_prob: float` (constrained to [0.0, 1.0])
 
-- [ ] Task 2: Implement `RunStore` persistence layer (AC: #4)
-  - [ ] 2.1 Create `RunStore` class in `src/ncaa_eval/model/tracking.py` (or separate file if tracking.py grows large)
-  - [ ] 2.2 `RunStore.__init__(base_path: Path)` — stores runs under `base_path / "runs/"`
-  - [ ] 2.3 `save_run(run: ModelRun, predictions: list[Prediction])` — writes `run.json` (ModelRun metadata) + `predictions.parquet` (Prediction records via PyArrow) under `base_path / "runs" / run_id /`
-  - [ ] 2.4 `load_run(run_id: str) -> ModelRun` — reads `run.json`
-  - [ ] 2.5 `load_predictions(run_id: str) -> pd.DataFrame` — reads `predictions.parquet`
-  - [ ] 2.6 `list_runs() -> list[ModelRun]` — scans `runs/` directory for all `run.json` files
+- [x] Task 2: Implement `RunStore` persistence layer (AC: #4)
+  - [x] 2.1 Create `RunStore` class in `src/ncaa_eval/model/tracking.py` (or separate file if tracking.py grows large)
+  - [x] 2.2 `RunStore.__init__(base_path: Path)` — stores runs under `base_path / "runs/"`
+  - [x] 2.3 `save_run(run: ModelRun, predictions: list[Prediction])` — writes `run.json` (ModelRun metadata) + `predictions.parquet` (Prediction records via PyArrow) under `base_path / "runs" / run_id /`
+  - [x] 2.4 `load_run(run_id: str) -> ModelRun` — reads `run.json`
+  - [x] 2.5 `load_predictions(run_id: str) -> pd.DataFrame` — reads `predictions.parquet`
+  - [x] 2.6 `list_runs() -> list[ModelRun]` — scans `runs/` directory for all `run.json` files
 
 - [ ] Task 3: Implement training pipeline function (AC: #1, #5, #6, #7)
   - [ ] 3.1 Create `src/ncaa_eval/cli/__init__.py` (make it a package)
@@ -51,14 +51,14 @@ So that I can reproduce results, compare runs, and train models from the termina
   - [ ] 4.4 Validate `--model` against `list_models()` and print available models on error
   - [ ] 4.5 Instantiate model via `get_model(name)` with optional config override from `--config`
 
-- [ ] Task 5: Write unit tests for tracking entities (AC: #2, #3, #4)
-  - [ ] 5.1 Test `ModelRun` creation with all fields
-  - [ ] 5.2 Test `ModelRun` JSON round-trip serialization
-  - [ ] 5.3 Test `Prediction` creation and `pred_win_prob` constraint [0.0, 1.0]
-  - [ ] 5.4 Test `RunStore.save_run()` / `load_run()` round-trip (`tmp_path`)
-  - [ ] 5.5 Test `RunStore.load_predictions()` returns correct DataFrame
-  - [ ] 5.6 Test `RunStore.list_runs()` discovers saved runs
-  - [ ] 5.7 Test `RunStore.load_run()` raises `FileNotFoundError` on missing run
+- [x] Task 5: Write unit tests for tracking entities (AC: #2, #3, #4)
+  - [x] 5.1 Test `ModelRun` creation with all fields
+  - [x] 5.2 Test `ModelRun` JSON round-trip serialization
+  - [x] 5.3 Test `Prediction` creation and `pred_win_prob` constraint [0.0, 1.0]
+  - [x] 5.4 Test `RunStore.save_run()` / `load_run()` round-trip (`tmp_path`)
+  - [x] 5.5 Test `RunStore.load_predictions()` returns correct DataFrame
+  - [x] 5.6 Test `RunStore.list_runs()` discovers saved runs
+  - [x] 5.7 Test `RunStore.load_run()` raises `FileNotFoundError` on missing run
 
 - [ ] Task 6: Write integration tests for CLI (AC: #1, #8)
   - [ ] 6.1 Test CLI `train` command with `"logistic_regression"` model on synthetic data (fastest model for testing)
