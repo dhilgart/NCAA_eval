@@ -1,6 +1,6 @@
 # Story 5.3: Implement Reference Stateful Model (Elo)
 
-Status: review
+Status: done
 
 ## Story
 
@@ -15,7 +15,7 @@ So that I have a proven baseline for tournament prediction and a template for bu
 3. **start_season delegates** — `start_season(season: int)` delegates to `EloFeatureEngine.start_new_season(season)` for mean reversion.
 4. **_predict_one** — `_predict_one(team_a_id: int, team_b_id: int) -> float` returns P(team_a wins) via the Elo expected-score formula using current ratings; public prediction is via inherited `predict_proba(X: pd.DataFrame) -> pd.Series`.
 5. **EloModelConfig** — `EloModelConfig(ModelConfig)` is the Pydantic config with parameters: `initial_rating`, `k_early`, `early_game_threshold`, `k_regular`, `k_tournament`, `margin_exponent`, `max_margin`, `home_advantage_elo`, `mean_reversion_fraction` — defaults matching `EloConfig` from Story 4.8.
-6. **get_state / set_state** — `get_state() -> dict[str, Any]` returns the ratings dict; `set_state(state)` restores it.
+6. **get_state / set_state** — `get_state() -> dict[str, Any]` returns a snapshot dict with `"ratings"` (dict[int, float]) and `"game_counts"` (dict[int, int]) keys; `set_state(state)` validates the dict structure and restores both.
 7. **save / load** — `save(path: Path)` JSON-dumps ratings dict + config; `load(cls, path: Path) -> Self` reconstructs from JSON.
 8. **Plugin registration** — The model registers via the plugin registry as `"elo"`.
 9. **Validation** — The Elo model is validated against known rating calculations on a small fixture dataset.
@@ -317,11 +317,13 @@ Claude Opus 4.6
 - `save(path)` writes `config.json` + `state.json` with string-key JSON; `load(path)` reconstructs with int-key conversion
 - `@register_model("elo")` decorator + `__init__.py` import for auto-registration
 - 25 unit tests covering: config defaults/custom/round-trip, update delegation, _predict_one correctness, start_season mean reversion, get/set state round-trip, save/load file-system round-trip, fit→predict_proba end-to-end, plugin registration, known numeric calculations, home advantage verification
-- All 449 tests pass (25 new + 424 existing), ruff clean, mypy --strict clean
+- All 454 tests pass (30 new + 424 existing), ruff clean, mypy --strict clean
+- Code review fixes applied: set_state() input validation with KeyError/TypeError on malformed state; load() FileNotFoundError with clear message on partial saves; _to_elo_config() uses dataclasses.fields to auto-map EloConfig fields (future-proof); set_state() private-access comment added; fit()-twice accumulation documented and tested
 
 ### Change Log
 
 - 2026-02-23: Implemented EloModel reference stateful model (Story 5.3) — all ACs satisfied, 25 tests added
+- 2026-02-23: Code review fixes — 5 issues fixed: set_state() validation (HIGH), fit() accumulation documented+tested (MEDIUM), load() partial-save guard (MEDIUM), set_state() private-access comment (MEDIUM), _to_elo_config() future-proofed via dataclasses.fields (MEDIUM); 5 new tests added (30 total); 454 tests pass
 
 ### File List
 

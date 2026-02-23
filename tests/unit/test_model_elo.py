@@ -196,6 +196,18 @@ class TestGetSetState:
         state["ratings"][1] = 9999.0
         assert model._engine.get_rating(1) == 1550.0
 
+    def test_set_state_missing_key_raises(self) -> None:
+        """set_state() rejects dicts missing required keys."""
+        model = EloModel()
+        with pytest.raises(KeyError, match="missing required keys"):
+            model.set_state({"ratings": {1: 1500.0}})  # missing game_counts
+
+    def test_set_state_wrong_type_raises(self) -> None:
+        """set_state() rejects non-dict values for ratings/game_counts."""
+        model = EloModel()
+        with pytest.raises(TypeError, match="must be dicts"):
+            model.set_state({"ratings": [1, 2, 3], "game_counts": {}})
+
 
 # ---------------------------------------------------------------------------
 # Task 5.6: save / load round-trip
@@ -249,6 +261,26 @@ class TestSaveLoad:
 
         assert pred_before == pytest.approx(pred_after, abs=1e-12)
 
+    def test_load_missing_state_json_raises(self, tmp_path: Path) -> None:
+        """load() raises FileNotFoundError with a clear message if state.json is missing."""
+        model = EloModel()
+        save_dir = tmp_path / "elo_model"
+        model.save(save_dir)
+        (save_dir / "state.json").unlink()
+
+        with pytest.raises(FileNotFoundError, match="state.json"):
+            EloModel.load(save_dir)
+
+    def test_load_missing_config_json_raises(self, tmp_path: Path) -> None:
+        """load() raises FileNotFoundError with a clear message if config.json is missing."""
+        model = EloModel()
+        save_dir = tmp_path / "elo_model"
+        model.save(save_dir)
+        (save_dir / "config.json").unlink()
+
+        with pytest.raises(FileNotFoundError, match="config.json"):
+            EloModel.load(save_dir)
+
 
 # ---------------------------------------------------------------------------
 # Task 5.7: Full fit → predict_proba end-to-end
@@ -272,6 +304,24 @@ class TestFitPredictProba:
 
         state = model.get_state()
         assert len(state["ratings"]) > 0
+
+    def test_fit_twice_accumulates_state(self) -> None:
+        """fit() accumulates ratings — it does NOT reset state between calls.
+
+        StatefulModel.fit() is designed for sequential accumulation.  Callers
+        who need a clean slate should instantiate a new EloModel.
+        """
+        model = EloModel()
+        X, y = _make_game_dataframe(n_games=1)
+        model.fit(X, y)
+        ratings_after_first = dict(model.get_state()["ratings"])
+
+        # Second fit on the same data — ratings change further (not reset)
+        model.fit(X, y)
+        ratings_after_second = dict(model.get_state()["ratings"])
+
+        # Ratings differ: second fit accumulates on top of first
+        assert ratings_after_first != ratings_after_second
 
 
 # ---------------------------------------------------------------------------

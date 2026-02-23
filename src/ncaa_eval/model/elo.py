@@ -8,6 +8,7 @@ registration.
 
 from __future__ import annotations
 
+import dataclasses
 import json
 from pathlib import Path
 from typing import Any, Literal, Self
@@ -78,9 +79,36 @@ class EloModel(StatefulModel):
         }
 
     def set_state(self, state: dict[str, Any]) -> None:
-        """Restore ratings and game counts from a snapshot."""
-        self._engine._ratings = dict(state["ratings"])
-        self._engine._game_counts = dict(state["game_counts"])
+        """Restore ratings and game counts from a snapshot.
+
+        Parameters
+        ----------
+        state
+            Must contain ``"ratings"`` (``dict[int, float]``) and
+            ``"game_counts"`` (``dict[int, int]``) keys, as returned by
+            :meth:`get_state`.
+
+        Raises
+        ------
+        KeyError
+            If ``"ratings"`` or ``"game_counts"`` keys are absent.
+        TypeError
+            If either value is not a ``dict``.
+        """
+        if "ratings" not in state or "game_counts" not in state:
+            missing = {"ratings", "game_counts"} - state.keys()
+            msg = f"set_state() state dict missing required keys: {missing}"
+            raise KeyError(msg)
+        ratings = state["ratings"]
+        game_counts = state["game_counts"]
+        if not isinstance(ratings, dict) or not isinstance(game_counts, dict):
+            msg = "set_state() 'ratings' and 'game_counts' must be dicts"
+            raise TypeError(msg)
+        # EloFeatureEngine has no public setter — direct attribute assignment is
+        # intentional here.  If the engine later adds validation, these lines
+        # should be replaced with the appropriate public API.
+        self._engine._ratings = dict(ratings)
+        self._engine._game_counts = dict(game_counts)
 
     # ------------------------------------------------------------------
     # Model ABC: persistence
@@ -100,10 +128,27 @@ class EloModel(StatefulModel):
 
     @classmethod
     def load(cls, path: Path) -> Self:
-        """Reconstruct an EloModel from a saved directory."""
-        config = EloModelConfig.model_validate_json((path / "config.json").read_text())
+        """Reconstruct an EloModel from a saved directory.
+
+        Raises
+        ------
+        FileNotFoundError
+            If either ``config.json`` or ``state.json`` is missing.  A missing
+            file indicates an incomplete :meth:`save` (e.g., interrupted write).
+        """
+        config_path = path / "config.json"
+        state_path = path / "state.json"
+        missing = [p for p in (config_path, state_path) if not p.exists()]
+        if missing:
+            missing_names = ", ".join(p.name for p in missing)
+            msg = (
+                f"Incomplete save at {path!r}: missing {missing_names}. "
+                "The save may have been interrupted."
+            )
+            raise FileNotFoundError(msg)
+        config = EloModelConfig.model_validate_json(config_path.read_text())
         instance = cls(config)
-        raw = json.loads((path / "state.json").read_text())
+        raw = json.loads(state_path.read_text())
         state = {
             "ratings": {int(k): v for k, v in raw["ratings"].items()},
             "game_counts": {int(k): v for k, v in raw["game_counts"].items()},
@@ -125,15 +170,13 @@ class EloModel(StatefulModel):
 
     @staticmethod
     def _to_elo_config(config: EloModelConfig) -> EloConfig:
-        """Convert Pydantic config to the frozen dataclass the engine expects."""
-        return EloConfig(
-            initial_rating=config.initial_rating,
-            k_early=config.k_early,
-            k_regular=config.k_regular,
-            k_tournament=config.k_tournament,
-            early_game_threshold=config.early_game_threshold,
-            margin_exponent=config.margin_exponent,
-            max_margin=config.max_margin,
-            home_advantage_elo=config.home_advantage_elo,
-            mean_reversion_fraction=config.mean_reversion_fraction,
-        )
+        """Convert Pydantic config to the frozen dataclass the engine expects.
+
+        Uses :func:`dataclasses.fields` to derive the argument set from
+        ``EloConfig`` at runtime, so any new field added to ``EloConfig`` is
+        automatically included — without requiring a manual update here.
+        ``EloModelConfig`` must keep its fields in sync with ``EloConfig``.
+        """
+        elo_field_names = {f.name for f in dataclasses.fields(EloConfig)}
+        kwargs = {k: v for k, v in config.model_dump().items() if k in elo_field_names}
+        return EloConfig(**kwargs)

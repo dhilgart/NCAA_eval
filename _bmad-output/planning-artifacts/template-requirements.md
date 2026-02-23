@@ -1790,3 +1790,64 @@ def _clean_registry() -> Generator[None, None, None]:
     yield
     ...
 ```
+
+### Stateful Model `set_state()`: Always Validate Input Dict Structure (Discovered Story 5.3 Code Review, 2026-02-23)
+
+When a `set_state(state)` method restores model internals from a snapshot dict, it must validate the dict structure before applying it. Without validation, missing keys cause opaque `KeyError` on access, non-dict values cause `TypeError` deep inside the engine, and malformed JSON loaded from disk corrupts the model silently — with no error until the next `predict()` call.
+
+**Pattern:**
+```python
+def set_state(self, state: dict[str, Any]) -> None:
+    if "ratings" not in state or "game_counts" not in state:
+        missing = {"ratings", "game_counts"} - state.keys()
+        msg = f"set_state() state dict missing required keys: {missing}"
+        raise KeyError(msg)
+    if not isinstance(state["ratings"], dict) or not isinstance(state["game_counts"], dict):
+        msg = "set_state() 'ratings' and 'game_counts' must be dicts"
+        raise TypeError(msg)
+    # direct assignment to private attrs — see encapsulation note in elo.py set_state()
+```
+
+**Rule:** Every `set_state()` implementation must have a test for missing keys (`pytest.raises(KeyError)`) and wrong types (`pytest.raises(TypeError)`).
+
+### Multi-File `save()` / `load()`: Check All Files Before Loading (Discovered Story 5.3 Code Review, 2026-02-23)
+
+When `save()` writes multiple files (e.g., `config.json` + `state.json`), `load()` must verify ALL expected files exist before attempting to read any of them. A crashed or interrupted `save()` leaves the directory in a half-written state; loading partial state produces confusing errors instead of a clear "save was incomplete" message.
+
+**Pattern:**
+```python
+@classmethod
+def load(cls, path: Path) -> Self:
+    missing = [p for p in (path / "config.json", path / "state.json") if not p.exists()]
+    if missing:
+        missing_names = ", ".join(p.name for p in missing)
+        raise FileNotFoundError(
+            f"Incomplete save at {path!r}: missing {missing_names}. "
+            "The save may have been interrupted."
+        )
+```
+
+**Rule:** Include `test_load_missing_X_raises` tests for each expected save file.
+
+### Config Bridge Functions: Use `dataclasses.fields()` Not Manual Field Copy (Discovered Story 5.3 Code Review, 2026-02-23)
+
+When a Pydantic config class (`EloModelConfig`) must be converted to a frozen dataclass (`EloConfig`), avoid manually listing every field. Manual mapping silently omits any new field added to the dataclass later, causing silent fallback to defaults.
+
+**Pattern:**
+```python
+@staticmethod
+def _to_elo_config(config: EloModelConfig) -> EloConfig:
+    elo_field_names = {f.name for f in dataclasses.fields(EloConfig)}
+    kwargs = {k: v for k, v in config.model_dump().items() if k in elo_field_names}
+    return EloConfig(**kwargs)
+```
+
+The `if k in elo_field_names` filter drops Pydantic-only fields (like `model_name`) that don't exist in the dataclass. Any new field added to `EloConfig` is picked up automatically as long as `EloModelConfig` also adds the matching field.
+
+### `fit()` Accumulation vs Reset: Document and Test (Discovered Story 5.3 Code Review, 2026-02-23)
+
+`StatefulModel.fit()` is designed for sequential accumulation — calling it twice on the same instance accumulates ratings from both datasets. This differs from scikit-learn convention where `fit()` resets state. Callers who expect idempotency will get silent bugs in train/validation split workflows.
+
+**Rule:** Any stateful model that inherits an accumulating `fit()` must:
+1. Document this behavior in the class or method docstring: "Calling `fit()` accumulates state. To start fresh, instantiate a new model."
+2. Include a `test_fit_twice_accumulates_state` test that asserts ratings change after the second call.
