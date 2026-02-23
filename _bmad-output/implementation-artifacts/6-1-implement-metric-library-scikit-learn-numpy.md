@@ -1,6 +1,6 @@
 # Story 6.1: Implement Metric Library (scikit-learn + numpy)
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -22,28 +22,28 @@ So that I can evaluate model quality across multiple dimensions using vectorized
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `src/ncaa_eval/evaluation/metrics.py` (AC: #1–#7)
-  - [ ] 1.1 `log_loss(y_true, y_prob) -> float` — thin wrapper around `sklearn.metrics.log_loss`
-  - [ ] 1.2 `brier_score(y_true, y_prob) -> float` — thin wrapper around `sklearn.metrics.brier_score_loss`
-  - [ ] 1.3 `roc_auc(y_true, y_prob) -> float` — thin wrapper around `sklearn.metrics.roc_auc_score`
-  - [ ] 1.4 `expected_calibration_error(y_true, y_prob, *, n_bins: int = 10) -> float` — custom numpy vectorized implementation
-  - [ ] 1.5 `reliability_diagram_data(y_true, y_prob, *, n_bins: int = 10) -> ReliabilityData` — wraps `sklearn.calibration.calibration_curve` with extra bin statistics
-  - [ ] 1.6 Define `ReliabilityData` dataclass for structured return from reliability diagram
-  - [ ] 1.7 Input validation: check array lengths match, non-empty, probabilities in [0,1]
-- [ ] Task 2: Export public API from `src/ncaa_eval/evaluation/__init__.py` (AC: #6)
-  - [ ] 2.1 Add imports and `__all__` for all metric functions and `ReliabilityData`
-- [ ] Task 3: Create `tests/unit/test_evaluation_metrics.py` (AC: #8, #9)
-  - [ ] 3.1 Test `log_loss` with known expected values
-  - [ ] 3.2 Test `brier_score` with known expected values
-  - [ ] 3.3 Test `roc_auc` with known expected values
-  - [ ] 3.4 Test `expected_calibration_error` with hand-computed expected values
-  - [ ] 3.5 Test `reliability_diagram_data` output structure and values
-  - [ ] 3.6 Test edge case: perfect predictions (all correct)
-  - [ ] 3.7 Test edge case: all-same-class raises `ValueError` for `roc_auc`
-  - [ ] 3.8 Test edge case: single prediction
-  - [ ] 3.9 Test edge case: empty arrays raise `ValueError`
-  - [ ] 3.10 Test edge case: mismatched array lengths raise `ValueError`
-  - [ ] 3.11 Test edge case: probabilities outside [0,1] raise `ValueError`
+- [x] Task 1: Create `src/ncaa_eval/evaluation/metrics.py` (AC: #1–#7)
+  - [x] 1.1 `log_loss(y_true, y_prob) -> float` — thin wrapper around `sklearn.metrics.log_loss`
+  - [x] 1.2 `brier_score(y_true, y_prob) -> float` — thin wrapper around `sklearn.metrics.brier_score_loss`
+  - [x] 1.3 `roc_auc(y_true, y_prob) -> float` — thin wrapper around `sklearn.metrics.roc_auc_score`
+  - [x] 1.4 `expected_calibration_error(y_true, y_prob, *, n_bins: int = 10) -> float` — custom numpy vectorized implementation
+  - [x] 1.5 `reliability_diagram_data(y_true, y_prob, *, n_bins: int = 10) -> ReliabilityData` — wraps `sklearn.calibration.calibration_curve` with extra bin statistics
+  - [x] 1.6 Define `ReliabilityData` dataclass for structured return from reliability diagram
+  - [x] 1.7 Input validation: check array lengths match, non-empty, probabilities in [0,1]
+- [x] Task 2: Export public API from `src/ncaa_eval/evaluation/__init__.py` (AC: #6)
+  - [x] 2.1 Add imports and `__all__` for all metric functions and `ReliabilityData`
+- [x] Task 3: Create `tests/unit/test_evaluation_metrics.py` (AC: #8, #9)
+  - [x] 3.1 Test `log_loss` with known expected values
+  - [x] 3.2 Test `brier_score` with known expected values
+  - [x] 3.3 Test `roc_auc` with known expected values
+  - [x] 3.4 Test `expected_calibration_error` with hand-computed expected values
+  - [x] 3.5 Test `reliability_diagram_data` output structure and values
+  - [x] 3.6 Test edge case: perfect predictions (all correct)
+  - [x] 3.7 Test edge case: all-same-class raises `ValueError` for `roc_auc`
+  - [x] 3.8 Test edge case: single prediction
+  - [x] 3.9 Test edge case: empty arrays raise `ValueError`
+  - [x] 3.10 Test edge case: mismatched array lengths raise `ValueError`
+  - [x] 3.11 Test edge case: probabilities outside [0,1] raise `ValueError`
 
 ## Dev Notes
 
@@ -157,10 +157,31 @@ Follow the test patterns established in `tests/unit/test_calibration.py`:
 
 ### Agent Model Used
 
+Claude Opus 4.6
+
 ### Debug Log References
+
+- sklearn `log_loss` raises `ValueError` when `y_true` contains only one class and `labels` is not specified. Fixed by passing `labels=[0, 1]` explicitly.
+- sklearn `brier_score_loss` and `roc_auc_score` have type stubs in current version — `# type: ignore[import-untyped]` not needed (removed to satisfy `mypy --strict` unused-ignore check). `log_loss` and `calibration_curve` still need the ignore.
 
 ### Completion Notes List
 
+- Implemented 5 metric functions (`log_loss`, `brier_score`, `roc_auc`, `expected_calibration_error`, `reliability_diagram_data`) plus `ReliabilityData` frozen dataclass
+- All sklearn wrappers use lazy imports inside function bodies (consistent with `calibration.py` pattern)
+- ECE uses fully vectorized numpy: `np.digitize` + `np.bincount` with weighted sums — zero Python `for` loops
+- Input validation via shared `_validate_inputs()` helper: checks non-empty, matching lengths, probabilities in [0, 1]
+- `roc_auc` adds explicit check for single-class `y_true` with clear error message (before sklearn's less informative error)
+- 48 unit tests covering known values, edge cases (empty, single, all-same-class, perfect, out-of-range), and structural properties
+- All 545 tests pass (0 regressions), ruff clean, mypy --strict clean
+
 ### Change Log
 
+- 2026-02-23: Implemented metric library with all 5 metric functions, ReliabilityData dataclass, input validation, public API exports, and 48 unit tests
+
 ### File List
+
+- src/ncaa_eval/evaluation/metrics.py (NEW)
+- src/ncaa_eval/evaluation/__init__.py (MODIFIED)
+- tests/unit/test_evaluation_metrics.py (NEW)
+- _bmad-output/implementation-artifacts/6-1-implement-metric-library-scikit-learn-numpy.md (MODIFIED)
+- _bmad-output/implementation-artifacts/sprint-status.yaml (MODIFIED)
