@@ -379,6 +379,65 @@ Testing strategy uses 1 main document (TESTING_STRATEGY.md) + 7 focused guides:
 
 **Rationale:** Improves navigability, reduces cognitive load, better GitHub UX vs single comprehensive document (60KB+)
 
+### Session-Scoped Fixtures for Expensive Operations ⭐ (Discovered Story 5.4 Code Review)
+
+When tests share an expensive resource (e.g., a trained ML model for property-based tests), use `@pytest.fixture(scope="session")` rather than a module-level mutable global with `noqa: PLW0603`.
+
+```python
+# ❌ Anti-pattern: module-level singleton with global statement
+_MODEL: MyModel | None = None
+
+def _get_model() -> MyModel:
+    global _MODEL  # noqa: PLW0603
+    if _MODEL is None:
+        _MODEL = MyModel()
+        _MODEL.fit(X, y)
+    return _MODEL
+
+# ✅ Correct: session-scoped pytest fixture
+@pytest.fixture(scope="session")
+def trained_model() -> MyModel:
+    """Return a trained model shared across all tests in the session."""
+    model = MyModel()
+    model.fit(X, y)
+    return model
+
+# Test method accepts fixture as argument (pytest injects it)
+def test_predict_bounded(self, trained_model: MyModel, ...) -> None:
+    preds = trained_model.predict_proba(X_test)
+    ...
+```
+
+**Rationale:** Session fixtures are properly scoped, discoverable, type-checked, and pytest-managed. Globals with `noqa` suppress legitimate linting, create test ordering dependencies, and are invisible in test signatures.
+
+### Hypothesis + Session Fixture Pattern ⭐ (Discovered Story 5.4 Code Review)
+
+Property-based tests (`@given`) combined with expensive setup (model training) require two settings to avoid flakiness:
+1. `@settings(deadline=None)` — disables the 200ms per-example deadline
+2. A **session-scoped fixture** for the trained model — prevents re-training on every Hypothesis example
+
+```python
+@given(x=st.lists(st.floats(...), min_size=50, max_size=50))
+@settings(max_examples=50, deadline=None)
+def test_predictions_bounded(self, trained_model: MyModel, x: list[float]) -> None:
+    preds = trained_model.predict_proba(pd.DataFrame({"x": x}))
+    assert (preds >= 0.0).all()
+```
+
+### Defensive Private Attribute Access in Tests ⭐ (Discovered Story 5.4 Code Review)
+
+When tests must access private attributes for behavioral verification (e.g., `_clf.best_iteration` on a wrapped estimator), use `getattr` with a `None` default and assert before comparison:
+
+```python
+# ❌ Fragile: raises TypeError if best_iteration is None
+assert model._clf.best_iteration < 500
+
+# ✅ Defensive: guards against None; explicit assertion message
+best_iteration: int | None = getattr(model._clf, "best_iteration", None)
+assert best_iteration is not None, "Expected best_iteration to be set (early stopping should have fired)"
+assert best_iteration < 500, f"Early stopping should fire before 500; got {best_iteration}"
+```
+
 ### CI/CD Integration
 - 4-tier quality gates: Pre-commit (< 10s) → PR/CI (full) → AI review → Owner review
 - Pre-commit: lint, format, type-check, smoke tests
@@ -535,6 +594,26 @@ Code review workflow generates PRs following .github/pull_request_template.md st
 **Template Pattern:** Code review workflow instructions.xml generates template-formatted PR bodies
 
 **Discovered in Story 1.3 (2026-02-16):** PR #3 initially bypassed template, required manual reformatting and workflow update.
+
+### Pydantic Field Constraints for Bounded Hyperparameters ⭐ (Discovered Story 5.4 Code Review)
+
+Use `Annotated[type, Field(gt=..., lt=...)]` for hyperparameters that have meaningful mathematical bounds. Without these, invalid values (e.g., `validation_fraction=0.0`) produce cryptic errors deep in the call stack.
+
+```python
+from typing import Annotated
+from pydantic import BaseModel, Field
+
+class MyModelConfig(BaseModel):
+    # ❌ No validation — 0.0 causes train_test_split to fail cryptically
+    validation_fraction: float = 0.1
+
+    # ✅ Validated at construction — clear Pydantic error at the boundary
+    validation_fraction: Annotated[float, Field(gt=0.0, lt=1.0)] = 0.1
+    subsample: Annotated[float, Field(gt=0.0, le=1.0)] = 0.8
+    n_estimators: Annotated[int, Field(gt=0)] = 500
+```
+
+**Rule of thumb:** Any float parameter that feeds into a random split (`test_size`, `validation_fraction`), a sampling ratio (`subsample`, `colsample_bytree`), or a probability should be constrained at the Pydantic level.
 
 ### Style Guide
 **Reference:** [STYLE_GUIDE.md](./STYLE_GUIDE.md)

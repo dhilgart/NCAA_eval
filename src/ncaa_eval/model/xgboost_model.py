@@ -8,9 +8,10 @@ native UBJSON persistence format.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Literal, Self
+from typing import Annotated, Literal, Self
 
 import pandas as pd  # type: ignore[import-untyped]
+from pydantic import Field
 from sklearn.model_selection import train_test_split  # type: ignore[import-untyped]
 from xgboost import XGBClassifier
 
@@ -39,7 +40,7 @@ class XGBoostModelConfig(ModelConfig):
     reg_alpha: float = 0.0
     reg_lambda: float = 1.0
     early_stopping_rounds: int = 50
-    validation_fraction: float = 0.1
+    validation_fraction: Annotated[float, Field(gt=0.0, lt=1.0)] = 0.1
     scale_pos_weight: float | None = None  # None → XGBoost default (1.0)
 
 
