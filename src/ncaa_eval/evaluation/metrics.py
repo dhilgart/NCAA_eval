@@ -32,7 +32,11 @@ class ReliabilityData:
     mean_predicted_value
         Mean predicted probability per bin (from calibration_curve).
     bin_counts
-        Number of samples in each bin.
+        Number of samples in each non-empty bin.
+    bin_edges
+        Full bin edge array of shape ``(n_bins + 1,)``, i.e.
+        ``np.linspace(0.0, 1.0, n_bins + 1)``.  Includes both the lower (0.0)
+        and upper (1.0) boundaries so callers do not need to recompute them.
     n_bins
         Requested number of bins.
     """
@@ -40,6 +44,7 @@ class ReliabilityData:
     fraction_of_positives: npt.NDArray[np.float64]
     mean_predicted_value: npt.NDArray[np.float64]
     bin_counts: npt.NDArray[np.int64]
+    bin_edges: npt.NDArray[np.float64]
     n_bins: int
 
 
@@ -47,12 +52,15 @@ def _validate_inputs(
     y_true: npt.NDArray[np.float64],
     y_prob: npt.NDArray[np.float64],
 ) -> None:
-    """Validate metric inputs: non-empty, matching lengths, probs in [0, 1]."""
+    """Validate metric inputs: non-empty, matching lengths, binary y_true, probs in [0, 1]."""
     if len(y_true) == 0 or len(y_prob) == 0:
         msg = "y_true and y_prob must be non-empty arrays."
         raise ValueError(msg)
     if len(y_true) != len(y_prob):
         msg = f"y_true and y_prob must have the same length, " f"got {len(y_true)} and {len(y_prob)}."
+        raise ValueError(msg)
+    if not np.all((y_true == 0) | (y_true == 1)):
+        msg = "y_true must contain only binary values (0 or 1)."
         raise ValueError(msg)
     if np.any(y_prob < 0.0) or np.any(y_prob > 1.0):
         msg = "y_prob values must be in [0, 1]."
@@ -185,11 +193,16 @@ def expected_calibration_error(
     ValueError
         If inputs are empty, mismatched, or probabilities are outside [0, 1].
     """
+    if n_bins < 1:
+        msg = f"n_bins must be >= 1, got {n_bins}."
+        raise ValueError(msg)
     _validate_inputs(y_true, y_prob)
 
     # Bin edges: [0, 1/n_bins, 2/n_bins, ..., 1]
     bin_edges = np.linspace(0.0, 1.0, n_bins + 1)
-    # np.digitize assigns bin index starting at 1; clip to [1, n_bins]
+    # Digitize against interior edges only (bin_edges[1:-1] excludes 0.0 and 1.0).
+    # np.digitize returns 0 for values below the first interior edge, and n_bins-1
+    # for values at or above the last interior edge after clipping to [0, n_bins-1].
     bin_indices = np.clip(np.digitize(y_prob, bin_edges[1:-1]), 0, n_bins - 1)
 
     # Vectorized per-bin statistics using np.bincount
@@ -234,15 +247,19 @@ def reliability_diagram_data(
     -------
     ReliabilityData
         Structured data containing fraction of positives, mean predicted
-        values, bin counts, and requested number of bins.
+        values, bin counts, bin edges, and requested number of bins.
 
     Raises
     ------
     ValueError
-        If inputs are empty, mismatched, or probabilities are outside [0, 1].
+        If inputs are empty, mismatched, ``n_bins < 1``, or probabilities are
+        outside [0, 1].
     """
     from sklearn.calibration import calibration_curve  # type: ignore[import-untyped]
 
+    if n_bins < 1:
+        msg = f"n_bins must be >= 1, got {n_bins}."
+        raise ValueError(msg)
     _validate_inputs(y_true, y_prob)
 
     fraction_of_positives: npt.NDArray[np.float64]
@@ -264,5 +281,6 @@ def reliability_diagram_data(
         fraction_of_positives=fraction_of_positives,
         mean_predicted_value=mean_predicted_value,
         bin_counts=bin_counts,
+        bin_edges=bin_edges,
         n_bins=n_bins,
     )

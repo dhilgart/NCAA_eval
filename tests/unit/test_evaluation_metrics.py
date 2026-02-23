@@ -217,6 +217,20 @@ class TestReliabilityDiagramData:
         assert isinstance(result.fraction_of_positives, np.ndarray)
         assert isinstance(result.mean_predicted_value, np.ndarray)
         assert isinstance(result.bin_counts, np.ndarray)
+        assert isinstance(result.bin_edges, np.ndarray)
+
+    def test_bin_edges_shape_and_values(self) -> None:
+        """bin_edges should have shape (n_bins+1,) spanning [0, 1]."""
+        rng = np.random.default_rng(42)
+        y_true = rng.integers(0, 2, size=100).astype(np.float64)
+        y_prob = rng.uniform(0, 1, size=100)
+        result = reliability_diagram_data(y_true, y_prob, n_bins=5)
+        assert result.bin_edges.shape == (6,)
+        assert result.bin_edges[0] == pytest.approx(0.0)
+        assert result.bin_edges[-1] == pytest.approx(1.0)
+        # Edges should be evenly spaced
+        expected_edges = np.linspace(0.0, 1.0, 6)
+        assert np.allclose(result.bin_edges, expected_edges)
 
     def test_bin_counts_sum(self) -> None:
         """Bin counts from non-empty bins should sum to total samples."""
@@ -390,3 +404,33 @@ class TestEdgeCases:
         """Single prediction should raise ValueError for roc_auc (needs 2+ classes)."""
         with pytest.raises(ValueError, match="both positive and negative"):
             roc_auc(np.array([1.0]), np.array([0.8]))
+
+    def test_non_binary_y_true_ece(self) -> None:
+        """Non-binary y_true (e.g., 0.5) should raise ValueError for ECE."""
+        with pytest.raises(ValueError, match="binary"):
+            expected_calibration_error(np.array([0.5, 0.3]), np.array([0.7, 0.4]))
+
+    def test_non_binary_y_true_log_loss(self) -> None:
+        """Non-binary y_true should raise ValueError for log_loss."""
+        with pytest.raises(ValueError, match="binary"):
+            log_loss(np.array([0.5, 0.3]), np.array([0.7, 0.4]))
+
+    def test_non_binary_y_true_brier(self) -> None:
+        """Non-binary y_true should raise ValueError for brier_score."""
+        with pytest.raises(ValueError, match="binary"):
+            brier_score(np.array([0.5, 0.3]), np.array([0.7, 0.4]))
+
+    def test_non_binary_y_true_reliability(self) -> None:
+        """Non-binary y_true should raise ValueError for reliability_diagram_data."""
+        with pytest.raises(ValueError, match="binary"):
+            reliability_diagram_data(np.array([0.5, 0.3]), np.array([0.7, 0.4]))
+
+    def test_n_bins_zero_ece(self) -> None:
+        """n_bins=0 should raise ValueError for expected_calibration_error."""
+        with pytest.raises(ValueError, match="n_bins must be >= 1"):
+            expected_calibration_error(np.array([1.0, 0.0]), np.array([0.8, 0.2]), n_bins=0)
+
+    def test_n_bins_zero_reliability(self) -> None:
+        """n_bins=0 should raise ValueError for reliability_diagram_data."""
+        with pytest.raises(ValueError, match="n_bins must be >= 1"):
+            reliability_diagram_data(np.array([1.0, 0.0]), np.array([0.8, 0.2]), n_bins=0)

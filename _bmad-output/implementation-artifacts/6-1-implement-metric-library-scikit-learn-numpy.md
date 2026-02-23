@@ -1,6 +1,6 @@
 # Story 6.1: Implement Metric Library (scikit-learn + numpy)
 
-Status: review
+Status: done
 
 ## Story
 
@@ -177,11 +177,13 @@ Claude Opus 4.6
 ### Change Log
 
 - 2026-02-23: Implemented metric library with all 5 metric functions, ReliabilityData dataclass, input validation, public API exports, and 48 unit tests
+- 2026-02-23: Code review fixes — added bin_edges to ReliabilityData (AC5 compliance), binary y_true validation to _validate_inputs, n_bins>=1 validation to ECE and reliability_diagram_data, corrected misleading comment on ECE binning; 7 new tests added (55 total, 552 suite-wide)
 
 ### File List
 
-- src/ncaa_eval/evaluation/metrics.py (NEW)
+- src/ncaa_eval/evaluation/metrics.py (NEW — code review: added bin_edges to ReliabilityData, binary y_true validation, n_bins>=1 validation, corrected misleading comment)
 - src/ncaa_eval/evaluation/__init__.py (MODIFIED)
-- tests/unit/test_evaluation_metrics.py (NEW)
+- tests/unit/test_evaluation_metrics.py (NEW — code review: added 7 tests for new validations and bin_edges field)
 - _bmad-output/implementation-artifacts/6-1-implement-metric-library-scikit-learn-numpy.md (MODIFIED)
 - _bmad-output/implementation-artifacts/sprint-status.yaml (MODIFIED)
+- _bmad-output/planning-artifacts/template-requirements.md (MODIFIED — code review learnings)
