@@ -504,8 +504,12 @@ class Model(ABC):
     """Common parent for all NCAA prediction models."""
 
     @abstractmethod
-    def predict(self, team_a_id: int, team_b_id: int) -> float:
-        """Return P(team_a wins) as a calibrated probability in [0, 1]."""
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> None:
+        """Train the model on feature matrix X and labels y."""
+
+    @abstractmethod
+    def predict_proba(self, X: pd.DataFrame) -> pd.Series:
+        """Return P(team_a wins) as a calibrated probability in [0, 1] for each row in X."""
 
     @abstractmethod
     def save(self, path: Path) -> None:
@@ -524,10 +528,10 @@ class Model(ABC):
 class StatefulModel(Model):
     """Model that maintains per-team state updated game-by-game.
 
-    Exposes a concrete fit(X, y) that reconstructs Game objects from X and
-    iterates them in chronological order via the update() hook. X must contain
-    raw game columns (not pre-engineered features) so that Game objects can be
-    faithfully reconstructed — see _to_games() for required columns.
+    Provides concrete template implementations for both fit() and predict_proba().
+    For fit(), X must contain raw game columns so that Game objects can be faithfully
+    reconstructed — see _to_games() for required columns. For predict_proba(), X
+    must contain at minimum team_a_id and team_b_id columns.
     """
 
     def fit(self, X: pd.DataFrame, y: pd.Series) -> None:
@@ -553,6 +557,17 @@ class StatefulModel(Model):
         """
         ...  # concrete implementation — reconstruct from standard schema
 
+    def predict_proba(self, X: pd.DataFrame) -> pd.Series:
+        """Concrete template: extract team IDs from X, delegate to _predict_one per row."""
+        return pd.Series(
+            [self._predict_one(row.team_a_id, row.team_b_id) for row in X.itertuples()],
+            index=X.index,
+        )
+
+    @abstractmethod
+    def _predict_one(self, team_a_id: int, team_b_id: int) -> float:
+        """Return P(team_a wins) from current internal state."""
+
     @abstractmethod
     def update(self, game: Game) -> None:
         """Process one game and update internal state."""
@@ -570,62 +585,39 @@ class StatefulModel(Model):
         """Restore internal state from a snapshot."""
 
 
-class StatelessModel(Model):
-    """Model that trains on a batch feature matrix."""
-
-    @abstractmethod
-    def fit(self, X: pd.DataFrame, y: pd.Series) -> None:
-        """Fit model on feature matrix X and labels y."""
-
-    @abstractmethod
-    def predict_proba(self, X: pd.DataFrame) -> pd.Series:
-        """Return P(team_a wins) for each row in X."""
-
-    # NOTE: StatelessModel satisfies the Model.predict() abstract method
-    # by providing a concrete delegation that builds a single-row DataFrame.
-    # Implementations that need per-matchup prediction without a full feature
-    # matrix should override this method; the default is a convenience wrapper.
-    def predict(self, team_a_id: int, team_b_id: int) -> float:
-        """Not the primary API for stateless models — use predict_proba(X).
-
-        This implementation raises NotImplementedError by default; stateless
-        models are designed for batch prediction via predict_proba(). Override
-        if your model supports single-matchup lookup without a feature matrix.
-        """
-        raise NotImplementedError(
-            "StatelessModel.predict() requires a feature matrix. "
-            "Call predict_proba(X) with a pre-built feature row instead."
-        )
+# Stateless models (XGBoost, logistic regression, etc.) implement Model directly.
+# No StatelessModel subclass is needed — fit(X, y) and predict_proba(X) on Model
+# are sufficient. Stateless models do not require lifecycle hooks.
 ```
 
 ### 5.3 Interface Design Rationale
 
-**Why two ABC subclasses (not one):**
+**Why `StatefulModel` subclass (not just `Model`):**
 
-| Consideration | Single ABC | Dual ABC (proposed) |
+| Consideration | `Model` only | `StatefulModel` subclass |
 |:---|:---|:---|
-| `fit(X, y)` | Same signature — a single ABC *could* work | `StatefulModel.fit()` is concrete (template method); `StatelessModel.fit()` is abstract — both work cleanly |
-| Stateful lifecycle hooks (`start_season`, `get_state`, `set_state`) | Must raise `NotImplementedError` in stateless models | Only on `StatefulModel`; stateless models don't see them |
-| `update(game)` hook | Must raise `NotImplementedError` in stateless models | Only on `StatefulModel`; stateless models don't see it |
-| Type safety | Caller must guard against missing lifecycle methods | Type system prevents calling stateful lifecycle methods on stateless models |
-| Evaluation pipeline `fit` call | Single dispatch — both use `fit(X, y)`, no branching needed | Both use `fit(X, y)` — no branching needed for training |
-| **Verdict** | Viable for `fit`, but lifecycle methods still pollute the interface | **Preferred** — lifecycle methods properly isolated |
+| `fit(X, y)` | Abstract on `Model` — each model implements independently | Concrete template on `StatefulModel`; stateless models implement `fit` directly on `Model` |
+| `predict_proba(X)` | Abstract on `Model` — each model implements independently | Concrete template on `StatefulModel`; stateless models implement `predict_proba` directly on `Model` |
+| Lifecycle hooks (`start_season`, `get_state`, `set_state`) | Must be on `Model`, polluting stateless models | Isolated to `StatefulModel` — stateless models never see them |
+| `update(game)` / `_predict_one` hooks | Meaningless for stateless models | Isolated to `StatefulModel` |
+| Type safety | No way to distinguish stateful vs stateless at type level | `isinstance(model, StatefulModel)` for feature preparation dispatch |
+| **Verdict** | Lifecycle pollution on base; no template methods | **Preferred** — stateful concerns properly isolated |
 
 **Why NOT full sklearn BaseEstimator:**
 
 | sklearn Convention | NCAA Requirement | Conflict? |
 |:---|:---|:---|
 | `fit(X, y)` | Stateful models process games one at a time, not as a matrix | **Resolved** — `StatefulModel.fit(X, y)` reconstructs `Game` objects from `X` internally and iterates sequentially |
-| `predict(X)` returns labels | We need probabilities, not labels | **Minor** — use `predict_proba` convention |
+| `predict(X)` returns labels | We need probabilities, not labels | **Resolved** — `predict_proba(X: DataFrame) -> Series` is the unified prediction interface; no `predict` method |
 | `get_params()`/`set_params()` | Need Pydantic-validated configs | **Compatible** — implement via Pydantic model |
 | `clone()` via constructor introspection | We have Pydantic configs that can reconstruct | **Compatible** — implement via config |
 | Pipeline integration | Walk-forward temporal logic doesn't fit in `Pipeline.fit()` | **Yes** — custom evaluation loop required |
 
-**Conclusion:** Adopt sklearn **naming conventions** (`fit`, `predict`, `predict_proba`, `get_params`) but NOT sklearn `BaseEstimator` inheritance. The `fit(X, y)` interface is unified across both model types — `StatefulModel` handles game reconstruction internally. The evaluation pipeline (Epic 6) will handle walk-forward logic.
+**Conclusion:** Adopt sklearn **naming conventions** (`fit`, `predict_proba`, `get_params`) but NOT sklearn `BaseEstimator` inheritance. `predict_proba(X: DataFrame) -> Series` is the unified prediction interface for all models — `StatefulModel` provides a concrete template that handles per-row dispatch internally. The evaluation pipeline (Epic 6) will handle walk-forward logic.
 
-**How the evaluation pipeline (Epic 6) dispatches across both model types:**
+**How the evaluation pipeline (Epic 6) dispatches across model types:**
 
-The evaluation pipeline must generate predictions for every matchup in a test season. Since `StatefulModel` and `StatelessModel` have different prediction APIs, the pipeline dispatches on ABC type:
+All models share the `predict_proba(X)` interface. The only pipeline branch is **data preparation** — stateful models need only team ID columns; stateless models need the full feature matrix:
 
 ```python
 from __future__ import annotations
@@ -643,21 +635,16 @@ def generate_predictions(
 ) -> pd.Series:
     """Return P(team_a wins) for every game in test_games."""
     if isinstance(model, StatefulModel):
-        # Stateful: predict per-game from in-memory ratings (no feature matrix needed)
-        return pd.Series(
-            [model.predict(row.team_a_id, row.team_b_id) for row in test_games.itertuples()],
-            index=test_games.index,
-        )
-    elif isinstance(model, StatelessModel):
-        # Stateless: build feature matrix, predict in batch
-        X = feature_server.serve_season_features(season, mode="tournament")
-        X_test = X.loc[test_games.index]
-        return model.predict_proba(X_test)
+        # Stateful: ratings are in-memory state; only team IDs needed
+        X = test_games[["team_a_id", "team_b_id"]]
     else:
-        raise TypeError(f"Unknown model type: {type(model)}")
+        # Stateless: build full feature matrix
+        X = feature_server.serve_season_features(season, mode="tournament")
+        X = X.loc[test_games.index]
+    return model.predict_proba(X)
 ```
 
-*Note: The `itertuples()` call in the stateful branch is acceptable here — this is evaluation/orchestration code (a side-effect boundary), not business logic. Stateful models inherently require sequential per-game access, so vectorization is not applicable at this layer.*
+*Note: `StatefulModel.predict_proba()` uses `itertuples()` internally — this is acceptable since stateful models inherently require per-row access to look up in-memory ratings.*
 
 ### 5.4 Plugin Registry Requirements
 
@@ -696,7 +683,7 @@ class EloModel(StatefulModel):
     ...
 
 @register_model("xgboost")
-class XGBoostModel(StatelessModel):
+class XGBoostModel(Model):
     ...
 
 # Runtime discovery
