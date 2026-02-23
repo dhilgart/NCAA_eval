@@ -117,38 +117,45 @@ class StatefulModel(Model):
         y : pd.Series
             Binary label — ``1`` (or ``True``) means team_a won.
         """
+        # Hoist column-existence checks outside the loop (O(1) each, not O(n))
+        has_scores = "w_score" in X.columns and "l_score" in X.columns
+        has_num_ot = "num_ot" in X.columns
+
         games: list[Game] = []
-        for idx in X.index:
-            row = X.loc[idx]
+        for row in X.itertuples():
+            idx = row.Index
             team_a_won = bool(y.loc[idx])
 
-            team_a_id = int(row["team_a_id"])
-            team_b_id = int(row["team_b_id"])
+            team_a_id = int(row.team_a_id)
+            team_b_id = int(row.team_b_id)
 
             if team_a_won:
                 w_team_id, l_team_id = team_a_id, team_b_id
             else:
                 w_team_id, l_team_id = team_b_id, team_a_id
 
-            loc_enc = int(row["loc_encoding"])
-            loc = _LOC_FROM_ENCODING.get(loc_enc, "N")
+            loc_enc = int(row.loc_encoding)
+            if loc_enc not in _LOC_FROM_ENCODING:
+                msg = f"Unknown loc_encoding {loc_enc!r}; expected one of {sorted(_LOC_FROM_ENCODING)}"
+                raise ValueError(msg)
+            loc = _LOC_FROM_ENCODING[loc_enc]
 
             # Scores: use real values if present, else dummy
-            w_score = int(row["w_score"]) if "w_score" in X.columns else 1
-            l_score = int(row["l_score"]) if "l_score" in X.columns else 0
-            num_ot = int(row["num_ot"]) if "num_ot" in X.columns else 0
+            w_score = int(row.w_score) if has_scores else 1
+            l_score = int(row.l_score) if has_scores else 0
+            num_ot = int(row.num_ot) if has_num_ot else 0
 
-            # Date handling
-            raw_date = row.get("date")
+            # Date handling: pd.isna covers None, float NaN, and pd.NaT uniformly
+            raw_date = row.date
             date_val: datetime.date | None = None
-            if raw_date is not None and not (isinstance(raw_date, float) and pd.isna(raw_date)):
+            if not pd.isna(raw_date):
                 date_val = pd.Timestamp(raw_date).date()
 
             games.append(
                 Game(
-                    game_id=str(row["game_id"]),
-                    season=int(row["season"]),
-                    day_num=int(row["day_num"]),
+                    game_id=str(row.game_id),
+                    season=int(row.season),
+                    day_num=int(row.day_num),
                     date=date_val,
                     w_team_id=w_team_id,
                     l_team_id=l_team_id,
@@ -156,7 +163,7 @@ class StatefulModel(Model):
                     l_score=l_score,
                     loc=loc,
                     num_ot=num_ot,
-                    is_tournament=bool(row["is_tournament"]),
+                    is_tournament=bool(row.is_tournament),
                 )
             )
         return games

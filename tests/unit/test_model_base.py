@@ -177,6 +177,13 @@ class TestStatefulModel:
         assert games[2].l_team_id == 202
         assert games[2].loc == "N"  # loc_encoding=0
 
+    def test_to_games_raises_on_invalid_loc_encoding(self) -> None:
+        X, y = _make_game_dataframe(n_games=1)
+        X = X.copy()
+        X["loc_encoding"] = 99  # not in {-1, 0, 1}
+        with pytest.raises(ValueError, match="loc_encoding"):
+            StatefulModel._to_games(X, y)
+
     def test_to_games_dummy_scores_when_absent(self) -> None:
         X, y = _make_game_dataframe(n_games=1)
         X = X.drop(columns=["w_score", "l_score", "num_ot"])

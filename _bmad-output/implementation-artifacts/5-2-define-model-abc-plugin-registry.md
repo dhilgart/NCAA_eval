@@ -1,6 +1,6 @@
 # Story 5.2: Define Model ABC & Plugin Registry
 
-Status: review
+Status: done
 
 ## Story
 
@@ -238,14 +238,33 @@ Claude Opus 4.6
 
 ### File List
 
-- `src/ncaa_eval/model/base.py` (new)
+- `src/ncaa_eval/model/base.py` (new, modified by code review)
 - `src/ncaa_eval/model/registry.py` (new)
-- `src/ncaa_eval/model/logistic_regression.py` (new)
-- `tests/unit/test_model_base.py` (new)
-- `tests/unit/test_model_registry.py` (new)
-- `tests/unit/test_model_logistic_regression.py` (new)
+- `src/ncaa_eval/model/logistic_regression.py` (new, modified by code review)
+- `tests/unit/test_model_base.py` (new, modified by code review)
+- `tests/unit/test_model_registry.py` (new, modified by code review)
+- `tests/unit/test_model_logistic_regression.py` (new, modified by code review)
 - `src/ncaa_eval/model/__init__.py` (modified)
+- `_bmad-output/planning-artifacts/template-requirements.md` (modified by code review — 4 new learnings added)
+
+### Senior Developer Review (AI)
+
+**Reviewer:** Claude Sonnet 4.6 — 2026-02-23
+**Outcome:** Approved with fixes applied
+
+**Issues Found:** 0 HIGH, 6 MEDIUM (fixed), 1 LOW (fixed)
+
+**Fixes Applied:**
+- **M1–M3** — `_to_games()` refactored from `X.loc[idx]` loop to `itertuples()`, column-existence checks hoisted outside loop (O(1) vs O(n)), `pd.isna()` used as universal null guard (was: `isinstance(x, float) and pd.isna(x)` which missed `pd.NaT`)
+- **M4** — `_LOC_FROM_ENCODING` lookup raises `ValueError` for invalid values instead of silently returning `"N"`
+- **M5** — `_clean_registry` fixture annotated as `Generator[None, None, None]`, removed `# type: ignore[misc]`
+- **M6** — Added `TestAutoRegistration.test_logistic_regression_registered_on_import` to explicitly test AC8's auto-registration claim
+- **L1** — `LogisticRegressionConfig.model_name` typed as `Literal["logistic_regression"]` instead of `str`
+- Added `test_to_games_raises_on_invalid_loc_encoding` test
+
+**Post-fix quality gates:** 424/424 tests pass, mypy --strict clean, ruff clean
 
 ## Change Log
 
 - 2026-02-23: Implemented all 8 tasks — Model ABC, StatefulModel, ModelConfig, plugin registry, LogisticRegression test fixture, __init__.py exports, 24 unit tests, quality gates passed (422/422 tests, mypy strict clean, ruff clean).
+- 2026-02-23: Code review applied 6 MEDIUM + 1 LOW fixes; 2 new tests added (26 total); 424/424 tests, mypy strict clean, ruff clean.

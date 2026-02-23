@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from pathlib import Path
 from typing import Self
 
@@ -19,10 +20,10 @@ from ncaa_eval.model.registry import (
 
 
 @pytest.fixture(autouse=True)
-def _clean_registry() -> None:  # type: ignore[misc]
+def _clean_registry() -> Generator[None, None, None]:
     """Snapshot and restore the global registry around each test."""
     snapshot = dict(_MODEL_REGISTRY)
-    yield  # noqa: PT022
+    yield
     _MODEL_REGISTRY.clear()
     _MODEL_REGISTRY.update(snapshot)
 

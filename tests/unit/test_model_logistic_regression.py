@@ -7,6 +7,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd  # type: ignore[import-untyped]
 
+from ncaa_eval.model import list_models
 from ncaa_eval.model.logistic_regression import (
     LogisticRegressionConfig,
     LogisticRegressionModel,
@@ -20,6 +21,14 @@ def _make_train_data() -> tuple[pd.DataFrame, pd.Series]:
     X = pd.DataFrame({"feat_a": rng.standard_normal(n), "feat_b": rng.standard_normal(n)})
     y = pd.Series((X["feat_a"] + X["feat_b"] > 0).astype(int))
     return X, y
+
+
+class TestAutoRegistration:
+    """AC8: built-in models auto-register on package import."""
+
+    def test_logistic_regression_registered_on_import(self) -> None:
+        """Importing ncaa_eval.model must register 'logistic_regression'."""
+        assert "logistic_regression" in list_models()
 
 
 class TestLogisticRegressionConfig:

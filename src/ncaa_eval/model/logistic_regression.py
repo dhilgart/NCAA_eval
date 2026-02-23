@@ -7,7 +7,7 @@ test the stateless ``Model`` interface in ~30 lines of logic.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Self
+from typing import Literal, Self
 
 import joblib  # type: ignore[import-untyped]
 import pandas as pd  # type: ignore[import-untyped]
@@ -20,7 +20,7 @@ from ncaa_eval.model.registry import register_model
 class LogisticRegressionConfig(ModelConfig):
     """Hyperparameters for the logistic regression test fixture."""
 
-    model_name: str = "logistic_regression"
+    model_name: Literal["logistic_regression"] = "logistic_regression"
     C: float = 1.0  # noqa: N815 — sklearn convention
     max_iter: int = 200
 
