@@ -490,7 +490,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any
+from typing import Any, Self
 
 import pandas as pd
 from pydantic import BaseModel as PydanticBaseModel
@@ -520,8 +520,12 @@ class Model(ABC):
 
     @classmethod
     @abstractmethod
-    def load(cls, path: Path) -> "Model":
-        """Restore a model from disk."""
+    def load(cls, path: Path) -> Self:
+        """Restore a model from disk.
+
+        Returns Self so that EloModel.load(path) is typed as EloModel, not Model.
+        Requires Python 3.11+ typing.Self (available in Python 3.12.12).
+        """
 
     @abstractmethod
     def get_config(self) -> ModelConfig:
@@ -557,8 +561,16 @@ class StatefulModel(Model):
         Required columns in X: w_team_id, l_team_id, season, day_num, date,
         loc, num_ot (and any score columns needed by the concrete model).
         Rows must already be sorted chronologically.
+
+        This is a CONCRETE method implemented once in StatefulModel — subclasses
+        do NOT override it. Story 5.2 must provide the full implementation here.
         """
-        ...  # concrete implementation — reconstruct from standard schema
+        # Story 5.2 implements this once in StatefulModel body.
+        # Subclasses (EloModel, etc.) inherit it without overriding.
+        raise NotImplementedError(  # pragma: no cover — replaced by full impl in Story 5.2
+            "_to_games() must be implemented in StatefulModel (not subclasses). "
+            "See required column list in docstring."
+        )
 
     def predict_proba(self, X: pd.DataFrame) -> pd.Series:
         """Concrete template: extract team IDs from X, delegate to _predict_one per row."""
@@ -627,6 +639,7 @@ from __future__ import annotations
 
 import pandas as pd
 
+from ncaa_eval.model import Model, StatefulModel  # noqa: TC001 — used at runtime in isinstance
 from ncaa_eval.transform.feature_serving import StatefulFeatureServer
 
 
@@ -721,7 +734,8 @@ class XGBoostModelConfig(ModelConfig):
     subsample: float = 0.8
     colsample_bytree: float = 0.8
     min_child_weight: int = 3  # Regularization for small NCAA datasets
-    reg_lambda: float = 1.0
+    reg_alpha: float = 0.0  # L1 regularization; non-zero induces feature sparsity
+    reg_lambda: float = 1.0  # L2 regularization; default XGBoost value
     early_stopping_rounds: int = 50
 ```
 
@@ -830,6 +844,7 @@ These defaults match `EloConfig` from Story 4.8 and are informed by Silver/SBCB 
 |:---|:---|:---|:---|
 | `initial_rating` | 1500.0 | 1200–1800 | Standard Elo convention |
 | `k_early` | 56.0 | 40–70 | Silver/SBCB; high early-season uncertainty |
+| `early_game_threshold` | 20 | 10–30 | Games before K transitions from `k_early` → `k_regular`; aligns with `EloConfig` |
 | `k_regular` | 38.0 | 25–50 | Silver/SBCB; standard K-factor |
 | `k_tournament` | 47.5 | 35–60 | Community convention; slightly elevated for tournament |
 | `margin_exponent` | 0.85 | 0.6–1.0 | Silver formula; 0.85 = moderate MOV credit |
@@ -847,7 +862,8 @@ Ranges informed by Odeh (2025 winner), maze508 (2023 gold), and Edwards (2021).
 | `learning_rate` | 0.05 | 0.01–0.3 | Standard range |
 | `subsample` | 0.8 | 0.5–1.0 | Row sampling |
 | `colsample_bytree` | 0.8 | 0.5–1.0 | Feature sampling |
-| `reg_lambda` | 1.0 | 0.5–5.0 | L2 regularization |
+| `reg_alpha` | 0.0 | 0–1.0 | L1 (Lasso) regularization; non-zero induces feature sparsity |
+| `reg_lambda` | 1.0 | 0.5–5.0 | L2 (Ridge) regularization |
 | `min_child_weight` | 3 | 1–10 | Regularization |
 
 ---

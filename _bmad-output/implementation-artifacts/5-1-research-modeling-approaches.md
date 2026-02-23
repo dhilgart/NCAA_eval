@@ -291,8 +291,30 @@ N/A — research spike; no production code.
 
 **Round 2 Outcome:** Story set to `review`. All ACs remain implemented. Pseudocode is now import-complete and API-accurate across both rounds of review. Awaiting PO decision gate (AC 7) and SM downstream update (AC 8).
 
+### Senior Developer Review (AI) — Round 3
+
+**Reviewer:** Claude Sonnet 4.6 (adversarial code review — third pass)
+**Date:** 2026-02-23
+**Issues Found:** 1 HIGH, 4 MEDIUM, 2 LOW
+**Issues Fixed:** 5 (all HIGH and MEDIUM)
+**Git vs Story Discrepancies:** 0
+
+**Summary of fixes applied to `specs/research/modeling-approaches.md`:**
+- **H1 (HIGH):** Added `from ncaa_eval.model import Model, StatefulModel` to Section 5.3 evaluation dispatch pseudocode — Round 2 (H2) added `StatefulFeatureServer` import but missed the Model ABC imports. Both `Model` (type annotation) and `StatefulModel` (isinstance check) were NameError at runtime. Third import-gap catch in as many rounds.
+- **M1 (MEDIUM):** Added `reg_alpha: float = 0.0` to `XGBoostModelConfig` pseudocode in Section 5.5 and a corresponding row to the Section 6.4 XGBoost hyperparameter table — `reg_alpha (L1)` was documented with range `0–1.0` in Section 3.1 but absent from both the Pydantic config and the hyperparameter table. Same class of inconsistency as Round 1's `min_child_weight`.
+- **M2 (MEDIUM):** Added `early_game_threshold` to the Section 6.4 Elo hyperparameter table — Round 2 (M1) added this parameter to `EloModelConfig` in Section 5.5 but didn't propagate it to the §6.4 hyperparameter table. Section 5.5 and 6.4 were now out of sync.
+- **M3 (MEDIUM):** Replaced `_to_games()` ellipsis body (`...`) with `raise NotImplementedError(...)` and an explicit docstring clarification that it is a **concrete** method to be implemented once in `StatefulModel` (not abstract, not to be overridden by subclasses). Using `...` is the Python convention for abstract/stub methods; the concrete intent was ambiguous and would cause silent `TypeError` at runtime if copied literally.
+- **M4 (MEDIUM):** Changed `load(cls, path: Path) -> "Model"` to `-> Self` and added `from typing import Self` import — `Self` (Python 3.11+, PEP 673) ensures `EloModel.load(path)` is typed as `EloModel` not `Model`, enabling proper type narrowing in user code. Python 3.12.12 (project env) supports this natively.
+
+**LOW issues — documented as action items (not blocking):**
+- **L1 (LOW):** Registry stubs `get_model()` / `list_models()` in Section 5.4 use `...` bodies while `register_model` has full implementation — inconsistent pseudocode style. Left as-is; a comment noting these are stubs awaiting implementation in Story 5.2 would help but is minor.
+- **L2 (LOW):** `scale_pos_weight: 1.0` class balance assumption in Section 3.1 is only valid if `StatefulFeatureServer` assigns team_a/team_b with balanced labels — Story 5.4 dev agent should verify label distribution before adopting this default.
+
+**Round 3 Outcome:** Story status remains `review`. All 5 HIGH+MEDIUM issues fixed. Pseudocode is now fully import-complete, spec-consistent, and type-safe across all three rounds of review. Awaiting PO decision gate (AC 7) and SM downstream update (AC 8).
+
 ### Change Log
 
 - 2026-02-22: Created `specs/research/modeling-approaches.md` with complete survey of modeling approaches for NCAA tournament prediction. 8 sections covering: MMLM solution survey (2014–2025), stateful model catalogue (Elo, Glicko-2, TrueSkill), stateless model catalogue (XGBoost, LightGBM, LR, neural nets), hybrid approaches, Model ABC interface requirements, reference model recommendations, equivalence groups, and scope recommendation for PO decision.
 - 2026-02-22: Code review round 1 (Claude Sonnet 4.6) — applied 7 fixes to `specs/research/modeling-approaches.md`: pathlib import in pseudocode, StatelessModel.predict() resolution, arXiv verification caveat, min_child_weight added to XGBoostModelConfig, evaluation pipeline dispatch guidance, stacking code block language tag, https:// URL prefixes, 538 discontinuation entry in Section 1.4. Added Task 8 (post-PO SM work) to story file.
 - 2026-02-22: Code review round 2 (Claude Sonnet 4.6) — applied 6 fixes to `specs/research/modeling-approaches.md`: Game import in Section 5.2 ABC pseudocode, StatefulFeatureServer import in Section 5.3 dispatch pseudocode, early_game_threshold added to EloModelConfig (Section 5.5), XGBClassifier.load_model() API correction (Section 6.2), Callable return type on register_model (Section 5.4), save(path)/load(path) consistency in Section 6.1, removed misleading type: ignore[override] comment. Corrected sprint-status from `done` → `review` (PO gate not yet passed).
+- 2026-02-23: Code review round 3 (Claude Sonnet 4.6) — applied 5 fixes to `specs/research/modeling-approaches.md`: Added Model+StatefulModel imports to Section 5.3 dispatch pseudocode (missed by Round 2 H2), added reg_alpha to XGBoostModelConfig (Section 5.5) and XGBoost hyperparameter table (Section 6.4), added early_game_threshold to Elo hyperparameter table (Section 6.4; was added to Section 5.5 in Round 2 but not propagated), replaced _to_games() ellipsis body with NotImplementedError + concrete-method clarification, changed load() return type from "Model" to Self (typing.Self, Python 3.12 native, PEP 673).

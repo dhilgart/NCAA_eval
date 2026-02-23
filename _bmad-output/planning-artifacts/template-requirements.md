@@ -1692,3 +1692,44 @@ When a spike story has a **PO decision gate AC** (e.g., "PO reviews and approves
 **Failure mode:** Round 1 review of Story 5.1 found "All ACs implemented" and set sprint-status → `done`, but AC 7 (PO gate) was explicitly unfulfilled. The sprint-status had to be reverted to `review` in Round 2.
 
 **Rule:** If any AC contains the phrase "product owner reviews", "PO approves", "decision gate", or similar, the code review agent MUST leave the story in `review` state regardless of how many other ACs are satisfied. Advancing to `done` requires human PO action, not agent action.
+
+### Multi-Block Pseudocode: Each Code Block Has Independent Imports (Discovered Story 5.1 Code Review Round 3, 2026-02-23)
+
+When fixing an import gap in one code block (e.g., Section 5.2 ABC definition), **always check every other code block in the same document independently**. Imports added to Block A do not carry into Block B. Over three rounds of Story 5.1 review, each round found a new import gap in a different code block:
+- Round 1: `Path` missing from Block A (§5.2 ABC)
+- Round 2: `Game` missing from Block A; `StatefulFeatureServer` missing from Block B (§5.3 dispatch)
+- Round 3: `Model` and `StatefulModel` missing from Block B (§5.3 dispatch — same block Round 2 partially fixed)
+
+**Rule:** After any import fix, scan ALL other code blocks in the document for the same class of gap, especially blocks that reference types defined in the same ABC.
+
+**Updated checklist item:** "Check EVERY code block independently — and after fixing imports in one block, re-scan ALL blocks for the same type."
+
+### Concrete Methods in ABC Pseudocode: Use `raise NotImplementedError`, Not `...` (Discovered Story 5.1 Round 3, 2026-02-23)
+
+In Python, `...` (Ellipsis) is idiomatic for abstract method stubs. Using `...` as the body of a **concrete** helper method in pseudocode creates ambiguity: Story 5.2 dev agents may either treat it as abstract (wrong — defeats template inheritance) or copy `...` literally (causes `None` return → `TypeError` at runtime).
+
+**Rule:** In research doc pseudocode:
+- **Abstract methods** → use `...` body or `pass` (Python convention for "subclass must implement")
+- **Concrete methods with placeholder bodies** → use `raise NotImplementedError("message")` + a docstring comment explicitly stating "CONCRETE — implement in `StatefulModel` body, not subclasses"
+
+### Classmethod Factory Return Types: Use `Self`, Not Parent Class (Discovered Story 5.1 Round 3, 2026-02-23)
+
+`load(cls, path: Path) -> "Model"` (or any similar factory classmethod returning the parent class) prevents type narrowing: `EloModel.load(path)` returns `Model`, not `EloModel`. Use `typing.Self` (Python 3.11+, PEP 673) for all factory classmethods:
+
+```python
+from typing import Self
+
+@classmethod
+@abstractmethod
+def load(cls, path: Path) -> Self: ...
+```
+
+**Rule:** Any `@classmethod` that creates and returns an instance of `cls` should return `Self`, not the ABC name.
+
+### Config Spec → Hyperparameter Table Sync (Discovered Story 5.1 Round 3, 2026-02-23)
+
+When adding a parameter to a Pydantic config class in one section (e.g., §5.5), always update ALL hyperparameter tables in other sections that describe that model (e.g., §6.4). Over rounds of Story 5.1 review:
+- Round 2 added `min_child_weight` to `XGBoostModelConfig` (§5.5) and §6.4 table correctly
+- Round 2 added `early_game_threshold` to `EloModelConfig` (§5.5) but missed the §6.4 Elo table
+
+**Rule:** Whenever a parameter is added to or removed from a Pydantic model config in pseudocode, search the document for all hyperparameter tables referencing that model and update them to match.
