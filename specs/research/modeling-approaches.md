@@ -18,7 +18,7 @@
 | [5. Model ABC Interface](#5-model-abc-interface-requirements) | Interface specification for Story 5.2 | `Model` ABC + `StatefulModel` subclass; stateless models implement `Model` directly; designed for external extensibility |
 | [6. Reference Model Recommendations](#6-reference-model-recommendations) | Story 5.3 (Elo) and 5.4 (XGBoost) | Elo as stateful reference, XGBoost as stateless reference |
 | [7. Equivalence Groups](#7-model-equivalence-groups) | Which models are redundant vs. distinct | 3 distinct model families; GBDT variants form one equivalence group |
-| [8. Scope Recommendation](#8-scope-recommendation-for-po-decision) | MVP options for PO approval | Recommended: 2 reference models + ABC; LightGBM/neural nets deferred |
+| [8. Scope Recommendation](#8-scope-recommendation-for-po-decision) | MVP scope for PO approval | Option A only: ABC + Elo + XGBoost; all other models are user-space extensions |
 
 ---
 
@@ -612,11 +612,11 @@ class StatefulModel(Model):
 |:---|:---|:---|
 | `fit(X, y)` | Stateful models process games one at a time, not as a matrix | **Resolved** — `StatefulModel.fit(X, y)` reconstructs `Game` objects from `X` internally and iterates sequentially |
 | `predict(X)` returns labels | We need probabilities, not labels | **Resolved** — `predict_proba(X: DataFrame) -> Series` is the unified prediction interface; no `predict` method |
-| `get_params()`/`set_params()` | Need Pydantic-validated configs | **Compatible** — implement via Pydantic model |
+| `get_params()`/`set_params()` | Need Pydantic-validated configs | **Tension** — `BaseEstimator.get_params()` introspects constructor args and returns flat primitives; our design returns `{"config": PydanticModel}`, which is incompatible with `GridSearchCV` and similar sklearn tools without additional adaptation |
 | `clone()` via constructor introspection | We have Pydantic configs that can reconstruct | **Compatible** — implement via config |
-| Pipeline integration | Walk-forward temporal logic doesn't fit in `Pipeline.fit()` | **Yes** — custom evaluation loop required |
+| Pipeline integration | Walk-forward temporal logic doesn't fit in `Pipeline.fit()` | **Yes** — custom evaluation loop required; sklearn `Pipeline` cannot express leave-one-tournament-out or per-season walk-forward splits |
 
-**Conclusion:** Adopt sklearn **naming conventions** (`fit`, `predict_proba`, `get_params`) but NOT sklearn `BaseEstimator` inheritance. `predict_proba(X: DataFrame) -> Series` is the unified prediction interface for all models — `StatefulModel` provides a concrete template that handles per-row dispatch internally. The evaluation pipeline (Epic 6) will handle walk-forward logic.
+**Conclusion:** Adopt sklearn **naming conventions** (`fit`, `predict_proba`, `get_params`) but NOT sklearn `BaseEstimator` inheritance. The two remaining conflicts — `Pipeline` incompatibility and Pydantic config tension with `GridSearchCV` — make full inheritance more friction than value. `predict_proba(X: DataFrame) -> Series` is the unified prediction interface for all models. The evaluation pipeline (Epic 6) will handle walk-forward logic.
 
 **How the evaluation pipeline (Epic 6) dispatches across model types:**
 
@@ -921,49 +921,24 @@ Similar to the feature equivalence groups in `feature-engineering-techniques.md`
 | XGBoost Reference Model | 5.4 | Wraps `xgboost.XGBClassifier` as `Model`; built-in reference and extensibility example |
 | Model Run Tracking + CLI | 5.5 | Metadata tracking, CLI for launching training jobs |
 
-**What's deferred to Post-MVP Backlog:**
-- LightGBM, CatBoost (GBDT family — XGBoost covers this)
-- Glicko-2, TrueSkill (rating family — Elo covers this)
-- LRMC, Mixed-effects models (novel approaches — lower priority)
-- LSTM, Transformer (neural nets — academic interest, not competition-proven)
-- Stacking/blending meta-model (requires multiple trained models first)
+**Rationale:** This option provides the two most competition-validated model types (Elo for stateful, XGBoost for stateless) and the extensibility infrastructure (ABC + registry). Additional models — logistic regression, LightGBM, Glicko-2, neural nets — are natural candidates for user-owned repos following the Model ABC contract; they do not belong in this repo.
 
-**Rationale:** This option provides the two most competition-validated model types (Elo for stateful, XGBoost for stateless) and the extensibility infrastructure (ABC + registry) for users to add their own models from external repos. Every deferred model — and every user-defined custom model — can be added as a plugin without changing core code.
+### User-Space Extensions (not in-repo scope)
 
-### Option B: Extended MVP
+The following are examples a user could implement by subclassing `Model` or `StatefulModel` in their own repo and registering via `@register_model`:
 
-**Scope:** Option A + Logistic Regression as a third reference model
+| Model | Base Class | Effort | Notes |
+|:---|:---|:---|:---|
+| Logistic Regression | `Model` | ~30 lines | `sklearn.LogisticRegression` wrapper; won MMLM 2014–2018 |
+| LightGBM | `Model` | ~50 lines | Near-identical pattern to XGBoost reference |
+| Glicko-2 | `StatefulModel` | ~150 lines | Extension of Elo with rating deviation; same lifecycle contract |
+| CatBoost / neural net | `Model` | varies | Same `fit(X,y)` / `predict_proba(X)` contract |
 
-| Additional Component | Story | Description |
-|:---|:---|:---|
-| Logistic Regression Reference | New 5.4b or in 5.4 | `sklearn.LogisticRegression` wrapper as `Model`; serves as simple baseline |
-
-**Rationale:** Logistic regression won or placed in MMLM 2014–2018. Trivial to implement (~50 lines). Provides a meaningful comparison point: if LR with ordinal deltas matches XGBoost, the complex features aren't helping.
-
-**Trade-off:** Adds ~0.5 story points of work. Could be included in Story 5.4 as a second stateless model example rather than a separate story.
-
-### Option C: Extended MVP + LightGBM
-
-**Scope:** Option B + LightGBM as a fourth model
-
-| Additional Component | Story | Description |
-|:---|:---|:---|
-| LightGBM Reference | New 5.4c | `lightgbm.LGBMClassifier` wrapper as `Model`; comparison point for XGBoost |
-
-**Rationale:** While the 2025 winner found XGBoost superior, having two GBDT implementations enables comparison and validates that the Model ABC properly supports GBDT-family models.
-
-**Trade-off:** Adds a new dependency (`lightgbm`). Marginal value — XGBoost and LightGBM produce very similar results on NCAA-sized data.
+These are Post-MVP from this repo's perspective. The XGBoost and Elo reference implementations in Stories 5.3–5.4 serve as the worked examples users follow.
 
 ### Recommendation
 
-**Option A (Minimal MVP)** is recommended. It provides:
-- The two most proven model types (Elo + XGBoost)
-- The ABC + registry infrastructure for extensibility
-- The smallest scope with the highest value
-
-Option B (adding logistic regression in Story 5.4) is a reasonable extension with minimal cost. The PO should decide whether to include it.
-
-Options C and beyond add models from the same equivalence groups and provide diminishing returns.
+**Option A** is the full scope for this repo. The ABC + registry design deliberately makes every other model a user-space concern.
 
 ---
 
