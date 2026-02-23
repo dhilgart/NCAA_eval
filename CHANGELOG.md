@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.0 (2026-02-23)
+
+### Feat
+
+- **model**: define Model ABC and plugin registry — story 5.2 (#27)
+
 ## 0.4.0 (2026-02-22)
 
 ### Feat
