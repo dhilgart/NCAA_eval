@@ -425,6 +425,11 @@ class TestEdgeCases:
         with pytest.raises(ValueError, match="binary"):
             reliability_diagram_data(np.array([0.5, 0.3]), np.array([0.7, 0.4]))
 
+    def test_non_binary_y_true_roc_auc(self) -> None:
+        """Non-binary y_true should raise ValueError for roc_auc."""
+        with pytest.raises(ValueError, match="binary"):
+            roc_auc(np.array([0.5, 0.3]), np.array([0.7, 0.4]))
+
     def test_n_bins_zero_ece(self) -> None:
         """n_bins=0 should raise ValueError for expected_calibration_error."""
         with pytest.raises(ValueError, match="n_bins must be >= 1"):

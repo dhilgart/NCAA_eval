@@ -2157,3 +2157,42 @@ if n_bins < 1:
     msg = f"n_bins must be >= 1, got {n_bins}."
     raise ValueError(msg)
 ```
+
+### `frozen=True` Dataclasses with Numpy Array Fields: Use `.copy()` at Construction (Discovered Story 6.1 Code Review Round 2, 2026-02-23)
+
+When a `frozen=True` dataclass contains `npt.NDArray` fields (numpy arrays), the frozen semantics only prevent field *rebinding* — callers can still mutate array contents in-place. This silently breaks the immutability contract:
+
+```python
+@dataclass(frozen=True)
+class ReliabilityData:
+    fraction_of_positives: npt.NDArray[np.float64]
+
+result = compute_reliability(...)
+result.fraction_of_positives = np.array([0.0])  # ← FrozenInstanceError ✓
+result.fraction_of_positives[0] = 0.999          # ← silently succeeds! ✗
+```
+
+**Fix:** Return `.copy()` of all numpy array fields in the constructor call so callers receive an independent copy:
+
+```python
+return ReliabilityData(
+    fraction_of_positives=fraction_of_positives.copy(),
+    mean_predicted_value=mean_predicted_value.copy(),
+    bin_counts=bin_counts.copy(),
+    bin_edges=bin_edges.copy(),
+    n_bins=n_bins,
+)
+```
+
+This also protects against the case where the array returned from a library call (e.g., sklearn) is an internal view — copying ensures the dataclass owns its data.
+
+**Related:** The general `frozen=True` / mutable field pattern is documented above (Story 4.2, `list[Game]` case). This entry specifically addresses numpy array fields where `.copy()` is the idiomatic fix (vs. `tuple()` for lists).
+
+### Test Coverage Symmetry: All Input Validation Tests Must Cover ALL Functions (Discovered Story 6.1 Code Review Round 2, 2026-02-23)
+
+When a shared validation helper (`_validate_inputs`) covers N metrics, edge-case tests for each validation condition should exist for **all N metrics** — not just the first few. Asymmetric coverage leads to silently untested code paths.
+
+**Pattern:** For each validation condition (empty arrays, mismatched lengths, non-binary y_true, probs outside [0,1]), add a dedicated `test_<condition>_<metric>` test for every public function. Use a checklist during code review:
+- `test_empty_arrays_raise_<metric>` → 5 tests for 5 metrics ✓
+- `test_mismatched_lengths_<metric>` → 5 tests ✓
+- `test_non_binary_y_true_<metric>` → must cover ALL metrics (log_loss, brier, roc_auc, ece, reliability) — Story 6.1 originally missed `roc_auc`.

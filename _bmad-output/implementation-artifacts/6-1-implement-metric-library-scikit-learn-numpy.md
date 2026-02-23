@@ -178,12 +178,13 @@ Claude Opus 4.6
 
 - 2026-02-23: Implemented metric library with all 5 metric functions, ReliabilityData dataclass, input validation, public API exports, and 48 unit tests
 - 2026-02-23: Code review fixes — added bin_edges to ReliabilityData (AC5 compliance), binary y_true validation to _validate_inputs, n_bins>=1 validation to ECE and reliability_diagram_data, corrected misleading comment on ECE binning; 7 new tests added (55 total, 552 suite-wide)
+- 2026-02-23: Code review round 2 fixes — added .copy() for all numpy array fields in ReliabilityData constructor (frozen=True immutability contract); added test_non_binary_y_true_roc_auc (test coverage symmetry); updated __init__.py docstring from "Metrics and simulation module" to "Evaluation metrics module"; 1 new test (56 total)
 
 ### File List
 
-- src/ncaa_eval/evaluation/metrics.py (NEW — code review: added bin_edges to ReliabilityData, binary y_true validation, n_bins>=1 validation, corrected misleading comment)
-- src/ncaa_eval/evaluation/__init__.py (MODIFIED)
-- tests/unit/test_evaluation_metrics.py (NEW — code review: added 7 tests for new validations and bin_edges field)
+- src/ncaa_eval/evaluation/metrics.py (NEW — code review: added bin_edges to ReliabilityData, binary y_true validation, n_bins>=1 validation, corrected misleading comment; code review round 2: .copy() for all array fields in ReliabilityData)
+- src/ncaa_eval/evaluation/__init__.py (MODIFIED — updated docstring)
+- tests/unit/test_evaluation_metrics.py (NEW — code review: 7 tests; code review round 2: test_non_binary_y_true_roc_auc)
 - _bmad-output/implementation-artifacts/6-1-implement-metric-library-scikit-learn-numpy.md (MODIFIED)
 - _bmad-output/implementation-artifacts/sprint-status.yaml (MODIFIED)
 - _bmad-output/planning-artifacts/template-requirements.md (MODIFIED — code review learnings)

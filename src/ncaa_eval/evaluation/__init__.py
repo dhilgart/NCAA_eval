@@ -1,4 +1,4 @@
-"""Metrics and simulation module."""
+"""Evaluation metrics module."""
 
 from __future__ import annotations
 

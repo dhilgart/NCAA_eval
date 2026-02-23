@@ -278,9 +278,9 @@ def reliability_diagram_data(
     bin_counts: npt.NDArray[np.int64] = all_bin_counts[non_empty_mask].astype(np.int64)
 
     return ReliabilityData(
-        fraction_of_positives=fraction_of_positives,
-        mean_predicted_value=mean_predicted_value,
-        bin_counts=bin_counts,
-        bin_edges=bin_edges,
+        fraction_of_positives=fraction_of_positives.copy(),
+        mean_predicted_value=mean_predicted_value.copy(),
+        bin_counts=bin_counts.copy(),
+        bin_edges=bin_edges.copy(),
         n_bins=n_bins,
     )
