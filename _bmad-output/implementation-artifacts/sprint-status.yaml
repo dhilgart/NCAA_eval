@@ -83,7 +83,7 @@ development_status:
   # Epic 5: Core Modeling Framework
   epic-5: in-progress
   5-1-research-modeling-approaches: done
-  5-2-define-model-abc-plugin-registry: in-progress
+  5-2-define-model-abc-plugin-registry: review
   5-3-implement-reference-stateful-model-elo: backlog
   5-4-implement-reference-stateless-model-xgboost: backlog
   5-5-implement-model-run-tracking-training-cli: backlog

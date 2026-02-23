@@ -1,6 +1,6 @@
 # Story 5.2: Define Model ABC & Plugin Registry
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -55,20 +55,20 @@ So that I can implement custom models that plug into the training and evaluation
   - [x] 6.1 Export: `Model`, `StatefulModel`, `ModelConfig`, `register_model`, `get_model`, `list_models`
   - [x] 6.2 Import `LogisticRegressionModel` for auto-registration
 
-- [ ] Task 7: Write unit tests (AC: #10)
-  - [ ] 7.1 Test Model ABC cannot be instantiated directly
-  - [ ] 7.2 Test StatefulModel ABC cannot be instantiated without implementing all abstract methods
-  - [ ] 7.3 Test `_to_games()` correctly reconstructs `Game` objects from DataFrame
-  - [ ] 7.4 Test `StatefulModel.fit()` calls `start_season` at boundaries and `update` per game
-  - [ ] 7.5 Test `StatefulModel.predict_proba()` dispatches to `_predict_one` per row
-  - [ ] 7.6 Test plugin registry: `register_model`, `get_model`, `list_models`, `ModelNotFoundError`
-  - [ ] 7.7 Test LogisticRegressionModel: `fit`/`predict_proba`/`save`/`load` round-trip
-  - [ ] 7.8 Test `ModelConfig` Pydantic validation and JSON serialization
+- [x] Task 7: Write unit tests (AC: #10)
+  - [x] 7.1 Test Model ABC cannot be instantiated directly
+  - [x] 7.2 Test StatefulModel ABC cannot be instantiated without implementing all abstract methods
+  - [x] 7.3 Test `_to_games()` correctly reconstructs `Game` objects from DataFrame
+  - [x] 7.4 Test `StatefulModel.fit()` calls `start_season` at boundaries and `update` per game
+  - [x] 7.5 Test `StatefulModel.predict_proba()` dispatches to `_predict_one` per row
+  - [x] 7.6 Test plugin registry: `register_model`, `get_model`, `list_models`, `ModelNotFoundError`
+  - [x] 7.7 Test LogisticRegressionModel: `fit`/`predict_proba`/`save`/`load` round-trip
+  - [x] 7.8 Test `ModelConfig` Pydantic validation and JSON serialization
 
-- [ ] Task 8: Run quality gates (AC: #11)
-  - [ ] 8.1 `ruff check .` passes
-  - [ ] 8.2 `mypy --strict src/ncaa_eval tests` passes
-  - [ ] 8.3 `pytest` passes with all new tests green
+- [x] Task 8: Run quality gates (AC: #11)
+  - [x] 8.1 `ruff check .` passes
+  - [x] 8.2 `mypy --strict src/ncaa_eval tests` passes
+  - [x] 8.3 `pytest` passes with all new tests green
 
 ## Dev Notes
 
@@ -233,6 +233,8 @@ Claude Opus 4.6
 - Task 4: Created plugin registry with `@register_model` decorator, `get_model()`, `list_models()`, `ModelNotFoundError`. 5 registry tests pass including duplicate name detection and unknown model error.
 - Task 5: Created `LogisticRegressionModel` test fixture wrapping sklearn LR in ~30 lines with `LogisticRegressionConfig(C, max_iter)`, `save`/`load` via joblib+JSON, `@register_model("logistic_regression")`. 6 tests pass.
 - Task 6: Updated `__init__.py` with public exports (`Model`, `StatefulModel`, `ModelConfig`, `register_model`, `get_model`, `list_models`, `ModelNotFoundError`) and auto-registration import. Verified `list_models()` returns `["logistic_regression"]` on package import.
+- Task 7: All 24 unit tests covering Tasks 1-6 already written alongside implementation (TDD). Verified coverage of all 8 AC-mapped subtasks.
+- Task 8: Quality gates passed — `ruff check src/ tests/` clean, `mypy --strict` 53 files clean, 422/422 tests pass (24 new + 398 existing, 0 regressions).
 
 ### File List
 
@@ -243,3 +245,7 @@ Claude Opus 4.6
 - `tests/unit/test_model_registry.py` (new)
 - `tests/unit/test_model_logistic_regression.py` (new)
 - `src/ncaa_eval/model/__init__.py` (modified)
+
+## Change Log
+
+- 2026-02-23: Implemented all 8 tasks — Model ABC, StatefulModel, ModelConfig, plugin registry, LogisticRegression test fixture, __init__.py exports, 24 unit tests, quality gates passed (422/422 tests, mypy strict clean, ruff clean).
