@@ -1,6 +1,6 @@
 # Story 5.5: Implement Model Run Tracking & Training CLI
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -66,10 +66,10 @@ So that I can reproduce results, compare runs, and train models from the termina
   - [x] 6.3 Test CLI with invalid `--model` name prints error with available models
   - [x] 6.4 Test CLI with `--config` override applies custom hyperparameters
 
-- [ ] Task 7: Run quality gates (AC: all)
-  - [ ] 7.1 `ruff check src/ tests/` passes
-  - [ ] 7.2 `mypy --strict src/ncaa_eval tests` passes
-  - [ ] 7.3 `pytest` passes with all new tests green and zero regressions
+- [x] Task 7: Run quality gates (AC: all)
+  - [x] 7.1 `ruff check src/ tests/` passes
+  - [x] 7.2 `mypy --strict src/ncaa_eval tests` passes
+  - [x] 7.3 `pytest` passes with all new tests green and zero regressions (496 passed)
 
 ## Dev Notes
 
@@ -316,10 +316,36 @@ Key learnings from the XGBoost story (previous story in epic):
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+- Pre-commit ruff caught `pytest.raises(Exception)` too broad → fixed to `ValidationError`
+- Pre-commit ruff caught PLR0913 (too many args) on CLI functions → added `noqa: PLR0913`
+- mypy strict caught `list[bool]` not assignable to `list[object]` (list invariance) → widened annotation to `dict[str, object]`
+- Typer single-command auto-promotion: `train` subcommand was not accepted as arg → added `@app.callback()` to force multi-command mode
+
 ### Completion Notes List
 
+- **Task 1+2**: `ModelRun` and `Prediction` Pydantic models with `RunStore` (JSON + Parquet persistence) in `src/ncaa_eval/model/tracking.py`. `pred_win_prob` constrained to [0.0, 1.0] via `Annotated[float, Field(ge=0.0, le=1.0)]`. PyArrow explicit schema for Parquet writes.
+- **Task 3**: Training pipeline in `src/ncaa_eval/cli/train.py`. Handles stateful vs stateless model dispatch — stateful models receive full DataFrame (metadata + features), stateless receive feature-only columns. Rich progress bars for season iteration, Rich table for results summary. Label imbalance warning when mean > 0.95 or < 0.05.
+- **Task 4**: Typer CLI at `src/ncaa_eval/cli/main.py` with `@app.callback()` to support `python -m ncaa_eval.cli train`. Config override via `--config` JSON file creates Pydantic config from model's config class.
+- **Task 5**: 13 unit tests covering ModelRun creation/round-trip, Prediction validation bounds, RunStore save/load/list_runs/missing.
+- **Task 6**: 4 CLI integration tests with mocked `StatefulFeatureServer.serve_season_features` returning synthetic data. Tests cover: happy path, output file creation, invalid model error, config override.
+- **Task 7**: All quality gates pass: ruff (0 errors), mypy strict (0 errors), pytest (496 passed, 0 failed).
+
 ### File List
+
+- `src/ncaa_eval/cli/__init__.py` (NEW)
+- `src/ncaa_eval/cli/__main__.py` (NEW)
+- `src/ncaa_eval/cli/main.py` (NEW)
+- `src/ncaa_eval/cli/train.py` (NEW)
+- `src/ncaa_eval/model/tracking.py` (NEW)
+- `tests/unit/test_model_tracking.py` (NEW)
+- `tests/unit/test_cli_train.py` (NEW)
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` (MODIFIED)
+- `_bmad-output/implementation-artifacts/5-5-implement-model-run-tracking-training-cli.md` (MODIFIED)
+
+### Change Log
+
+- 2026-02-23: Implemented model run tracking (ModelRun, Prediction, RunStore) and training CLI (`python -m ncaa_eval.cli train`) with Rich progress bars and results summary. 17 new tests (13 unit + 4 integration), 496 total passing.
