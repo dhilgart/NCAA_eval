@@ -1733,3 +1733,60 @@ When adding a parameter to a Pydantic config class in one section (e.g., §5.5),
 - Round 2 added `early_game_threshold` to `EloModelConfig` (§5.5) but missed the §6.4 Elo table
 
 **Rule:** Whenever a parameter is added to or removed from a Pydantic model config in pseudocode, search the document for all hyperparameter tables referencing that model and update them to match.
+
+### `pd.isna()` Is the Universal Null Guard for pandas Values (Discovered Story 5.2 Code Review, 2026-02-23)
+
+When extracting scalar values from a DataFrame row (via `X.loc[idx]` or `itertuples()`), null checks must handle three distinct representations: Python `None`, `float('nan')` (numeric columns), and `pd.NaT` (datetime columns). The pattern `isinstance(raw, float) and pd.isna(raw)` only catches float NaN and silently fails for `pd.NaT`.
+
+**Rule:** Always use `pd.isna(value)` as the sole null guard — it handles all three types uniformly:
+```python
+# ❌ Misses pd.NaT — crashes when date column has NaT values
+if raw_date is not None and not (isinstance(raw_date, float) and pd.isna(raw_date)):
+    date_val = pd.Timestamp(raw_date).date()
+
+# ✅ Handles None, float NaN, and pd.NaT correctly
+if not pd.isna(raw_date):
+    date_val = pd.Timestamp(raw_date).date()
+```
+
+### `itertuples()` Must Be Used Consistently in ABC Template Methods (Discovered Story 5.2 Code Review, 2026-02-23)
+
+When an ABC template method is documented to use `itertuples()` for row iteration (e.g., `predict_proba()`), all sibling template methods that iterate the same DataFrame must also use `itertuples()`. Mixing `itertuples()` in one method with `X.loc[idx]` in another creates a ~5–10× performance inconsistency that is invisible from the outside.
+
+**Rule:** Pick one iteration pattern per class and apply it consistently. When object construction (not pure calculation) requires per-row iteration, `itertuples()` is preferred over `X.loc[idx]` for both speed and style consistency.
+
+**Companion rule:** Hoist all `"col_name" in X.columns` checks outside the loop — they evaluate identically on every iteration and pay O(c) overhead n times unnecessarily.
+
+### Pydantic Config `model_name`: Use `Literal` to Lock the Name at the Type Level (Discovered Story 5.2 Code Review, 2026-02-23)
+
+When a concrete `ModelConfig` subclass has a fixed `model_name`, type it as `Literal["name"]` not `str`. This prevents `LogisticRegressionConfig(model_name="wrong")` from passing mypy silently and locks the config identity at the type level.
+
+```python
+# ❌ Allows any string — no enforcement
+model_name: str = "logistic_regression"
+
+# ✅ Enforced at type-check time
+model_name: Literal["logistic_regression"] = "logistic_regression"
+```
+
+### Pytest Generator Fixtures: Annotate as `Generator[None, None, None]` (Discovered Story 5.2 Code Review, 2026-02-23)
+
+A pytest fixture that uses `yield` for setup/teardown is a generator function. Typing it `-> None` triggers `mypy --strict`'s `[misc]` error and requires a suppression comment. The correct annotation uses `collections.abc.Generator`:
+
+```python
+# ❌ Triggers mypy [misc] — requires type: ignore[misc]
+@pytest.fixture(autouse=True)
+def _clean_registry() -> None:  # type: ignore[misc]
+    ...
+    yield
+    ...
+
+# ✅ mypy strict clean — no suppression needed
+from collections.abc import Generator
+
+@pytest.fixture(autouse=True)
+def _clean_registry() -> Generator[None, None, None]:
+    ...
+    yield
+    ...
+```
