@@ -458,7 +458,7 @@ This is naturally supported by the proposed dual-contract ABC — any `Model` ca
 
 The Model ABC must support the following requirements derived from the survey:
 
-1. **Dual contract:** Stateful models (per-game updates) and stateless models (batch training) have fundamentally different interfaces. A single ABC cannot cleanly abstract both without violating the Interface Segregation Principle. **Use two abstract base classes** under a common parent.
+1. **Unified fit interface, specialised lifecycle:** Both model types expose `fit(X, y)` — the standard sklearn-style entry point. `StatefulModel` provides a *concrete* template implementation that reconstructs `Game` objects from `X` and iterates them sequentially via an abstract `update()` hook; `StatelessModel` leaves `fit(X, y)` abstract for batch training. The two-subclass split is justified by lifecycle methods specific to stateful models (`start_season`, `get_state`, `set_state`) that have no meaning for stateless models. **Use two abstract base classes** under a common parent.
 
 2. **Calibrated probability output:** All models must output calibrated probabilities, not raw scores. This is required because the evaluation metrics (Brier Score, LogLoss) are proper scoring rules that reward calibration. Models can either:
    - Output calibrated probabilities directly (e.g., Elo expected score)
@@ -522,7 +522,36 @@ class Model(ABC):
 
 
 class StatefulModel(Model):
-    """Model that maintains per-team state updated game-by-game."""
+    """Model that maintains per-team state updated game-by-game.
+
+    Exposes a concrete fit(X, y) that reconstructs Game objects from X and
+    iterates them in chronological order via the update() hook. X must contain
+    raw game columns (not pre-engineered features) so that Game objects can be
+    faithfully reconstructed — see _to_games() for required columns.
+    """
+
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> None:
+        """Concrete template: reconstruct Games from X, iterate sequentially.
+
+        Calls start_season() at each season boundary. X rows must be sorted
+        chronologically (ascending by date/day_num).
+        """
+        games = self._to_games(X, y)
+        current_season: int | None = None
+        for game in games:
+            if game.season != current_season:
+                self.start_season(game.season)
+                current_season = game.season
+            self.update(game)
+
+    def _to_games(self, X: pd.DataFrame, y: pd.Series) -> list[Game]:
+        """Reconstruct ordered Game objects from raw game DataFrame.
+
+        Required columns in X: w_team_id, l_team_id, season, day_num, date,
+        loc, num_ot (and any score columns needed by the concrete model).
+        Rows must already be sorted chronologically.
+        """
+        ...  # concrete implementation — reconstruct from standard schema
 
     @abstractmethod
     def update(self, game: Game) -> None:
@@ -545,7 +574,7 @@ class StatelessModel(Model):
     """Model that trains on a batch feature matrix."""
 
     @abstractmethod
-    def train(self, X: pd.DataFrame, y: pd.Series) -> None:
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> None:
         """Fit model on feature matrix X and labels y."""
 
     @abstractmethod
@@ -575,23 +604,24 @@ class StatelessModel(Model):
 
 | Consideration | Single ABC | Dual ABC (proposed) |
 |:---|:---|:---|
-| Stateful `update(game)` | Must raise `NotImplementedError` in stateless models | Only on `StatefulModel`; stateless models don't see it |
-| Stateless `train(X, y)` | Must raise `NotImplementedError` in stateful models | Only on `StatelessModel`; stateful models don't see it |
-| Type safety | Caller must check model type before calling methods | Type system prevents calling wrong methods |
-| Evaluation pipeline | Must branch on model type | Can dispatch on ABC type |
-| **Verdict** | Cleaner single interface but violates ISP | **Preferred** — cleaner type contracts |
+| `fit(X, y)` | Same signature — a single ABC *could* work | `StatefulModel.fit()` is concrete (template method); `StatelessModel.fit()` is abstract — both work cleanly |
+| Stateful lifecycle hooks (`start_season`, `get_state`, `set_state`) | Must raise `NotImplementedError` in stateless models | Only on `StatefulModel`; stateless models don't see them |
+| `update(game)` hook | Must raise `NotImplementedError` in stateless models | Only on `StatefulModel`; stateless models don't see it |
+| Type safety | Caller must guard against missing lifecycle methods | Type system prevents calling stateful lifecycle methods on stateless models |
+| Evaluation pipeline `fit` call | Single dispatch — both use `fit(X, y)`, no branching needed | Both use `fit(X, y)` — no branching needed for training |
+| **Verdict** | Viable for `fit`, but lifecycle methods still pollute the interface | **Preferred** — lifecycle methods properly isolated |
 
 **Why NOT full sklearn BaseEstimator:**
 
 | sklearn Convention | NCAA Requirement | Conflict? |
 |:---|:---|:---|
-| `fit(X, y)` | Stateful models process games one at a time, not as a matrix | **Yes** — Elo doesn't have a batch `fit` |
+| `fit(X, y)` | Stateful models process games one at a time, not as a matrix | **Resolved** — `StatefulModel.fit(X, y)` reconstructs `Game` objects from `X` internally and iterates sequentially |
 | `predict(X)` returns labels | We need probabilities, not labels | **Minor** — use `predict_proba` convention |
 | `get_params()`/`set_params()` | Need Pydantic-validated configs | **Compatible** — implement via Pydantic model |
 | `clone()` via constructor introspection | We have Pydantic configs that can reconstruct | **Compatible** — implement via config |
 | Pipeline integration | Walk-forward temporal logic doesn't fit in `Pipeline.fit()` | **Yes** — custom evaluation loop required |
 
-**Conclusion:** Adopt sklearn **naming conventions** (`predict`, `predict_proba`, `get_params`) but NOT sklearn `BaseEstimator` inheritance. The evaluation pipeline (Epic 6) will handle walk-forward logic.
+**Conclusion:** Adopt sklearn **naming conventions** (`fit`, `predict`, `predict_proba`, `get_params`) but NOT sklearn `BaseEstimator` inheritance. The `fit(X, y)` interface is unified across both model types — `StatefulModel` handles game reconstruction internally. The evaluation pipeline (Epic 6) will handle walk-forward logic.
 
 **How the evaluation pipeline (Epic 6) dispatches across both model types:**
 
