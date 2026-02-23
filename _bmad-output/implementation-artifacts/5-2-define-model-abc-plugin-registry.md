@@ -44,12 +44,12 @@ So that I can implement custom models that plug into the training and evaluation
   - [x] 4.2 Implement `ModelNotFoundError` exception for unknown model names
   - [ ] 4.3 Ensure auto-registration on package import via `__init__.py` imports
 
-- [ ] Task 5: Create LogisticRegression test fixture (AC: #9)
-  - [ ] 5.1 Implement `LogisticRegressionModel(Model)` wrapping `sklearn.linear_model.LogisticRegression` in ~30 lines
-  - [ ] 5.2 Implement `LogisticRegressionConfig(ModelConfig)` with minimal hyperparameters
-  - [ ] 5.3 Register as `@register_model("logistic_regression")`
-  - [ ] 5.4 Place in `src/ncaa_eval/model/logistic_regression.py`
-  - [ ] 5.5 Implement `save`/`load` using `joblib.dump()`/`joblib.load()` + config JSON
+- [x] Task 5: Create LogisticRegression test fixture (AC: #9)
+  - [x] 5.1 Implement `LogisticRegressionModel(Model)` wrapping `sklearn.linear_model.LogisticRegression` in ~30 lines
+  - [x] 5.2 Implement `LogisticRegressionConfig(ModelConfig)` with minimal hyperparameters
+  - [x] 5.3 Register as `@register_model("logistic_regression")`
+  - [x] 5.4 Place in `src/ncaa_eval/model/logistic_regression.py`
+  - [x] 5.5 Implement `save`/`load` using `joblib.dump()`/`joblib.load()` + config JSON
 
 - [ ] Task 6: Update `model/__init__.py` exports (AC: #8)
   - [ ] 6.1 Export: `Model`, `StatefulModel`, `ModelConfig`, `register_model`, `get_model`, `list_models`
@@ -231,10 +231,13 @@ Claude Opus 4.6
 
 - Tasks 1-3: Created `ModelConfig`, `Model` ABC, and `StatefulModel` in `base.py`. All 13 unit tests pass covering: config validation/serialization, ABC enforcement, `_to_games()` reconstruction, `fit()` season boundaries, `predict_proba()` dispatch, and `get_state`/`set_state` round-trip.
 - Task 4: Created plugin registry with `@register_model` decorator, `get_model()`, `list_models()`, `ModelNotFoundError`. 5 registry tests pass including duplicate name detection and unknown model error.
+- Task 5: Created `LogisticRegressionModel` test fixture wrapping sklearn LR in ~30 lines with `LogisticRegressionConfig(C, max_iter)`, `save`/`load` via joblib+JSON, `@register_model("logistic_regression")`. 6 tests pass.
 
 ### File List
 
 - `src/ncaa_eval/model/base.py` (new)
 - `src/ncaa_eval/model/registry.py` (new)
+- `src/ncaa_eval/model/logistic_regression.py` (new)
 - `tests/unit/test_model_base.py` (new)
 - `tests/unit/test_model_registry.py` (new)
+- `tests/unit/test_model_logistic_regression.py` (new)
