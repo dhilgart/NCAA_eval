@@ -86,7 +86,9 @@ class EloModel(StatefulModel):
         state
             Must contain ``"ratings"`` (``dict[int, float]``) and
             ``"game_counts"`` (``dict[int, int]``) keys, as returned by
-            :meth:`get_state`.
+            :meth:`get_state`.  Keys may be ``int`` or ``str``; string keys
+            are coerced to ``int`` so that JSON-decoded dicts (where all keys
+            are strings) work correctly without silent rating loss.
 
         Raises
         ------
@@ -104,11 +106,14 @@ class EloModel(StatefulModel):
         if not isinstance(ratings, dict) or not isinstance(game_counts, dict):
             msg = "set_state() 'ratings' and 'game_counts' must be dicts"
             raise TypeError(msg)
+        # Coerce string keys to int so JSON-decoded dicts (all keys are str)
+        # work correctly — without coercion, get_rating(team_id_int) would
+        # silently return initial_rating for every team.
         # EloFeatureEngine has no public setter — direct attribute assignment is
         # intentional here.  If the engine later adds validation, these lines
         # should be replaced with the appropriate public API.
-        self._engine._ratings = dict(ratings)
-        self._engine._game_counts = dict(game_counts)
+        self._engine._ratings = {int(k): float(v) for k, v in ratings.items()}
+        self._engine._game_counts = {int(k): int(v) for k, v in game_counts.items()}
 
     # ------------------------------------------------------------------
     # Model ABC: persistence

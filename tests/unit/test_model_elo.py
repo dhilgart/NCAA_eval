@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pandas as pd  # type: ignore[import-untyped]
 import pytest
+from hypothesis import given, strategies as st
 
 from ncaa_eval.model import get_model, list_models
 from ncaa_eval.model.base import StatefulModel
@@ -187,14 +188,25 @@ class TestGetSetState:
         assert new_model.get_state() == state
 
     def test_state_is_independent_copy(self) -> None:
-        """Modifying returned state should not affect model."""
+        """Modifying returned state should not affect model (ratings or game_counts)."""
         model = EloModel()
         model._engine._ratings = {1: 1550.0}
         model._engine._game_counts = {1: 5}
 
         state = model.get_state()
         state["ratings"][1] = 9999.0
+        state["game_counts"][1] = 8888
         assert model._engine.get_rating(1) == 1550.0
+        assert model._engine._game_counts[1] == 5
+
+    def test_set_state_coerces_string_keys(self) -> None:
+        """set_state() coerces string keys to int (JSON-decoded dict compatibility)."""
+        model = EloModel()
+        model.set_state({"ratings": {"1": 1600.0, "2": 1400.0}, "game_counts": {"1": 5}})
+        # int key lookup must work after coercion
+        assert model._engine.get_rating(1) == pytest.approx(1600.0, abs=1e-10)
+        assert model._engine.get_rating(2) == pytest.approx(1400.0, abs=1e-10)
+        assert model._engine._game_counts[1] == 5
 
     def test_set_state_missing_key_raises(self) -> None:
         """set_state() rejects dicts missing required keys."""
@@ -435,6 +447,108 @@ class TestKnownNumericCalculation:
         r_home_winner = model_home.get_state()["ratings"][100]
         r_neutral_winner = model_neutral.get_state()["ratings"][100]
         assert r_home_winner != r_neutral_winner
+
+    def test_home_advantage_exact_numeric(self) -> None:
+        """Verify exact numeric outcome for home-site game (loc=H).
+
+        Game: Team 100 (home) beats Team 200, score 80-70, both start at 1500.
+        With loc="H": effective R_100 = 1500 - 3.5 = 1496.5 (home deflation).
+        expected_100 = 1 / (1 + 10^((1500 - 1496.5) / 400)) ≈ 0.49496
+        margin = 10, mult = 10^0.85 ≈ 7.0795, K_eff = 56 × 7.0795 ≈ 396.45
+        r_100_new = 1500 + 396.45 × (1 - 0.49496) ≈ 1700.22
+        """
+        model = EloModel()
+        X = pd.DataFrame(
+            {
+                "team_a_id": [100],
+                "team_b_id": [200],
+                "season": [2020],
+                "day_num": [10],
+                "date": [datetime.date(2020, 1, 10)],
+                "loc_encoding": [1],  # Home
+                "game_id": ["test_game"],
+                "is_tournament": [False],
+                "w_score": [80],
+                "l_score": [70],
+                "num_ot": [0],
+            }
+        )
+        y = pd.Series([True])  # team_a (100) won at home
+
+        model.fit(X, y)
+        state = model.get_state()
+
+        # Hand-calculated expected values
+        home_adj = 3.5  # default home_advantage_elo
+        r_w_eff = 1500.0 - home_adj  # deflate home winner's effective rating
+        r_l_eff = 1500.0
+        expected_w = 1.0 / (1.0 + 10.0 ** ((r_l_eff - r_w_eff) / 400.0))
+        margin = 10
+        mult = margin**0.85
+        k_eff = 56.0 * mult
+        expected_winner = 1500.0 + k_eff * (1.0 - expected_w)
+        expected_loser = 1500.0 + k_eff * (0.0 - (1.0 - expected_w))
+
+        assert state["ratings"][100] == pytest.approx(expected_winner, abs=0.01)
+        assert state["ratings"][200] == pytest.approx(expected_loser, abs=0.01)
+
+
+# ---------------------------------------------------------------------------
+# Property-based tests (Hypothesis): probability invariants
+# ---------------------------------------------------------------------------
+
+
+class TestPredictOneProperties:
+    @given(
+        rating_a=st.floats(min_value=0.0, max_value=5000.0, allow_nan=False, allow_infinity=False),
+        rating_b=st.floats(min_value=0.0, max_value=5000.0, allow_nan=False, allow_infinity=False),
+    )
+    def test_predict_one_always_in_unit_interval(self, rating_a: float, rating_b: float) -> None:
+        """P(team_a wins) must always be in [0, 1] regardless of rating values."""
+        model = EloModel()
+        model._engine._ratings[1] = rating_a
+        model._engine._ratings[2] = rating_b
+        prob = model._predict_one(1, 2)
+        assert 0.0 <= prob <= 1.0
+
+    @given(
+        rating_a=st.floats(min_value=0.0, max_value=5000.0, allow_nan=False, allow_infinity=False),
+        rating_b=st.floats(min_value=0.0, max_value=5000.0, allow_nan=False, allow_infinity=False),
+    )
+    def test_predict_one_symmetric(self, rating_a: float, rating_b: float) -> None:
+        """P(A beats B) + P(B beats A) must equal 1.0."""
+        model = EloModel()
+        model._engine._ratings[1] = rating_a
+        model._engine._ratings[2] = rating_b
+        prob_ab = model._predict_one(1, 2)
+        prob_ba = model._predict_one(2, 1)
+        assert prob_ab + prob_ba == pytest.approx(1.0, abs=1e-12)
+
+
+# ---------------------------------------------------------------------------
+# Edge case: predict_proba on empty DataFrame
+# ---------------------------------------------------------------------------
+
+
+class TestPredictProbaEdgeCases:
+    def test_predict_proba_empty_dataframe(self) -> None:
+        """predict_proba returns an empty Series for an empty input DataFrame."""
+        model = EloModel()
+        empty_X = pd.DataFrame(
+            columns=[
+                "team_a_id",
+                "team_b_id",
+                "season",
+                "day_num",
+                "date",
+                "loc_encoding",
+                "game_id",
+                "is_tournament",
+            ]
+        )
+        preds = model.predict_proba(empty_X)
+        assert len(preds) == 0
+        assert isinstance(preds, pd.Series)
 
 
 class TestGetConfig:

@@ -1851,3 +1851,59 @@ The `if k in elo_field_names` filter drops Pydantic-only fields (like `model_nam
 **Rule:** Any stateful model that inherits an accumulating `fit()` must:
 1. Document this behavior in the class or method docstring: "Calling `fit()` accumulates state. To start fresh, instantiate a new model."
 2. Include a `test_fit_twice_accumulates_state` test that asserts ratings change after the second call.
+
+### `set_state()` Must Coerce String Keys to `int` (Discovered Story 5.3 Code Review Round 2, 2026-02-23)
+
+`set_state()` validates structure (missing keys, wrong types) but must also coerce string dict keys to `int`. JSON serialization always produces string keys. A caller who does `json.loads(text)` and passes the result directly to `set_state()` will end up with string-keyed internal dicts; then `get_rating(team_id_int)` silently returns `initial_rating` for every team — wrong predictions with no error signal.
+
+The previous round's validation fix was incomplete: it checked types but not key types.
+
+**Pattern:**
+```python
+def set_state(self, state: dict[str, Any]) -> None:
+    # ... existing structure validation ...
+    # Coerce str → int for JSON-decoded dict compatibility
+    self._engine._ratings = {int(k): float(v) for k, v in ratings.items()}
+    self._engine._game_counts = {int(k): int(v) for k, v in game_counts.items()}
+```
+
+**Rule:** The docstring for `set_state()` must mention that string keys are accepted and coerced to `int`. Add a `test_set_state_coerces_string_keys` test that passes `{"1": 1600.0}` and verifies `get_rating(1)` returns `1600.0`.
+
+### Property-Based Tests for Pure Prediction Functions (Discovered Story 5.3 Code Review Round 2, 2026-02-23)
+
+Style guide Section 6.2 mandates property-based tests (Hypothesis) for pure functions. `_predict_one(team_a_id, team_b_id) -> float` is pure: same ratings → same probability, no I/O, no side effects. Despite Hypothesis being installed (`pyproject.toml: hypothesis = "*"`), the initial implementation had no property tests.
+
+**Key invariants to property-test for any prediction function:**
+1. **Bounded output:** `0.0 ≤ P(A wins) ≤ 1.0` for all valid rating inputs.
+2. **Symmetry:** `P(A beats B) + P(B beats A) == 1.0`.
+
+**Pattern:**
+```python
+from hypothesis import given, strategies as st
+
+class TestPredictOneProperties:
+    @given(
+        rating_a=st.floats(min_value=0.0, max_value=5000.0, allow_nan=False, allow_infinity=False),
+        rating_b=st.floats(min_value=0.0, max_value=5000.0, allow_nan=False, allow_infinity=False),
+    )
+    def test_predict_one_always_in_unit_interval(self, rating_a: float, rating_b: float) -> None:
+        model = EloModel()
+        model._engine._ratings[1] = rating_a
+        model._engine._ratings[2] = rating_b
+        prob = model._predict_one(1, 2)
+        assert 0.0 <= prob <= 1.0
+
+    @given(
+        rating_a=st.floats(min_value=0.0, max_value=5000.0, allow_nan=False, allow_infinity=False),
+        rating_b=st.floats(min_value=0.0, max_value=5000.0, allow_nan=False, allow_infinity=False),
+    )
+    def test_predict_one_symmetric(self, rating_a: float, rating_b: float) -> None:
+        model = EloModel()
+        model._engine._ratings[1] = rating_a
+        model._engine._ratings[2] = rating_b
+        prob_ab = model._predict_one(1, 2)
+        prob_ba = model._predict_one(2, 1)
+        assert prob_ab + prob_ba == pytest.approx(1.0, abs=1e-12)
+```
+
+**Rule:** Every `_predict_one()` implementation must have Hypothesis tests for the bounded-output and symmetry invariants.

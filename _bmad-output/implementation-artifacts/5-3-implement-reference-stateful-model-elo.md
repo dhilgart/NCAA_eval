@@ -319,11 +319,13 @@ Claude Opus 4.6
 - 25 unit tests covering: config defaults/custom/round-trip, update delegation, _predict_one correctness, start_season mean reversion, get/set state round-trip, save/load file-system round-trip, fit→predict_proba end-to-end, plugin registration, known numeric calculations, home advantage verification
 - All 454 tests pass (30 new + 424 existing), ruff clean, mypy --strict clean
 - Code review fixes applied: set_state() input validation with KeyError/TypeError on malformed state; load() FileNotFoundError with clear message on partial saves; _to_elo_config() uses dataclasses.fields to auto-map EloConfig fields (future-proof); set_state() private-access comment added; fit()-twice accumulation documented and tested
+- Code review round 2 fixes: set_state() now coerces string dict keys to int (JSON-decoded dict compatibility, M1); Hypothesis property tests added for _predict_one bounded-output and symmetry invariants (M2); exact numeric home-advantage test added (L3); empty DataFrame predict_proba test added (L4); game_counts isolation verified in test_state_is_independent_copy (L1); 5 new tests (35 total), 459 tests pass
 
 ### Change Log
 
 - 2026-02-23: Implemented EloModel reference stateful model (Story 5.3) — all ACs satisfied, 25 tests added
 - 2026-02-23: Code review fixes — 5 issues fixed: set_state() validation (HIGH), fit() accumulation documented+tested (MEDIUM), load() partial-save guard (MEDIUM), set_state() private-access comment (MEDIUM), _to_elo_config() future-proofed via dataclasses.fields (MEDIUM); 5 new tests added (30 total); 454 tests pass
+- 2026-02-23: Code review round 2 — 2 MEDIUM issues fixed: set_state() string-key coercion (M1), Hypothesis property tests for _predict_one (M2); 3 LOW issues resolved via tests (L1/L3/L4); 5 tests added (35 total); 459 tests pass; template-requirements.md updated
 
 ### File List
 
@@ -332,3 +334,4 @@ Claude Opus 4.6
 - `tests/unit/test_model_elo.py` (NEW)
 - `_bmad-output/implementation-artifacts/5-3-implement-reference-stateful-model-elo.md` (MODIFIED — task completion)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (MODIFIED — status update)
+- `_bmad-output/planning-artifacts/template-requirements.md` (MODIFIED — code review learnings)
