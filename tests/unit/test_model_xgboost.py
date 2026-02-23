@@ -48,6 +48,7 @@ class TestXGBoostModelConfig:
         assert cfg.reg_lambda == 1.0
         assert cfg.early_stopping_rounds == 50
         assert cfg.validation_fraction == 0.1
+        assert cfg.scale_pos_weight is None
 
     def test_custom_values(self) -> None:
         """5.2 — Config creation with custom values."""
@@ -62,6 +63,7 @@ class TestXGBoostModelConfig:
             reg_lambda=2.0,
             early_stopping_rounds=20,
             validation_fraction=0.15,
+            scale_pos_weight=2.5,
         )
         assert cfg.n_estimators == 100
         assert cfg.max_depth == 3
@@ -73,6 +75,7 @@ class TestXGBoostModelConfig:
         assert cfg.reg_lambda == 2.0
         assert cfg.early_stopping_rounds == 20
         assert cfg.validation_fraction == 0.15
+        assert cfg.scale_pos_weight == 2.5
 
     def test_json_round_trip(self) -> None:
         """5.3 — Config JSON round-trip."""
@@ -80,6 +83,12 @@ class TestXGBoostModelConfig:
         json_str = cfg.model_dump_json()
         loaded = XGBoostModelConfig.model_validate_json(json_str)
         assert loaded == cfg
+
+    def test_scale_pos_weight_json_round_trip(self) -> None:
+        """AC5 — scale_pos_weight survives JSON round-trip."""
+        cfg = XGBoostModelConfig(scale_pos_weight=3.0)
+        loaded = XGBoostModelConfig.model_validate_json(cfg.model_dump_json())
+        assert loaded.scale_pos_weight == 3.0
 
 
 # -----------------------------------------------------------------------
@@ -90,13 +99,11 @@ class TestXGBoostModelConfig:
 class TestXGBoostModel:
     """AC1-3, AC5: XGBoostModel fit/predict_proba."""
 
-    def test_fit_predict_proba(self) -> None:
-        """5.4 — fit trains successfully on synthetic data."""
+    def test_fit_trains_successfully(self) -> None:
+        """5.4 — fit trains successfully on synthetic data without raising."""
         X, y = _make_train_data()
         model = XGBoostModel()
-        model.fit(X, y)
-        preds = model.predict_proba(X)
-        assert len(preds) == len(X)
+        model.fit(X, y)  # Must not raise
 
     def test_predict_proba_in_range(self) -> None:
         """5.5 — predict_proba returns probabilities in [0, 1]."""
@@ -110,10 +117,12 @@ class TestXGBoostModel:
     def test_predict_proba_length(self) -> None:
         """5.6 — predict_proba output length matches input length."""
         X, y = _make_train_data()
+        # Use a subset for predict to confirm length = len(input), not len(train)
+        X_sub = X.iloc[:50]
         model = XGBoostModel()
         model.fit(X, y)
-        preds = model.predict_proba(X)
-        assert len(preds) == len(X)
+        preds = model.predict_proba(X_sub)
+        assert len(preds) == len(X_sub)
 
     def test_predict_proba_returns_series_with_index(self) -> None:
         """5.7 — predict_proba returns pd.Series with correct index."""
@@ -138,6 +147,27 @@ class TestXGBoostModel:
         model = XGBoostModel()
         with pytest.raises(ValueError, match="empty"):
             model.fit(pd.DataFrame(), pd.Series(dtype=int))
+
+    def test_predict_proba_before_fit_raises(self) -> None:
+        """M1 — predict_proba raises RuntimeError when called before fit."""
+        model = XGBoostModel()
+        X, _ = _make_train_data()
+        with pytest.raises(RuntimeError, match="fitted"):
+            model.predict_proba(X)
+
+    def test_scale_pos_weight_accepted(self) -> None:
+        """AC5 — scale_pos_weight config is wired into XGBClassifier constructor."""
+        cfg = XGBoostModelConfig(
+            n_estimators=20,
+            early_stopping_rounds=5,
+            scale_pos_weight=2.0,
+        )
+        model = XGBoostModel(cfg)
+        X, y = _make_train_data()
+        model.fit(X, y)  # Must not raise with scale_pos_weight set
+        preds = model.predict_proba(X)
+        assert (preds >= 0.0).all()
+        assert (preds <= 1.0).all()
 
 
 # -----------------------------------------------------------------------
@@ -203,6 +233,12 @@ class TestSaveLoad:
         with pytest.raises(FileNotFoundError, match="config.json"):
             XGBoostModel.load(save_dir)
 
+    def test_save_before_fit_raises(self, tmp_path: Path) -> None:
+        """M3 — save raises RuntimeError when model is not fitted."""
+        model = XGBoostModel()
+        with pytest.raises(RuntimeError, match="fitted"):
+            model.save(tmp_path / "xgb_model")
+
 
 # -----------------------------------------------------------------------
 # Task 4 — Plugin registration test (AC #8)
@@ -222,6 +258,19 @@ class TestPluginRegistration:
 # Task 5 — Property-based and early stopping tests
 # -----------------------------------------------------------------------
 
+# Train a shared model once for the property-based tests to avoid
+# re-training on every Hypothesis example (prevents deadline violations).
+_PROP_MODEL: XGBoostModel | None = None
+
+
+def _get_prop_model() -> XGBoostModel:
+    global _PROP_MODEL  # noqa: PLW0603
+    if _PROP_MODEL is None:
+        X_train, y_train = _make_train_data()
+        _PROP_MODEL = XGBoostModel(XGBoostModelConfig(n_estimators=20, early_stopping_rounds=5))
+        _PROP_MODEL.fit(X_train, y_train)
+    return _PROP_MODEL
+
 
 class TestPropertyBased:
     """Property-based tests for prediction bounds."""
@@ -238,14 +287,10 @@ class TestPropertyBased:
             max_size=50,
         ),
     )
-    @settings(max_examples=50)
+    @settings(max_examples=50, deadline=None)
     def test_predict_proba_bounded(self, feat_a: list[float], feat_b: list[float]) -> None:
         """5.15 — predict_proba output is bounded [0, 1] for random inputs."""
-        # Train on fixed synthetic data, then predict on Hypothesis-generated data
-        X_train, y_train = _make_train_data()
-        model = XGBoostModel(XGBoostModelConfig(n_estimators=20, early_stopping_rounds=5))
-        model.fit(X_train, y_train)
-
+        model = _get_prop_model()
         X_test = pd.DataFrame({"feat_a": feat_a, "feat_b": feat_b})
         preds = model.predict_proba(X_test)
         assert (preds >= 0.0).all()

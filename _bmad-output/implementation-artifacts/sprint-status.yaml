@@ -85,7 +85,7 @@ development_status:
   5-1-research-modeling-approaches: done
   5-2-define-model-abc-plugin-registry: done
   5-3-implement-reference-stateful-model-elo: done
-  5-4-implement-reference-stateless-model-xgboost: review
+  5-4-implement-reference-stateless-model-xgboost: done
   5-5-implement-model-run-tracking-training-cli: backlog
   epic-5-retrospective: optional
 

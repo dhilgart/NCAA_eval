@@ -1,6 +1,6 @@
 # Story 5.4: Implement Reference Stateless Model (XGBoost)
 
-Status: review
+Status: done
 
 ## Story
 
@@ -306,14 +306,39 @@ Claude Opus 4.6
 - 16 unit tests covering all ACs: config, fit/predict, save/load, registration, property-based, early stopping
 - All 475 tests pass (zero regressions), ruff clean, mypy --strict clean
 
+### Senior Developer Review (AI)
+
+**Reviewer:** Claude Sonnet 4.6 (code-review workflow) — 2026-02-23
+
+**Findings:** 2 High, 3 Medium, 2 Low → 5 fixed, 0 action items
+
+| # | Severity | Issue | Resolution |
+|---|---|---|---|
+| H1 | 🔴 HIGH | AC#5 partially unmet: `scale_pos_weight` documented but not in `XGBoostModelConfig` nor wired to `XGBClassifier` | **Fixed:** Added `scale_pos_weight: float | None = None` to config; wired conditionally into constructor kwargs |
+| H2 | 🔴 HIGH | Hypothesis `test_predict_proba_bounded` flaky (DeadlineExceeded ~543ms > 200ms default) | **Fixed:** Moved model training to module-level `_get_prop_model()` fixture; added `@settings(deadline=None)` |
+| M1 | 🟡 MEDIUM | `predict_proba` before `fit` raised opaque XGBoost error, no clear user guidance | **Fixed:** Added `_is_fitted` flag; `predict_proba` raises `RuntimeError("Model must be fitted before calling predict_proba")` |
+| M2 | 🟡 MEDIUM | `test_fit_predict_proba` and `test_predict_proba_length` were byte-for-byte identical | **Fixed:** `test_fit_trains_successfully` now tests only training-without-raising; `test_predict_proba_length` uses a subset slice to genuinely test length independence |
+| M3 | 🟡 MEDIUM | `save()` silently persisted an unfitted (empty) model — no guard | **Fixed:** `save()` checks `_is_fitted`; raises `RuntimeError("Model must be fitted before saving")` |
+| L1 | 🟢 LOW | `pd.Series[float]` local annotation redundant (cosmetic) | **Fixed:** Removed redundant type annotation on local variable |
+| L2 | 🟢 LOW | Hypothesis test trained model per-example (root cause of H2) | **Fixed:** Resolved as part of H2 fix |
+
+**Additional tests added (4 new):**
+- `test_scale_pos_weight_json_round_trip` — AC5 config round-trip
+- `test_predict_proba_before_fit_raises` — M1 guard
+- `test_scale_pos_weight_accepted` — AC5 training with non-default value
+- `test_save_before_fit_raises` — M3 guard
+
+**Post-fix results:** 479 tests pass (0 regressions), ruff clean, mypy --strict clean
+
 ### Change Log
 
 - 2026-02-23: Implemented XGBoostModel reference stateless model — all 6 tasks complete, 16 tests added
+- 2026-02-23: Code review fixes — 5 issues fixed (2H, 3M); 4 tests added (20 total); story marked done
 
 ### File List
 
 - `src/ncaa_eval/model/xgboost_model.py` (NEW) — XGBoostModelConfig, XGBoostModel
 - `src/ncaa_eval/model/__init__.py` (MODIFIED) — added xgboost_model import for auto-registration
-- `tests/unit/test_model_xgboost.py` (NEW) — 16 unit tests
+- `tests/unit/test_model_xgboost.py` (NEW) — 20 unit tests
 - `_bmad-output/implementation-artifacts/5-4-implement-reference-stateless-model-xgboost.md` (MODIFIED) — story tracking
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (MODIFIED) — status update

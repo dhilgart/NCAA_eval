@@ -1907,3 +1907,104 @@ class TestPredictOneProperties:
 ```
 
 **Rule:** Every `_predict_one()` implementation must have Hypothesis tests for the bounded-output and symmetry invariants.
+
+### Configurable Hyperparameters: Expose ALL Tunable Knobs in the Config Class (Discovered Story 5.4 Code Review, 2026-02-23)
+
+When a framework parameter (like XGBoost's `scale_pos_weight`) is mentioned in the story's AC with phrasing "set accordingly if…", it must be an **actual field** in the `ModelConfig` subclass — not just documented in a docstring. Documentation without a settable field means the AC is only partially met (the caller cannot configure the parameter without subclassing or monkey-patching).
+
+**Pattern:**
+```python
+class XGBoostModelConfig(ModelConfig):
+    scale_pos_weight: float | None = None  # None → framework default (1.0)
+    # ... other fields
+
+def __init__(self, config: XGBoostModelConfig | None = None) -> None:
+    kwargs: dict[str, object] = { ... base params ... }
+    if self._config.scale_pos_weight is not None:  # Only pass if set
+        kwargs["scale_pos_weight"] = self._config.scale_pos_weight
+    self._clf = XGBClassifier(**kwargs)
+```
+
+**Rule:** Every AC that says "set X accordingly" or "configure X" must result in a field on the config. Docstring documentation alone ≠ AC satisfaction.
+
+### Unfitted Model Guards: All I/O Methods Must Check `_is_fitted` (Discovered Story 5.4 Code Review, 2026-02-23)
+
+Both `predict_proba()` and `save()` must guard against being called before `fit()`. Without guards:
+- `predict_proba()` raises an opaque internal library error (XGBoost core error)
+- `save()` silently persists an empty/invalid model that loads successfully but predicts garbage
+
+**Pattern:**
+```python
+class SomeModel(Model):
+    def __init__(self, config=None) -> None:
+        self._is_fitted = False  # Track fit state
+
+    def fit(self, X, y) -> None:
+        # ... training ...
+        self._is_fitted = True
+
+    def predict_proba(self, X) -> pd.Series:
+        if not self._is_fitted:
+            msg = "Model must be fitted before calling predict_proba"
+            raise RuntimeError(msg)
+        # ... prediction ...
+
+    def save(self, path) -> None:
+        if not self._is_fitted:
+            msg = "Model must be fitted before saving"
+            raise RuntimeError(msg)
+        # ... save files ...
+
+    @classmethod
+    def load(cls, path) -> Self:
+        # ... load files ...
+        instance._is_fitted = True  # Mark loaded model as fitted
+        return instance
+```
+
+**Rule:** Every stateless `Model` implementation must initialize `_is_fitted = False` in `__init__`, set `_is_fitted = True` after `fit()` and after `load()`, and guard `predict_proba()` and `save()` with clear `RuntimeError` messages.
+
+### Hypothesis Deadline Violations: Training-Heavy Tests Need `deadline=None` (Discovered Story 5.4 Code Review, 2026-02-23)
+
+When a Hypothesis `@given` test body includes model training (even with a small `n_estimators`), the first invocation can trigger a `DeadlineExceeded` flaky failure. Hypothesis's default deadline is 200ms; ML model training often exceeds this on the first example (no JIT warm-up).
+
+Two patterns to avoid this:
+
+**Pattern A — Module-level fixture (preferred for shared trained models):**
+```python
+_TRAINED_MODEL: XGBoostModel | None = None
+
+def _get_trained_model() -> XGBoostModel:
+    global _TRAINED_MODEL  # noqa: PLW0603
+    if _TRAINED_MODEL is None:
+        X, y = _make_train_data()
+        _TRAINED_MODEL = XGBoostModel(XGBoostModelConfig(n_estimators=20, early_stopping_rounds=5))
+        _TRAINED_MODEL.fit(X, y)
+    return _TRAINED_MODEL
+
+@given(feat_a=st.lists(...), feat_b=st.lists(...))
+@settings(max_examples=50, deadline=None)  # deadline=None because predict is fast but JIT varies
+def test_predict_proba_bounded(self, feat_a, feat_b) -> None:
+    model = _get_trained_model()  # Never trains inside @given body
+    X_test = pd.DataFrame({"feat_a": feat_a, "feat_b": feat_b})
+    preds = model.predict_proba(X_test)
+    assert (preds >= 0.0).all() and (preds <= 1.0).all()
+```
+
+**Pattern B — Suppress deadline explicitly:**
+```python
+@settings(max_examples=50, deadline=None)
+```
+
+**Rule:** Any `@given` test that trains a model OR calls predict on an untriggered JIT path must use `deadline=None`. Training must NEVER happen inside the `@given` body — train once, test many examples.
+
+### Duplicate Tests Inflate Test Count; Use Distinct Assertions (Discovered Story 5.4 Code Review, 2026-02-23)
+
+When story tasks map to distinct requirements (e.g., "trains successfully" vs "output length matches input"), the tests must be genuinely distinct. A test that calls `model.fit(X, y)` and asserts `len(preds) == len(X)` covers BOTH "trains successfully" AND "length matches." A second test with identical assertions inflates the count and provides no additional coverage.
+
+**Distinguishing techniques:**
+- "Trains successfully" → assert no exception raised (no `assert` on predictions at all, or use `model.fit(X, y)  # Must not raise`)
+- "Output length matches input" → use a *subset* of training data for prediction to prove length = `len(X_subset)`, not `len(X_train)`
+- "Output is bounded [0,1]" → check `(preds >= 0).all() and (preds <= 1).all()`
+
+**Rule:** Before adding a test, verify it exercises a code path or assertion not already covered by existing tests. If two tests have identical `assert` statements on the same data, merge or differentiate them.

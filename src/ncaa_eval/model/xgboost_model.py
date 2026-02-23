@@ -22,6 +22,11 @@ class XGBoostModelConfig(ModelConfig):
     """Hyperparameters for the XGBoost gradient-boosting model.
 
     Defaults from ``specs/research/modeling-approaches.md`` §5.5 and §6.4.
+
+    **Label balance:** Set ``scale_pos_weight = count(y==0) / count(y==1)``
+    when training labels are imbalanced (e.g. team_a is always the winner).
+    Leave as ``None`` (XGBoost default = 1.0) when team assignment is
+    randomised before training.
     """
 
     model_name: Literal["xgboost"] = "xgboost"
@@ -35,6 +40,7 @@ class XGBoostModelConfig(ModelConfig):
     reg_lambda: float = 1.0
     early_stopping_rounds: int = 50
     validation_fraction: float = 0.1
+    scale_pos_weight: float | None = None  # None → XGBoost default (1.0)
 
 
 @register_model("xgboost")
@@ -55,7 +61,8 @@ class XGBoostModel(Model):
 
     def __init__(self, config: XGBoostModelConfig | None = None) -> None:
         self._config = config or XGBoostModelConfig()
-        self._clf = XGBClassifier(
+        self._is_fitted = False
+        kwargs: dict[str, object] = dict(
             n_estimators=self._config.n_estimators,
             max_depth=self._config.max_depth,
             learning_rate=self._config.learning_rate,
@@ -69,6 +76,9 @@ class XGBoostModel(Model):
             early_stopping_rounds=self._config.early_stopping_rounds,
             random_state=42,
         )
+        if self._config.scale_pos_weight is not None:
+            kwargs["scale_pos_weight"] = self._config.scale_pos_weight
+        self._clf = XGBClassifier(**kwargs)
 
     def fit(self, X: pd.DataFrame, y: pd.Series) -> None:
         """Train on feature matrix *X* and binary labels *y*.
@@ -100,10 +110,20 @@ class XGBoostModel(Model):
             stratify=y,
         )
         self._clf.fit(X_train, y_train, eval_set=[(X_val, y_val)], verbose=False)
+        self._is_fitted = True
 
     def predict_proba(self, X: pd.DataFrame) -> pd.Series:
-        """Return P(team_a wins) for each row of *X*."""
-        probs: pd.Series[float] = pd.Series(self._clf.predict_proba(X)[:, 1], index=X.index)
+        """Return P(team_a wins) for each row of *X*.
+
+        Raises
+        ------
+        RuntimeError
+            If called before :meth:`fit`.
+        """
+        if not self._is_fitted:
+            msg = "Model must be fitted before calling predict_proba"
+            raise RuntimeError(msg)
+        probs = pd.Series(self._clf.predict_proba(X)[:, 1], index=X.index)
         return probs
 
     def save(self, path: Path) -> None:
@@ -112,7 +132,15 @@ class XGBoostModel(Model):
         Writes two files:
         - ``model.ubj`` — XGBoost native UBJSON format (stable across versions)
         - ``config.json`` — Pydantic-serialised hyperparameter config
+
+        Raises
+        ------
+        RuntimeError
+            If called before :meth:`fit`.
         """
+        if not self._is_fitted:
+            msg = "Model must be fitted before saving"
+            raise RuntimeError(msg)
         path.mkdir(parents=True, exist_ok=True)
         self._clf.save_model(str(path / "model.ubj"))
         (path / "config.json").write_text(self._config.model_dump_json())
@@ -139,6 +167,7 @@ class XGBoostModel(Model):
         config = XGBoostModelConfig.model_validate_json(config_path.read_text())
         instance = cls(config)
         instance._clf.load_model(str(model_path))
+        instance._is_fitted = True
         return instance
 
     def get_config(self) -> XGBoostModelConfig:
