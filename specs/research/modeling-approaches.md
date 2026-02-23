@@ -15,7 +15,7 @@
 | [2. Stateful Models](#2-stateful-model-catalogue) | Elo, Glicko-2, TrueSkill | Elo is the proven baseline; Glicko-2/TrueSkill add uncertainty but marginal signal |
 | [3. Stateless Models](#3-stateless-model-catalogue) | XGBoost, LightGBM, logistic regression, neural nets | XGBoost is the tabular-data standard; neural nets underperform GBDT on small NCAA data |
 | [4. Hybrid Approaches](#4-hybrid-approaches) | Elo-as-feature, ordinal composites, stacking | Elo features → XGBoost is the dominant community pattern |
-| [5. Model ABC Interface](#5-model-abc-interface-requirements) | Interface specification for Story 5.2 | Dual-contract ABC: `StatefulModel` (per-game) + `StatelessModel` (batch) |
+| [5. Model ABC Interface](#5-model-abc-interface-requirements) | Interface specification for Story 5.2 | `Model` ABC + `StatefulModel` subclass; stateless models implement `Model` directly; designed for external extensibility |
 | [6. Reference Model Recommendations](#6-reference-model-recommendations) | Story 5.3 (Elo) and 5.4 (XGBoost) | Elo as stateful reference, XGBoost as stateless reference |
 | [7. Equivalence Groups](#7-model-equivalence-groups) | Which models are redundant vs. distinct | 3 distinct model families; GBDT variants form one equivalence group |
 | [8. Scope Recommendation](#8-scope-recommendation-for-po-decision) | MVP options for PO approval | Recommended: 2 reference models + ABC; LightGBM/neural nets deferred |
@@ -458,25 +458,28 @@ This is naturally supported by the proposed dual-contract ABC — any `Model` ca
 
 The Model ABC must support the following requirements derived from the survey:
 
-1. **Unified fit interface, specialised lifecycle:** Both model types expose `fit(X, y)` — the standard sklearn-style entry point. `StatefulModel` provides a *concrete* template implementation that reconstructs `Game` objects from `X` and iterates them sequentially via an abstract `update()` hook; `StatelessModel` leaves `fit(X, y)` abstract for batch training. The two-subclass split is justified by lifecycle methods specific to stateful models (`start_season`, `get_state`, `set_state`) that have no meaning for stateless models. **Use two abstract base classes** under a common parent.
+1. **External extensibility is the primary value:** The Model ABC is a public interface designed to be imported and subclassed in *user-owned repos*, not just inside this repo. Users bring their own model architectures; this repo provides the contract, the evaluation harness, and a small set of reference implementations. Reference models (Elo, XGBoost) ship with the package as baselines, but the design must not assume that all models live inside `src/ncaa_eval/`.
 
-2. **Calibrated probability output:** All models must output calibrated probabilities, not raw scores. This is required because the evaluation metrics (Brier Score, LogLoss) are proper scoring rules that reward calibration. Models can either:
+2. **Unified fit interface, specialised lifecycle:** Both model types expose `fit(X, y)` — the standard sklearn-style entry point. `StatefulModel` provides a *concrete* template implementation that reconstructs `Game` objects from `X` and iterates them sequentially via an abstract `update()` hook. The `StatefulModel` subclass is justified by lifecycle methods (`start_season`, `get_state`, `set_state`) that have no meaning for stateless models. **Stateless models implement `Model` directly** — no separate `StatelessModel` ABC needed.
+
+3. **Calibrated probability output:** All models must output calibrated probabilities, not raw scores. This is required because the evaluation metrics (Brier Score, LogLoss) are proper scoring rules that reward calibration. Models can either:
    - Output calibrated probabilities directly (e.g., Elo expected score)
    - Output raw predictions that the caller calibrates via `transform.calibration`
    - The ABC should NOT enforce a specific calibration approach — leave it to the implementation.
 
-3. **Persistence:** All models must support `save()` and `load()`. The format varies by model type:
+4. **Persistence:** All models must support `save()` and `load()`. The format varies by model type:
    - Stateful models: serialize rating state (dict of team_id → rating) + config
    - Stateless models: serialize trained model artifact (XGBoost native JSON, joblib for sklearn)
    - Hyperparameters: always serializable to JSON (Pydantic `BaseModel`)
 
-4. **Plugin registry:** Models register by name for runtime discovery. This enables:
-   - CLI: `--model elo` or `--model xgboost`
+5. **Plugin registry:** Models register by name for runtime discovery. This enables:
+   - CLI: `--model elo` or `--model xgboost` (built-in) or `--model my_custom_model` (user-registered)
    - Configuration files that reference models by name
    - Dynamic model loading without import chains
+   - User code registers external models via `@register_model("name")` before invoking the evaluation pipeline
 
-5. **Scikit-learn compatibility (partial):** The ABC should follow sklearn conventions where practical:
-   - `fit(X, y)` / `predict(X)` naming convention
+6. **Scikit-learn compatibility (partial):** The ABC should follow sklearn conventions where practical:
+   - `fit(X, y)` / `predict_proba(X)` naming convention
    - `get_params()` / `set_params()` for hyperparameter introspection
    - But: NOT full sklearn `BaseEstimator` inheritance — NCAA-specific requirements (walk-forward, tournament filtering, per-game state) don't fit sklearn's assumptions
 
@@ -691,7 +694,7 @@ model_cls = get_model("elo")
 model = model_cls(config=EloModelConfig(...))
 ```
 
-**Auto-registration:** Models in `src/ncaa_eval/model/` are auto-registered when the package is imported. No manual registry maintenance required.
+**Auto-registration:** Built-in reference models in `src/ncaa_eval/model/` are auto-registered when the package is imported. User-defined models in external repos register themselves by calling `@register_model("name")` in their own code before invoking the evaluation pipeline — no changes to this repo required.
 
 ### 5.5 Hyperparameter Configuration Schema
 
@@ -730,12 +733,13 @@ Benefits:
 
 ### 5.6 Prediction Output Contract
 
-All models output **calibrated probabilities**:
+All models output **calibrated probabilities** via a single unified interface:
 
 | Output | Type | Range | Description |
 |:---|:---|:---|:---|
-| `predict(team_a, team_b)` | `float` | `[0.0, 1.0]` | P(team_a wins) |
-| `predict_proba(X)` (stateless) | `pd.Series` | `[0.0, 1.0]` per row | P(team_a wins) for each matchup row |
+| `predict_proba(X)` | `pd.Series` | `[0.0, 1.0]` per row | P(team_a wins) for each matchup row in X |
+
+For stateful models, `X` requires only `team_a_id` and `team_b_id` columns; the model reads ratings from internal state. For stateless models, `X` is the full feature matrix.
 
 **Calibration responsibility:**
 - Models MAY output raw probabilities and rely on the evaluation pipeline to calibrate
@@ -772,7 +776,7 @@ All models output **calibrated probabilities**:
 
 **Implementation approach for Story 5.3:**
 - Create `EloModel(StatefulModel)` that wraps `EloFeatureEngine` from `transform.elo`
-- `predict(team_a, team_b)` → `EloFeatureEngine.expected_score(r_a, r_b)`
+- `_predict_one(team_a_id, team_b_id)` → `EloFeatureEngine.expected_score(r_a, r_b)`
 - `update(game)` → `EloFeatureEngine.update_game(...)`
 - `start_season(season)` → `EloFeatureEngine.start_new_season(season)`
 - `save(path)` → JSON dump of ratings dict + config to `path`
@@ -788,8 +792,8 @@ All models output **calibrated probabilities**:
 5. **Template value** — demonstrates the stateless model contract (batch train, feature matrix input, probability output)
 
 **Implementation approach for Story 5.4:**
-- Create `XGBoostModel(StatelessModel)` wrapping `xgboost.XGBClassifier`
-- `train(X, y)` → `XGBClassifier.fit(X, y, eval_set=..., early_stopping_rounds=...)`
+- Create `XGBoostModel(Model)` wrapping `xgboost.XGBClassifier`
+- `fit(X, y)` → `XGBClassifier.fit(X, y, eval_set=..., early_stopping_rounds=...)`
 - `predict_proba(X)` → `XGBClassifier.predict_proba(X)[:, 1]`
 - `save()` → `clf.save_model("model.ubj")` + config JSON (instance method on `XGBClassifier`)
 - `load()` → `clf = XGBClassifier(); clf.load_model("model.ubj")` — `load_model` is an instance method, NOT a class method; instantiate first, then call
@@ -912,9 +916,9 @@ Similar to the feature equivalence groups in `feature-engineering-techniques.md`
 
 | Component | Story | Description |
 |:---|:---|:---|
-| Model ABC + Plugin Registry | 5.2 | Dual-contract ABC (StatefulModel, StatelessModel) + decorator-based registry |
-| Elo Reference Model | 5.3 | Wraps `EloFeatureEngine` (4.8) as `StatefulModel`; predict via expected score |
-| XGBoost Reference Model | 5.4 | Wraps `xgboost.XGBClassifier` as `StatelessModel`; configurable hyperparameters |
+| Model ABC + Plugin Registry | 5.2 | `Model` ABC + `StatefulModel` subclass + decorator-based registry; designed for external extensibility |
+| Elo Reference Model | 5.3 | Wraps `EloFeatureEngine` (4.8) as `StatefulModel`; built-in reference and extensibility example |
+| XGBoost Reference Model | 5.4 | Wraps `xgboost.XGBClassifier` as `Model`; built-in reference and extensibility example |
 | Model Run Tracking + CLI | 5.5 | Metadata tracking, CLI for launching training jobs |
 
 **What's deferred to Post-MVP Backlog:**
@@ -924,7 +928,7 @@ Similar to the feature equivalence groups in `feature-engineering-techniques.md`
 - LSTM, Transformer (neural nets — academic interest, not competition-proven)
 - Stacking/blending meta-model (requires multiple trained models first)
 
-**Rationale:** This option provides the two most competition-validated model types (Elo for stateful, XGBoost for stateless) and the extensibility infrastructure (ABC + registry) for users to add more models. Every deferred model can be added as a plugin without changing core code.
+**Rationale:** This option provides the two most competition-validated model types (Elo for stateful, XGBoost for stateless) and the extensibility infrastructure (ABC + registry) for users to add their own models from external repos. Every deferred model — and every user-defined custom model — can be added as a plugin without changing core code.
 
 ### Option B: Extended MVP
 
@@ -932,7 +936,7 @@ Similar to the feature equivalence groups in `feature-engineering-techniques.md`
 
 | Additional Component | Story | Description |
 |:---|:---|:---|
-| Logistic Regression Reference | New 5.4b or in 5.4 | `sklearn.LogisticRegression` wrapper as `StatelessModel`; serves as simple baseline |
+| Logistic Regression Reference | New 5.4b or in 5.4 | `sklearn.LogisticRegression` wrapper as `Model`; serves as simple baseline |
 
 **Rationale:** Logistic regression won or placed in MMLM 2014–2018. Trivial to implement (~50 lines). Provides a meaningful comparison point: if LR with ordinal deltas matches XGBoost, the complex features aren't helping.
 
@@ -944,7 +948,7 @@ Similar to the feature equivalence groups in `feature-engineering-techniques.md`
 
 | Additional Component | Story | Description |
 |:---|:---|:---|
-| LightGBM Reference | New 5.4c | `lightgbm.LGBMClassifier` wrapper; comparison point for XGBoost |
+| LightGBM Reference | New 5.4c | `lightgbm.LGBMClassifier` wrapper as `Model`; comparison point for XGBoost |
 
 **Rationale:** While the 2025 winner found XGBoost superior, having two GBDT implementations enables comparison and validates that the Model ABC properly supports GBDT-family models.
 
