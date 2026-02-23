@@ -379,6 +379,65 @@ Testing strategy uses 1 main document (TESTING_STRATEGY.md) + 7 focused guides:
 
 **Rationale:** Improves navigability, reduces cognitive load, better GitHub UX vs single comprehensive document (60KB+)
 
+### Session-Scoped Fixtures for Expensive Operations ⭐ (Discovered Story 5.4 Code Review)
+
+When tests share an expensive resource (e.g., a trained ML model for property-based tests), use `@pytest.fixture(scope="session")` rather than a module-level mutable global with `noqa: PLW0603`.
+
+```python
+# ❌ Anti-pattern: module-level singleton with global statement
+_MODEL: MyModel | None = None
+
+def _get_model() -> MyModel:
+    global _MODEL  # noqa: PLW0603
+    if _MODEL is None:
+        _MODEL = MyModel()
+        _MODEL.fit(X, y)
+    return _MODEL
+
+# ✅ Correct: session-scoped pytest fixture
+@pytest.fixture(scope="session")
+def trained_model() -> MyModel:
+    """Return a trained model shared across all tests in the session."""
+    model = MyModel()
+    model.fit(X, y)
+    return model
+
+# Test method accepts fixture as argument (pytest injects it)
+def test_predict_bounded(self, trained_model: MyModel, ...) -> None:
+    preds = trained_model.predict_proba(X_test)
+    ...
+```
+
+**Rationale:** Session fixtures are properly scoped, discoverable, type-checked, and pytest-managed. Globals with `noqa` suppress legitimate linting, create test ordering dependencies, and are invisible in test signatures.
+
+### Hypothesis + Session Fixture Pattern ⭐ (Discovered Story 5.4 Code Review)
+
+Property-based tests (`@given`) combined with expensive setup (model training) require two settings to avoid flakiness:
+1. `@settings(deadline=None)` — disables the 200ms per-example deadline
+2. A **session-scoped fixture** for the trained model — prevents re-training on every Hypothesis example
+
+```python
+@given(x=st.lists(st.floats(...), min_size=50, max_size=50))
+@settings(max_examples=50, deadline=None)
+def test_predictions_bounded(self, trained_model: MyModel, x: list[float]) -> None:
+    preds = trained_model.predict_proba(pd.DataFrame({"x": x}))
+    assert (preds >= 0.0).all()
+```
+
+### Defensive Private Attribute Access in Tests ⭐ (Discovered Story 5.4 Code Review)
+
+When tests must access private attributes for behavioral verification (e.g., `_clf.best_iteration` on a wrapped estimator), use `getattr` with a `None` default and assert before comparison:
+
+```python
+# ❌ Fragile: raises TypeError if best_iteration is None
+assert model._clf.best_iteration < 500
+
+# ✅ Defensive: guards against None; explicit assertion message
+best_iteration: int | None = getattr(model._clf, "best_iteration", None)
+assert best_iteration is not None, "Expected best_iteration to be set (early stopping should have fired)"
+assert best_iteration < 500, f"Early stopping should fire before 500; got {best_iteration}"
+```
+
 ### CI/CD Integration
 - 4-tier quality gates: Pre-commit (< 10s) → PR/CI (full) → AI review → Owner review
 - Pre-commit: lint, format, type-check, smoke tests
@@ -535,6 +594,26 @@ Code review workflow generates PRs following .github/pull_request_template.md st
 **Template Pattern:** Code review workflow instructions.xml generates template-formatted PR bodies
 
 **Discovered in Story 1.3 (2026-02-16):** PR #3 initially bypassed template, required manual reformatting and workflow update.
+
+### Pydantic Field Constraints for Bounded Hyperparameters ⭐ (Discovered Story 5.4 Code Review)
+
+Use `Annotated[type, Field(gt=..., lt=...)]` for hyperparameters that have meaningful mathematical bounds. Without these, invalid values (e.g., `validation_fraction=0.0`) produce cryptic errors deep in the call stack.
+
+```python
+from typing import Annotated
+from pydantic import BaseModel, Field
+
+class MyModelConfig(BaseModel):
+    # ❌ No validation — 0.0 causes train_test_split to fail cryptically
+    validation_fraction: float = 0.1
+
+    # ✅ Validated at construction — clear Pydantic error at the boundary
+    validation_fraction: Annotated[float, Field(gt=0.0, lt=1.0)] = 0.1
+    subsample: Annotated[float, Field(gt=0.0, le=1.0)] = 0.8
+    n_estimators: Annotated[int, Field(gt=0)] = 500
+```
+
+**Rule of thumb:** Any float parameter that feeds into a random split (`test_size`, `validation_fraction`), a sampling ratio (`subsample`, `colsample_bytree`), or a probability should be constrained at the Pydantic level.
 
 ### Style Guide
 **Reference:** [STYLE_GUIDE.md](./STYLE_GUIDE.md)
@@ -1907,3 +1986,104 @@ class TestPredictOneProperties:
 ```
 
 **Rule:** Every `_predict_one()` implementation must have Hypothesis tests for the bounded-output and symmetry invariants.
+
+### Configurable Hyperparameters: Expose ALL Tunable Knobs in the Config Class (Discovered Story 5.4 Code Review, 2026-02-23)
+
+When a framework parameter (like XGBoost's `scale_pos_weight`) is mentioned in the story's AC with phrasing "set accordingly if…", it must be an **actual field** in the `ModelConfig` subclass — not just documented in a docstring. Documentation without a settable field means the AC is only partially met (the caller cannot configure the parameter without subclassing or monkey-patching).
+
+**Pattern:**
+```python
+class XGBoostModelConfig(ModelConfig):
+    scale_pos_weight: float | None = None  # None → framework default (1.0)
+    # ... other fields
+
+def __init__(self, config: XGBoostModelConfig | None = None) -> None:
+    kwargs: dict[str, object] = { ... base params ... }
+    if self._config.scale_pos_weight is not None:  # Only pass if set
+        kwargs["scale_pos_weight"] = self._config.scale_pos_weight
+    self._clf = XGBClassifier(**kwargs)
+```
+
+**Rule:** Every AC that says "set X accordingly" or "configure X" must result in a field on the config. Docstring documentation alone ≠ AC satisfaction.
+
+### Unfitted Model Guards: All I/O Methods Must Check `_is_fitted` (Discovered Story 5.4 Code Review, 2026-02-23)
+
+Both `predict_proba()` and `save()` must guard against being called before `fit()`. Without guards:
+- `predict_proba()` raises an opaque internal library error (XGBoost core error)
+- `save()` silently persists an empty/invalid model that loads successfully but predicts garbage
+
+**Pattern:**
+```python
+class SomeModel(Model):
+    def __init__(self, config=None) -> None:
+        self._is_fitted = False  # Track fit state
+
+    def fit(self, X, y) -> None:
+        # ... training ...
+        self._is_fitted = True
+
+    def predict_proba(self, X) -> pd.Series:
+        if not self._is_fitted:
+            msg = "Model must be fitted before calling predict_proba"
+            raise RuntimeError(msg)
+        # ... prediction ...
+
+    def save(self, path) -> None:
+        if not self._is_fitted:
+            msg = "Model must be fitted before saving"
+            raise RuntimeError(msg)
+        # ... save files ...
+
+    @classmethod
+    def load(cls, path) -> Self:
+        # ... load files ...
+        instance._is_fitted = True  # Mark loaded model as fitted
+        return instance
+```
+
+**Rule:** Every stateless `Model` implementation must initialize `_is_fitted = False` in `__init__`, set `_is_fitted = True` after `fit()` and after `load()`, and guard `predict_proba()` and `save()` with clear `RuntimeError` messages.
+
+### Hypothesis Deadline Violations: Training-Heavy Tests Need `deadline=None` (Discovered Story 5.4 Code Review, 2026-02-23)
+
+When a Hypothesis `@given` test body includes model training (even with a small `n_estimators`), the first invocation can trigger a `DeadlineExceeded` flaky failure. Hypothesis's default deadline is 200ms; ML model training often exceeds this on the first example (no JIT warm-up).
+
+Two patterns to avoid this:
+
+**Pattern A — Module-level fixture (preferred for shared trained models):**
+```python
+_TRAINED_MODEL: XGBoostModel | None = None
+
+def _get_trained_model() -> XGBoostModel:
+    global _TRAINED_MODEL  # noqa: PLW0603
+    if _TRAINED_MODEL is None:
+        X, y = _make_train_data()
+        _TRAINED_MODEL = XGBoostModel(XGBoostModelConfig(n_estimators=20, early_stopping_rounds=5))
+        _TRAINED_MODEL.fit(X, y)
+    return _TRAINED_MODEL
+
+@given(feat_a=st.lists(...), feat_b=st.lists(...))
+@settings(max_examples=50, deadline=None)  # deadline=None because predict is fast but JIT varies
+def test_predict_proba_bounded(self, feat_a, feat_b) -> None:
+    model = _get_trained_model()  # Never trains inside @given body
+    X_test = pd.DataFrame({"feat_a": feat_a, "feat_b": feat_b})
+    preds = model.predict_proba(X_test)
+    assert (preds >= 0.0).all() and (preds <= 1.0).all()
+```
+
+**Pattern B — Suppress deadline explicitly:**
+```python
+@settings(max_examples=50, deadline=None)
+```
+
+**Rule:** Any `@given` test that trains a model OR calls predict on an untriggered JIT path must use `deadline=None`. Training must NEVER happen inside the `@given` body — train once, test many examples.
+
+### Duplicate Tests Inflate Test Count; Use Distinct Assertions (Discovered Story 5.4 Code Review, 2026-02-23)
+
+When story tasks map to distinct requirements (e.g., "trains successfully" vs "output length matches input"), the tests must be genuinely distinct. A test that calls `model.fit(X, y)` and asserts `len(preds) == len(X)` covers BOTH "trains successfully" AND "length matches." A second test with identical assertions inflates the count and provides no additional coverage.
+
+**Distinguishing techniques:**
+- "Trains successfully" → assert no exception raised (no `assert` on predictions at all, or use `model.fit(X, y)  # Must not raise`)
+- "Output length matches input" → use a *subset* of training data for prediction to prove length = `len(X_subset)`, not `len(X_train)`
+- "Output is bounded [0,1]" → check `(preds >= 0).all() and (preds <= 1).all()`
+
+**Rule:** Before adding a test, verify it exercises a code path or assertion not already covered by existing tests. If two tests have identical `assert` statements on the same data, merge or differentiate them.
