@@ -39,9 +39,9 @@ So that I can implement custom models that plug into the training and evaluation
   - [x] 3.3 Implement concrete `predict_proba(X)` template — iterate rows with `itertuples()`, call `_predict_one(team_a_id, team_b_id)` per row
   - [x] 3.4 Define abstract hooks: `_predict_one`, `update`, `start_season`, `get_state`, `set_state`
 
-- [ ] Task 4: Create plugin registry (AC: #8)
-  - [ ] 4.1 Implement `_MODEL_REGISTRY` dict, `@register_model("name")` decorator, `get_model(name)`, `list_models()` in `src/ncaa_eval/model/registry.py`
-  - [ ] 4.2 Implement `ModelNotFoundError` exception for unknown model names
+- [x] Task 4: Create plugin registry (AC: #8)
+  - [x] 4.1 Implement `_MODEL_REGISTRY` dict, `@register_model("name")` decorator, `get_model(name)`, `list_models()` in `src/ncaa_eval/model/registry.py`
+  - [x] 4.2 Implement `ModelNotFoundError` exception for unknown model names
   - [ ] 4.3 Ensure auto-registration on package import via `__init__.py` imports
 
 - [ ] Task 5: Create LogisticRegression test fixture (AC: #9)
@@ -230,8 +230,11 @@ Claude Opus 4.6
 ### Completion Notes List
 
 - Tasks 1-3: Created `ModelConfig`, `Model` ABC, and `StatefulModel` in `base.py`. All 13 unit tests pass covering: config validation/serialization, ABC enforcement, `_to_games()` reconstruction, `fit()` season boundaries, `predict_proba()` dispatch, and `get_state`/`set_state` round-trip.
+- Task 4: Created plugin registry with `@register_model` decorator, `get_model()`, `list_models()`, `ModelNotFoundError`. 5 registry tests pass including duplicate name detection and unknown model error.
 
 ### File List
 
 - `src/ncaa_eval/model/base.py` (new)
+- `src/ncaa_eval/model/registry.py` (new)
 - `tests/unit/test_model_base.py` (new)
+- `tests/unit/test_model_registry.py` (new)
