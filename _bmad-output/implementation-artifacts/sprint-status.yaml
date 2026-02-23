@@ -81,8 +81,8 @@ development_status:
   epic-4-retrospective: optional
 
   # Epic 5: Core Modeling Framework
-  epic-5: backlog
-  5-1-research-modeling-approaches: backlog
+  epic-5: in-progress
+  5-1-research-modeling-approaches: done
   5-2-define-model-abc-plugin-registry: backlog
   5-3-implement-reference-stateful-model-elo: backlog
   5-4-implement-reference-stateless-model-xgboost: backlog

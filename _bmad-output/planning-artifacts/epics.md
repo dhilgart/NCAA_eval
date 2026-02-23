@@ -618,13 +618,19 @@ So that I can implement custom models that plug into the training and evaluation
 
 **Given** the spike findings (Story 5.1) define the interface requirements
 **When** the developer creates a new model by subclassing `Model`
-**Then** the ABC enforces implementation of `train`, `predict`, and `save` methods
-**And** the ABC distinguishes between stateful models (per-game state updates) and stateless models (batch training)
-**And** stateful models support `update(game)` for incremental state updates and `get_state()` / `set_state()` for persistence
-**And** the plugin registry allows registering custom models by name (e.g., `@register_model("my_elo")`)
-**And** registered models are discoverable at runtime (e.g., `get_model("my_elo")`)
-**And** the ABC and registry are covered by unit tests including a minimal mock model implementation
+**Then** the `Model` ABC enforces implementation of `fit(X, y)`, `predict_proba(X)`, `save(path)`, `load(path)`, and `get_config()` abstract methods
+**And** `fit(X: pd.DataFrame, y: pd.Series) -> None` is the unified training interface for all model types (sklearn naming convention)
+**And** `predict_proba(X: pd.DataFrame) -> pd.Series` returns calibrated P(team_a wins) in [0.0, 1.0] for each row in X (unified for stateful and stateless)
+**And** `load(cls, path: Path) -> Self` is a classmethod returning `Self` (PEP 673 / Python 3.12) so that `EloModel.load(path)` is typed as `EloModel`, not `Model`
+**And** `get_config() -> ModelConfig` returns the Pydantic-validated config; `ModelConfig` (Pydantic BaseModel) is the base class for all model configs
+**And** a `StatefulModel(Model)` subclass is defined with: (1) concrete template `fit()` that reconstructs `Game` objects from X and calls `update()` per game; (2) concrete template `predict_proba()` that dispatches to `_predict_one()` per row; (3) abstract hooks `update(game: Game)`, `_predict_one(team_a_id, team_b_id)`, `start_season(season)`, `get_state()`, `set_state(state)`
+**And** stateless models (XGBoost, logistic regression) implement `Model` directly — NO separate `StatelessModel` subclass exists
+**And** the plugin registry provides `@register_model("name")` decorator, `get_model(name) -> type[Model]`, and `list_models() -> list[str]`; built-in models auto-register on package import; external users register via `@register_model` before invoking the pipeline
+**And** a minimal logistic regression implementation (`LogisticRegressionModel(Model)`) is included as a test fixture (not as a production reference model) — demonstrates the stateless `Model` contract in ~30 lines
+**And** the ABC and registry are covered by unit tests including the logistic regression test fixture
 **And** type annotations satisfy `mypy --strict`
+
+**Design Reference:** `specs/research/modeling-approaches.md` Section 5 (complete interface pseudocode, import-verified across 3 code review rounds)
 
 ### Story 5.3: Implement Reference Stateful Model (Elo)
 
@@ -634,16 +640,20 @@ So that I have a proven baseline for tournament prediction and a template for bu
 
 **Acceptance Criteria:**
 
-**Given** the Model ABC (Story 5.2) is defined and the chronological serving API (Epic 4, Story 4.2) is available
+**Given** the Model ABC (Story 5.2) is defined and `EloFeatureEngine` (Story 4.8, `transform.elo`) is available
 **When** the developer trains the Elo model on historical game data
-**Then** the Elo model consumes games via `get_chronological_season(year)` from the chronological serving API, updating team ratings after each game
-**And** the K-factor and initial rating are configurable hyperparameters
-**And** home-court advantage adjustment is supported
-**And** season-to-season state persistence is implemented (ratings carry forward with optional regression to mean)
-**And** `predict(team_a, team_b)` returns a win probability derived from the rating difference
+**Then** `EloModel(StatefulModel)` wraps `EloFeatureEngine` from `transform.elo` — it does NOT re-implement Elo from scratch; `fit(X, y)` is inherited from `StatefulModel` (calls `update()` per reconstructed game)
+**And** `update(game: Game)` delegates to `EloFeatureEngine.update_game()` to advance ratings
+**And** `start_season(season: int)` delegates to `EloFeatureEngine.start_new_season(season)` for mean reversion
+**And** `_predict_one(team_a_id: int, team_b_id: int) -> float` returns P(team_a wins) via the Elo expected-score formula using current ratings; public prediction is via inherited `predict_proba(X: pd.DataFrame) -> pd.Series`
+**And** `EloModelConfig(ModelConfig)` is the Pydantic config with parameters: `initial_rating`, `k_early`, `early_game_threshold`, `k_regular`, `k_tournament`, `margin_exponent`, `max_margin`, `home_advantage_elo`, `mean_reversion_fraction` — defaults matching `EloConfig` from Story 4.8 (see `specs/research/modeling-approaches.md` §5.5 and §6.4)
+**And** `get_state() -> dict[str, Any]` returns the ratings dict; `set_state(state)` restores it
+**And** `save(path: Path)` JSON-dumps ratings dict + config; `load(cls, path: Path) -> Self` reconstructs from JSON
 **And** the model registers via the plugin registry as `"elo"`
 **And** the Elo model is validated against known rating calculations on a small fixture dataset
-**And** the model is covered by unit tests for rating updates, prediction, and state persistence
+**And** the model is covered by unit tests for rating updates, `_predict_one`, state persistence (`get_state`/`set_state`), and `save`/`load` round-trip
+
+**Design Reference:** `specs/research/modeling-approaches.md` §6.1 (implementation approach), §5.5 (EloModelConfig), §6.4 (hyperparameter ranges)
 
 ### Story 5.4: Implement Reference Stateless Model (XGBoost)
 
@@ -653,15 +663,19 @@ So that I have a powerful gradient-boosting baseline and a template for building
 
 **Acceptance Criteria:**
 
-**Given** the Model ABC (Story 5.2) is defined and the feature serving layer (Epic 4) provides feature matrices
+**Given** the Model ABC (Story 5.2) is defined and `StatefulFeatureServer` (Epic 4, Story 4.7) provides feature matrices
 **When** the developer trains the XGBoost model on a feature matrix
-**Then** the model wraps `xgboost.XGBClassifier` with the `Model` ABC interface
-**And** `train(X, y)` fits the classifier on the provided feature matrix and labels
-**And** `predict(X)` returns calibrated win probabilities (not raw scores)
-**And** hyperparameters are configurable via constructor or config dict
-**And** `save()` persists the trained model to disk and `load()` restores it
+**Then** `XGBoostModel(Model)` wraps `xgboost.XGBClassifier` implementing `Model` directly (no `StatefulModel` subclass — stateless models bypass the per-game lifecycle)
+**And** `fit(X: pd.DataFrame, y: pd.Series)` calls `XGBClassifier.fit(X, y, eval_set=..., early_stopping_rounds=...)` using the validation split from `X`
+**And** `predict_proba(X: pd.DataFrame) -> pd.Series` returns `XGBClassifier.predict_proba(X)[:, 1]` — P(team_a wins) as calibrated probabilities (XGBoost `binary:logistic` objective)
+**And** `XGBoostModelConfig(ModelConfig)` is the Pydantic config with: `n_estimators`, `max_depth`, `learning_rate`, `subsample`, `colsample_bytree`, `min_child_weight`, `reg_alpha`, `reg_lambda`, `early_stopping_rounds` — see `specs/research/modeling-approaches.md` §5.5 and §6.4 for defaults and tuning ranges
+**And** label balance is verified before training: if `StatefulFeatureServer` assigns team_a/team_b non-randomly (e.g., always winner = team_a), `scale_pos_weight` must be set accordingly; document the convention in the implementation
+**And** `save(path: Path)` calls `clf.save_model(str(path / "model.ubj"))` (XGBoost UBJSON native format, stable across versions) and writes config JSON to `path / "config.json"`
+**And** `load(cls, path: Path) -> Self` instantiates `XGBClassifier()` then calls `clf.load_model(str(path / "model.ubj"))` — `load_model` is an instance method, NOT a class method
 **And** the model registers via the plugin registry as `"xgboost"`
-**And** the model is covered by unit tests validating train/predict/save/load round-trip
+**And** the model is covered by unit tests validating `fit`/`predict_proba`/`save`/`load` round-trip
+
+**Design Reference:** `specs/research/modeling-approaches.md` §6.2 (implementation approach), §5.5 (XGBoostModelConfig), §6.4 (hyperparameter ranges), §5.7 (persistence format)
 
 ### Story 5.5: Implement Model Run Tracking & Training CLI
 
@@ -678,8 +692,10 @@ So that I can reproduce results, compare runs, and train models from the termina
 **And** ModelRun and Prediction records are persisted to the local store
 **And** training progress is displayed via progress bars in the terminal
 **And** results summary (metrics, run metadata) is printed on completion
-**And** the CLI supports `--model` flag accepting any registered plugin model name
+**And** the CLI supports `--model` flag accepting any registered plugin model name (built-in: `"elo"`, `"xgboost"`; external user-registered names also work)
 **And** the CLI and tracking are covered by integration tests validating the full train-track-persist cycle
+
+**Note:** `fit(X, y)` is the canonical training entry point for all models (see Story 5.2). The CLI's `train` sub-command constructs the feature matrix via `StatefulFeatureServer` and calls `model.fit(X, y)`.
 
 ## Epic 6: Evaluation & Validation Engine
 
@@ -954,6 +970,50 @@ So that I can quickly learn how to use the platform's key workflows.
 ## Post-MVP Backlog
 
 Items identified during development for future consideration. These are not scheduled for any sprint but may be promoted into epics/stories later.
+
+### Model ABC Plugins — LightGBM (Story 5.1 spike decision, 2026-02-23)
+
+`LightGBMModel(Model)` — stateless Model ABC plugin wrapping `lightgbm.LGBMClassifier`. Near-identical pattern to `XGBoostModel` (~50 lines); same GBDT family but with leaf-wise tree growth and native categorical support. 2025 winner tested LightGBM and found XGBoost superior on NCAA data; deferred because XGBoost already covers the GBDT equivalence group.
+
+- **Effort:** ~50 lines — `fit(X, y)` / `predict_proba(X)` / `save(path)` / `load(path)` wrapping `LGBMClassifier`
+- **Distinctness:** Low — same GBDT family as XGBoost; minimal additional signal on small NCAA datasets
+- **Source:** Story 5.1 spike — `specs/research/modeling-approaches.md` §3.2, §7.1 (Group A equivalence)
+- **Template:** Follow `XGBoostModel` pattern exactly; `@register_model("lightgbm")`
+
+### Model ABC Plugins — CatBoost (Story 5.1 spike decision, 2026-02-23)
+
+`CatBoostModel(Model)` — stateless Model ABC plugin wrapping `catboost.CatBoostClassifier`. Ordered boosting with native categorical handling. 2025 winner tested CatBoost and found it underperformed XGBoost; deferred for same reason as LightGBM.
+
+- **Effort:** ~50 lines — same pattern as `XGBoostModel`
+- **Distinctness:** Low — same GBDT family; ordered boosting provides marginal benefit on NCAA-sized data
+- **Source:** Story 5.1 spike — `specs/research/modeling-approaches.md` §3.3, §7.1 (Group A equivalence)
+- **Template:** Follow `XGBoostModel` pattern; `@register_model("catboost")`
+
+### Model ABC Plugins — Glicko-2 & TrueSkill (Story 5.1 spike decision, 2026-02-23)
+
+`Glicko2Model(StatefulModel)` and `TrueSkillModel(StatefulModel)` — uncertainty-quantified rating models. Each adds rating deviation / skill variance beyond Elo, but both converge toward standard Elo for full-season snapshots (30+ games per team reduces uncertainty gap). Deferred: marginal signal, weak competition validation (occasional top-25, not top-10).
+
+- **Effort:** ~150 lines each — implement `update(game)`, `_predict_one()`, `start_season()`, `get_state()`, `save()`/`load()` using `glicko2` or `trueskill` PyPI packages
+- **Distinctness:** Low-Medium — RD/volatility are genuine new parameters but converge for full-season data
+- **Source:** Story 5.1 spike — `specs/research/modeling-approaches.md` §2.2, §2.3, §2.5
+- **Template:** Follow `EloModel` (Story 5.3) as the stateful reference; `@register_model("glicko2")` / `@register_model("trueskill")`
+
+### Model ABC Plugins — LSTM & Transformer (Story 5.1 spike decision, 2026-02-23)
+
+`LSTMModel(Model)` and `TransformerModel(Model)` — deep learning models for sequential NCAA tournament prediction. arXiv:2508.02725 (Habib 2025) reports Transformer-BCE achieves highest AUC (0.8473) but poor calibration; LSTM-Brier achieves best calibration. Deferred: no competition wins, small data disadvantage vs. GBDT, high implementation complexity (PyTorch/TensorFlow training loops).
+
+- **Effort:** High — custom PyTorch/TF training loop, architecture design, sequence data formatting
+- **Distinctness:** Moderate — captures temporal game sequences not in tabular features; but GBDT still outperforms on small NCAA data (Grinsztajn et al. 2022, NeurIPS)
+- **Source:** Story 5.1 spike — `specs/research/modeling-approaches.md` §3.5
+- **Note:** These require PyTorch or TensorFlow as new dependencies — add only as optional extras in pyproject.toml
+
+### Model ABC Plugins — Bayesian Logistic Regression (Story 5.1 spike decision, 2026-02-23)
+
+`BayesianLogisticRegressionModel(Model)` — Bayesian LR with informative priors (via `pymc` or `bambi`). Won MMLM 2015 (Bradshaw) and 2017 (Landgraf). Deferred: standard `LogisticRegressionModel` is the Story 5.2 test fixture and covers the linear model equivalence group; Bayesian variant adds uncertainty quantification but higher implementation complexity.
+
+- **Effort:** Medium — `pymc` or `bambi` dependency; MCMC sampling is slower than sklearn LR
+- **Distinctness:** Slight extension of logistic regression — posterior uncertainty is useful but adds complexity
+- **Source:** Story 5.1 spike — `specs/research/modeling-approaches.md` §3.4, §7.1 (Group B equivalence)
 
 ### LRMC (Logistic Regression Markov Chain) Rating System
 

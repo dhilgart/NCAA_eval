@@ -1634,3 +1634,102 @@ def test_hits_convergence_failure() -> None:
 ```
 
 **Template action:** For any function that catches a convergence/iteration exception and returns a fallback, add a `test_<function>_convergence_failure` test to the story's AC list.
+
+### Interface Pseudocode in Research Spikes Must Be Import-Complete (Discovered Story 5.1 Code Review, 2026-02-22)
+
+When a research spike document defines an ABC interface with pseudocode, the import block must be **complete and correct**. Downstream story dev agents will copy-paste this pseudocode as the starting point for their implementation. Missing imports are copy-paste traps that cause runtime errors or `mypy --strict` failures.
+
+**Checklist for interface pseudocode in research docs:**
+- [ ] All types used in signatures have corresponding imports (`Path`, `pd.DataFrame`, `pd.Series`, `Any`, etc.)
+- [ ] `from __future__ import annotations` is the first import (required by project convention)
+- [ ] `from pathlib import Path` if any method signatures accept or return paths
+- [ ] Domain types (e.g., `Game`, `Team`, `Season` from `ncaa_eval.ingest.schema`) imported if used in abstract method signatures
+- [ ] **Check EVERY code block independently** — imports in one block do not carry to a separate code block later in the document
+- [ ] Decorator factories have return type annotations (e.g., `register_model() -> Callable[...]`) — `mypy --strict` fails on unannotated functions
+- [ ] API references match the actual library's method style (e.g., `XGBClassifier.load_model` is instance method, not class method)
+- [ ] All abstract methods on a parent ABC are either overridden or explicitly given a concrete implementation with a clear `NotImplementedError` in subclasses
+- [ ] `type: ignore[X]` comments are only included if `mypy --strict` actually raises that error code — spurious ignores mislead implementors
+
+**Discovered in Story 5.1 Round 1:** `Model.save(path: Path)` was used without `from pathlib import Path`.
+**Discovered in Story 5.1 Round 2:** `StatefulModel.update(game: Game)` used without `from ncaa_eval.ingest.schema import Game`; `StatefulFeatureServer` type annotation in separate dispatch code block had no import; `register_model` decorator missing `Callable` return type; `XGBClassifier.load_model()` incorrectly documented as class method; spurious `# type: ignore[override]` on `StatelessModel.predict()`.
+
+### Dual-ABC Patterns: Document Evaluation Pipeline Dispatch Before Implementation (Discovered Story 5.1 Code Review, 2026-02-22)
+
+When a research spike proposes a dual-ABC architecture (e.g., `StatefulModel` with per-game `predict(id_a, id_b)` vs. `StatelessModel` with batch `predict_proba(X)`), the document **must** show how a caller polymorphically dispatches across both types. Without this, the evaluation pipeline (which must call predictions uniformly) has no spec to follow and will either duplicate the dispatch logic inconsistently or stall in Story design.
+
+**Template pattern:** Add a `## Evaluation Pipeline Dispatch` subsection to the ABC interface section of any dual-contract design, showing an `isinstance`-dispatch snippet:
+
+```python
+if isinstance(model, StatefulModel):
+    return model.predict(team_a_id, team_b_id)
+elif isinstance(model, StatelessModel):
+    return model.predict_proba(X_test)
+```
+
+**Discovered in Story 5.1:** The dual-contract ABC was specified but no dispatch guidance was provided; added in code review (Section 5.3 of `specs/research/modeling-approaches.md`).
+
+### Spike Story Post-PO SM Task Must Be an Explicit Task (Not Just an AC) (Discovered Story 5.1 Code Review, 2026-02-22)
+
+AC 8 of Story 5.1 (post-PO SM downstream update) was present as an acceptance criterion but had no corresponding task in the Tasks section. This violates the Story 4.1 SM retrospective pattern in template-requirements.md (see "Spike story post-PO-approval checklist" in BMAD Workflow Preferences). The task must explicitly exist so the SM has a tracked work item to complete.
+
+**Template pattern:** All spike stories must include as the **last task**:
+```
+- [ ] Task N: Post-PO SM downstream update (AC: #N) — SM WORK, NOT DEV WORK
+  - [ ] N.1 After PO approves spike findings, SM updates downstream story descriptions in epics.md
+  - [ ] N.2 SM adds new story placeholders as needed
+  - [ ] N.3 SM moves deferred items to Post-MVP Backlog
+  - [ ] N.4 SM updates sprint-status.yaml: `story-key` → `done` (only after all post-PO work complete)
+```
+
+**Discovered in Story 5.1 Code Review, 2026-02-22.** Prior retrospective about AC existence discovered in Story 4.1 SM work (2026-02-21).
+
+### Code Review Must Not Advance Sprint-Status Past `review` for Open PO Gates (Discovered Story 5.1 Code Review Round 2, 2026-02-22)
+
+When a spike story has a **PO decision gate AC** (e.g., "PO reviews and approves scope"), the code review agent must set sprint-status to `review`, NOT `done`. The story should not advance to `done` until:
+1. The PO has reviewed and approved the spike findings (PO gate AC)
+2. The SM has completed the downstream epic update (post-PO SM AC)
+
+**Failure mode:** Round 1 review of Story 5.1 found "All ACs implemented" and set sprint-status → `done`, but AC 7 (PO gate) was explicitly unfulfilled. The sprint-status had to be reverted to `review` in Round 2.
+
+**Rule:** If any AC contains the phrase "product owner reviews", "PO approves", "decision gate", or similar, the code review agent MUST leave the story in `review` state regardless of how many other ACs are satisfied. Advancing to `done` requires human PO action, not agent action.
+
+### Multi-Block Pseudocode: Each Code Block Has Independent Imports (Discovered Story 5.1 Code Review Round 3, 2026-02-23)
+
+When fixing an import gap in one code block (e.g., Section 5.2 ABC definition), **always check every other code block in the same document independently**. Imports added to Block A do not carry into Block B. Over three rounds of Story 5.1 review, each round found a new import gap in a different code block:
+- Round 1: `Path` missing from Block A (§5.2 ABC)
+- Round 2: `Game` missing from Block A; `StatefulFeatureServer` missing from Block B (§5.3 dispatch)
+- Round 3: `Model` and `StatefulModel` missing from Block B (§5.3 dispatch — same block Round 2 partially fixed)
+
+**Rule:** After any import fix, scan ALL other code blocks in the document for the same class of gap, especially blocks that reference types defined in the same ABC.
+
+**Updated checklist item:** "Check EVERY code block independently — and after fixing imports in one block, re-scan ALL blocks for the same type."
+
+### Concrete Methods in ABC Pseudocode: Use `raise NotImplementedError`, Not `...` (Discovered Story 5.1 Round 3, 2026-02-23)
+
+In Python, `...` (Ellipsis) is idiomatic for abstract method stubs. Using `...` as the body of a **concrete** helper method in pseudocode creates ambiguity: Story 5.2 dev agents may either treat it as abstract (wrong — defeats template inheritance) or copy `...` literally (causes `None` return → `TypeError` at runtime).
+
+**Rule:** In research doc pseudocode:
+- **Abstract methods** → use `...` body or `pass` (Python convention for "subclass must implement")
+- **Concrete methods with placeholder bodies** → use `raise NotImplementedError("message")` + a docstring comment explicitly stating "CONCRETE — implement in `StatefulModel` body, not subclasses"
+
+### Classmethod Factory Return Types: Use `Self`, Not Parent Class (Discovered Story 5.1 Round 3, 2026-02-23)
+
+`load(cls, path: Path) -> "Model"` (or any similar factory classmethod returning the parent class) prevents type narrowing: `EloModel.load(path)` returns `Model`, not `EloModel`. Use `typing.Self` (Python 3.11+, PEP 673) for all factory classmethods:
+
+```python
+from typing import Self
+
+@classmethod
+@abstractmethod
+def load(cls, path: Path) -> Self: ...
+```
+
+**Rule:** Any `@classmethod` that creates and returns an instance of `cls` should return `Self`, not the ABC name.
+
+### Config Spec → Hyperparameter Table Sync (Discovered Story 5.1 Round 3, 2026-02-23)
+
+When adding a parameter to a Pydantic config class in one section (e.g., §5.5), always update ALL hyperparameter tables in other sections that describe that model (e.g., §6.4). Over rounds of Story 5.1 review:
+- Round 2 added `min_child_weight` to `XGBoostModelConfig` (§5.5) and §6.4 table correctly
+- Round 2 added `early_game_threshold` to `EloModelConfig` (§5.5) but missed the §6.4 Elo table
+
+**Rule:** Whenever a parameter is added to or removed from a Pydantic model config in pseudocode, search the document for all hyperparameter tables referencing that model and update them to match.
