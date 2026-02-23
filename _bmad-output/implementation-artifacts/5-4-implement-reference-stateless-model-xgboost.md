@@ -1,6 +1,6 @@
 # Story 5.4: Implement Reference Stateless Model (XGBoost)
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -22,50 +22,50 @@ So that I have a powerful gradient-boosting baseline and a template for building
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `XGBoostModelConfig` (AC: #4)
-  - [ ] 1.1 Define `XGBoostModelConfig(ModelConfig)` with `model_name: Literal["xgboost"] = "xgboost"` and all hyperparameters from §5.5
-  - [ ] 1.2 Add `validation_fraction: float = 0.1` for automatic eval_set splitting in `fit()`
-  - [ ] 1.3 Verify Pydantic JSON round-trip with default and custom values
+- [x] Task 1: Create `XGBoostModelConfig` (AC: #4)
+  - [x] 1.1 Define `XGBoostModelConfig(ModelConfig)` with `model_name: Literal["xgboost"] = "xgboost"` and all hyperparameters from §5.5
+  - [x] 1.2 Add `validation_fraction: float = 0.1` for automatic eval_set splitting in `fit()`
+  - [x] 1.3 Verify Pydantic JSON round-trip with default and custom values
 
-- [ ] Task 2: Create `XGBoostModel(Model)` (AC: #1, #2, #3, #5)
-  - [ ] 2.1 Implement `__init__(config: XGBoostModelConfig | None = None)` — store config, instantiate `XGBClassifier` with config params
-  - [ ] 2.2 Implement `fit(X, y)` — split validation set from X/y using `validation_fraction`, call `XGBClassifier.fit(X_train, y_train, eval_set=[(X_val, y_val)])` with `early_stopping_rounds` from config
-  - [ ] 2.3 Guard `fit()` against empty DataFrame input (`if X.empty: raise ValueError`)
-  - [ ] 2.4 Implement `predict_proba(X)` — return `pd.Series(clf.predict_proba(X)[:, 1], index=X.index)`
-  - [ ] 2.5 Implement `get_config() -> XGBoostModelConfig`
-  - [ ] 2.6 Document label balance convention in docstring (team_a assignment and scale_pos_weight)
+- [x] Task 2: Create `XGBoostModel(Model)` (AC: #1, #2, #3, #5)
+  - [x] 2.1 Implement `__init__(config: XGBoostModelConfig | None = None)` — store config, instantiate `XGBClassifier` with config params
+  - [x] 2.2 Implement `fit(X, y)` — split validation set from X/y using `validation_fraction`, call `XGBClassifier.fit(X_train, y_train, eval_set=[(X_val, y_val)])` with `early_stopping_rounds` from config
+  - [x] 2.3 Guard `fit()` against empty DataFrame input (`if X.empty: raise ValueError`)
+  - [x] 2.4 Implement `predict_proba(X)` — return `pd.Series(clf.predict_proba(X)[:, 1], index=X.index)`
+  - [x] 2.5 Implement `get_config() -> XGBoostModelConfig`
+  - [x] 2.6 Document label balance convention in docstring (team_a assignment and scale_pos_weight)
 
-- [ ] Task 3: Implement `save` / `load` (AC: #6, #7)
-  - [ ] 3.1 `save(path)` — create directory, save model via `clf.save_model(str(path / "model.ubj"))`, config via `path / "config.json"` with `model_dump_json()`
-  - [ ] 3.2 `load(cls, path) -> Self` — check BOTH `config.json` and `model.ubj` exist before reading either; `XGBClassifier()` then `clf.load_model(str(path / "model.ubj"))`; reconstruct from config; return Self
-  - [ ] 3.3 Raise `FileNotFoundError` with clear message on incomplete saves
+- [x] Task 3: Implement `save` / `load` (AC: #6, #7)
+  - [x] 3.1 `save(path)` — create directory, save model via `clf.save_model(str(path / "model.ubj"))`, config via `path / "config.json"` with `model_dump_json()`
+  - [x] 3.2 `load(cls, path) -> Self` — check BOTH `config.json` and `model.ubj` exist before reading either; `XGBClassifier()` then `clf.load_model(str(path / "model.ubj"))`; reconstruct from config; return Self
+  - [x] 3.3 Raise `FileNotFoundError` with clear message on incomplete saves
 
-- [ ] Task 4: Register as plugin (AC: #8)
-  - [ ] 4.1 Add `@register_model("xgboost")` decorator to `XGBoostModel`
-  - [ ] 4.2 Update `model/__init__.py` to import `xgboost_model` module for auto-registration
+- [x] Task 4: Register as plugin (AC: #8)
+  - [x] 4.1 Add `@register_model("xgboost")` decorator to `XGBoostModel`
+  - [x] 4.2 Update `model/__init__.py` to import `xgboost_model` module for auto-registration
 
-- [ ] Task 5: Write unit tests (AC: #9)
-  - [ ] 5.1 Test `XGBoostModelConfig` creation with defaults
-  - [ ] 5.2 Test `XGBoostModelConfig` creation with custom values
-  - [ ] 5.3 Test `XGBoostModelConfig` JSON round-trip
-  - [ ] 5.4 Test `XGBoostModel.fit(X, y)` trains successfully on synthetic data
-  - [ ] 5.5 Test `XGBoostModel.predict_proba(X)` returns probabilities in [0, 1]
-  - [ ] 5.6 Test `predict_proba` output length matches input length
-  - [ ] 5.7 Test `predict_proba` returns `pd.Series` with correct index
-  - [ ] 5.8 Test `save()` / `load()` round-trip produces identical predictions (`tmp_path`)
-  - [ ] 5.9 Test `save()` / `load()` preserves config values
-  - [ ] 5.10 Test `load()` raises `FileNotFoundError` on missing model file
-  - [ ] 5.11 Test `load()` raises `FileNotFoundError` on missing config file
-  - [ ] 5.12 Test plugin registration: `get_model("xgboost")` returns `XGBoostModel`
-  - [ ] 5.13 Test `get_config()` returns the config instance
-  - [ ] 5.14 Test `fit()` raises `ValueError` on empty DataFrame
-  - [ ] 5.15 Hypothesis property test: `predict_proba` output is bounded [0, 1] for random feature inputs
-  - [ ] 5.16 Test early stopping: model with `early_stopping_rounds` stops before `n_estimators` on easy data
+- [x] Task 5: Write unit tests (AC: #9)
+  - [x] 5.1 Test `XGBoostModelConfig` creation with defaults
+  - [x] 5.2 Test `XGBoostModelConfig` creation with custom values
+  - [x] 5.3 Test `XGBoostModelConfig` JSON round-trip
+  - [x] 5.4 Test `XGBoostModel.fit(X, y)` trains successfully on synthetic data
+  - [x] 5.5 Test `XGBoostModel.predict_proba(X)` returns probabilities in [0, 1]
+  - [x] 5.6 Test `predict_proba` output length matches input length
+  - [x] 5.7 Test `predict_proba` returns `pd.Series` with correct index
+  - [x] 5.8 Test `save()` / `load()` round-trip produces identical predictions (`tmp_path`)
+  - [x] 5.9 Test `save()` / `load()` preserves config values
+  - [x] 5.10 Test `load()` raises `FileNotFoundError` on missing model file
+  - [x] 5.11 Test `load()` raises `FileNotFoundError` on missing config file
+  - [x] 5.12 Test plugin registration: `get_model("xgboost")` returns `XGBoostModel`
+  - [x] 5.13 Test `get_config()` returns the config instance
+  - [x] 5.14 Test `fit()` raises `ValueError` on empty DataFrame
+  - [x] 5.15 Hypothesis property test: `predict_proba` output is bounded [0, 1] for random feature inputs
+  - [x] 5.16 Test early stopping: model with `early_stopping_rounds` stops before `n_estimators` on easy data
 
-- [ ] Task 6: Run quality gates (AC: all)
-  - [ ] 6.1 `ruff check src/ tests/` passes
-  - [ ] 6.2 `mypy --strict src/ncaa_eval tests` passes
-  - [ ] 6.3 `pytest` passes with all new tests green and zero regressions
+- [x] Task 6: Run quality gates (AC: all)
+  - [x] 6.1 `ruff check src/ tests/` passes
+  - [x] 6.2 `mypy --strict src/ncaa_eval tests` passes
+  - [x] 6.3 `pytest` passes with all new tests green and zero regressions
 
 ## Dev Notes
 
@@ -284,10 +284,36 @@ From `specs/research/modeling-approaches.md` §5.5 and §6.4:
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+- XGBoost 3.x confirmed: `use_label_encoder` parameter removed — omitted from constructor as specified in Dev Notes
+- `xgboost` package provides type stubs — no `type: ignore[import-untyped]` needed (unlike pandas/sklearn)
+- Ruff auto-fixed import sorting (merged `from hypothesis import` lines)
+
 ### Completion Notes List
 
+- Implemented `XGBoostModelConfig(ModelConfig)` with all 10 hyperparameters matching §5.5/§6.4 defaults
+- Implemented `XGBoostModel(Model)` — stateless model wrapping `XGBClassifier` with `binary:logistic` objective
+- `fit()` uses `train_test_split` with `stratify=y` for early stopping validation set
+- `fit()` guards against empty DataFrame input
+- Label balance convention documented in class and method docstrings
+- `save()` uses XGBoost native UBJSON format (`model.ubj`) + Pydantic JSON config
+- `load()` checks both files exist before reading either (Story 5.3 pattern)
+- Plugin registered as `"xgboost"` via `@register_model` decorator
+- Auto-registration via `model/__init__.py` import
+- 16 unit tests covering all ACs: config, fit/predict, save/load, registration, property-based, early stopping
+- All 475 tests pass (zero regressions), ruff clean, mypy --strict clean
+
+### Change Log
+
+- 2026-02-23: Implemented XGBoostModel reference stateless model — all 6 tasks complete, 16 tests added
+
 ### File List
+
+- `src/ncaa_eval/model/xgboost_model.py` (NEW) — XGBoostModelConfig, XGBoostModel
+- `src/ncaa_eval/model/__init__.py` (MODIFIED) — added xgboost_model import for auto-registration
+- `tests/unit/test_model_xgboost.py` (NEW) — 16 unit tests
+- `_bmad-output/implementation-artifacts/5-4-implement-reference-stateless-model-xgboost.md` (MODIFIED) — story tracking
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` (MODIFIED) — status update
