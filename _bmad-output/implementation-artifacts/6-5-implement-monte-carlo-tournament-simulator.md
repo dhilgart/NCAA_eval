@@ -1,6 +1,6 @@
 # Story 6.5: Implement Monte Carlo Tournament Simulator
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -28,53 +28,53 @@ So that I can compute Expected Points and Bracket Distribution metrics for tourn
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Define bracket data structures (AC: #3)
-  - [ ] 1.1 Implement `BracketNode` dataclass (frozen) — leaf or internal node with `round_index`, `team_index`, `left`/`right` children
-  - [ ] 1.2 Implement `BracketStructure` class with `root: BracketNode`, `team_ids: tuple[int, ...]`, `team_index_map: dict[int, int]`
-  - [ ] 1.3 Implement `build_bracket(seeds: list[TourneySeed], season: int) -> BracketStructure` — constructs 64-team tree from tournament seeds using hardcoded NCAA matchup order (1v16, 8v9, 5v12, 4v13, 6v11, 3v14, 7v10, 2v15) per region, regions merge at Final Four
-  - [ ] 1.4 Implement `MatchupContext` frozen dataclass (`season: int`, `day_num: int`, `is_neutral: bool`)
-  - [ ] 1.5 Unit tests for bracket construction: correct number of leaves (64), correct depth (6 rounds), correct matchup pairing by seed
+- [x] Task 1: Define bracket data structures (AC: #3)
+  - [x] 1.1 Implement `BracketNode` dataclass (frozen) — leaf or internal node with `round_index`, `team_index`, `left`/`right` children
+  - [x] 1.2 Implement `BracketStructure` class with `root: BracketNode`, `team_ids: tuple[int, ...]`, `team_index_map: dict[int, int]`
+  - [x] 1.3 Implement `build_bracket(seeds: list[TourneySeed], season: int) -> BracketStructure` — constructs 64-team tree from tournament seeds using hardcoded NCAA matchup order (1v16, 8v9, 5v12, 4v13, 6v11, 3v14, 7v10, 2v15) per region, regions merge at Final Four
+  - [x] 1.4 Implement `MatchupContext` frozen dataclass (`season: int`, `day_num: int`, `is_neutral: bool`)
+  - [x] 1.5 Unit tests for bracket construction: correct number of leaves (64), correct depth (6 rounds), correct matchup pairing by seed
 
-- [ ] Task 2: Define probability provider protocol (AC: #1)
-  - [ ] 2.1 Implement `ProbabilityProvider` Protocol with `matchup_probability(team_a_id, team_b_id, context) -> float` and `batch_matchup_probabilities(team_a_ids, team_b_ids, context) -> npt.NDArray[np.float64]`
-  - [ ] 2.2 Implement `build_probability_matrix(provider, team_ids, context) -> npt.NDArray[np.float64]` — builds n×n matrix P where P[i,j] = P(team_i beats team_j); uses upper-triangle batch call then fills P[j,i] = 1 - P[i,j]
-  - [ ] 2.3 Implement `EloProvider(ProbabilityProvider)` — wraps a trained `EloModel` (or any `StatefulModel` with `_predict_one`)
-  - [ ] 2.4 Implement `MatrixProvider(ProbabilityProvider)` — wraps a pre-computed probability matrix (for testing and direct matrix input)
-  - [ ] 2.5 Unit tests: complementarity contract P(A,B) + P(B,A) = 1, matrix symmetry, batch vs. scalar consistency
+- [x] Task 2: Define probability provider protocol (AC: #1)
+  - [x] 2.1 Implement `ProbabilityProvider` Protocol with `matchup_probability(team_a_id, team_b_id, context) -> float` and `batch_matchup_probabilities(team_a_ids, team_b_ids, context) -> npt.NDArray[np.float64]`
+  - [x] 2.2 Implement `build_probability_matrix(provider, team_ids, context) -> npt.NDArray[np.float64]` — builds n×n matrix P where P[i,j] = P(team_i beats team_j); uses upper-triangle batch call then fills P[j,i] = 1 - P[i,j]
+  - [x] 2.3 Implement `EloProvider(ProbabilityProvider)` — wraps a trained `EloModel` (or any `StatefulModel` with `_predict_one`)
+  - [x] 2.4 Implement `MatrixProvider(ProbabilityProvider)` — wraps a pre-computed probability matrix (for testing and direct matrix input)
+  - [x] 2.5 Unit tests: complementarity contract P(A,B) + P(B,A) = 1, matrix symmetry, batch vs. scalar consistency
 
-- [ ] Task 3: Implement Phylourny analytical computation (AC: #1, #4, #5)
-  - [ ] 3.1 Implement `compute_advancement_probs(bracket, P) -> npt.NDArray[np.float64]` — post-order traversal with WPV formula `R = V ⊙ (P^T · W) + W ⊙ (P^T · V)`; returns shape (n_teams, n_rounds) matrix
-  - [ ] 3.2 Implement `compute_expected_points(adv_probs, scoring_rule) -> npt.NDArray[np.float64]` — matrix-vector multiply `adv_probs @ points_vector`; returns per-team EP, shape (n_teams,)
-  - [ ] 3.3 Unit tests: known small-bracket fixtures (4-team, 8-team) with hand-computed advancement probs; verify all columns sum correctly (round 0 sums to 32, round 5 sums to 1 for 64 teams)
-  - [ ] 3.4 Unit test: verify analytical EP matches MC EP within statistical tolerance at large N
+- [x] Task 3: Implement Phylourny analytical computation (AC: #1, #4, #5)
+  - [x] 3.1 Implement `compute_advancement_probs(bracket, P) -> npt.NDArray[np.float64]` — post-order traversal with WPV formula `R = V ⊙ (P · W) + W ⊙ (P · V)`; returns shape (n_teams, n_rounds) matrix
+  - [x] 3.2 Implement `compute_expected_points(adv_probs, scoring_rule) -> npt.NDArray[np.float64]` — matrix-vector multiply `adv_probs @ points_vector`; returns per-team EP, shape (n_teams,)
+  - [x] 3.3 Unit tests: known small-bracket fixtures (4-team, 8-team) with hand-computed advancement probs; verify all columns sum correctly (round 0 sums to 32, round 5 sums to 1 for 64 teams)
+  - [x] 3.4 Unit test: verify analytical EP matches MC EP within statistical tolerance at large N
 
-- [ ] Task 4: Implement scoring rules with plugin registry (AC: #4)
-  - [ ] 4.1 Define `ScoringRule` Protocol — `points_per_round(round_idx: int) -> float` and `name: str` property
-  - [ ] 4.2 Implement `StandardScoring` (1-2-4-8-16-32), `FibonacciScoring` (2-3-5-8-13-21), `SeedDiffBonusScoring` (base + |seed_a - seed_b| when lower seed wins)
-  - [ ] 4.3 Implement `CustomScoring(ScoringRule)` wrapping a `Callable[[int], float]`
-  - [ ] 4.4 Register built-in scoring rules via a `SCORING_REGISTRY` dict (analogous to model registry pattern)
-  - [ ] 4.5 Unit tests: verify point totals for perfect bracket, verify seed-diff bonus calculation
+- [x] Task 4: Implement scoring rules with plugin registry (AC: #4)
+  - [x] 4.1 Define `ScoringRule` Protocol — `points_per_round(round_idx: int) -> float` and `name: str` property
+  - [x] 4.2 Implement `StandardScoring` (1-2-4-8-16-32), `FibonacciScoring` (2-3-5-8-13-21), `SeedDiffBonusScoring` (base + |seed_a - seed_b| when lower seed wins)
+  - [x] 4.3 Implement `CustomScoring(ScoringRule)` wrapping a `Callable[[int], float]`
+  - [x] 4.4 Register built-in scoring rules via a `SCORING_REGISTRY` dict (analogous to model registry pattern)
+  - [x] 4.5 Unit tests: verify point totals for perfect bracket, verify seed-diff bonus calculation
 
-- [ ] Task 5: Implement `SimulationResult` data model (AC: #4)
-  - [ ] 5.1 Implement frozen `SimulationResult` dataclass with fields: `season`, `advancement_probs` (n_teams × n_rounds ndarray), `expected_points` (dict[str, ndarray]), `method` ("analytical" | "monte_carlo"), `n_simulations` (int | None), `confidence_intervals` (dict | None), `score_distribution` (dict | None)
-  - [ ] 5.2 Unit tests for dataclass construction and immutability
+- [x] Task 5: Implement `SimulationResult` data model (AC: #4)
+  - [x] 5.1 Implement frozen `SimulationResult` dataclass with fields: `season`, `advancement_probs` (n_teams × n_rounds ndarray), `expected_points` (dict[str, ndarray]), `method` ("analytical" | "monte_carlo"), `n_simulations` (int | None), `confidence_intervals` (dict | None), `score_distribution` (dict | None)
+  - [x] 5.2 Unit tests for dataclass construction and immutability
 
-- [ ] Task 6: Implement Monte Carlo simulation engine (AC: #1, #2, #5, #6)
-  - [ ] 6.1 Implement `simulate_tournament_mc(bracket, P, scoring_rules, season, n_simulations, rng) -> SimulationResult` — vectorized across all N simulations: pre-generate `randoms` array shape (n_simulations, 63), then traverse rounds sequentially but all sims in parallel
-  - [ ] 6.2 Vectorized round-by-round traversal: for each round, determine matchup pairs across all sims, look up P values via fancy indexing, compare against pre-generated randoms, update survivor arrays — no per-sim Python loop
-  - [ ] 6.3 Accumulate per-simulation scores for score_distribution output
-  - [ ] 6.4 Add progress reporting via logging for n_simulations >= 10,000
-  - [ ] 6.5 Unit tests: bracket integrity (exactly 1 champion per sim), advancement counts monotonically decrease by round, MC advancement probs converge to analytical probs at large N
+- [x] Task 6: Implement Monte Carlo simulation engine (AC: #1, #2, #5, #6)
+  - [x] 6.1 Implement `simulate_tournament_mc(bracket, P, scoring_rules, season, n_simulations, rng) -> SimulationResult` — vectorized across all N simulations: pre-generate `randoms` array shape (n_simulations, 63), then traverse rounds sequentially but all sims in parallel
+  - [x] 6.2 Vectorized round-by-round traversal: for each round, determine matchup pairs across all sims, look up P values via fancy indexing, compare against pre-generated randoms, update survivor arrays — no per-sim Python loop
+  - [x] 6.3 Accumulate per-simulation scores for score_distribution output
+  - [x] 6.4 Add progress reporting via logging for n_simulations >= 10,000
+  - [x] 6.5 Unit tests: bracket integrity (exactly 1 champion per sim), advancement counts monotonically decrease by round, MC advancement probs converge to analytical probs at large N
 
-- [ ] Task 7: Implement high-level `simulate_tournament` orchestrator (AC: #1, #2, #3, #4)
-  - [ ] 7.1 Implement `simulate_tournament(bracket, probability_provider, context, scoring_rules, method, n_simulations, rng) -> SimulationResult` — dispatches to analytical or MC path
-  - [ ] 7.2 Default method="analytical"; if method="monte_carlo", require n_simulations >= 100
-  - [ ] 7.3 Integration test: end-to-end from TourneySeed list → BracketStructure → ProbabilityProvider → SimulationResult
+- [x] Task 7: Implement high-level `simulate_tournament` orchestrator (AC: #1, #2, #3, #4)
+  - [x] 7.1 Implement `simulate_tournament(bracket, probability_provider, context, scoring_rules, method, n_simulations, rng) -> SimulationResult` — dispatches to analytical or MC path
+  - [x] 7.2 Default method="analytical"; if method="monte_carlo", require n_simulations >= 100
+  - [x] 7.3 Integration test: end-to-end from TourneySeed list → BracketStructure → ProbabilityProvider → SimulationResult
 
-- [ ] Task 8: Export public API from `evaluation/__init__.py` (AC: all)
-  - [ ] 8.1 Add new types and functions to `evaluation/__init__.py` `__all__`
-  - [ ] 8.2 Verify `mypy --strict` passes on all new code
-  - [ ] 8.3 Verify `ruff check` passes
+- [x] Task 8: Export public API from `evaluation/__init__.py` (AC: all)
+  - [x] 8.1 Add new types and functions to `evaluation/__init__.py` `__all__`
+  - [x] 8.2 Verify `mypy --strict` passes on all new code
+  - [x] 8.3 Verify `ruff check` passes
 
 ## Dev Notes
 
@@ -256,10 +256,35 @@ The Seed-Difference Bonus rule adds `|seed_a - seed_b|` as bonus points when the
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+- Fixed Phylourny formula: spike research document used `P^T` notation from the original paper, but our convention `P[i,j] = P(team_i beats team_j)` requires using `P` directly (not transposed). The paper defines `P[i,j] = P(team_j beats team_i)`, which is the transpose of our convention.
+- Fibonacci perfect bracket total: story Dev Notes stated 164 but correct value is 231 (32×2 + 16×3 + 8×5 + 4×8 + 2×13 + 1×21).
+
 ### Completion Notes List
 
+- **Task 1**: Implemented `BracketNode` (frozen dataclass with leaf/internal node discrimination), `BracketStructure` (immutable bracket with team_ids, team_index_map, seed_map), `build_bracket` (64-team tree from TourneySeed list using hardcoded NCAA matchup order), `MatchupContext` (frozen dataclass). 12 passing tests covering leaf count, depth, matchup pairing, play-in exclusion, season filtering, and immutability.
+- **Task 2**: Implemented `ProbabilityProvider` Protocol (runtime_checkable), `MatrixProvider` (wraps pre-computed matrix), `EloProvider` (wraps StatefulModel._predict_one via duck typing), `build_probability_matrix` (upper-triangle batch + complementarity fill). 7 passing tests covering complementarity, batch/scalar consistency, diagonal zeros.
+- **Task 3**: Implemented `compute_advancement_probs` (Phylourny post-order traversal with WPV formula R = V ⊙ (P·W) + W ⊙ (P·V)), `compute_expected_points` (adv_probs @ points_vector). 8 passing tests covering 4/8/64-team brackets with uniform/deterministic probabilities, column sum invariants, non-negativity, and analytical-vs-MC convergence.
+- **Task 4**: Implemented `ScoringRule` Protocol, `StandardScoring` (1-2-4-8-16-32), `FibonacciScoring` (2-3-5-8-13-21), `SeedDiffBonusScoring` (base + upset bonus), `CustomScoring` (callable wrapper), `SCORING_REGISTRY` dict. 6 passing tests.
+- **Task 5**: Implemented frozen `SimulationResult` dataclass with all specified fields. 3 passing tests for construction, immutability, and MC-specific fields.
+- **Task 6**: Implemented vectorized MC engine — pre-generates random array shape (N, 63), traverses rounds sequentially with all N sims in parallel using numpy fancy indexing and np.where. Progress logging for N >= 10,000. Score distributions populated per scoring rule. 7 passing tests including bracket integrity, monotonicity, convergence, deterministic correctness, and reproducibility.
+- **Task 7**: Implemented `simulate_tournament` orchestrator dispatching to analytical or MC path. Default method="analytical". MC requires n_simulations >= 100. 6 passing tests including full end-to-end integration from TourneySeed → BracketStructure → MatrixProvider → SimulationResult.
+- **Task 8**: Added 16 new exports to `evaluation/__init__.py` `__all__`. `mypy --strict` passes on all 72 source files. `ruff check` passes on all src/ and tests/ files.
+
+### Change Log
+
+- 2026-02-24: Implemented complete tournament simulation engine (analytical + MC) — all 8 tasks complete, 57 new tests, 654 total tests passing
+
 ### File List
+
+New files:
+- `src/ncaa_eval/evaluation/simulation.py` — main simulation module (875 lines)
+- `tests/unit/test_evaluation_simulation.py` — comprehensive unit tests (57 tests)
+
+Modified files:
+- `src/ncaa_eval/evaluation/__init__.py` — added 16 new public exports
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — status updated
+- `_bmad-output/implementation-artifacts/6-5-implement-monte-carlo-tournament-simulator.md` — story file updated
