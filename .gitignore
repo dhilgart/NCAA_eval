@@ -155,3 +155,6 @@ data/*
 
 # Claude Code CLI
 .claude/settings.local.json
+
+# Override: dashboard/lib/ is a source package, not a build artifact
+!dashboard/lib/

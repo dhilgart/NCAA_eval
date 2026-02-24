@@ -1,6 +1,6 @@
 # Story 7.2: Build Streamlit App Shell & Navigation
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -28,50 +28,50 @@ So that I can seamlessly switch between Lab and Presentation views while maintai
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `.streamlit/config.toml` for dark theme and wide layout defaults (AC: #1)
-  - [ ] 1.1 Create `.streamlit/` directory in project root
-  - [ ] 1.2 Configure `[theme]` section with project color palette (primaryColor `#28a745`, dark backgrounds)
-  - [ ] 1.3 Configure `[server]` section (runOnSave=false)
-  - [ ] 1.4 Configure `[client]` section (toolbarMode="minimal")
+- [x] Task 1: Create `.streamlit/config.toml` for dark theme and wide layout defaults (AC: #1)
+  - [x] 1.1 Create `.streamlit/` directory in project root
+  - [x] 1.2 Configure `[theme]` section with project color palette (primaryColor `#28a745`, dark backgrounds)
+  - [x] 1.3 Configure `[server]` section (runOnSave=false)
+  - [x] 1.4 Configure `[client]` section (toolbarMode="minimal")
 
-- [ ] Task 2: Implement `dashboard/app.py` — the app entrypoint and navigation router (AC: #1, #2, #3, #4)
-  - [ ] 2.1 Call `st.set_page_config(page_title="NCAA Eval", page_icon=":material/sports_basketball:", layout="wide", initial_sidebar_state="expanded")` as the FIRST Streamlit command
-  - [ ] 2.2 Define page objects using `st.Page` for each section: Home (default), Lab pages (Leaderboard placeholder, Model Deep Dive placeholder), Presentation pages (Bracket Visualizer placeholder, Pool Scorer placeholder)
-  - [ ] 2.3 Configure `st.navigation()` with a dict to group pages into "Lab" and "Presentation" sections in the sidebar
-  - [ ] 2.4 Call `pg.run()` to execute the selected page
-  - [ ] 2.5 Render global filter widgets in `st.sidebar` BEFORE `pg.run()` (so filters appear on every page): Tournament Year selectbox, Model Run selectbox, Scoring Format selectbox
-  - [ ] 2.6 Initialize and read/write all filter values via `st.session_state` for cross-page persistence
+- [x] Task 2: Implement `dashboard/app.py` — the app entrypoint and navigation router (AC: #1, #2, #3, #4)
+  - [x] 2.1 Call `st.set_page_config(page_title="NCAA Eval", page_icon=":material/sports_basketball:", layout="wide", initial_sidebar_state="expanded")` as the FIRST Streamlit command
+  - [x] 2.2 Define page objects using `st.Page` for each section: Home (default), Lab pages (Leaderboard placeholder, Model Deep Dive placeholder), Presentation pages (Bracket Visualizer placeholder, Pool Scorer placeholder)
+  - [x] 2.3 Configure `st.navigation()` with a dict to group pages into "Lab" and "Presentation" sections in the sidebar
+  - [x] 2.4 Call `pg.run()` to execute the selected page
+  - [x] 2.5 Render global filter widgets in `st.sidebar` BEFORE `pg.run()` (so filters appear on every page): Tournament Year selectbox, Model Run selectbox, Scoring Format selectbox
+  - [x] 2.6 Initialize and read/write all filter values via `st.session_state` for cross-page persistence
 
-- [ ] Task 3: Implement `dashboard/lib/filters.py` — shared data-loading and filter logic (AC: #3, #5, #6)
-  - [ ] 3.1 Create `dashboard/lib/` package with `__init__.py`
-  - [ ] 3.2 Implement `load_available_years() -> list[int]` using `@st.cache_data` — calls `ParquetRepository.get_seasons()` and extracts years
-  - [ ] 3.3 Implement `load_available_runs() -> list[ModelRun]` using `@st.cache_data` — calls `RunStore.list_runs()`
-  - [ ] 3.4 Implement `load_available_scorings() -> list[str]` using `@st.cache_data` — calls `list_scorings()`
-  - [ ] 3.5 Implement `get_data_dir() -> Path` helper that resolves the project's `data/` directory for RunStore/ParquetRepository construction
+- [x] Task 3: Implement `dashboard/lib/filters.py` — shared data-loading and filter logic (AC: #3, #5, #6)
+  - [x] 3.1 Create `dashboard/lib/` package with `__init__.py`
+  - [x] 3.2 Implement `load_available_years() -> list[int]` using `@st.cache_data` — calls `ParquetRepository.get_seasons()` and extracts years
+  - [x] 3.3 Implement `load_available_runs() -> list[ModelRun]` using `@st.cache_data` — calls `RunStore.list_runs()`
+  - [x] 3.4 Implement `load_available_scorings() -> list[str]` using `@st.cache_data` — calls `list_scorings()`
+  - [x] 3.5 Implement `get_data_dir() -> Path` helper that resolves the project's `data/` directory for RunStore/ParquetRepository construction
 
-- [ ] Task 4: Implement Home page callable (AC: #1, #2)
-  - [ ] 4.1 Create `dashboard/pages/home.py` with a welcome page showing project title, brief description, and navigation hints
-  - [ ] 4.2 Display placeholder summary cards showing available model runs count, available seasons, etc. using `st.metric`
+- [x] Task 4: Implement Home page callable (AC: #1, #2)
+  - [x] 4.1 Create `dashboard/pages/home.py` with a welcome page showing project title, brief description, and navigation hints
+  - [x] 4.2 Display placeholder summary cards showing available model runs count, available seasons, etc. using `st.metric`
 
-- [ ] Task 5: Convert existing page stubs to work with `st.navigation` pattern (AC: #2)
-  - [ ] 5.1 Rewrite `dashboard/pages/1_Lab.py` as a proper page function or script that reads global filters from `st.session_state` and displays a placeholder ("Backtest Leaderboard — coming in Story 7.3")
-  - [ ] 5.2 Rewrite `dashboard/pages/2_Presentation.py` as a proper page function or script that reads global filters from `st.session_state` and displays a placeholder ("Bracket Visualizer — coming in Story 7.5")
-  - [ ] 5.3 Add additional placeholder page files for remaining Epic 7 pages: `3_Model_Deep_Dive.py` (Story 7.4), `4_Pool_Scorer.py` (Story 7.6)
+- [x] Task 5: Convert existing page stubs to work with `st.navigation` pattern (AC: #2)
+  - [x] 5.1 Rewrite `dashboard/pages/1_Lab.py` as a proper page function or script that reads global filters from `st.session_state` and displays a placeholder ("Backtest Leaderboard — coming in Story 7.3")
+  - [x] 5.2 Rewrite `dashboard/pages/2_Presentation.py` as a proper page function or script that reads global filters from `st.session_state` and displays a placeholder ("Bracket Visualizer — coming in Story 7.5")
+  - [x] 5.3 Add additional placeholder page files for remaining Epic 7 pages: `3_Model_Deep_Dive.py` (Story 7.4), `4_Pool_Scorer.py` (Story 7.6)
 
-- [ ] Task 6: Apply monospace font styling (AC: #7)
-  - [ ] 6.1 Add custom CSS via `st.markdown(unsafe_allow_html=True)` in `app.py` to apply monospace font (`IBM Plex Mono`, fallback to system monospace) to `st.dataframe` and `st.table` elements
-  - [ ] 6.2 Define shared CSS string in `dashboard/lib/styles.py` for reuse across pages
+- [x] Task 6: Apply monospace font styling (AC: #7)
+  - [x] 6.1 Add custom CSS via `st.markdown(unsafe_allow_html=True)` in `app.py` to apply monospace font (`IBM Plex Mono`, fallback to system monospace) to `st.dataframe` and `st.table` elements
+  - [x] 6.2 Define shared CSS string in `dashboard/lib/styles.py` for reuse across pages
 
-- [ ] Task 7: Write tests (AC: all)
-  - [ ] 7.1 Create `tests/unit/test_dashboard_filters.py` — test data-loading functions with mocked RunStore/ParquetRepository (return type validation, caching behavior)
-  - [ ] 7.2 Create `tests/unit/test_dashboard_app.py` — smoke test that `app.py` imports without error, page modules are importable
-  - [ ] 7.3 Test that session state keys are initialized correctly
-  - [ ] 7.4 Test filter loader functions return correct types
+- [x] Task 7: Write tests (AC: all)
+  - [x] 7.1 Create `tests/unit/test_dashboard_filters.py` — test data-loading functions with mocked RunStore/ParquetRepository (return type validation, caching behavior)
+  - [x] 7.2 Create `tests/unit/test_dashboard_app.py` — smoke test that `app.py` imports without error, page modules are importable
+  - [x] 7.3 Test that session state keys are initialized correctly
+  - [x] 7.4 Test filter loader functions return correct types
 
-- [ ] Task 8: Verify quality gates (AC: all)
-  - [ ] 8.1 `mypy --strict src/ncaa_eval tests` (dashboard/ is NOT under mypy --strict — it's a Streamlit app, not library code; but run `mypy dashboard/` non-strict to catch obvious errors)
-  - [ ] 8.2 `ruff check .`
-  - [ ] 8.3 Full test suite passes
+- [x] Task 8: Verify quality gates (AC: all)
+  - [x] 8.1 `mypy --strict src/ncaa_eval tests` (dashboard/ is NOT under mypy --strict — it's a Streamlit app, not library code; but run `mypy dashboard/` non-strict to catch obvious errors)
+  - [x] 8.2 `ruff check .`
+  - [x] 8.3 Full test suite passes
 
 ## Dev Notes
 
@@ -309,10 +309,44 @@ dashboard/
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
 ### Completion Notes List
 
+- Implemented complete Streamlit multipage app shell using modern `st.navigation()` + `st.Page()` API (Streamlit 1.54.0)
+- Dark mode enforced by `.streamlit/config.toml` with project green (`#28a745`) primary color
+- Global filters (Tournament Year, Model Run, Scoring Format) persist across page navigation via `st.session_state` with `key=` binding
+- All data loading goes through `ncaa_eval` public APIs: `ParquetRepository.get_seasons()`, `RunStore.list_runs()`, `list_scorings()`
+- `@st.cache_data` with 5-min TTL on all data-loading functions for sub-500ms interaction response
+- Edge cases handled: empty data directory shows "run sync.py" hint, empty runs shows "No model runs available"
+- Monospace font CSS applied globally via config.toml `font = "monospace"` plus supplemental CSS for data tables (IBM Plex Mono with fallbacks)
+- Added `dashboard/__init__.py` for mypy module resolution (not in original plan, but required for `mypy dashboard/` to work)
+- 21 new tests: 9 filter tests (mocked dependencies, return types, cache unwrapping), 12 smoke tests (imports, signatures, CSS, session state)
+- All quality gates pass: `mypy --strict` (src+tests), `mypy dashboard/` (non-strict), `ruff check .`, 751 tests passed + 1 skipped
+
+### Change Log
+
+- 2026-02-24: Implemented Story 7.2 — Streamlit app shell with navigation, global filters, dark theme, and monospace fonts
+
 ### File List
+
+**New files:**
+- `.streamlit/config.toml`
+- `dashboard/__init__.py`
+- `dashboard/lib/__init__.py`
+- `dashboard/lib/filters.py`
+- `dashboard/lib/styles.py`
+- `dashboard/pages/home.py`
+- `dashboard/pages/3_Model_Deep_Dive.py`
+- `dashboard/pages/4_Pool_Scorer.py`
+- `tests/unit/test_dashboard_filters.py`
+- `tests/unit/test_dashboard_app.py`
+
+**Modified files:**
+- `dashboard/app.py`
+- `dashboard/pages/1_Lab.py`
+- `dashboard/pages/2_Presentation.py`
+- `_bmad-output/implementation-artifacts/7-2-build-streamlit-app-shell-navigation.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`
