@@ -1,6 +1,6 @@
 # Story 7.3: Build Lab Page — Backtest Leaderboard
 
-Status: ready-for-dev
+Status: in-progress
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -28,11 +28,11 @@ So that I can quickly identify the best-performing models and spot trends.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Extend `RunStore` to persist and load backtest metric summaries (AC: #1, #7)
-  - [ ] 1.1 Add `save_metrics(run_id: str, summary: pd.DataFrame) -> None` to `RunStore` — writes `summary.parquet` under `runs/<run_id>/`
-  - [ ] 1.2 Add `load_metrics(run_id: str) -> pd.DataFrame | None` to `RunStore` — reads `summary.parquet` if it exists, returns `None` for legacy runs without metrics
-  - [ ] 1.3 Add `load_all_summaries() -> pd.DataFrame` to `RunStore` — iterates all runs, loads available metrics, and concatenates into a single DataFrame with `run_id` column; skips runs without `summary.parquet`
-  - [ ] 1.4 Write unit tests for `save_metrics`/`load_metrics`/`load_all_summaries` round-trip, missing-file handling, and empty-store edge case
+- [x] Task 1: Extend `RunStore` to persist and load backtest metric summaries (AC: #1, #7)
+  - [x] 1.1 Add `save_metrics(run_id: str, summary: pd.DataFrame) -> None` to `RunStore` — writes `summary.parquet` under `runs/<run_id>/`
+  - [x] 1.2 Add `load_metrics(run_id: str) -> pd.DataFrame | None` to `RunStore` — reads `summary.parquet` if it exists, returns `None` for legacy runs without metrics
+  - [x] 1.3 Add `load_all_summaries() -> pd.DataFrame` to `RunStore` — iterates all runs, loads available metrics, and concatenates into a single DataFrame with `run_id` column; skips runs without `summary.parquet`
+  - [x] 1.4 Write unit tests for `save_metrics`/`load_metrics`/`load_all_summaries` round-trip, missing-file handling, and empty-store edge case
 
 - [ ] Task 2: Wire `run_training()` CLI to persist backtest metrics after training (AC: #1)
   - [ ] 2.1 In `src/ncaa_eval/model/cli.py` `run_training()`, after `run_backtest()` completes, call `store.save_metrics(run.run_id, result.summary)` to persist the backtest summary alongside the run
@@ -323,10 +323,15 @@ data/
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
 ### Completion Notes List
 
+- Task 1: Added `save_metrics()`, `load_metrics()`, `load_all_summaries()` to `RunStore` in tracking.py. 8 unit tests all pass covering round-trip, missing-file, empty-store, mixed legacy/new runs.
+
 ### File List
+
+- src/ncaa_eval/model/tracking.py (modified — added 3 new methods)
+- tests/unit/test_run_store_metrics.py (new — 8 unit tests)
