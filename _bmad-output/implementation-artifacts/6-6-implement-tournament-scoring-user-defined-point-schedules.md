@@ -1,6 +1,6 @@
 # Story 6.6: Implement Tournament Scoring with User-Defined Point Schedules
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -62,11 +62,11 @@ So that I can evaluate model value under different pool scoring rules and optimi
   - [x] 6.4 Update `simulate_tournament_mc` to store `sim_winners` (shape `(n_simulations, 63)`) in `SimulationResult` for downstream bracket-vs-sim scoring
   - [x] 6.5 Unit tests: deterministic matrix → chosen bracket matches all sims → max score; verify score distribution has genuine variance when bracket picks differ from sim outcomes
 
-- [ ] Task 7: Export new public API and verify quality (AC: all)
-  - [ ] 7.1 Add new types and functions to `evaluation/__init__.py` `__all__`: `BracketDistribution`, `MostLikelyBracket`, `DictScoring`, `register_scoring`, `get_scoring`, `list_scorings`, `ScoringNotFoundError`, `compute_expected_points_seed_diff`, `compute_most_likely_bracket`, `compute_bracket_distribution`, `score_bracket_against_sims`, `scoring_from_config`
-  - [ ] 7.2 Verify `mypy --strict` passes on all source files
-  - [ ] 7.3 Verify `ruff check` passes
-  - [ ] 7.4 Run full test suite — all existing 658+ tests plus new tests pass
+- [x] Task 7: Export new public API and verify quality (AC: all)
+  - [x] 7.1 Add new types and functions to `evaluation/__init__.py` `__all__`: `BracketDistribution`, `MostLikelyBracket`, `DictScoring`, `register_scoring`, `get_scoring`, `list_scorings`, `ScoringNotFoundError`, `compute_expected_points_seed_diff`, `compute_most_likely_bracket`, `compute_bracket_distribution`, `score_bracket_against_sims`, `scoring_from_config`
+  - [x] 7.2 Verify `mypy --strict` passes on all source files
+  - [x] 7.3 Verify `ruff check` passes (notebook-only issues pre-existing)
+  - [x] 7.4 Run full test suite — 690 passed, 1 skipped
 
 ## Dev Notes
 

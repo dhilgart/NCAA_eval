@@ -96,7 +96,7 @@ development_status:
   6-3-implement-parallel-cross-validation-execution: done
   6-4-research-tournament-simulation-confidence: done
   6-5-implement-monte-carlo-tournament-simulator: done
-  6-6-implement-tournament-scoring-user-defined-point-schedules: in-progress
+  6-6-implement-tournament-scoring-user-defined-point-schedules: review
   epic-6-retrospective: optional
 
   # Epic 7: Lab & Presentation Dashboard
