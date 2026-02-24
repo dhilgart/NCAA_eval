@@ -104,7 +104,7 @@ development_status:
   7-1-build-plotly-adapters-jupyter-lab-visualization: done
   7-2-build-streamlit-app-shell-navigation: done
   7-3-build-lab-page-backtest-leaderboard: done
-  7-4-build-lab-page-model-deep-dive-reliability-diagrams: ready-for-dev
+  7-4-build-lab-page-model-deep-dive-reliability-diagrams: review
   7-5-build-presentation-page-bracket-visualizer: backlog
   7-6-build-presentation-page-pool-scorer-point-outcome-analysis: backlog
   7-7-research-game-theory-slider-mechanism: backlog

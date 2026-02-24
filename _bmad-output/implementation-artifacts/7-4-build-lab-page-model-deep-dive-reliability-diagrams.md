@@ -1,6 +1,6 @@
 # Story 7.4: Build Lab Page — Model Deep Dive & Reliability Diagrams
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -26,51 +26,51 @@ So that I can understand where a model succeeds and fails beyond aggregate metri
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Extend `RunStore` to persist fold-level predictions and actuals at training time (AC: #1, #2, #3)
-  - [ ] 1.1 Add `save_fold_predictions(run_id: str, fold_results: Sequence[FoldResult]) -> None` to `RunStore` — writes a `fold_predictions.parquet` under `runs/<run_id>/` containing columns `[year, game_index, pred_win_prob, team_a_won]`; concatenates predictions+actuals from each `FoldResult` with the `year` column for per-fold identification
-  - [ ] 1.2 Add `load_fold_predictions(run_id: str) -> pd.DataFrame | None` to `RunStore` — reads `fold_predictions.parquet` if exists, returns `None` for legacy runs
-  - [ ] 1.3 Write unit tests for `save_fold_predictions` / `load_fold_predictions` round-trip, missing-file handling, and legacy-run behavior (extend `tests/unit/test_run_store_metrics.py`)
+- [x] Task 1: Extend `RunStore` to persist fold-level predictions and actuals at training time (AC: #1, #2, #3)
+  - [x] 1.1 Add `save_fold_predictions(run_id: str, fold_preds: pd.DataFrame) -> None` to `RunStore` — writes a `fold_predictions.parquet` under `runs/<run_id>/` containing columns `[year, game_id, team_a_id, team_b_id, pred_win_prob, team_a_won]`
+  - [x] 1.2 Add `load_fold_predictions(run_id: str) -> pd.DataFrame | None` to `RunStore` — reads `fold_predictions.parquet` if exists, returns `None` for legacy runs
+  - [x] 1.3 Write unit tests for `save_fold_predictions` / `load_fold_predictions` round-trip, missing-file handling, and legacy-run behavior (extend `tests/unit/test_run_store_metrics.py`)
 
-- [ ] Task 2: Wire `run_training()` to persist fold predictions after backtest (AC: #1)
-  - [ ] 2.1 In `src/ncaa_eval/cli/train.py` `run_training()`, after `store.save_metrics(...)`, call `store.save_fold_predictions(run.run_id, result.fold_results)` to persist per-fold y_true/y_prob alongside the run
-  - [ ] 2.2 Verify the save call is inside the `if len(seasons) >= 2:` guard (same scope as `save_metrics`)
+- [x] Task 2: Wire `run_training()` to persist fold predictions after backtest (AC: #1)
+  - [x] 2.1 In `src/ncaa_eval/cli/train.py` `run_training()`, after `store.save_metrics(...)`, build fold predictions DataFrame from FoldResult objects and call `store.save_fold_predictions()` to persist per-fold y_true/y_prob alongside the run
+  - [x] 2.2 Verify the save call is inside the `if len(seasons) >= 2:` guard (same scope as `save_metrics`)
 
-- [ ] Task 3: Extend `RunStore` to persist trained model artifacts (AC: #4)
-  - [ ] 3.1 Add `save_model(run_id: str, model: Model) -> None` to `RunStore` — calls `model.save(run_dir / "model")` which creates `model/model.ubj` (XGBoost) or `model/model.json` (Elo) plus config
-  - [ ] 3.2 Add `load_model(run_id: str) -> Model | None` to `RunStore` — reads `run.json` for `model_type`, looks up the model class from the plugin registry via `get_model(model_type)`, calls `ModelClass.load(run_dir / "model")`; returns `None` if `model/` dir does not exist (legacy run)
-  - [ ] 3.3 In `src/ncaa_eval/cli/train.py` `run_training()`, after the existing save calls, add `store.save_model(run.run_id, model)` to persist the trained model
-  - [ ] 3.4 Write unit tests for `save_model` / `load_model` round-trip and legacy-run behavior
+- [x] Task 3: Extend `RunStore` to persist trained model artifacts (AC: #4)
+  - [x] 3.1 Add `save_model(run_id, model, feature_names=None)` to `RunStore`
+  - [x] 3.2 Add `load_model(run_id)` / `load_feature_names(run_id)` to `RunStore`
+  - [x] 3.3 Wire `store.save_model(run.run_id, model, feature_names=feat_cols)` in `run_training()`
+  - [x] 3.4 Write unit tests for save/load round-trip and legacy-run behavior
 
-- [ ] Task 4: Add deep-dive data-loading functions to `dashboard/lib/filters.py` (AC: #1, #3, #4, #7)
-  - [ ] 4.1 Implement `load_fold_predictions(data_dir: str, run_id: str) -> list[dict[str, object]]` decorated with `@st.cache_data(ttl=300)` — calls `RunStore(Path(data_dir)).load_fold_predictions(run_id)`, returns list of dicts (cache-safe); returns `[]` on missing dir or `OSError`
-  - [ ] 4.2 Implement `load_run_predictions(data_dir: str, run_id: str) -> list[dict[str, object]]` decorated with `@st.cache_data(ttl=300)` — calls `RunStore(Path(data_dir)).load_predictions(run_id)`, returns list of dicts; returns `[]` on `OSError`
-  - [ ] 4.3 Implement `load_feature_importances(data_dir: str, run_id: str) -> list[dict[str, object]]` decorated with `@st.cache_data(ttl=300)` — calls `RunStore(Path(data_dir)).load_model(run_id)`, extracts `model._clf.feature_importances_` if it's an XGBoost model (check `model_type == "xgboost"`), returns list of `{"feature": name, "importance": value}` dicts sorted descending; returns `[]` for Elo/LogReg models or if model not persisted. Catches `OSError`.
-  - [ ] 4.4 Write unit tests for all three new cache functions (mocked `RunStore`)
+- [x] Task 4: Add deep-dive data-loading functions to `dashboard/lib/filters.py` (AC: #1, #3, #4, #7)
+  - [x] 4.1 Implement `load_fold_predictions(data_dir, run_id)` with `@st.cache_data(ttl=300)`
+  - [x] 4.2 Skipped — `load_run_predictions` not needed; fold predictions are sufficient for reliability diagrams
+  - [x] 4.3 Implement `load_feature_importances(data_dir, run_id)` with `@st.cache_data(ttl=300)`
+  - [x] 4.4 Write unit tests for both new cache functions (mocked `RunStore`)
 
-- [ ] Task 5: Implement the Model Deep Dive page in `dashboard/pages/3_Model_Deep_Dive.py` (AC: #1–#6)
-  - [ ] 5.1 Wrap all page logic in a `_render_deep_dive() -> None` function (follows Story 7.3 pattern for testable imports)
-  - [ ] 5.2 Read `st.session_state.get("selected_run_id")` — if `None`, display `st.info("Select a model run from the Leaderboard to view diagnostics.")` with a "Go to Leaderboard" button via `st.page_link("pages/1_Lab.py")`
-  - [ ] 5.3 Render breadcrumb navigation: `st.caption("Home > Lab > {model_type}-{run_id[:8]}")` using `ModelRun` metadata from `load_available_runs()`
-  - [ ] 5.4 Load fold predictions via `load_fold_predictions(...)` — if empty (legacy run), display `st.warning("No fold predictions available. Re-run training to generate diagnostic data.")`
-  - [ ] 5.5 **Reliability Diagram section:** Use year selector (`st.selectbox`) to choose a specific fold year or "All Years (Aggregate)"; filter fold predictions by year (or concatenate all); call `plot_reliability_diagram(y_true, y_prob, title=...)` from `evaluation.plotting`; render via `st.plotly_chart(fig, use_container_width=True)`
-  - [ ] 5.6 **Metric Summary section:** Load metrics via `load_leaderboard_data(...)` filtered to this run_id; display per-year metrics as a styled `st.dataframe` with gradient formatting (reuse Story 7.3 gradient pattern)
-  - [ ] 5.7 **Metric Explorer section:** Add `st.selectbox` for metric drill-down dimension (Year already covered; add seed matchup and round if data available); use fold predictions joined against game data to compute metrics per sub-group; display results as a styled table or bar chart
-  - [ ] 5.8 **Feature Importance section:** Call `load_feature_importances(...)` — if non-empty, render a horizontal bar chart via Plotly (`go.Bar(orientation="h")`) with `COLOR_GREEN` bars; if empty (Elo model or legacy run), display `st.info("Feature importance is not available for this model type.")`
-  - [ ] 5.9 **"Back to Leaderboard" navigation:** Add a `st.page_link("pages/1_Lab.py", label="Back to Leaderboard")` at the top of the page next to breadcrumbs
+- [x] Task 5: Implement the Model Deep Dive page in `dashboard/pages/3_Model_Deep_Dive.py` (AC: #1–#6)
+  - [x] 5.1 Wrap all page logic in `_render_deep_dive()` with helper functions `_render_reliability_section()`, `_render_metric_summary()`, `_render_feature_importance()`
+  - [x] 5.2 No-run-selected guard: `st.info` + `st.page_link` to Leaderboard
+  - [x] 5.3 Breadcrumb navigation: `st.caption("Home > Lab > {model_type}-{run_id[:8]}")`
+  - [x] 5.4 Legacy run handling: `st.warning` for missing fold predictions
+  - [x] 5.5 Reliability diagram with year selector and `plot_reliability_diagram()`
+  - [x] 5.6 Per-year metric summary table with gradient styling
+  - [x] 5.7 Metric Explorer: year drill-down via fold year selector (seed/round drill-down deferred per Dev Notes scope decision)
+  - [x] 5.8 Feature importance horizontal bar chart (XGBoost) / info message (Elo)
+  - [x] 5.9 Back to Leaderboard navigation at top of page
 
-- [ ] Task 6: Write tests for the Model Deep Dive page (AC: all)
-  - [ ] 6.1 Smoke test: `importlib.import_module("dashboard.pages.3_Model_Deep_Dive")` succeeds (existing test in `test_dashboard_app.py` should still pass)
-  - [ ] 6.2 Test `_render_deep_dive()` with no `selected_run_id` — verify `st.info` is called
-  - [ ] 6.3 Test `_render_deep_dive()` with valid `selected_run_id` and fold predictions — verify `st.plotly_chart` is called
-  - [ ] 6.4 Test `_render_deep_dive()` with legacy run (empty fold predictions) — verify `st.warning` is called
-  - [ ] 6.5 Test feature importance rendering for XGBoost run vs. Elo run
-  - [ ] 6.6 Use `patch.object(module, ...)` pattern — NOT dotted-path `patch()` (numeric-prefixed filename)
+- [x] Task 6: Write tests for the Model Deep Dive page (AC: all)
+  - [x] 6.1 Smoke test: existing `test_dashboard_app.py` import test passes
+  - [x] 6.2 Test `_render_deep_dive()` with no `selected_run_id` — st.info + st.page_link called
+  - [x] 6.3 Test with valid run and fold predictions — st.plotly_chart called
+  - [x] 6.4 Test legacy run (empty fold predictions) — st.warning called
+  - [x] 6.5 Test feature importance: XGBoost renders chart, Elo shows info message
+  - [x] 6.6 All tests use `patch.object(module, ...)` pattern
 
-- [ ] Task 7: Verify quality gates (AC: all)
-  - [ ] 7.1 `mypy --strict src/ncaa_eval tests` passes
-  - [ ] 7.2 `mypy dashboard/` passes
-  - [ ] 7.3 `ruff check src/ tests/ dashboard/` passes
-  - [ ] 7.4 Full test suite passes (all existing + new tests)
+- [x] Task 7: Verify quality gates (AC: all)
+  - [x] 7.1 `mypy --strict src/ncaa_eval tests` passes — 79 source files, no issues
+  - [x] 7.2 `mypy dashboard/` passes — 11 source files, no issues
+  - [x] 7.3 `ruff check src/ tests/ dashboard/` passes — all checks passed
+  - [x] 7.4 Full test suite passes — 807 passed, 1 skipped
 
 ## Dev Notes
 
@@ -369,10 +369,33 @@ fig.update_layout(
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
 ### Completion Notes List
 
 ### File List
+
+**Modified:**
+- `src/ncaa_eval/model/tracking.py` — Added `save_fold_predictions`, `load_fold_predictions`, `save_model`, `load_model`, `load_feature_names` to RunStore
+- `src/ncaa_eval/evaluation/backtest.py` — Extended `FoldResult` with `test_game_ids`, `test_team_a_ids`, `test_team_b_ids` fields; updated `_evaluate_fold()` to populate them
+- `src/ncaa_eval/cli/train.py` — Added `_build_fold_predictions()` helper; wired fold prediction and model persistence into `run_training()`
+- `dashboard/lib/filters.py` — Added `load_fold_predictions()` and `load_feature_importances()` cached loaders
+- `dashboard/pages/3_Model_Deep_Dive.py` — Full rewrite from placeholder to diagnostic page with reliability diagram, metric summary, feature importance, hyperparameters
+- `tests/unit/test_run_store_metrics.py` — Added 12 tests for fold predictions and model persistence
+- `tests/unit/test_dashboard_filters.py` — Added 8 tests for new data loader functions
+
+**New:**
+- `tests/unit/test_deep_dive_page.py` — 6 tests for Model Deep Dive page rendering logic
+
+### Change Log
+
+| Commit | Message |
+|:---|:---|
+| `8344868` | feat(tracking): add fold predictions persistence to RunStore |
+| `648fcc1` | feat(train): wire fold predictions persistence into training pipeline |
+| `2d3d728` | feat(tracking): add model persistence to RunStore |
+| `69583d1` | feat(dashboard): add fold predictions and feature importance loaders |
+| `8500265` | feat(dashboard): implement Model Deep Dive page |
+| `f75d8ed` | test(dashboard): add Model Deep Dive page tests |
