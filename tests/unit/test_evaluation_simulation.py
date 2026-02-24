@@ -33,6 +33,7 @@ from ncaa_eval.evaluation.simulation import (
     build_probability_matrix,
     compute_advancement_probs,
     compute_expected_points,
+    compute_expected_points_seed_diff,
     get_scoring,
     list_scorings,
     register_scoring,
@@ -497,6 +498,109 @@ class TestComputeExpectedPoints:
         # R0: 32*1=32, R1: 16*2=32, R2: 8*4=32, R3: 4*8=32, R4: 2*16=32, R5: 1*32=32
         total = sum((32 // (2**r)) * rule.points_per_round(r) for r in range(6))
         assert total == 192
+
+
+class TestComputeExpectedPointsSeedDiff:
+    """Tests for seed-diff bonus EP computation (Task 2)."""
+
+    def test_identical_seeds_equals_standard(self) -> None:
+        """When all seeds are the same, seed-diff bonus is always 0.
+
+        So seed-diff EP should equal standard EP.
+        """
+        bracket = _make_small_bracket(4)
+        P = _make_uniform_matrix(4)
+        adv = compute_advancement_probs(bracket, P)
+        # All teams have the same seed — no upset bonus possible
+        seed_map = {0: 1, 1: 1, 2: 1, 3: 1}
+        ep_seed = compute_expected_points_seed_diff(adv, bracket, P, seed_map)
+        ep_std = compute_expected_points(adv, StandardScoring())
+        np.testing.assert_allclose(ep_seed, ep_std, atol=1e-10)
+
+    def test_known_4team_fixture(self) -> None:
+        """4-team deterministic bracket with known seed-diff bonuses.
+
+        Teams: 0(seed=1), 1(seed=16), 2(seed=8), 3(seed=9)
+        Deterministic: lower-index always wins.
+        R0: 0 beats 1 (no upset, no bonus), 2 beats 3 (no upset since seed 8<9)
+        R1: 0 beats 2 (no upset, no bonus)
+        Standard EP for team 0: 1+2=3 (wins both rounds)
+        Seed-diff bonus for team 0: 0 (always favored)
+        """
+        bracket = _make_small_bracket(4)
+        P = _make_deterministic_matrix(4)
+        adv = compute_advancement_probs(bracket, P)
+        seed_map = {0: 1, 1: 16, 2: 8, 3: 9}
+        ep_seed = compute_expected_points_seed_diff(adv, bracket, P, seed_map)
+        # Team 0 always beats everyone, seed 1 = lowest (favored), no upset bonus
+        # Standard EP = 3.0, no bonus EP → should still be 3.0
+        assert ep_seed[0] == pytest.approx(3.0)
+        # Team 1 (seed 16) always loses R0 → EP = 0
+        assert ep_seed[1] == pytest.approx(0.0)
+
+    def test_upset_adds_bonus(self) -> None:
+        """When the higher-seeded team wins, seed-diff bonus is added.
+
+        4-team bracket, team 1 (seed=16) always beats team 0 (seed=1).
+        Deterministic matrix: lower-index always wins (P[i,j]=1 when i<j).
+        P_mod swaps only (0,1) pair so team 1 beats team 0.
+        But P_mod[1,2]=1 (team 1 still beats team 2 in R1 since 1<2).
+        So team 1 wins R0 and R1 → EP_std = 1+2 = 3.
+        Seed-diff bonus: R0 upset of seed 16 over seed 1 → bonus 15.
+        R1: team 1(seed=16) beats team 2(seed=8) → bonus |16-8|=8.
+        EP_seed = 3 + 15 + 8 = 26.
+        """
+        bracket = _make_small_bracket(4)
+        P = _make_deterministic_matrix(4)
+        P_mod = P.copy()
+        P_mod[0, 1] = 0.0
+        P_mod[1, 0] = 1.0
+        adv = compute_advancement_probs(bracket, P_mod)
+        seed_map = {0: 1, 1: 16, 2: 8, 3: 9}
+        ep_seed = compute_expected_points_seed_diff(adv, bracket, P_mod, seed_map)
+        ep_std = compute_expected_points(adv, StandardScoring())
+        # Team 1 wins both rounds (R0: beats team 0, R1: beats team 2)
+        assert ep_std[1] == pytest.approx(3.0)
+        # Seed-diff bonus: R0 upset (16 vs 1) = 15, R1 upset (16 vs 8) = 8
+        assert ep_seed[1] == pytest.approx(3.0 + 15.0 + 8.0)
+
+    def test_converges_with_mc(self) -> None:
+        """Seed-diff analytical EP converges with MC EP at large N."""
+        bracket = _make_small_bracket(8)
+        n = 8
+        rng_matrix = np.random.default_rng(456)
+        raw = rng_matrix.random((n, n))
+        P = raw / (raw + raw.T)
+        np.fill_diagonal(P, 0.0)
+        adv = compute_advancement_probs(bracket, P)
+        seed_map = {i: i + 1 for i in range(n)}
+
+        ep_analytical = compute_expected_points_seed_diff(adv, bracket, P, seed_map)
+
+        # MC approximation: run many sims, for each sim compute seed-diff score
+        rng = np.random.default_rng(42)
+        n_sims = 100_000
+        ep_mc = np.zeros(n, dtype=np.float64)
+        base_rule = SeedDiffBonusScoring(seed_map)
+        leaves = list(range(n))
+        for _ in range(n_sims):
+            survivors = list(leaves)
+            for r in range(int(np.log2(n))):
+                next_round = []
+                for g in range(0, len(survivors), 2):
+                    a, b = survivors[g], survivors[g + 1]
+                    if rng.random() < P[a, b]:
+                        winner, loser = a, b
+                    else:
+                        winner, loser = b, a
+                    next_round.append(winner)
+                    pts = base_rule.points_per_round(r)
+                    bonus = base_rule.seed_diff_bonus(seed_map[winner], seed_map[loser])
+                    ep_mc[winner] += pts + bonus
+                survivors = next_round
+        ep_mc /= n_sims
+
+        np.testing.assert_allclose(ep_analytical, ep_mc, atol=0.15)
 
 
 class TestAnalyticalMatchesMC:

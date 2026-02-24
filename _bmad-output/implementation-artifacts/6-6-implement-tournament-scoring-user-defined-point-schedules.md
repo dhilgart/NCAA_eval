@@ -32,11 +32,11 @@ So that I can evaluate model value under different pool scoring rules and optimi
   - [x] 1.3 Register all built-in rules (`StandardScoring`, `FibonacciScoring`, `SeedDiffBonusScoring`) via the decorator
   - [x] 1.4 Unit tests: duplicate registration raises `ValueError`, unknown name raises `ScoringNotFoundError`, `list_scorings` returns sorted names
 
-- [ ] Task 2: Implement seed-aware Expected Points computation (AC: #1, #3)
-  - [ ] 2.1 Implement `compute_expected_points_seed_diff(adv_probs, bracket, P, seed_map) -> ndarray` — per-team EP that includes seed-diff bonus for upset wins, computed analytically (extend Phylourny output with per-matchup seed lookup)
-  - [ ] 2.2 The function traverses the bracket, at each internal node computing the bonus-weighted expected contribution: for each pair of potential opponents, multiply P(team_i wins that game) × seed_diff_bonus(seed_i, seed_j) × P(opponent_j reaches that game)
-  - [ ] 2.3 Integrate into `simulate_tournament` orchestrator: when a `SeedDiffBonusScoring` rule is in `scoring_rules`, use the seed-aware EP function instead of `compute_expected_points`
-  - [ ] 2.4 Unit tests: verify seed-diff EP for known small-bracket fixtures; verify equals standard EP when all seeds are identical; verify converges with MC at large N
+- [x] Task 2: Implement seed-aware Expected Points computation (AC: #1, #3)
+  - [x] 2.1 Implement `compute_expected_points_seed_diff(adv_probs, bracket, P, seed_map) -> ndarray` — per-team EP that includes seed-diff bonus for upset wins, computed analytically (extend Phylourny output with per-matchup seed lookup)
+  - [x] 2.2 The function traverses the bracket, at each internal node computing the bonus-weighted expected contribution: for each pair of potential opponents, multiply P(team_i wins that game) × seed_diff_bonus(seed_i, seed_j) × P(opponent_j reaches that game)
+  - [x] 2.3 Integrate into `simulate_tournament` orchestrator: when a `SeedDiffBonusScoring` rule is in `scoring_rules`, use the seed-aware EP function instead of `compute_expected_points`
+  - [x] 2.4 Unit tests: verify seed-diff EP for known small-bracket fixtures; verify equals standard EP when all seeds are identical; verify converges with MC at large N
 
 - [ ] Task 3: Implement `compute_most_likely_bracket` (AC: #4, deferred from 6.5)
   - [ ] 3.1 Implement `compute_most_likely_bracket(bracket, P) -> tuple[ndarray, float]` — returns `(winners, log_likelihood)` where `winners` is shape `(n_games,)` array of team indices for the max-likelihood bracket; greedy traversal picking `argmax(P[left, right])` at each game

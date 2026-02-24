@@ -679,6 +679,85 @@ def compute_expected_points(
     return result
 
 
+def compute_expected_points_seed_diff(
+    adv_probs: npt.NDArray[np.float64],
+    bracket: BracketStructure,
+    P: npt.NDArray[np.float64],
+    seed_map: dict[int, int],
+) -> npt.NDArray[np.float64]:
+    """Compute Expected Points with seed-difference upset bonus.
+
+    Extends standard EP by adding per-matchup seed-diff bonus.  For each
+    internal bracket node at round *r*, the bonus contribution for team *i*
+    beating opponent *j* is::
+
+        P(i reaches node) * P(i beats j) * P(j reaches node) * bonus(seed_i, seed_j)
+
+    where ``bonus = |seed_i - seed_j|`` when ``seed_i > seed_j`` (upset), else 0.
+
+    Uses ``SeedDiffBonusScoring`` base points for standard round points and
+    a post-order traversal of the bracket tree (reusing WPVs from
+    :func:`compute_advancement_probs` logic) for bonus computation.
+
+    Args:
+        adv_probs: Advancement probabilities, shape ``(n, n_rounds)``.
+        bracket: Tournament bracket structure (for tree traversal).
+        P: Pairwise win probability matrix, shape ``(n, n)``.
+        seed_map: Mapping of ``team_id → seed_num``.
+
+    Returns:
+        Expected Points per team, shape ``(n,)``, including base + bonus.
+    """
+    n = P.shape[0]
+
+    # Base EP from standard round points (same as StandardScoring)
+    base_rule = SeedDiffBonusScoring(seed_map)
+    base_ep = compute_expected_points(adv_probs, base_rule)
+
+    # Build seed vector indexed by team_index (bracket position)
+    seed_vec = np.zeros(n, dtype=np.float64)
+    for team_id, idx in bracket.team_index_map.items():
+        seed_vec[idx] = float(seed_map.get(team_id, 0))
+
+    # Precompute bonus matrix: bonus[i,j] = |seed_i - seed_j| if seed_i > seed_j else 0
+    seed_diff = seed_vec[:, None] - seed_vec[None, :]  # (n, n)
+    bonus_matrix = np.where(seed_diff > 0, seed_diff, 0.0)
+
+    # Bonus EP via bracket tree traversal
+    bonus_ep = np.zeros(n, dtype=np.float64)
+
+    def _traverse_bonus(node: BracketNode) -> npt.NDArray[np.float64]:
+        """Post-order traversal returning WPV and accumulating bonus EP."""
+        if node.is_leaf:
+            wpv = np.zeros(n, dtype=np.float64)
+            wpv[node.team_index] = 1.0
+            return wpv
+
+        if node.left is None or node.right is None:
+            msg = "Internal bracket node missing child — tree is malformed"
+            raise RuntimeError(msg)
+        left_wpv = _traverse_bonus(node.left)
+        right_wpv = _traverse_bonus(node.right)
+
+        # WPV at this node (same as Phylourny)
+        wpv = left_wpv * (P @ right_wpv) + right_wpv * (P @ left_wpv)
+
+        # Bonus: for each team i on the left beating opponent j on the right
+        # bonus_ep[i] += left_wpv[i] * P[i,j] * right_wpv[j] * bonus[i,j]
+        # Vectorized: left_wpv * ((P * bonus_matrix) @ right_wpv)
+        #           + right_wpv * ((P * bonus_matrix) @ left_wpv)
+        P_bonus = P * bonus_matrix  # element-wise: P[i,j] * bonus[i,j]
+        bonus_ep[:] += left_wpv * (P_bonus @ right_wpv)
+        bonus_ep[:] += right_wpv * (P_bonus @ left_wpv)
+
+        return wpv
+
+    _traverse_bonus(bracket.root)
+
+    result: npt.NDArray[np.float64] = base_ep + bonus_ep
+    return result
+
+
 # ---------------------------------------------------------------------------
 # Monte Carlo simulation engine (Task 6)
 # ---------------------------------------------------------------------------
@@ -881,7 +960,12 @@ def simulate_tournament(  # noqa: PLR0913
 
     if method == "analytical":
         adv_probs = compute_advancement_probs(bracket, P)
-        ep_dict = {rule.name: compute_expected_points(adv_probs, rule) for rule in scoring_rules}
+        ep_dict: dict[str, npt.NDArray[np.float64]] = {}
+        for rule in scoring_rules:
+            if isinstance(rule, SeedDiffBonusScoring):
+                ep_dict[rule.name] = compute_expected_points_seed_diff(adv_probs, bracket, P, rule.seed_map)
+            else:
+                ep_dict[rule.name] = compute_expected_points(adv_probs, rule)
         return SimulationResult(
             season=context.season,
             advancement_probs=adv_probs,
