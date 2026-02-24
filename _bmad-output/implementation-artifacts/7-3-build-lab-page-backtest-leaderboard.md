@@ -52,11 +52,11 @@ So that I can quickly identify the best-performing models and spot trends.
   - [x] 4.7 Make the run_id column clickable — use `st.dataframe` with `on_select="rerun"` and `selection_mode="single-row"`; on select, set `st.session_state.selected_run_id` and call `st.switch_page("pages/3_Model_Deep_Dive.py")`
   - [x] 4.8 Handle empty state: if no runs exist, display `st.info("No model runs available. Train a model first: python -m ncaa_eval.cli train --model elo")`
 
-- [ ] Task 5: Write tests for the leaderboard page (AC: all)
-  - [ ] 5.1 Smoke test: `import dashboard.pages.1_Lab` succeeds without error (update existing test)
-  - [ ] 5.2 Unit test `load_leaderboard_data` with mocked `RunStore` returning known data
-  - [ ] 5.3 Test that the page handles empty data gracefully (no runs → info message)
-  - [ ] 5.4 Test that year filtering logic correctly subsets the DataFrame
+- [x] Task 5: Write tests for the leaderboard page (AC: all)
+  - [x] 5.1 Smoke test: `import dashboard.pages.1_Lab` succeeds without error (existing test passes — refactored page to use function wrapper for import safety)
+  - [x] 5.2 Unit test `load_leaderboard_data` with mocked `RunStore` returning known data (done in Task 3 — 4 tests in test_dashboard_filters.py)
+  - [x] 5.3 Test that the page handles empty data gracefully (2 tests in test_leaderboard_page.py)
+  - [x] 5.4 Test that year filtering logic correctly subsets the DataFrame (3 tests: specific year, missing year, aggregate)
 
 - [ ] Task 6: Verify quality gates (AC: all)
   - [ ] 6.1 `mypy --strict src/ncaa_eval tests` passes (RunStore changes are in library code)
@@ -333,12 +333,14 @@ Claude Opus 4.6
 - Task 2: Wired `run_training()` in `src/ncaa_eval/cli/train.py` to run walk-forward backtest after training and persist `summary.parquet` via `store.save_metrics()`. Skips backtest when <2 seasons. No existing CLI integration tests existed (story referenced wrong file path).
 - Task 3: Added `load_leaderboard_data()` to `dashboard/lib/filters.py` — cached, returns list[dict] joining summaries with run metadata. 4 unit tests pass.
 - Task 4: Replaced placeholder in `dashboard/pages/1_Lab.py` with full leaderboard: year filtering, st.metric KPI cards, Pandas Styler gradients, st.dataframe with on_select for row click navigation to Deep Dive, and empty state handling.
+- Task 5: Refactored page into `_render_leaderboard()` function for import safety. Added 5 tests in test_leaderboard_page.py (year filtering + empty state). Existing smoke import test passes. load_leaderboard_data tests already in Task 3.
 
 ### File List
 
 - src/ncaa_eval/model/tracking.py (modified — added 3 new methods)
 - src/ncaa_eval/cli/train.py (modified — added backtest + save_metrics after training)
 - dashboard/lib/filters.py (modified — added load_leaderboard_data function)
-- dashboard/pages/1_Lab.py (rewritten — full leaderboard implementation)
+- dashboard/pages/1_Lab.py (rewritten — full leaderboard with function wrapper)
 - tests/unit/test_run_store_metrics.py (new — 8 unit tests)
 - tests/unit/test_dashboard_filters.py (modified — added 4 leaderboard tests)
+- tests/unit/test_leaderboard_page.py (new — 5 tests for year filtering and empty state)
