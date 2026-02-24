@@ -160,6 +160,37 @@ class RunStore:
             return None
         return pd.read_parquet(path)
 
+    def save_fold_predictions(self, run_id: str, fold_preds: pd.DataFrame) -> None:
+        """Persist fold-level predictions from walk-forward CV.
+
+        Args:
+            run_id: The run identifier.
+            fold_preds: DataFrame with columns [year, game_id, team_a_id,
+                team_b_id, pred_win_prob, team_a_won].
+
+        Raises:
+            FileNotFoundError: If the run directory does not exist.
+        """
+        run_dir = self._runs_dir / run_id
+        if not run_dir.exists():
+            msg = f"Run directory not found: {run_id}"
+            raise FileNotFoundError(msg)
+        fold_preds.to_parquet(run_dir / "fold_predictions.parquet", index=False)
+
+    def load_fold_predictions(self, run_id: str) -> pd.DataFrame | None:
+        """Load fold-level predictions for a run.
+
+        Args:
+            run_id: The run identifier.
+
+        Returns:
+            DataFrame or None if no fold predictions exist (legacy run).
+        """
+        path = self._runs_dir / run_id / "fold_predictions.parquet"
+        if not path.exists():
+            return None
+        return pd.read_parquet(path)
+
     def load_all_summaries(self) -> pd.DataFrame:
         """Load metric summaries for all runs that have them.
 
