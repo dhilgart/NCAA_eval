@@ -29,11 +29,18 @@ def load_available_years(data_dir: str) -> list[int]:
         data_dir: String path to the project data directory.
 
     Returns:
-        Descending-sorted list of season years.
+        Descending-sorted list of season years, or empty list if the data
+        directory does not exist or cannot be read.
     """
-    repo = ParquetRepository(Path(data_dir))
-    seasons = repo.get_seasons()
-    return sorted((s.year for s in seasons), reverse=True)
+    path = Path(data_dir)
+    if not path.exists():
+        return []
+    try:
+        repo = ParquetRepository(path)
+        seasons = repo.get_seasons()
+        return sorted((s.year for s in seasons), reverse=True)
+    except Exception:
+        return []
 
 
 @st.cache_data(ttl=300)
@@ -44,10 +51,17 @@ def load_available_runs(data_dir: str) -> list[dict[str, object]]:
         data_dir: String path to the project data directory.
 
     Returns:
-        List of dicts (one per run), serialised via ``ModelRun.model_dump()``.
+        List of dicts (one per run), serialised via ``ModelRun.model_dump()``,
+        or empty list if the data directory does not exist or cannot be read.
     """
-    store = RunStore(Path(data_dir))
-    return [run.model_dump() for run in store.list_runs()]
+    path = Path(data_dir)
+    if not path.exists():
+        return []
+    try:
+        store = RunStore(path)
+        return [run.model_dump() for run in store.list_runs()]
+    except Exception:
+        return []
 
 
 @st.cache_data(ttl=None)

@@ -1,6 +1,6 @@
 # Story 7.2: Build Streamlit App Shell & Navigation
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -329,6 +329,7 @@ Claude Opus 4.6
 ### Change Log
 
 - 2026-02-24: Implemented Story 7.2 — Streamlit app shell with navigation, global filters, dark theme, and monospace fonts
+- 2026-02-24: Code review fixes — session state defaults now use first available value (not None), data-loading functions gracefully return [] when data dir missing, run_id cast to str for type safety, 4 new tests added (25 total)
 
 ### File List
 
@@ -345,6 +346,7 @@ Claude Opus 4.6
 - `tests/unit/test_dashboard_app.py`
 
 **Modified files:**
+- `.gitignore` (added `!dashboard/lib/` override for `lib/` gitignore rule)
 - `dashboard/app.py`
 - `dashboard/pages/1_Lab.py`
 - `dashboard/pages/2_Presentation.py`

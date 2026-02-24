@@ -31,8 +31,9 @@ class TestGetDataDir:
 
 
 class TestLoadAvailableYears:
+    @patch("dashboard.lib.filters.Path.exists", return_value=True)
     @patch("dashboard.lib.filters.ParquetRepository")
-    def test_returns_sorted_years_descending(self, mock_repo_cls: MagicMock) -> None:
+    def test_returns_sorted_years_descending(self, mock_repo_cls: MagicMock, mock_exists: MagicMock) -> None:
         mock_repo = MagicMock()
         mock_repo.get_seasons.return_value = [
             Season(year=2020),
@@ -46,8 +47,9 @@ class TestLoadAvailableYears:
         result: list[int] = _unwrap(load_available_years)("/fake/data")
         assert result == [2023, 2020, 2018]
 
+    @patch("dashboard.lib.filters.Path.exists", return_value=True)
     @patch("dashboard.lib.filters.ParquetRepository")
-    def test_returns_empty_when_no_seasons(self, mock_repo_cls: MagicMock) -> None:
+    def test_returns_empty_when_no_seasons(self, mock_repo_cls: MagicMock, mock_exists: MagicMock) -> None:
         mock_repo = MagicMock()
         mock_repo.get_seasons.return_value = []
         mock_repo_cls.return_value = mock_repo
@@ -57,8 +59,9 @@ class TestLoadAvailableYears:
         result: list[int] = _unwrap(load_available_years)("/fake/data")
         assert result == []
 
+    @patch("dashboard.lib.filters.Path.exists", return_value=True)
     @patch("dashboard.lib.filters.ParquetRepository")
-    def test_passes_data_dir_as_path(self, mock_repo_cls: MagicMock) -> None:
+    def test_passes_data_dir_as_path(self, mock_repo_cls: MagicMock, mock_exists: MagicMock) -> None:
         mock_repo = MagicMock()
         mock_repo.get_seasons.return_value = []
         mock_repo_cls.return_value = mock_repo
@@ -68,10 +71,29 @@ class TestLoadAvailableYears:
         _unwrap(load_available_years)("/some/path")
         mock_repo_cls.assert_called_once_with(Path("/some/path"))
 
+    def test_returns_empty_when_data_dir_missing(self) -> None:
+        from dashboard.lib.filters import load_available_years
+
+        result: list[int] = _unwrap(load_available_years)("/nonexistent/path/that/cannot/exist")
+        assert result == []
+
+    @patch("dashboard.lib.filters.Path.exists", return_value=True)
+    @patch("dashboard.lib.filters.ParquetRepository")
+    def test_returns_empty_on_repository_exception(
+        self, mock_repo_cls: MagicMock, mock_exists: MagicMock
+    ) -> None:
+        mock_repo_cls.side_effect = OSError("disk error")
+
+        from dashboard.lib.filters import load_available_years
+
+        result: list[int] = _unwrap(load_available_years)("/fake/data")
+        assert result == []
+
 
 class TestLoadAvailableRuns:
+    @patch("dashboard.lib.filters.Path.exists", return_value=True)
     @patch("dashboard.lib.filters.RunStore")
-    def test_returns_serialised_runs(self, mock_store_cls: MagicMock) -> None:
+    def test_returns_serialised_runs(self, mock_store_cls: MagicMock, mock_exists: MagicMock) -> None:
         mock_store = MagicMock()
         run = ModelRun(
             run_id="run-1",
@@ -93,11 +115,30 @@ class TestLoadAvailableRuns:
         assert result[0]["model_type"] == "elo"
         assert isinstance(result[0], dict)
 
+    @patch("dashboard.lib.filters.Path.exists", return_value=True)
     @patch("dashboard.lib.filters.RunStore")
-    def test_returns_empty_when_no_runs(self, mock_store_cls: MagicMock) -> None:
+    def test_returns_empty_when_no_runs(self, mock_store_cls: MagicMock, mock_exists: MagicMock) -> None:
         mock_store = MagicMock()
         mock_store.list_runs.return_value = []
         mock_store_cls.return_value = mock_store
+
+        from dashboard.lib.filters import load_available_runs
+
+        result: list[dict[str, object]] = _unwrap(load_available_runs)("/fake/data")
+        assert result == []
+
+    def test_returns_empty_when_data_dir_missing(self) -> None:
+        from dashboard.lib.filters import load_available_runs
+
+        result: list[dict[str, object]] = _unwrap(load_available_runs)("/nonexistent/path/that/cannot/exist")
+        assert result == []
+
+    @patch("dashboard.lib.filters.Path.exists", return_value=True)
+    @patch("dashboard.lib.filters.RunStore")
+    def test_returns_empty_on_store_exception(
+        self, mock_store_cls: MagicMock, mock_exists: MagicMock
+    ) -> None:
+        mock_store_cls.side_effect = OSError("disk error")
 
         from dashboard.lib.filters import load_available_runs
 

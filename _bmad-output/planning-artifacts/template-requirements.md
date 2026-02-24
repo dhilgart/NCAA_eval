@@ -2519,6 +2519,61 @@ bin_width = float(dist.histogram_bins[1] - dist.histogram_bins[0])
 bin_width = float(dist.histogram_bins[1] - dist.histogram_bins[0]) if len(dist.histogram_bins) >= 2 else 1.0
 ```
 
+### Streamlit Session State: Initialize Defaults to First Available Value, Not None (Discovered Story 7.2 Code Review, 2026-02-24)
+
+When using `st.selectbox` with `key=` to bind directly to `st.session_state`, initializing the key to `None` before the widget renders is misleading — if the options list is non-empty, the selectbox will overwrite `None` with its first rendered option on the very first render. This creates a false guarantee that downstream pages see `None` when data is available.
+
+**Correct pattern**: Initialize session state keys to the first available real value (or `None` only when the options list is empty):
+
+```python
+# ❌ Misleading — None default is immediately overwritten by selectbox render
+if "selected_year" not in st.session_state:
+    st.session_state.selected_year = None
+if years:
+    st.selectbox("Tournament Year", options=years, key="selected_year")
+
+# ✅ Correct — initialize to first real value; only None when no data available
+if years:
+    if "selected_year" not in st.session_state:
+        st.session_state.selected_year = years[0]
+    st.selectbox("Tournament Year", options=years, key="selected_year")
+else:
+    st.session_state.selected_year = None
+    st.info("No data available — run `python sync.py` first")
+```
+
+**Also applies to string defaults**: A `selected_scoring = "standard"` default is only meaningful if "standard" is actually in the scorings list. Guard with `"standard" if "standard" in scorings else scorings[0]`.
+
+### Streamlit Data-Loading Functions Must Guard Against Missing Data Directory (Discovered Story 7.2 Code Review, 2026-02-24)
+
+`@st.cache_data` functions that construct `ParquetRepository` or `RunStore` will raise `FileNotFoundError` or similar if the `data/` directory doesn't exist (fresh clone). The calling page code's `if years:` guard only executes if the function returns — it can't catch the exception.
+
+**Pattern**: Always guard against missing data dir before constructing any data-access object:
+
+```python
+@st.cache_data(ttl=300)
+def load_available_years(data_dir: str) -> list[int]:
+    path = Path(data_dir)
+    if not path.exists():
+        return []
+    try:
+        repo = ParquetRepository(path)
+        return sorted((s.year for s in repo.get_seasons()), reverse=True)
+    except Exception:
+        return []
+```
+
+This ensures fresh-clone users see "No data available — run sync.py" instead of an unhandled exception crash.
+
+### Streamlit `lib/` Package in .gitignore Needs Explicit Override (Discovered Story 7.2 Code Review, 2026-02-24)
+
+Standard `.gitignore` templates include `lib/` as a catch-all for C extension build artifacts. A `dashboard/lib/` source package will be silently excluded. Add an explicit override:
+
+```gitignore
+# Override: dashboard/lib/ is a source package, not a build artifact
+!dashboard/lib/
+```
+
 ### Config Factory Functions Must Raise ValueError, Not KeyError (Discovered Story 6.6 Code Review, 2026-02-24)
 
 Factory functions that dispatch on a config dict key (e.g., `config["type"]`) should **explicitly check** for missing required keys and raise `ValueError`, not let Python raise `KeyError` through dict indexing. Callers catching `ValueError` miss `KeyError`:

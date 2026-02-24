@@ -54,15 +54,6 @@ pg = st.navigation(
     }
 )
 
-# --- Session-state defaults -------------------------------------------------
-
-if "selected_year" not in st.session_state:
-    st.session_state.selected_year = None
-if "selected_run_id" not in st.session_state:
-    st.session_state.selected_run_id = None
-if "selected_scoring" not in st.session_state:
-    st.session_state.selected_scoring = "standard"
-
 # --- Global sidebar filters -------------------------------------------------
 
 data_dir = str(get_data_dir())
@@ -71,22 +62,33 @@ with st.sidebar:
     # Tournament Year
     years = load_available_years(data_dir)
     if years:
+        if "selected_year" not in st.session_state:
+            st.session_state.selected_year = years[0]
         st.selectbox("Tournament Year", options=years, key="selected_year")
     else:
+        st.session_state.selected_year = None
         st.info("No data available — run `python sync.py` first")
 
     # Model Run
     runs = load_available_runs(data_dir)
-    run_options = [r["run_id"] for r in runs] if runs else []
+    run_options = [str(r["run_id"]) for r in runs] if runs else []
     if run_options:
+        if "selected_run_id" not in st.session_state:
+            st.session_state.selected_run_id = run_options[0]
         st.selectbox("Model Run", options=run_options, key="selected_run_id")
     else:
+        st.session_state.selected_run_id = None
         st.info("No model runs available")
 
     # Scoring Format
     scorings = load_available_scorings()
     if scorings:
+        default_scoring = "standard" if "standard" in scorings else scorings[0]
+        if "selected_scoring" not in st.session_state:
+            st.session_state.selected_scoring = default_scoring
         st.selectbox("Scoring Format", options=scorings, key="selected_scoring")
+    else:
+        st.session_state.selected_scoring = None
 
 # --- Run selected page ------------------------------------------------------
 
