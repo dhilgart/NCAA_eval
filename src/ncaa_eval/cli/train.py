@@ -50,26 +50,18 @@ def run_training(  # noqa: PLR0913
 ) -> ModelRun:
     """Execute the full train → predict → persist pipeline.
 
-    Parameters
-    ----------
-    model
-        An instantiated model (stateful or stateless).
-    start_year, end_year
-        Inclusive season range for training.
-    data_dir
-        Path to the local Parquet data store.
-    output_dir
-        Path where run artifacts are persisted.
-    model_name
-        Registered plugin name (used in the ModelRun record).
-    console
-        Rich Console instance for terminal output.  Defaults to a fresh
-        ``Console()`` so callers (e.g. tests) can suppress output by
-        passing ``Console(quiet=True)``.
+    Args:
+        model: An instantiated model (stateful or stateless).
+        start_year: First season year (inclusive) for training.
+        end_year: Last season year (inclusive) for training.
+        data_dir: Path to the local Parquet data store.
+        output_dir: Path where run artifacts are persisted.
+        model_name: Registered plugin name (used in the ModelRun record).
+        console: Rich Console instance for terminal output. Defaults to a
+            fresh ``Console()`` so callers (e.g. tests) can suppress output
+            by passing ``Console(quiet=True)``.
 
-    Returns
-    -------
-    ModelRun
+    Returns:
         The persisted run metadata record.
     """
     _console = console or Console()

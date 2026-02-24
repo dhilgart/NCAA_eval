@@ -38,6 +38,8 @@ def _make_season_df(
 
     total = n_regular + n_tournament
     is_tournament = [False] * n_regular + [True] * n_tournament
+    # Include synthetic feature columns (not in METADATA_COLS) so _feature_cols()
+    # returns a non-empty list, exercising the stateless column-filtering code path.
     return pd.DataFrame(
         {
             "game_id": [f"{year}_{i}" for i in range(total)],
@@ -49,6 +51,10 @@ def _make_season_df(
             "is_tournament": is_tournament,
             "loc_encoding": rng.choice([1, -1, 0], size=total),
             "team_a_won": rng.choice([True, False], size=total),
+            # Synthetic features — used to verify stateless models receive only
+            # non-metadata columns and _DataDependentModel has real values to use.
+            "elo_diff": rng.normal(0.0, 50.0, size=total),
+            "win_pct_diff": rng.uniform(-0.5, 0.5, size=total),
         }
     )
 
@@ -424,6 +430,19 @@ class TestRunBacktest:
         expected_metrics = {"log_loss", "brier_score", "roc_auc", "ece"}
         for fold_result in result.fold_results:
             assert set(fold_result.metrics.keys()) == expected_metrics
+            # log_loss and brier_score are always finite for constant 0.5 predictions.
+            assert not np.isnan(fold_result.metrics["log_loss"]), "log_loss must be finite"
+            assert not np.isnan(fold_result.metrics["brier_score"]), "brier_score must be finite"
+            # Constant 0.5 predictions → known values regardless of label balance.
+            assert fold_result.metrics["log_loss"] == pytest.approx(0.693, abs=0.1)
+            assert fold_result.metrics["brier_score"] == pytest.approx(0.25, abs=0.05)
+            # roc_auc may be NaN if test fold has single-class labels (small fold, random seed).
+            roc = fold_result.metrics["roc_auc"]
+            if not np.isnan(roc):
+                assert 0.0 <= roc <= 1.0
+            # ece is always finite for constant predictions.
+            assert not np.isnan(fold_result.metrics["ece"]), "ece must be finite"
+            assert 0.0 <= fold_result.metrics["ece"] <= 1.0
 
     def test_invalid_mode_raises(self) -> None:
         """run_backtest validates mode at entry point."""
@@ -436,6 +455,13 @@ class TestRunBacktest:
                 seasons=[2010, 2011],
                 mode="invalid",
             )
+
+    def test_too_few_seasons_raises(self) -> None:
+        """run_backtest propagates ValueError from walk_forward_splits for < 2 seasons."""
+        server = _make_feature_server({2010: _make_season_df(2010)})
+        model = _FakeStatelessModel()
+        with pytest.raises(ValueError, match="at least 2 seasons"):
+            run_backtest(model, server, seasons=[2010])
 
     def test_backtest_result_frozen(self) -> None:
         """BacktestResult is a frozen dataclass."""

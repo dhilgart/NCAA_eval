@@ -355,7 +355,7 @@ Claude Opus 4.6
 - `_bmad-output/implementation-artifacts/6-3-implement-parallel-cross-validation-execution.md` — MODIFIED: story file updated
 - `_bmad-output/planning-artifacts/template-requirements.md` — MODIFIED: Story 6.3 code review learnings added
 
-## Senior Developer Review (AI)
+## Senior Developer Review (AI) — Pass 1
 
 **Reviewer:** Volty (AI Code Review) — 2026-02-23
 **Verdict:** ✅ APPROVED — 5 issues fixed, 1 skipped performance test stub added
@@ -377,7 +377,31 @@ Claude Opus 4.6
 - mypy --strict: clean
 - ruff: clean
 
+## Senior Developer Review (AI) — Pass 2
+
+**Reviewer:** Volty (AI Code Review) — 2026-02-23
+**Verdict:** ✅ APPROVED — 5 issues fixed
+
+### Issues Fixed
+- **M1 [FIXED]** `run_backtest` `Raises:` docstring missing `ValueError` for `seasons < 2` (propagated from `walk_forward_splits`) — added to docstring; added `test_too_few_seasons_raises` test
+- **M2 [FIXED]** `_make_season_df` test helper contained only metadata columns → `_feature_cols()` always returned `[]` → column-filtering code path never exercised — added `elo_diff` and `win_pct_diff` synthetic feature columns to `_make_season_df`; `_DataDependentModel` now uses real feature values
+- **M3 [FIXED]** `cli/train.py:run_training` docstring used NumPy style (`Parameters\n----------`) instead of Google style — converted to Google style (`Args:`, `Returns:`)
+- **L1 [FIXED]** `y_train` dtype was `int` while `y_test` was `np.float64` — normalized both to `np.float64`
+- **L4 [FIXED]** `test_default_metric_fns` only checked metric keys, not values — added `log_loss ≈ 0.693`, `brier_score ≈ 0.25`, finite/range assertions for `ece`; `roc_auc` asserted in range `[0,1]` when non-NaN (may be NaN for small single-class folds)
+
+### Accepted Issues (Not Fixed)
+- **L2** `_feature_cols` imported as private function from `cli/train.py` — architectural smell (private API crossing module boundary); not fixed because the refactor (promoting to public, adding to `__init__`) touches more files than appropriate for a code review. Captured in template-requirements.md for future story.
+- **L3** No test for `seasons=[]` (empty list) — `walk_forward_splits` raises `ValueError` for `len(seasons) < 2`, which covers `seasons=[2010]`. `seasons=[]` would also raise but is a true zero-seasons edge case; coverage is adequate with the existing test.
+- **L5** `_DataDependentModel` would fall back to constant 0.5 if feature columns were empty — this is now moot since M2 adds real feature columns.
+
+### Post-Fix Stats
+- Tests: 597 passed, 1 skipped
+- mypy --strict: clean
+- ruff: clean
+- template-requirements.md: updated with 4 new patterns
+
 ## Change Log
 
 - 2026-02-23: Implemented parallel cross-validation backtest orchestrator (Story 6.3). Added `FoldResult`, `BacktestResult` frozen dataclasses, `_evaluate_fold` worker function, and `run_backtest` parallel orchestrator using `joblib.Parallel`. Moved `METADATA_COLS` and `_feature_cols` to `evaluation.backtest` for correct dependency direction. 20 unit tests added covering all ACs.
-- 2026-02-23: Code review fixes: broadened exception guard to `Exception`; normalized `actuals` dtype to float64; wrapped `DEFAULT_METRICS` with `MappingProxyType`; changed `FoldResult.metrics` to `Mapping[str, float]`; added `_DataDependentModel` and data-dependent determinism test; added AC5 performance test stub (skipped). Updated template-requirements.md with 5 new patterns.
+- 2026-02-23: Code review fixes (Pass 1): broadened exception guard to `Exception`; normalized `actuals` dtype to float64; wrapped `DEFAULT_METRICS` with `MappingProxyType`; changed `FoldResult.metrics` to `Mapping[str, float]`; added `_DataDependentModel` and data-dependent determinism test; added AC5 performance test stub (skipped). Updated template-requirements.md with 5 new patterns.
+- 2026-02-23: Code review fixes (Pass 2): documented seasons<2 ValueError in docstring + added test; added real feature columns to `_make_season_df` test helper; converted `cli/train.py` docstring to Google style; normalized `y_train` dtype to float64; added metric value assertions to `test_default_metric_fns`. Updated template-requirements.md with 4 new patterns.

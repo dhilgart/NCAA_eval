@@ -142,7 +142,7 @@ def _evaluate_fold(
             elapsed_seconds=elapsed,
         )
 
-    y_train = fold.train["team_a_won"].astype(int)
+    y_train = fold.train["team_a_won"].astype(np.float64)
     y_test = fold.test["team_a_won"].astype(np.float64)
 
     is_stateful = isinstance(model, StatefulModel)
@@ -208,7 +208,9 @@ def run_backtest(  # noqa: PLR0913
         BacktestResult with per-fold results and summary DataFrame.
 
     Raises:
-        ValueError: If ``mode`` is not ``"batch"`` or ``"stateful"``.
+        ValueError: If ``mode`` is not ``"batch"`` or ``"stateful"``, or if
+            ``seasons`` contains fewer than 2 elements (propagated from
+            :func:`walk_forward_splits`).
     """
     if mode not in _VALID_MODES:
         msg = f"mode must be 'batch' or 'stateful', got {mode!r}"

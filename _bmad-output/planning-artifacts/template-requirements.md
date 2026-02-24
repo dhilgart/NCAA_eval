@@ -2294,3 +2294,31 @@ class _DataDependentModel(_FakeStatelessModel):
         prob = float(np.clip(col_mean / (col_mean + 1.0), 0.01, 0.99))
         return pd.Series(prob, index=X.index)
 ```
+
+### Test Helper DataFrames Must Include Real Feature Columns (Discovered Story 6.3 2nd Code Review, 2026-02-23)
+
+A synthetic test DataFrame that contains **only metadata columns** (all in `METADATA_COLS`) will produce an empty feature list from `_feature_cols()`. Stateless model tests will then exercise `model.fit(df[[]])` — a zero-column slice — which passes trivially if the fake model ignores `X`. The column-filtering code path is never actually validated.
+
+**Pattern:** Always add at least two non-metadata numeric columns to `_make_season_df()` helpers (e.g., `elo_diff`, `win_pct_diff`). This ensures `_feature_cols()` returns a non-empty list, column-filtering is exercised, and data-dependent models have values to work with:
+```python
+"elo_diff": rng.normal(0.0, 50.0, size=total),
+"win_pct_diff": rng.uniform(-0.5, 0.5, size=total),
+```
+
+### Public API Promotion for Shared Helpers (Discovered Story 6.3 2nd Code Review, 2026-02-23)
+
+When a private helper function (single underscore prefix, e.g., `_feature_cols`) is imported by an external module (e.g., `cli/train.py`), it should be promoted to a public API. Options:
+1. Remove the underscore prefix: `feature_cols` → add to `__init__.py` `__all__`.
+2. If the function is truly internal to the module (logic-sharing only), expose a public wrapper or re-export from `__init__.py`.
+
+Importing private functions from external modules violates the module encapsulation contract and creates implicit coupling that mypy cannot enforce. This is a common drift issue when moving shared logic between modules (e.g., moving `METADATA_COLS` from `cli` to `evaluation.backtest`).
+
+### Propagated Exceptions Must Be Documented in Raises: Section (Discovered Story 6.3 2nd Code Review, 2026-02-23)
+
+When a public function calls another function that raises `ValueError` (or other exceptions) with no try/except, the caller's docstring `Raises:` section must document it. "Propagated from X" is sufficient. Missing this creates a contract gap — callers have no API-level warning that the exception can occur.
+
+**Pattern:** After implementing a function, grep for all uncaught exceptions from called functions and ensure they appear in `Raises:`.
+
+### Docstring Style Drift in Modified Files (Discovered Story 6.3 2nd Code Review, 2026-02-23)
+
+When a story modifies an existing file (e.g., to update an import), the dev agent should inspect the file's docstrings for style compliance. Files written before the Google-docstring mandate was established often still use NumPy style (`Parameters\n----------`). Any file **touched** by a story is an opportunity to correct docstring drift — failing to do so perpetuates the style inconsistency and will be flagged in every subsequent code review.
