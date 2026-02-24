@@ -1,6 +1,6 @@
 # Story 6.3: Implement Parallel Cross-Validation Execution
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -20,29 +20,29 @@ So that multi-year backtests complete faster by utilizing all available CPU core
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `src/ncaa_eval/evaluation/backtest.py` (AC: #1–#6)
-  - [ ] 1.1 Define `FoldResult` frozen dataclass: `year: int`, `predictions: pd.Series`, `actuals: pd.Series`, `metrics: dict[str, float]`, `elapsed_seconds: float`
-  - [ ] 1.2 Define `BacktestResult` frozen dataclass: `fold_results: tuple[FoldResult, ...]`, `summary: pd.DataFrame`, `elapsed_seconds: float`
-  - [ ] 1.3 Implement `_evaluate_fold(fold: CVFold, model: Model, metric_fns: ...) -> FoldResult` — the single-fold worker function
-  - [ ] 1.4 Implement `run_backtest(model, feature_server, *, seasons, mode, n_jobs, metric_fns, console) -> BacktestResult` — the main parallel orchestrator
-  - [ ] 1.5 Collect all `CVFold` objects eagerly (materialize the generator) before dispatching to joblib
-  - [ ] 1.6 Deep-copy the model for each fold to avoid shared-state corruption (stateful models)
-  - [ ] 1.7 Aggregate fold results into a summary DataFrame (year as index, metric columns + elapsed_seconds)
-  - [ ] 1.8 Report progress via Rich console (fold completion count, per-fold timing)
-- [ ] Task 2: Export public API from `src/ncaa_eval/evaluation/__init__.py` (AC: #4)
-  - [ ] 2.1 Add `FoldResult`, `BacktestResult`, `run_backtest` to imports and `__all__`
-- [ ] Task 3: Create `tests/unit/test_evaluation_backtest.py` (AC: #6, #7)
-  - [ ] 3.1 Test `_evaluate_fold` with a mock model producing known predictions
-  - [ ] 3.2 Test `run_backtest` sequential (`n_jobs=1`) produces correct fold count and metrics
-  - [ ] 3.3 Test `run_backtest` parallel (`n_jobs=2`) produces identical results to sequential
-  - [ ] 3.4 Test stateful model gets deep-copied per fold (original model state unchanged after backtest)
-  - [ ] 3.5 Test stateless model column selection (only feature columns passed to fit/predict_proba)
-  - [ ] 3.6 Test progress reporting (console output captured and validated)
-  - [ ] 3.7 Test empty test fold (0 tournament games) is handled gracefully — metrics are NaN or skipped
-  - [ ] 3.8 Test `n_jobs` parameter is passed through to `joblib.Parallel`
-  - [ ] 3.9 Test summary DataFrame structure (correct columns, index is years, sorted ascending)
-  - [ ] 3.10 Test single fold (2 seasons minimum) works correctly
-  - [ ] 3.11 Test default metric_fns includes log_loss, brier_score, roc_auc, expected_calibration_error
+- [x] Task 1: Create `src/ncaa_eval/evaluation/backtest.py` (AC: #1–#6)
+  - [x] 1.1 Define `FoldResult` frozen dataclass: `year: int`, `predictions: pd.Series`, `actuals: pd.Series`, `metrics: dict[str, float]`, `elapsed_seconds: float`
+  - [x] 1.2 Define `BacktestResult` frozen dataclass: `fold_results: tuple[FoldResult, ...]`, `summary: pd.DataFrame`, `elapsed_seconds: float`
+  - [x] 1.3 Implement `_evaluate_fold(fold: CVFold, model: Model, metric_fns: ...) -> FoldResult` — the single-fold worker function
+  - [x] 1.4 Implement `run_backtest(model, feature_server, *, seasons, mode, n_jobs, metric_fns, console) -> BacktestResult` — the main parallel orchestrator
+  - [x] 1.5 Collect all `CVFold` objects eagerly (materialize the generator) before dispatching to joblib
+  - [x] 1.6 Deep-copy the model for each fold to avoid shared-state corruption (stateful models)
+  - [x] 1.7 Aggregate fold results into a summary DataFrame (year as index, metric columns + elapsed_seconds)
+  - [x] 1.8 Report progress via Rich console (fold completion count, per-fold timing)
+- [x] Task 2: Export public API from `src/ncaa_eval/evaluation/__init__.py` (AC: #4)
+  - [x] 2.1 Add `FoldResult`, `BacktestResult`, `run_backtest` to imports and `__all__`
+- [x] Task 3: Create `tests/unit/test_evaluation_backtest.py` (AC: #6, #7)
+  - [x] 3.1 Test `_evaluate_fold` with a mock model producing known predictions
+  - [x] 3.2 Test `run_backtest` sequential (`n_jobs=1`) produces correct fold count and metrics
+  - [x] 3.3 Test `run_backtest` parallel (`n_jobs=2`) produces identical results to sequential
+  - [x] 3.4 Test stateful model gets deep-copied per fold (original model state unchanged after backtest)
+  - [x] 3.5 Test stateless model column selection (only feature columns passed to fit/predict_proba)
+  - [x] 3.6 Test progress reporting (console output captured and validated)
+  - [x] 3.7 Test empty test fold (0 tournament games) is handled gracefully — metrics are NaN or skipped
+  - [x] 3.8 Test `n_jobs` parameter is passed through to `joblib.Parallel`
+  - [x] 3.9 Test summary DataFrame structure (correct columns, index is years, sorted ascending)
+  - [x] 3.10 Test single fold (2 seasons minimum) works correctly
+  - [x] 3.11 Test default metric_fns includes log_loss, brier_score, roc_auc, expected_calibration_error
 
 ## Dev Notes
 
@@ -331,10 +331,29 @@ run_backtest()
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+- Minor test fix: `test_parallel_produces_correct_fold_count` initially had wrong expected fold count (1 vs 2 for 3 seasons) — corrected.
+- mypy `# type: ignore[type-arg]` on `pd.Series` was unnecessary with current pandas-stubs — removed.
+
 ### Completion Notes List
 
+- **Task 1**: Implemented `backtest.py` with `FoldResult` (frozen), `BacktestResult` (frozen), `_evaluate_fold` worker, and `run_backtest` parallel orchestrator using `joblib.Parallel`/`delayed`. Moved `METADATA_COLS` and `_feature_cols` from `cli/train.py` to `evaluation/backtest.py` (correct dependency direction). Updated `cli/train.py` to import from new location.
+- **Task 2**: Added `FoldResult`, `BacktestResult`, `run_backtest` to `evaluation/__init__.py` imports and `__all__`.
+- **Task 3**: Created 20 unit tests covering: `_evaluate_fold` with mock models, sequential/parallel fold counts, determinism (parallel vs sequential), stateful model deep-copy isolation, stateless column selection, progress reporting, `n_jobs` passthrough, summary DataFrame structure, single-fold edge case, default metrics, empty test fold handling, frozen dataclasses, mode validation, year sorting.
+- All 595 tests pass (0 failures), `mypy --strict` clean, `ruff check` clean on changed files.
+
 ### File List
+
+- `src/ncaa_eval/evaluation/backtest.py` — NEW: parallel backtest orchestrator
+- `src/ncaa_eval/evaluation/__init__.py` — MODIFIED: added FoldResult, BacktestResult, run_backtest exports
+- `src/ncaa_eval/cli/train.py` — MODIFIED: imports METADATA_COLS/_feature_cols from evaluation.backtest instead of defining locally
+- `tests/unit/test_evaluation_backtest.py` — NEW: 20 unit tests for backtest module
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — MODIFIED: story status updated
+- `_bmad-output/implementation-artifacts/6-3-implement-parallel-cross-validation-execution.md` — MODIFIED: story file updated
+
+## Change Log
+
+- 2026-02-23: Implemented parallel cross-validation backtest orchestrator (Story 6.3). Added `FoldResult`, `BacktestResult` frozen dataclasses, `_evaluate_fold` worker function, and `run_backtest` parallel orchestrator using `joblib.Parallel`. Moved `METADATA_COLS` and `_feature_cols` to `evaluation.backtest` for correct dependency direction. 20 unit tests added covering all ACs.
