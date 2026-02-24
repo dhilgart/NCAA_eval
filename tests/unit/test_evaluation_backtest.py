@@ -461,11 +461,33 @@ class TestRunBacktest:
 # ── TestDeterminism ─────────────────────────────────────────────────────────
 
 
+class _DataDependentModel(_FakeStatelessModel):
+    """Stateless model whose predictions vary with input data.
+
+    Returns the mean of the first feature column as the predicted probability
+    (clipped to [0.01, 0.99]).  This ensures predictions are data-dependent
+    rather than constant 0.5, making the determinism test more meaningful.
+    """
+
+    def predict_proba(self, X: pd.DataFrame) -> pd.Series:
+        feat = _feature_cols(X)
+        if not feat:
+            return pd.Series(0.5, index=X.index)
+        col_mean = X[feat[0]].mean()
+        prob = float(np.clip(col_mean / (col_mean + 1.0), 0.01, 0.99))
+        return pd.Series(prob, index=X.index)
+
+
 class TestDeterminism:
     """Tests for parallel vs sequential determinism (AC #6, #7)."""
 
     def test_parallel_matches_sequential(self) -> None:
-        """3.3: Parallel n_jobs=2 produces identical results to sequential n_jobs=1."""
+        """3.3: Parallel n_jobs=2 produces identical results to sequential n_jobs=1.
+
+        NOTE: Uses _FakeStatelessModel (constant predictions).  The
+        test_parallel_matches_sequential_data_dependent test below uses a
+        data-dependent model to provide stronger determinism coverage.
+        """
         seasons = [2010, 2011, 2012, 2013]
         dfs = {y: _make_season_df(y) for y in seasons}
 
@@ -505,6 +527,46 @@ class TestDeterminism:
             result_seq.summary[metric_cols],
             result_par.summary[metric_cols],
         )
+
+    def test_parallel_matches_sequential_data_dependent(self) -> None:
+        """AC6/AC7: Determinism with data-dependent model (stronger coverage).
+
+        Uses _DataDependentModel whose predictions vary with input feature values,
+        ensuring the parallel orchestration doesn't introduce result ordering bugs
+        that would be masked by constant-prediction models.
+        """
+        seasons = [2010, 2011, 2012, 2013]
+        dfs = {y: _make_season_df(y) for y in seasons}
+
+        server_seq = _make_feature_server(dfs)
+        server_par = _make_feature_server(dfs)
+        console = Console(quiet=True)
+
+        result_seq = run_backtest(
+            _DataDependentModel(),
+            server_seq,
+            seasons=seasons,
+            n_jobs=1,
+            metric_fns={"const": _constant_metric},
+            console=console,
+        )
+
+        result_par = run_backtest(
+            _DataDependentModel(),
+            server_par,
+            seasons=seasons,
+            n_jobs=2,
+            metric_fns={"const": _constant_metric},
+            console=console,
+        )
+
+        assert len(result_seq.fold_results) == len(result_par.fold_results)
+
+        for fr_seq, fr_par in zip(result_seq.fold_results, result_par.fold_results):
+            assert fr_seq.year == fr_par.year
+            assert fr_seq.metrics == pytest.approx(fr_par.metrics, rel=1e-9)
+            pd.testing.assert_series_equal(fr_seq.predictions, fr_par.predictions)
+            pd.testing.assert_series_equal(fr_seq.actuals, fr_par.actuals)
 
 
 # ── TestEdgeCases ───────────────────────────────────────────────────────────
@@ -574,3 +636,48 @@ class TestEdgeCases:
 
         years = [fr.year for fr in result.fold_results]
         assert years == sorted(years)
+
+
+# ── TestPerformance ──────────────────────────────────────────────────────────
+
+
+class TestPerformance:
+    """Performance tests for AC5: 10-year Elo backtest must complete in < 60s.
+
+    These tests require the full data pipeline (real EloModel + real game data)
+    and are skipped in the standard unit test run.  Run manually or in a
+    dedicated integration test suite once the data pipeline (Epic 4) is
+    available end-to-end.
+
+    To run: pytest tests/unit/test_evaluation_backtest.py::TestPerformance -v -s
+    """
+
+    @pytest.mark.skip(
+        reason=(
+            "AC5 integration test requires real EloModel + real game data from "
+            "Epic 4 data pipeline.  Cannot be run in unit test context without "
+            "full data infrastructure.  Verify manually: "
+            "run_backtest(EloModel(), real_feature_server, seasons=range(2015, 2025), "
+            "n_jobs=-1) must complete in < 60 seconds."
+        )
+    )
+    def test_elo_10year_backtest_under_60_seconds(self) -> None:
+        """AC5: 10-year Elo backtest completes in under 60 seconds (PRD perf target).
+
+        Implementation notes:
+        - Use real EloModel (or equivalent) with actual NCAA game data
+        - Feature server must serve real feature matrices for seasons 2015–2024
+        - n_jobs=-1 to use all available cores
+        - Assert result.elapsed_seconds < 60.0
+        """
+        import time  # noqa: PLC0415
+
+        # Placeholder body — this test is always skipped.
+        # Real implementation:
+        #   from ncaa_eval.model.elo import EloModel
+        #   from ncaa_eval.transform.feature_serving import StatefulFeatureServer, FeatureConfig
+        #   ...
+        #   result = run_backtest(EloModel(), server, seasons=list(range(2015, 2025)), n_jobs=-1)
+        #   assert result.elapsed_seconds < 60.0, f"Backtest took {result.elapsed_seconds:.1f}s > 60s"
+        start = time.perf_counter()
+        assert time.perf_counter() - start < 60.0  # pragma: no cover

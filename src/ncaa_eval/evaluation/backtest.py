@@ -13,6 +13,7 @@ import copy
 import dataclasses
 import math
 import time
+import types
 from collections.abc import Callable, Mapping, Sequence
 
 import joblib  # type: ignore[import-untyped]
@@ -52,15 +53,17 @@ METADATA_COLS: frozenset[str] = frozenset(
 
 _VALID_MODES: frozenset[str] = frozenset({"batch", "stateful"})
 
-DEFAULT_METRICS: dict[
+DEFAULT_METRICS: Mapping[
     str,
     Callable[[npt.NDArray[np.float64], npt.NDArray[np.float64]], float],
-] = {
-    "log_loss": log_loss,
-    "brier_score": brier_score,
-    "roc_auc": roc_auc,
-    "ece": expected_calibration_error,
-}
+] = types.MappingProxyType(
+    {
+        "log_loss": log_loss,
+        "brier_score": brier_score,
+        "roc_auc": roc_auc,
+        "ece": expected_calibration_error,
+    }
+)
 
 
 def _feature_cols(df: pd.DataFrame) -> list[str]:
@@ -90,7 +93,7 @@ class FoldResult:
     year: int
     predictions: pd.Series
     actuals: pd.Series
-    metrics: dict[str, float]
+    metrics: Mapping[str, float]
     elapsed_seconds: float
 
 
@@ -140,7 +143,7 @@ def _evaluate_fold(
         )
 
     y_train = fold.train["team_a_won"].astype(int)
-    y_test = fold.test["team_a_won"].astype(int)
+    y_test = fold.test["team_a_won"].astype(np.float64)
 
     is_stateful = isinstance(model, StatefulModel)
     feat_cols = _feature_cols(fold.train)
@@ -155,14 +158,14 @@ def _evaluate_fold(
     else:
         preds = model.predict_proba(fold.test[feat_cols])
 
-    y_true_np = y_test.to_numpy().astype(np.float64)
+    y_true_np = y_test.to_numpy()
     y_prob_np = preds.to_numpy().astype(np.float64)
 
     metrics: dict[str, float] = {}
     for name, fn in metric_fns.items():
         try:
             metrics[name] = fn(y_true_np, y_prob_np)
-        except (ValueError, ZeroDivisionError):
+        except Exception:  # noqa: BLE001
             metrics[name] = float("nan")
 
     elapsed = time.perf_counter() - start

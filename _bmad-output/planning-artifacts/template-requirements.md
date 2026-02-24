@@ -2224,3 +2224,73 @@ def walk_forward_splits(seasons, feature_server, *, mode: str = "batch") -> ...:
 ```
 
 Consider `typing.Literal["batch", "stateful"]` as the type annotation when the valid set is small and stable — mypy catches invalid literals at call sites without runtime overhead.
+
+### Exception Guard Breadth in Per-Item try/except Blocks (Discovered Story 6.3 Code Review, 2026-02-23)
+
+When wrapping individual callable invocations to store `NaN` on failure (e.g., metric functions per fold), catching only `ValueError, ZeroDivisionError` is **too narrow**. Metric libraries can raise `RuntimeError`, `OverflowError`, `FloatingPointError`, `numpy.exceptions.FloatingPointError`, or other exceptions depending on edge-case inputs (single-class test sets, all-NaN inputs, etc.). An uncaught exception propagates out of the worker and crashes the entire parallel job.
+
+**Pattern:** Use `except Exception:  # noqa: BLE001` for per-item error isolation:
+```python
+for name, fn in metric_fns.items():
+    try:
+        metrics[name] = fn(y_true_np, y_prob_np)
+    except Exception:  # noqa: BLE001
+        metrics[name] = float("nan")
+```
+
+The `# noqa: BLE001` suppresses Ruff's "blind exception" warning with explicit acknowledgement. This is appropriate when the intent is "any failure → NaN, continue".
+
+### Module-Level Default Dicts Must Use `MappingProxyType` (Discovered Story 6.3 Code Review, 2026-02-23)
+
+Module-level `dict` objects used as defaults (e.g., `DEFAULT_METRICS = {"log_loss": log_loss, ...}`) are mutable — callers can silently mutate them (`DEFAULT_METRICS["injected"] = ...`), affecting all subsequent users in the same process. This is particularly dangerous in long-running data science workflows where modules are imported once.
+
+**Pattern:** Wrap with `types.MappingProxyType` and annotate as `Mapping[...]`:
+```python
+import types
+from collections.abc import Mapping
+
+DEFAULT_METRICS: Mapping[str, Callable[...]] = types.MappingProxyType({
+    "log_loss": log_loss,
+    "brier_score": brier_score,
+    ...
+})
+```
+
+The `run_backtest` caller still does `dict(DEFAULT_METRICS)` to get a mutable working copy — `MappingProxyType` is shallow-copied correctly by `dict()`.
+
+### Frozen Dataclass Result Fields: Use `Mapping` Not `dict` (Discovered Story 6.3 Code Review, 2026-02-23)
+
+`frozen=True` on a dataclass prevents reassigning fields but does NOT prevent mutating mutable field values. A `dict` field on a frozen dataclass can have new keys injected by any consumer.
+
+**Pattern:** Annotate metric/config fields as `Mapping[str, float]` instead of `dict[str, float]`. Python's type system (and mypy `--strict`) will then flag mutation attempts at call sites:
+```python
+@dataclasses.dataclass(frozen=True)
+class FoldResult:
+    metrics: Mapping[str, float]   # ✅ read-only contract
+    # NOT: metrics: dict[str, float]   # ❌ mutable despite frozen
+```
+
+### AC Performance Targets Need Explicit Test Stubs (Discovered Story 6.3 Code Review, 2026-02-23)
+
+When an AC specifies a performance target (e.g., "10-year backtest completes in < 60 seconds"), the dev agent often omits a test because the target requires end-to-end infrastructure not available during unit testing. This creates a silent gap: the AC is marked [x] in the story but has zero test coverage.
+
+**Pattern:** Always add a `@pytest.mark.skip(reason="requires real data pipeline")` stub in `TestPerformance` class that:
+1. Documents the exact assertion (`result.elapsed_seconds < 60.0`)
+2. Explains what infrastructure is needed to un-skip it
+3. Shows the exact `run_backtest(RealModel(), real_server, ...)` invocation
+
+This makes the coverage gap visible, tracks the intent, and gives future engineers a ready-to-enable test.
+
+### Determinism Tests Require Data-Dependent Models (Discovered Story 6.3 Code Review, 2026-02-23)
+
+A determinism test comparing parallel vs. sequential results using a **constant-prediction model** (e.g., always returns 0.5) is not meaningful. Constant predictions produce identical metric values regardless of parallelism ordering bugs — the test passes even if fold results are returned in the wrong order or associated with the wrong year.
+
+**Pattern:** Add a `_DataDependentModel` alongside the `_FakeStatelessModel` in test helpers. The data-dependent model should return predictions that actually vary with input feature values (e.g., based on column means). Use it in the determinism test to provide meaningful coverage:
+```python
+class _DataDependentModel(_FakeStatelessModel):
+    def predict_proba(self, X: pd.DataFrame) -> pd.Series:
+        feat = _feature_cols(X)
+        col_mean = X[feat[0]].mean() if feat else 0.5
+        prob = float(np.clip(col_mean / (col_mean + 1.0), 0.01, 0.99))
+        return pd.Series(prob, index=X.index)
+```
