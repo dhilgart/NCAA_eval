@@ -17,6 +17,7 @@ import pytest
 
 from ncaa_eval.evaluation.simulation import (
     _SCORING_REGISTRY,
+    BracketDistribution,
     BracketNode,
     BracketStructure,
     CustomScoring,
@@ -33,6 +34,7 @@ from ncaa_eval.evaluation.simulation import (
     build_bracket,
     build_probability_matrix,
     compute_advancement_probs,
+    compute_bracket_distribution,
     compute_expected_points,
     compute_expected_points_seed_diff,
     compute_most_likely_bracket,
@@ -672,6 +674,60 @@ class TestComputeMostLikelyBracket:
         assert result.champion_team_id == 0
 
 
+class TestBracketDistribution:
+    """Tests for BracketDistribution and compute_bracket_distribution (Task 4)."""
+
+    def test_basic_distribution(self) -> None:
+        """Compute distribution from known scores array."""
+        scores = np.array([10.0, 20.0, 30.0, 40.0, 50.0], dtype=np.float64)
+        dist = compute_bracket_distribution(scores, n_bins=5)
+        assert isinstance(dist, BracketDistribution)
+        assert dist.mean == pytest.approx(30.0)
+        assert dist.std == pytest.approx(float(np.std(scores)))
+        assert len(dist.histogram_bins) == 6  # n_bins + 1 edges
+        assert len(dist.histogram_counts) == 5
+
+    def test_percentile_ordering(self) -> None:
+        """Percentiles must be monotonically non-decreasing."""
+        rng = np.random.default_rng(42)
+        scores = rng.normal(100, 20, size=1000).astype(np.float64)
+        dist = compute_bracket_distribution(scores)
+        assert dist.percentiles[5] <= dist.percentiles[25]
+        assert dist.percentiles[25] <= dist.percentiles[50]
+        assert dist.percentiles[50] <= dist.percentiles[75]
+        assert dist.percentiles[75] <= dist.percentiles[95]
+
+    def test_mean_std_match_numpy(self) -> None:
+        """Mean and std match numpy reference."""
+        rng = np.random.default_rng(99)
+        scores = rng.uniform(0, 200, size=5000).astype(np.float64)
+        dist = compute_bracket_distribution(scores)
+        assert dist.mean == pytest.approx(float(np.mean(scores)))
+        assert dist.std == pytest.approx(float(np.std(scores)))
+
+    def test_histogram_bin_count(self) -> None:
+        """Histogram has requested number of bins."""
+        scores = np.arange(100, dtype=np.float64)
+        dist = compute_bracket_distribution(scores, n_bins=20)
+        assert len(dist.histogram_counts) == 20
+        assert len(dist.histogram_bins) == 21
+        # Total histogram counts should equal number of scores
+        assert dist.histogram_counts.sum() == 100
+
+    def test_frozen_dataclass(self) -> None:
+        """BracketDistribution is frozen."""
+        scores = np.array([1.0, 2.0, 3.0], dtype=np.float64)
+        dist = compute_bracket_distribution(scores)
+        with pytest.raises(AttributeError):
+            dist.mean = 99.0  # type: ignore[misc]
+
+    def test_scores_stored(self) -> None:
+        """Raw scores are stored in the distribution."""
+        scores = np.array([5.0, 10.0, 15.0], dtype=np.float64)
+        dist = compute_bracket_distribution(scores)
+        np.testing.assert_array_equal(dist.scores, scores)
+
+
 class TestAnalyticalMatchesMC:
     """Verify analytical EP matches MC EP within statistical tolerance."""
 
@@ -903,6 +959,28 @@ class TestMonteCarlo:
         # would indicate the broken "total_games * points" computation.
         scores = result.score_distribution["standard"]
         assert float(scores.std()) > 0.0, "score_distribution should not be constant"
+
+    def test_bracket_distributions_populated(self) -> None:
+        bracket = _make_small_bracket(4)
+        P = _make_uniform_matrix(4)
+        rules = [StandardScoring()]
+        result = simulate_tournament_mc(
+            bracket, P, rules, season=2024, n_simulations=500, rng=np.random.default_rng(7)
+        )
+        assert result.bracket_distributions is not None
+        assert "standard" in result.bracket_distributions
+        dist = result.bracket_distributions["standard"]
+        assert isinstance(dist, BracketDistribution)
+        assert dist.scores.shape == (500,)
+        assert dist.percentiles[5] <= dist.percentiles[95]
+
+    def test_analytical_bracket_distributions_none(self) -> None:
+        bracket = _make_small_bracket(4)
+        P = _make_uniform_matrix(4)
+        provider = MatrixProvider(P, list(range(4)))
+        ctx = _make_context()
+        result = simulate_tournament(bracket, provider, ctx, method="analytical")
+        assert result.bracket_distributions is None
 
     def test_minimum_simulations(self) -> None:
         bracket = _make_small_bracket(4)

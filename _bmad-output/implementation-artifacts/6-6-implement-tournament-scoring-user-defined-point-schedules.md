@@ -43,12 +43,12 @@ So that I can evaluate model value under different pool scoring rules and optimi
   - [x] 3.2 Return type is a frozen `MostLikelyBracket` dataclass with fields: `winners: tuple[int, ...]`, `champion_team_id: int`, `log_likelihood: float`
   - [x] 3.3 Unit tests: deterministic matrix yields perfect bracket; uniform matrix yields any valid bracket; log_likelihood is negative sum of log(max(P[i,j], P[j,i]))
 
-- [ ] Task 4: Implement `BracketDistribution` analysis (AC: #4)
-  - [ ] 4.1 Implement `BracketDistribution` frozen dataclass with fields: `scores: ndarray` (raw per-sim scores), `percentiles: dict[int, float]` (5, 25, 50, 75, 95), `mean: float`, `std: float`, `histogram_bins: ndarray`, `histogram_counts: ndarray`
-  - [ ] 4.2 Implement `compute_bracket_distribution(score_distribution: ndarray, n_bins: int = 50) -> BracketDistribution` — computes all distribution statistics from raw MC scores
-  - [ ] 4.3 Integrate into `SimulationResult`: add `bracket_distributions: dict[str, BracketDistribution] | None` field (MC only)
-  - [ ] 4.4 Update `simulate_tournament_mc` to populate `bracket_distributions` from existing `score_distribution` arrays
-  - [ ] 4.5 Unit tests: verify percentile ordering, histogram bin count, mean/std against numpy reference, None for analytical path
+- [x] Task 4: Implement `BracketDistribution` analysis (AC: #4)
+  - [x] 4.1 Implement `BracketDistribution` frozen dataclass with fields: `scores: ndarray` (raw per-sim scores), `percentiles: dict[int, float]` (5, 25, 50, 75, 95), `mean: float`, `std: float`, `histogram_bins: ndarray`, `histogram_counts: ndarray`
+  - [x] 4.2 Implement `compute_bracket_distribution(score_distribution: ndarray, n_bins: int = 50) -> BracketDistribution` — computes all distribution statistics from raw MC scores
+  - [x] 4.3 Integrate into `SimulationResult`: add `bracket_distributions: dict[str, BracketDistribution] | None` field (MC only)
+  - [x] 4.4 Update `simulate_tournament_mc` to populate `bracket_distributions` from existing `score_distribution` arrays
+  - [x] 4.5 Unit tests: verify percentile ordering, histogram bin count, mean/std against numpy reference, None for analytical path
 
 - [ ] Task 5: Implement dict-based custom scoring configuration (AC: #2)
   - [ ] 5.1 Implement `DictScoring(ScoringRule)` — wraps a `dict[int, float]` mapping `round_idx → points`; validates exactly 6 entries (rounds 0–5); raises `ValueError` on missing rounds

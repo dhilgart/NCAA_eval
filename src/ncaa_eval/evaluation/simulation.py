@@ -580,6 +580,8 @@ class SimulationResult:
             ``rule_name → (lower, upper)`` arrays.
         score_distribution: Optional mapping of
             ``rule_name → per-sim scores`` array, shape ``(n_simulations,)``.
+        bracket_distributions: Optional mapping of
+            ``rule_name → BracketDistribution`` (MC only; ``None`` for analytical).
     """
 
     season: int
@@ -589,6 +591,28 @@ class SimulationResult:
     n_simulations: int | None
     confidence_intervals: dict[str, tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]] | None
     score_distribution: dict[str, npt.NDArray[np.float64]] | None
+    bracket_distributions: dict[str, BracketDistribution] | None = None
+
+
+@dataclass(frozen=True)
+class BracketDistribution:
+    """Score distribution statistics from Monte Carlo simulation.
+
+    Attributes:
+        scores: Raw per-simulation scores, shape ``(n_simulations,)``.
+        percentiles: Mapping of percentile → value for keys 5, 25, 50, 75, 95.
+        mean: Mean score across simulations.
+        std: Standard deviation of scores.
+        histogram_bins: Histogram bin edges, shape ``(n_bins + 1,)``.
+        histogram_counts: Histogram counts, shape ``(n_bins,)``.
+    """
+
+    scores: npt.NDArray[np.float64]
+    percentiles: dict[int, float]
+    mean: float
+    std: float
+    histogram_bins: npt.NDArray[np.float64]
+    histogram_counts: npt.NDArray[np.int64]
 
 
 @dataclass(frozen=True)
@@ -828,6 +852,35 @@ def compute_most_likely_bracket(
     )
 
 
+def compute_bracket_distribution(
+    scores: npt.NDArray[np.float64],
+    n_bins: int = 50,
+) -> BracketDistribution:
+    """Compute score distribution statistics from raw MC scores.
+
+    Args:
+        scores: Raw per-simulation scores, shape ``(n_simulations,)``.
+        n_bins: Number of histogram bins (default 50).
+
+    Returns:
+        :class:`BracketDistribution` with percentiles, mean, std, and histogram.
+    """
+    percentile_keys = (5, 25, 50, 75, 95)
+    pct_values = np.percentile(scores, percentile_keys)
+    percentiles = {k: float(v) for k, v in zip(percentile_keys, pct_values)}
+
+    counts_arr, bins_arr = np.histogram(scores, bins=n_bins)
+
+    return BracketDistribution(
+        scores=scores,
+        percentiles=percentiles,
+        mean=float(np.mean(scores)),
+        std=float(np.std(scores)),
+        histogram_bins=bins_arr.astype(np.float64),
+        histogram_counts=counts_arr.astype(np.int64),
+    )
+
+
 # ---------------------------------------------------------------------------
 # Monte Carlo simulation engine (Task 6)
 # ---------------------------------------------------------------------------
@@ -953,6 +1006,11 @@ def simulate_tournament_mc(  # noqa: PLR0913
             total_scores += rule.points_per_round(r_idx) * chalk_won_r.sum(axis=1)
         score_dist_dict[rule.name] = total_scores
 
+    # Compute bracket distributions from score distributions
+    bracket_dist_dict: dict[str, BracketDistribution] = {
+        name: compute_bracket_distribution(scores) for name, scores in score_dist_dict.items()
+    }
+
     return SimulationResult(
         season=season,
         advancement_probs=adv_probs,
@@ -961,6 +1019,7 @@ def simulate_tournament_mc(  # noqa: PLR0913
         n_simulations=n_simulations,
         confidence_intervals=None,
         score_distribution=score_dist_dict,
+        bracket_distributions=bracket_dist_dict,
     )
 
 
