@@ -325,11 +325,13 @@ Claude Opus 4.6
 - Added `dashboard/__init__.py` for mypy module resolution (not in original plan, but required for `mypy dashboard/` to work)
 - 21 new tests: 9 filter tests (mocked dependencies, return types, cache unwrapping), 12 smoke tests (imports, signatures, CSS, session state)
 - All quality gates pass: `mypy --strict` (src+tests), `mypy dashboard/` (non-strict), `ruff check .`, 751 tests passed + 1 skipped
+- Adversarial code review fixes (2026-02-24): narrowed except Exception → except OSError in filters, pinned streamlit >=1.36,<2, replaced unconditional session_state overwrites with setdefault(), added st.info() for empty scorings, added 5 page-file import smoke tests (30 tests total, 760 suite passed)
 
 ### Change Log
 
 - 2026-02-24: Implemented Story 7.2 — Streamlit app shell with navigation, global filters, dark theme, and monospace fonts
 - 2026-02-24: Code review fixes — session state defaults now use first available value (not None), data-loading functions gracefully return [] when data dir missing, run_id cast to str for type safety, 4 new tests added (25 total)
+- 2026-02-24: Adversarial code review fixes — except Exception narrowed to except OSError, streamlit pinned to >=1.36<2, session_state overwrites replaced with setdefault(), st.info() added for empty scorings, 5 page import smoke tests added (30 total)
 
 ### File List
 
@@ -348,7 +350,11 @@ Claude Opus 4.6
 **Modified files:**
 - `.gitignore` (added `!dashboard/lib/` override for `lib/` gitignore rule)
 - `dashboard/app.py`
+- `dashboard/lib/filters.py`
 - `dashboard/pages/1_Lab.py`
 - `dashboard/pages/2_Presentation.py`
+- `pyproject.toml` (pinned streamlit >=1.36,<2)
+- `poetry.lock`
 - `_bmad-output/implementation-artifacts/7-2-build-streamlit-app-shell-navigation.md`
 - `_bmad-output/implementation-artifacts/sprint-status.yaml`
+- `_bmad-output/planning-artifacts/template-requirements.md`

@@ -2559,11 +2559,39 @@ def load_available_years(data_dir: str) -> list[int]:
     try:
         repo = ParquetRepository(path)
         return sorted((s.year for s in repo.get_seasons()), reverse=True)
-    except Exception:
+    except OSError:
         return []
 ```
 
 This ensures fresh-clone users see "No data available — run sync.py" instead of an unhandled exception crash.
+
+**Anti-pattern (Updated Story 7.2 Adversarial Review, 2026-02-24):** Use `except OSError`, not bare `except Exception`. The `path.exists()` guard already covers the primary missing-dir case. `except Exception` silently swallows `ImportError`, `AttributeError`, schema mismatches, and other real bugs that should surface. Only `OSError` (filesystem-level errors) should be caught here.
+
+### Streamlit Session State: Use `setdefault()` Not Conditional Assignment (Discovered Story 7.2 Adversarial Review, 2026-02-24)
+
+When initializing sidebar filter defaults, **always** use `st.session_state.setdefault(key, value)` instead of the `if key not in st.session_state: st.session_state.key = value` pattern.
+
+The conditional pattern only prevents overwrite on first render. **But there's a second bug**: the `else:` branch (when data is unavailable) often unconditionally writes `st.session_state.x = None`, which **resets the user's existing selection on every re-render**. `setdefault()` never overwrites an existing value:
+
+```python
+# ❌ Anti-pattern — overwrites existing selection when data list changes
+if years:
+    if "selected_year" not in st.session_state:
+        st.session_state.selected_year = years[0]  # ok first time
+    st.selectbox("Tournament Year", options=years, key="selected_year")
+else:
+    st.session_state.selected_year = None  # ← destroys existing selection every render!
+
+# ✅ Correct — never overwrites an existing value
+if years:
+    st.session_state.setdefault("selected_year", years[0])
+    st.selectbox("Tournament Year", options=years, key="selected_year")
+else:
+    st.session_state.setdefault("selected_year", None)
+    st.info("No data available — run `python sync.py` first")
+```
+
+**Also applies to all three filter types** (year, run_id, scoring). Always pair the `else` branch with a `st.info()` user message — without it, the filter widget silently disappears with no user-visible explanation.
 
 ### Streamlit `lib/` Package in .gitignore Needs Explicit Override (Discovered Story 7.2 Code Review, 2026-02-24)
 
