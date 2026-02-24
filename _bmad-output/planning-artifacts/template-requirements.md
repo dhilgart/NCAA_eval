@@ -2120,3 +2120,79 @@ When story tasks map to distinct requirements (e.g., "trains successfully" vs "o
 - "Output is bounded [0,1]" → check `(preds >= 0).all() and (preds <= 1).all()`
 
 **Rule:** Before adding a test, verify it exercises a code path or assertion not already covered by existing tests. If two tests have identical `assert` statements on the same data, merge or differentiate them.
+
+### AC Text vs. Dev Notes Dataclass Spec Conflict: Dev Notes Win (Discovered Story 6.1 Code Review, 2026-02-23)
+
+When a high-level AC mentions fields in a structured return type (e.g., "bin counts, bin edges") but the Dev Notes dataclass spec lists different fields, the Dev Notes take precedence as the authoritative specification. However, the code review should flag the discrepancy so the PO can confirm whether the AC was intentionally simplified or the spec omitted something valuable downstream.
+
+**Pattern:** When the AC says field X is required but the spec omits it — add it anyway if:
+1. Downstream stories will need it (avoid a breaking dataclass change later), OR
+2. The caller would have to recompute it from stored fields (convenience ergonomics)
+
+In Story 6.1: AC5 mentioned `bin_edges` in `ReliabilityData`; the Dev Notes only specified `n_bins`. Since `bin_edges = np.linspace(0.0, 1.0, n_bins+1)` — easily derivable — and Story 7.4 (reliability diagrams) will need them for visualization, `bin_edges` was added during code review rather than forcing Story 7.4 to recompute and risk inconsistency.
+
+### Validate y_true Is Binary in All Custom Metric Functions (Discovered Story 6.1 Code Review, 2026-02-23)
+
+When writing custom metric functions that wrap sklearn (which has its own validation) AND implement custom numpy logic (ECE), the shared `_validate_inputs()` helper must validate `y_true ∈ {0, 1}`. Without this, custom functions silently accept non-binary labels while sklearn-backed wrappers raise, creating inconsistent behavior.
+
+**Pattern:** `_validate_inputs()` must check:
+1. Non-empty arrays
+2. Matching lengths
+3. **y_true is binary** (`np.all((y_true == 0) | (y_true == 1))`)
+4. y_prob ∈ [0, 1]
+
+### Vectorized Binning Comment Must Match 0-Indexed vs. 1-Indexed Reality (Discovered Story 6.1 Code Review, 2026-02-23)
+
+When using `np.digitize(y_prob, bin_edges[1:-1])` (passing only interior edges), the returned indices are **0-indexed** (0 for values below the first interior edge). Clipping to `[0, n_bins-1]` is correct. A comment saying "assigns bin index starting at 1; clip to [1, n_bins]" is **wrong** and misleads maintainers.
+
+**Rule:** Use interior edges (`bin_edges[1:-1]`) when you want 0-indexed bins `[0..n_bins-1]`. Use full edges (`bin_edges`) when you want 1-indexed bins `[1..n_bins]`. Never mix the indexing convention in comments vs. code.
+
+### n_bins Validation Must Be Explicit for Custom Binning Functions (Discovered Story 6.1 Code Review, 2026-02-23)
+
+A function that implements custom numpy binning (like ECE with `np.digitize` + `np.bincount`) must explicitly validate `n_bins >= 1`. Without it, `n_bins=0` causes a cryptic numpy internal error (`ValueError: 'list' argument must have no negative elements`). Functions that delegate to sklearn get this validation for free via sklearn's `InvalidParameterError`.
+
+**Pattern:** Add at the start of any function with `n_bins` parameter:
+```python
+if n_bins < 1:
+    msg = f"n_bins must be >= 1, got {n_bins}."
+    raise ValueError(msg)
+```
+
+### `frozen=True` Dataclasses with Numpy Array Fields: Use `.copy()` at Construction (Discovered Story 6.1 Code Review Round 2, 2026-02-23)
+
+When a `frozen=True` dataclass contains `npt.NDArray` fields (numpy arrays), the frozen semantics only prevent field *rebinding* — callers can still mutate array contents in-place. This silently breaks the immutability contract:
+
+```python
+@dataclass(frozen=True)
+class ReliabilityData:
+    fraction_of_positives: npt.NDArray[np.float64]
+
+result = compute_reliability(...)
+result.fraction_of_positives = np.array([0.0])  # ← FrozenInstanceError ✓
+result.fraction_of_positives[0] = 0.999          # ← silently succeeds! ✗
+```
+
+**Fix:** Return `.copy()` of all numpy array fields in the constructor call so callers receive an independent copy:
+
+```python
+return ReliabilityData(
+    fraction_of_positives=fraction_of_positives.copy(),
+    mean_predicted_value=mean_predicted_value.copy(),
+    bin_counts=bin_counts.copy(),
+    bin_edges=bin_edges.copy(),
+    n_bins=n_bins,
+)
+```
+
+This also protects against the case where the array returned from a library call (e.g., sklearn) is an internal view — copying ensures the dataclass owns its data.
+
+**Related:** The general `frozen=True` / mutable field pattern is documented above (Story 4.2, `list[Game]` case). This entry specifically addresses numpy array fields where `.copy()` is the idiomatic fix (vs. `tuple()` for lists).
+
+### Test Coverage Symmetry: All Input Validation Tests Must Cover ALL Functions (Discovered Story 6.1 Code Review Round 2, 2026-02-23)
+
+When a shared validation helper (`_validate_inputs`) covers N metrics, edge-case tests for each validation condition should exist for **all N metrics** — not just the first few. Asymmetric coverage leads to silently untested code paths.
+
+**Pattern:** For each validation condition (empty arrays, mismatched lengths, non-binary y_true, probs outside [0,1]), add a dedicated `test_<condition>_<metric>` test for every public function. Use a checklist during code review:
+- `test_empty_arrays_raise_<metric>` → 5 tests for 5 metrics ✓
+- `test_mismatched_lengths_<metric>` → 5 tests ✓
+- `test_non_binary_y_true_<metric>` → must cover ALL metrics (log_loss, brier, roc_auc, ece, reliability) — Story 6.1 originally missed `roc_auc`.
