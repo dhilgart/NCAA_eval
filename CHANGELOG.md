@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.0 (2026-02-24)
+
+### Feat
+
+- **epic-7**: Build Lab Page — Backtest Leaderboard (Story 7.3) (#39)
+
 ## 0.5.0 (2026-02-23)
 
 ### Feat
