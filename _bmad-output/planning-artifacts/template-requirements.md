@@ -2392,3 +2392,44 @@ Protocol definitions in research pseudocode often omit critical constraints that
 3. **Context dataclasses:** If a method takes a `Context` parameter described only in prose, add a concrete dataclass definition in the same section. Research docs are self-contained references — implementers must not need to guess field names.
 
 **Anti-pattern:** `def batch_matchup_probabilities(...) -> np.ndarray` with no shape comment and no mention of the complementarity constraint.
+
+### score_distribution Must Be Non-Trivial — "Total Games × Points" Is Always Constant (Discovered Story 6.5 Code Review, 2026-02-24)
+
+In an MC tournament simulation, `score_distribution` must produce a DIFFERENT score for each simulation run. A common implementation mistake: `total_scores += points * round_winners.shape[1]` adds a scalar (number of games in round) to all N simulations uniformly. For Standard scoring with 64 teams, every simulation scores 1×32 + 2×16 + 4×8 + 8×4 + 16×2 + 32×1 = 192 — an informationless constant.
+
+**Correct pattern (chalk-bracket distribution):** for each simulation, award points only when the pre-game favorite (P[left, right] >= 0.5) actually won. Upsets reduce the chalk score, producing genuine cross-simulation variance:
+```python
+left_favored = probs >= 0.5  # shape (N, n_games_in_round)
+chalk_won = np.where(left_favored, left_wins, ~left_wins)
+total_scores += rule.points_per_round(r) * chalk_won.sum(axis=1)
+```
+
+**Test requirement:** always assert `scores.std() > 0` for non-deterministic brackets. A test that only checks `.shape` misses the constant-output bug entirely.
+
+### np.bincount for Vectorized Per-Round Advancement Counting (Discovered Story 6.5 Code Review, 2026-02-24)
+
+When counting how many simulations each team won in a given round, avoid Python loops:
+```python
+# ❌ O(n_teams × n_sims × n_games): Python loop
+for team_idx in range(n):
+    count = int(np.sum(winners == team_idx))
+    advancement_counts[team_idx, r] = count
+
+# ✅ O(n_sims × n_games + n_teams): fully vectorized
+advancement_counts[:, r] = np.bincount(winners.ravel().astype(np.intp), minlength=n)
+```
+`winners` has shape `(n_simulations, n_games_in_round)`; `.ravel()` flattens to 1D for `bincount`. Use `.astype(np.intp)` for correct integer type on both 32-bit and 64-bit platforms.
+
+### assert vs RuntimeError in Tree Traversal (Discovered Story 6.5 Code Review, 2026-02-24)
+
+`assert node.left is not None` in production tree traversal is silenced under `python -O`. When structural invariants (fully binary tree) are guaranteed by construction but code correctness depends on them, use explicit guards:
+```python
+# ❌ Silenced under python -O
+assert node.left is not None
+assert node.right is not None
+
+# ✅ Always raises
+if node.left is None or node.right is None:
+    msg = "Internal bracket node missing child — tree is malformed"
+    raise RuntimeError(msg)
+```
