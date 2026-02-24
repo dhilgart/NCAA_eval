@@ -2440,3 +2440,45 @@ if node.left is None or node.right is None:
     msg = "Internal bracket node missing child — tree is malformed"
     raise RuntimeError(msg)
 ```
+
+### Tree Traversal Output Order Must Match Downstream Consumers (Discovered Story 6.6 Code Review, 2026-02-24)
+
+When a function traverses a tree in **post-order DFS** (left subtree fully, then right, then current node), its output array is NOT in the same order as arrays built in **round-major** (breadth-first) order. For a 4-team bracket both orderings coincide (each half has only 1 game per round), masking the bug. For 8+ teams they diverge:
+
+```
+Post-order DFS: [R0_g0, R0_g1, R1_g0, R0_g2, R0_g3, R1_g1, R2_g0]
+Round-major:    [R0_g0, R0_g1, R0_g2, R0_g3, R1_g0, R1_g1, R2_g0]
+```
+
+**Pattern:** If your MC engine stores winners in round-major order (all round-R games at a contiguous offset), any function that produces "a bracket of picks" must also use round-major order so callers can pass the output directly to comparison functions. Use a `(round_idx, game_within_round, winner)` accumulator then sort before returning.
+
+**Test requirement:** always include a compatibility test at n≥8 that scores `mlb.winners` against `sim_winners` and asserts the correct perfect-bracket total. A test at n=4 will pass by coincidence.
+
+### Protocol TypeVar Must Reference the Protocol Type (Discovered Story 6.6 Code Review, 2026-02-24)
+
+When a decorator registry restricts registration to classes implementing a Protocol, the `TypeVar` bound should reference that Protocol type, and the Protocol must be defined **before** the registry:
+
+```python
+# ❌ Unbound TypeVar — any class can be registered, no type safety
+_ST = TypeVar("_ST")
+
+# ✅ Bound TypeVar — only ScoringRule-compatible classes accepted
+class ScoringRule(Protocol): ...  # defined BEFORE registry
+_ST = TypeVar("_ST", bound="type[ScoringRule]")
+```
+
+### Config Factory Functions Must Raise ValueError, Not KeyError (Discovered Story 6.6 Code Review, 2026-02-24)
+
+Factory functions that dispatch on a config dict key (e.g., `config["type"]`) should **explicitly check** for missing required keys and raise `ValueError`, not let Python raise `KeyError` through dict indexing. Callers catching `ValueError` miss `KeyError`:
+
+```python
+# ❌ Raises KeyError — breaks documented API contract
+scoring_type = config["type"]  # KeyError if absent
+
+# ✅ Raises ValueError — consistent with documented behavior
+if "type" not in config:
+    raise ValueError("config must contain a 'type' key")
+scoring_type = config["type"]
+```
+
+Apply the same pattern to all required sub-keys (`"points"`, `"callable"`, `"seed_map"`, etc.).

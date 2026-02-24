@@ -676,6 +676,34 @@ class TestComputeMostLikelyBracket:
         assert len(result.winners) == 7
         assert result.champion_team_id == 0
 
+    def test_winners_in_round_major_order_matches_sim_winners(self) -> None:
+        """MostLikelyBracket.winners must be in round-major order matching sim_winners.
+
+        For an 8-team deterministic bracket (team 0 always wins), the chosen
+        bracket from mlb.winners should score a perfect 12 points against all sims.
+        """
+        bracket = _make_small_bracket(8)
+        P = _make_deterministic_matrix(8)
+        result = simulate_tournament_mc(
+            bracket, P, [StandardScoring()], season=2024, n_simulations=200, rng=np.random.default_rng(55)
+        )
+        assert result.sim_winners is not None
+        mlb = compute_most_likely_bracket(bracket, P)
+        # mlb.winners must match the sim_winners row ordering
+        assert list(mlb.winners) == list(result.sim_winners[0])
+        # Scoring the MLB bracket against all deterministic sims should yield perfect score
+        # For 8 teams: R0: 4*1=4, R1: 2*2=4, R2: 1*4=4 → total = 12
+        chosen = np.array(mlb.winners, dtype=np.int32)
+        scores = score_bracket_against_sims(chosen, result.sim_winners, [StandardScoring()])
+        np.testing.assert_allclose(scores["standard"], 12.0)
+
+    def test_64_team_bracket_winners_length(self) -> None:
+        """64-team bracket produces exactly 63 winners."""
+        bracket = _make_bracket()
+        P = _make_uniform_matrix(64)
+        result = compute_most_likely_bracket(bracket, P)
+        assert len(result.winners) == 63
+
 
 class TestBracketDistribution:
     """Tests for BracketDistribution and compute_bracket_distribution (Task 4)."""
@@ -915,6 +943,22 @@ class TestDictScoring:
     def test_scoring_from_config_invalid_type(self) -> None:
         with pytest.raises(ValueError, match="Unknown scoring type"):
             scoring_from_config({"type": "nonexistent"})
+
+    def test_scoring_from_config_missing_type_raises_value_error(self) -> None:
+        with pytest.raises(ValueError, match="'type' key"):
+            scoring_from_config({"points": {0: 1.0}})
+
+    def test_scoring_from_config_seed_diff_requires_seed_map(self) -> None:
+        with pytest.raises(ValueError, match="'seed_map'"):
+            scoring_from_config({"type": "seed_diff_bonus"})
+
+    def test_scoring_from_config_dict_requires_points(self) -> None:
+        with pytest.raises(ValueError, match="'points'"):
+            scoring_from_config({"type": "dict", "name": "missing_points"})
+
+    def test_scoring_from_config_custom_requires_callable(self) -> None:
+        with pytest.raises(ValueError, match="'callable'"):
+            scoring_from_config({"type": "custom", "name": "missing_callable"})
 
 
 # ---------------------------------------------------------------------------

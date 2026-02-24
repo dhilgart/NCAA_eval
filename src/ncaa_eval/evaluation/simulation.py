@@ -373,10 +373,36 @@ def build_probability_matrix(
 
 
 # ---------------------------------------------------------------------------
+# Scoring rule protocol (defined before registry so _ST can reference it)
+# ---------------------------------------------------------------------------
+
+
+@runtime_checkable
+class ScoringRule(Protocol):
+    """Protocol for tournament bracket scoring rules."""
+
+    @property
+    def name(self) -> str:
+        """Human-readable name of the scoring rule."""
+        ...
+
+    def points_per_round(self, round_idx: int) -> float:
+        """Return points awarded for a correct pick in round *round_idx*.
+
+        Args:
+            round_idx: Zero-indexed round number (0=R64 through 5=NCG).
+
+        Returns:
+            Points as a float.
+        """
+        ...
+
+
+# ---------------------------------------------------------------------------
 # Scoring registry (decorator-based, mirrors model/registry.py)
 # ---------------------------------------------------------------------------
 
-_ST = TypeVar("_ST")
+_ST = TypeVar("_ST", bound="type[ScoringRule]")
 
 _SCORING_REGISTRY: dict[str, type] = {}
 
@@ -402,7 +428,7 @@ def register_scoring(name: str) -> Callable[[_ST], _ST]:
         if name in _SCORING_REGISTRY:
             msg = f"Scoring name {name!r} is already registered to {_SCORING_REGISTRY[name].__name__}"
             raise ValueError(msg)
-        _SCORING_REGISTRY[name] = cls  # type: ignore[assignment]
+        _SCORING_REGISTRY[name] = cls
         return cls
 
     return decorator
@@ -427,29 +453,8 @@ def list_scorings() -> list[str]:
 
 
 # ---------------------------------------------------------------------------
-# Scoring rules (Task 4)
+# Scoring rule implementations (Task 4)
 # ---------------------------------------------------------------------------
-
-
-@runtime_checkable
-class ScoringRule(Protocol):
-    """Protocol for tournament bracket scoring rules."""
-
-    @property
-    def name(self) -> str:
-        """Human-readable name of the scoring rule."""
-        ...
-
-    def points_per_round(self, round_idx: int) -> float:
-        """Return points awarded for a correct pick in round *round_idx*.
-
-        Args:
-            round_idx: Zero-indexed round number (0=R64 through 5=NCG).
-
-        Returns:
-            Points as a float.
-        """
-        ...
 
 
 @register_scoring("standard")
@@ -608,16 +613,28 @@ def scoring_from_config(config: dict[str, Any]) -> ScoringRule:
     Raises:
         ValueError: If ``type`` is unknown or required keys are missing.
     """
+    if "type" not in config:
+        msg = "scoring config must contain a 'type' key"
+        raise ValueError(msg)
     scoring_type = config["type"]
     if scoring_type == "standard":
         return StandardScoring()
     if scoring_type == "fibonacci":
         return FibonacciScoring()
     if scoring_type == "seed_diff_bonus":
-        return SeedDiffBonusScoring(config.get("seed_map", {}))
+        if "seed_map" not in config:
+            msg = "scoring config for 'seed_diff_bonus' requires a 'seed_map' key"
+            raise ValueError(msg)
+        return SeedDiffBonusScoring(config["seed_map"])
     if scoring_type == "dict":
+        if "points" not in config:
+            msg = "scoring config for 'dict' requires a 'points' key"
+            raise ValueError(msg)
         return DictScoring(config["points"], config.get("name", "dict"))
     if scoring_type == "custom":
+        if "callable" not in config:
+            msg = "scoring config for 'custom' requires a 'callable' key"
+            raise ValueError(msg)
         return CustomScoring(config["callable"], config.get("name", "custom"))
     msg = f"Unknown scoring type: {scoring_type!r}"
     raise ValueError(msg)
@@ -694,8 +711,11 @@ class MostLikelyBracket:
 
     Attributes:
         winners: Tuple of team indices for each game's predicted winner,
-            in post-order (leaf games first, championship last;
-            63 entries for 64-team bracket).
+            in **round-major order** matching ``SimulationResult.sim_winners``
+            rows — all Round-of-64 games first (indices 0–31 for 64 teams),
+            then Round-of-32 (32–47), through to the championship (index 62).
+            63 entries for a 64-team bracket.  Pass directly to
+            :func:`score_bracket_against_sims` as ``chosen_bracket``.
         champion_team_id: Canonical team ID of the predicted champion
             (from BracketStructure.team_ids[champion_index]).
         log_likelihood: Sum of ``log(max(P[left, right], P[right, left]))``
@@ -884,6 +904,12 @@ def compute_most_likely_bracket(
     (``argmax(P[left, right])``).  Returns the full bracket of winners and
     the log-likelihood of the chosen bracket.
 
+    The ``winners`` array is in **round-major order** — the same order as
+    ``SimulationResult.sim_winners`` rows — so it can be passed directly to
+    :func:`score_bracket_against_sims`:
+    all Round-of-64 games first (indices 0–31), then Round-of-32 (32–47),
+    through to the championship game (index 62).
+
     Args:
         bracket: Tournament bracket structure.
         P: Pairwise win probability matrix, shape ``(n, n)``.
@@ -891,8 +917,11 @@ def compute_most_likely_bracket(
     Returns:
         :class:`MostLikelyBracket` with winners, champion, and log-likelihood.
     """
-    winners: list[int] = []
     log_likelihood = 0.0
+    # Collect (round_index, game_order_within_round, winner) tuples so we can
+    # sort into round-major order matching sim_winners layout.
+    games: list[tuple[int, int, int]] = []
+    round_counters: dict[int, int] = {}
 
     def _traverse(node: BracketNode) -> int:
         """Return team index of the predicted winner at this node."""
@@ -915,13 +944,20 @@ def compute_most_likely_bracket(
             winner = right_winner
             log_likelihood += float(np.log(max(1.0 - p_left, 1e-300)))
 
-        winners.append(winner)
+        r = node.round_index
+        game_idx = round_counters.get(r, 0)
+        round_counters[r] = game_idx + 1
+        games.append((r, game_idx, winner))
         return winner
 
     champion_index = _traverse(bracket.root)
 
+    # Sort by (round_index, game_index) to produce round-major order
+    games.sort(key=lambda x: (x[0], x[1]))
+    winners_ordered = tuple(w for _, _, w in games)
+
     return MostLikelyBracket(
-        winners=tuple(winners),
+        winners=winners_ordered,
         champion_team_id=bracket.team_ids[champion_index],
         log_likelihood=log_likelihood,
     )
