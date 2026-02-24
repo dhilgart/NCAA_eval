@@ -3,6 +3,8 @@
   <critical>You MUST have already loaded and processed: {installed_path}/workflow.yaml</critical>
   <critical>Communicate all responses in {communication_language} and generate all documents in {document_output_language}</critical>
 
+  <critical>READ {project-root}/.claude/settings.json at workflow start to identify pre-approved Bash patterns. Before issuing ANY Bash command, check if it matches an entry in the "allow" list. If it does NOT match, try an alternative approach BEFORE prompting the user — only ask if no approved alternative exists. Key defaults for this project: pytest, mypy, ruff, and git subcommands (status/diff/log/show/branch/add/commit/push/fetch/stash) are all pre-approved. The ncaa_eval conda env bin is in PATH — run pytest/mypy/ruff DIRECTLY without any conda run prefix. Use /home/dhilg/bin/ncaa-git for commits to trigger pre-commit hooks; fall back to plain git commit if ncaa-git fails to find conda.</critical>
+
   <critical>🔥 CRITICAL MISSION: You are creating the ULTIMATE story context engine that prevents LLM developer mistakes, omissions or
     disasters! 🔥</critical>
   <critical>Your purpose is NOT to copy from epics - it's to create a comprehensive, optimized story file that gives the DEV agent
