@@ -220,6 +220,32 @@ class TestLoadLeaderboardData:
         result: list[dict[str, object]] = _unwrap(load_leaderboard_data)("/fake/data")
         assert result == []
 
+    @patch("dashboard.lib.filters.Path.exists", return_value=True)
+    @patch("dashboard.lib.filters.RunStore")
+    def test_returns_empty_when_summaries_present_but_runs_missing(
+        self, mock_store_cls: MagicMock, mock_exists: MagicMock
+    ) -> None:
+        """Summaries loaded but list_runs returns empty → returns empty (no orphan rows)."""
+        mock_store = MagicMock()
+        mock_store.list_runs.return_value = []
+        mock_store.load_all_summaries.return_value = pd.DataFrame(
+            {
+                "run_id": ["ghost-run"],
+                "year": [2024],
+                "log_loss": [0.55],
+                "brier_score": [0.20],
+                "roc_auc": [0.73],
+                "ece": [0.035],
+                "elapsed_seconds": [1.2],
+            }
+        )
+        mock_store_cls.return_value = mock_store
+
+        from dashboard.lib.filters import load_leaderboard_data
+
+        result: list[dict[str, object]] = _unwrap(load_leaderboard_data)("/fake/data")
+        assert result == []
+
 
 class TestLoadAvailableScorings:
     @patch("dashboard.lib.filters.list_scorings")

@@ -12,6 +12,7 @@ import streamlit as st
 from dashboard.lib.filters import get_data_dir, load_available_runs, load_leaderboard_data
 
 _METRIC_COLS = ["log_loss", "brier_score", "roc_auc", "ece"]
+_DISPLAY_COLS = ["run_id", "model_type", "year", "log_loss", "brier_score", "roc_auc", "ece"]
 
 
 def _render_leaderboard() -> None:
@@ -44,11 +45,14 @@ def _render_leaderboard() -> None:
         if year_df.empty:
             st.info(f"No backtest results for {selected_year}")
             return
-        display_df = year_df.copy()
+        display_df = year_df[_DISPLAY_COLS].copy()
     else:
         display_df = df.groupby(["run_id", "model_type"], as_index=False)[_METRIC_COLS].mean()
 
     # -- Diagnostic KPI cards (st.metric) --------------------------------------
+    def _fmt(v: float) -> str:
+        return f"{v:.4f}" if v == v else "N/A"  # NaN check: NaN != NaN
+
     if len(display_df) >= 1:
         best_ll = display_df["log_loss"].min()
         best_bs = display_df["brier_score"].min()
@@ -64,26 +68,26 @@ def _render_leaderboard() -> None:
 
         col1.metric(
             "Best Log Loss",
-            f"{best_ll:.4f}",
-            delta=f"{best_ll - worst_ll:.4f}" if len(display_df) > 1 else None,
+            _fmt(best_ll),
+            delta=f"{best_ll - worst_ll:.4f}" if len(display_df) > 1 and best_ll == best_ll else None,
             delta_color="inverse",
         )
         col2.metric(
             "Best Brier",
-            f"{best_bs:.4f}",
-            delta=f"{best_bs - worst_bs:.4f}" if len(display_df) > 1 else None,
+            _fmt(best_bs),
+            delta=f"{best_bs - worst_bs:.4f}" if len(display_df) > 1 and best_bs == best_bs else None,
             delta_color="inverse",
         )
         col3.metric(
             "Best ROC-AUC",
-            f"{best_auc:.4f}",
-            delta=f"{best_auc - worst_auc:.4f}" if len(display_df) > 1 else None,
+            _fmt(best_auc),
+            delta=f"{best_auc - worst_auc:.4f}" if len(display_df) > 1 and best_auc == best_auc else None,
             delta_color="normal",
         )
         col4.metric(
             "Lowest ECE",
-            f"{best_ece:.4f}",
-            delta=f"{best_ece - worst_ece:.4f}" if len(display_df) > 1 else None,
+            _fmt(best_ece),
+            delta=f"{best_ece - worst_ece:.4f}" if len(display_df) > 1 and best_ece == best_ece else None,
             delta_color="inverse",
         )
 

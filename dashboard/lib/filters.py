@@ -83,6 +83,7 @@ def load_leaderboard_data(data_dir: str) -> list[dict[str, object]]:
         return []
     try:
         store = RunStore(path)
+        runs = store.list_runs()
         summaries = store.load_all_summaries()
         if summaries.empty:
             return []
@@ -95,7 +96,7 @@ def load_leaderboard_data(data_dir: str) -> list[dict[str, object]]:
                     "start_year": r.start_year,
                     "end_year": r.end_year,
                 }
-                for r in store.list_runs()
+                for r in runs
             ]
         )
         if runs_meta.empty:

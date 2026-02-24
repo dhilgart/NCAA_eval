@@ -2657,3 +2657,52 @@ import importlib
 _lab_mod = importlib.import_module("dashboard.pages.1_Lab")
 patch.object(_lab_mod, "load_leaderboard_data", return_value=[])
 ```
+
+### Streamlit: Always Define `_DISPLAY_COLS` for Leaderboard/Table Pages (Discovered Story 7.3 Code Review Round 2, 2026-02-24)
+
+When a raw data fetch returns more columns than the UX spec calls for (e.g., `timestamp`, `start_year`, `end_year` from a join), always define an explicit `_DISPLAY_COLS` constant and slice the display DataFrame through it in **every** code path (year-filtered, aggregate, etc.). Without this:
+
+- Internal fields leak into the Streamlit table UI
+- Different code paths show different column sets (inconsistent UX)
+- The Pandas Styler `.format()` dict must specify extra irrelevant columns or silently skip them
+
+```python
+# In the page module:
+_DISPLAY_COLS = ["run_id", "model_type", "year", "log_loss", "brier_score", "roc_auc", "ece"]
+
+# In the filtering logic:
+if selected_year is not None:
+    display_df = year_df[_DISPLAY_COLS].copy()   # ✅ explicit column slice
+else:
+    display_df = df.groupby(...)[_METRIC_COLS].mean()  # aggregate already has only desired cols
+```
+
+Also: **always test that `_DISPLAY_COLS` is enforced** through `_render_*()` functions by calling the function with a mocked `st` and checking `st.dataframe.call_args[0][0].data.columns`.
+
+### Avoid Double `list_runs()` Scans in Cache Functions (Discovered Story 7.3 Code Review Round 2, 2026-02-24)
+
+`load_all_summaries()` internally calls `list_runs()`. If the calling cache function also calls `store.list_runs()` for metadata, that's two full directory scans. Call `list_runs()` once and reuse:
+
+```python
+# ❌ Double scan — list_runs called inside load_all_summaries AND here
+summaries = store.load_all_summaries()  # internally calls list_runs
+runs_meta = pd.DataFrame([...for r in store.list_runs()])  # second scan
+
+# ✅ Single scan
+runs = store.list_runs()
+summaries = store.load_all_summaries()  # still does its own scan; refactor if perf matters
+runs_meta = pd.DataFrame([...for r in runs])  # reuse same list
+```
+
+### Always Guard `st.metric` Values Against NaN (Discovered Story 7.3 Code Review Round 2, 2026-02-24)
+
+`pd.Series.min()`/`max()` return `nan` when all values are `nan`. `f"{nan:.4f}"` formats as the string `"nan"` — displayed literally in `st.metric`. Add a guard:
+
+```python
+def _fmt(v: float) -> str:
+    return f"{v:.4f}" if v == v else "N/A"  # NaN != NaN
+
+col1.metric("Best Log Loss", _fmt(best_ll), ...)
+```
+
+Apply the same check to delta conditions: `delta=f"{...}" if len(df) > 1 and best_ll == best_ll else None`.

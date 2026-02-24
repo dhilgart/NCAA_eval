@@ -336,22 +336,24 @@ Claude Opus 4.6
 - Task 5: Refactored page into `_render_leaderboard()` function for import safety. Added 5 tests in test_leaderboard_page.py (year filtering + empty state). Existing smoke import test passes. load_leaderboard_data tests already in Task 3.
 - Task 6: All quality gates pass. mypy --strict (78 files), mypy dashboard (11 files), ruff check, full test suite (777 passed, 1 skipped).
 - Code Review (2026-02-24): 7 issues fixed: H1 (iterrows → vectorized merge in load_leaderboard_data), H2 (_feature_cols promoted to public feature_cols in evaluation API), M1 (legacy-run st.warning added to 1_Lab.py), M2 (CLI test extended to assert summary.parquet + new test_train_persists_backtest_metrics), M3 (session_state.setdefault), L1 (weak empty-state tests replaced with actual mock-based assertions), L2 (RunStore docstring updated). Post-review: 778 passed, 1 skipped.
+- Code Review Round 2 (2026-02-24): 6 issues fixed: M1 (_DISPLAY_COLS added, year-filtered view no longer exposes internal columns), M2 (double list_runs() scan eliminated in load_leaderboard_data), M3 (year-filtering integration tests added through _render_leaderboard()), L1 (NaN guard added to st.metric KPI cards), L2 (test added for summaries-present-but-runs-empty edge case), L3 (feature_cols imported from public ncaa_eval.evaluation API). Post-review: 781 passed, 1 skipped.
 
 ### Change Log
 
 - 2026-02-24: Story 7.3 implementation complete — all 6 tasks done, all ACs satisfied
 - 2026-02-24: Code review complete — 7 issues fixed (2 HIGH, 3 MEDIUM, 2 LOW); story marked done
+- 2026-02-24: Code review round 2 complete — 6 issues fixed (0 HIGH, 3 MEDIUM, 3 LOW); all ACs confirmed; 781 passed, 1 skipped
 
 ### File List
 
 - src/ncaa_eval/model/tracking.py (modified — added 3 new methods + updated docstring)
-- src/ncaa_eval/cli/train.py (modified — added backtest + save_metrics after training; updated import)
+- src/ncaa_eval/cli/train.py (modified — added backtest + save_metrics after training; import from public API)
 - src/ncaa_eval/evaluation/backtest.py (modified — _feature_cols renamed to feature_cols)
 - src/ncaa_eval/evaluation/__init__.py (modified — feature_cols added to public API)
-- dashboard/lib/filters.py (modified — added load_leaderboard_data; fixed iterrows → merge)
-- dashboard/pages/1_Lab.py (rewritten — full leaderboard with function wrapper; legacy-run warning; setdefault)
+- dashboard/lib/filters.py (modified — added load_leaderboard_data; fixed iterrows → merge; eliminated double list_runs() scan)
+- dashboard/pages/1_Lab.py (rewritten — full leaderboard with function wrapper; _DISPLAY_COLS; legacy-run warning; setdefault; NaN guard in KPI cards)
 - tests/unit/test_run_store_metrics.py (new — 8 unit tests)
-- tests/unit/test_dashboard_filters.py (modified — added 4 leaderboard tests)
-- tests/unit/test_leaderboard_page.py (new — 5 tests; empty-state tests strengthened with mock-based assertions)
+- tests/unit/test_dashboard_filters.py (modified — added 5 leaderboard tests including summaries-without-runs edge case)
+- tests/unit/test_leaderboard_page.py (new — 7 tests; year-filtering integration tests through _render_leaderboard())
 - tests/unit/test_cli_train.py (modified — assert summary.parquet + new test_train_persists_backtest_metrics)
 - tests/unit/test_evaluation_backtest.py (modified — updated import from _feature_cols to feature_cols)

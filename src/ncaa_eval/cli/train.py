@@ -17,7 +17,7 @@ from rich.console import Console
 from rich.progress import Progress
 from rich.table import Table
 
-from ncaa_eval.evaluation.backtest import feature_cols as _feature_cols, run_backtest
+from ncaa_eval.evaluation import feature_cols as _feature_cols, run_backtest
 from ncaa_eval.ingest import ParquetRepository
 from ncaa_eval.model.base import Model, StatefulModel
 from ncaa_eval.model.tracking import ModelRun, Prediction, RunStore
