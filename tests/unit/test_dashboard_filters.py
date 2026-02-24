@@ -247,6 +247,133 @@ class TestLoadLeaderboardData:
         assert result == []
 
 
+class TestLoadFoldPredictions:
+    @patch("dashboard.lib.filters.Path.exists", return_value=True)
+    @patch("dashboard.lib.filters.RunStore")
+    def test_returns_list_of_dicts(self, mock_store_cls: MagicMock, mock_exists: MagicMock) -> None:
+        mock_store = MagicMock()
+        mock_store.load_fold_predictions.return_value = pd.DataFrame(
+            {
+                "year": [2023, 2024],
+                "game_id": ["g1", "g2"],
+                "team_a_id": [101, 102],
+                "team_b_id": [201, 202],
+                "pred_win_prob": [0.7, 0.6],
+                "team_a_won": [1.0, 0.0],
+            }
+        )
+        mock_store_cls.return_value = mock_store
+
+        from dashboard.lib.filters import load_fold_predictions
+
+        result: list[dict[str, object]] = _unwrap(load_fold_predictions)("/fake/data", "run-1")
+        assert len(result) == 2
+        assert result[0]["year"] == 2023
+        assert result[0]["pred_win_prob"] == 0.7
+
+    @patch("dashboard.lib.filters.Path.exists", return_value=True)
+    @patch("dashboard.lib.filters.RunStore")
+    def test_returns_empty_for_legacy_run(self, mock_store_cls: MagicMock, mock_exists: MagicMock) -> None:
+        mock_store = MagicMock()
+        mock_store.load_fold_predictions.return_value = None
+        mock_store_cls.return_value = mock_store
+
+        from dashboard.lib.filters import load_fold_predictions
+
+        result: list[dict[str, object]] = _unwrap(load_fold_predictions)("/fake/data", "run-1")
+        assert result == []
+
+    def test_returns_empty_on_missing_dir(self) -> None:
+        from dashboard.lib.filters import load_fold_predictions
+
+        result: list[dict[str, object]] = _unwrap(load_fold_predictions)("/nonexistent", "run-1")
+        assert result == []
+
+    @patch("dashboard.lib.filters.Path.exists", return_value=True)
+    @patch("dashboard.lib.filters.RunStore")
+    def test_returns_empty_on_oserror(self, mock_store_cls: MagicMock, mock_exists: MagicMock) -> None:
+        mock_store_cls.side_effect = OSError("disk error")
+
+        from dashboard.lib.filters import load_fold_predictions
+
+        result: list[dict[str, object]] = _unwrap(load_fold_predictions)("/fake/data", "run-1")
+        assert result == []
+
+
+class TestLoadFeatureImportances:
+    @patch("dashboard.lib.filters.Path.exists", return_value=True)
+    @patch("dashboard.lib.filters.RunStore")
+    def test_returns_sorted_importances(self, mock_store_cls: MagicMock, mock_exists: MagicMock) -> None:
+        mock_store = MagicMock()
+        mock_store.load_feature_names.return_value = ["elo_delta", "seed_diff"]
+        mock_model = MagicMock()
+        mock_model._clf = MagicMock()
+        import numpy as np
+
+        mock_model._clf.feature_importances_ = np.array([0.3, 0.7])
+        mock_store.load_model.return_value = mock_model
+        mock_run = MagicMock()
+        mock_run.model_type = "xgboost"
+        mock_store.load_run.return_value = mock_run
+        mock_store_cls.return_value = mock_store
+
+        from dashboard.lib.filters import load_feature_importances
+
+        result: list[dict[str, object]] = _unwrap(load_feature_importances)("/fake/data", "run-1")
+        assert len(result) == 2
+        assert result[0]["feature"] == "seed_diff"
+        assert result[0]["importance"] == 0.7
+
+    @patch("dashboard.lib.filters.Path.exists", return_value=True)
+    @patch("dashboard.lib.filters.RunStore")
+    def test_returns_empty_for_elo_model(self, mock_store_cls: MagicMock, mock_exists: MagicMock) -> None:
+        mock_store = MagicMock()
+        mock_run = MagicMock()
+        mock_run.model_type = "elo"
+        mock_store.load_run.return_value = mock_run
+        mock_store_cls.return_value = mock_store
+
+        from dashboard.lib.filters import load_feature_importances
+
+        result: list[dict[str, object]] = _unwrap(load_feature_importances)("/fake/data", "run-1")
+        assert result == []
+
+    @patch("dashboard.lib.filters.Path.exists", return_value=True)
+    @patch("dashboard.lib.filters.RunStore")
+    def test_returns_empty_for_legacy_run(self, mock_store_cls: MagicMock, mock_exists: MagicMock) -> None:
+        mock_store = MagicMock()
+        mock_run = MagicMock()
+        mock_run.model_type = "xgboost"
+        mock_store.load_run.return_value = mock_run
+        mock_store.load_model.return_value = None
+        mock_store_cls.return_value = mock_store
+
+        from dashboard.lib.filters import load_feature_importances
+
+        result: list[dict[str, object]] = _unwrap(load_feature_importances)("/fake/data", "run-1")
+        assert result == []
+
+    def test_returns_empty_on_missing_dir(self) -> None:
+        from dashboard.lib.filters import load_feature_importances
+
+        result: list[dict[str, object]] = _unwrap(load_feature_importances)("/nonexistent", "run-1")
+        assert result == []
+
+    @patch("dashboard.lib.filters.Path.exists", return_value=True)
+    @patch("dashboard.lib.filters.RunStore")
+    def test_returns_empty_on_oserror_from_load_run(
+        self, mock_store_cls: MagicMock, mock_exists: MagicMock
+    ) -> None:
+        mock_store = MagicMock()
+        mock_store.load_run.side_effect = FileNotFoundError("no run.json")
+        mock_store_cls.return_value = mock_store
+
+        from dashboard.lib.filters import load_feature_importances
+
+        result: list[dict[str, object]] = _unwrap(load_feature_importances)("/fake/data", "missing-run")
+        assert result == []
+
+
 class TestLoadAvailableScorings:
     @patch("dashboard.lib.filters.list_scorings")
     def test_returns_scoring_names(self, mock_list: MagicMock) -> None:

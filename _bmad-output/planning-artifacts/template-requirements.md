@@ -2706,3 +2706,119 @@ col1.metric("Best Log Loss", _fmt(best_ll), ...)
 ```
 
 Apply the same check to delta conditions: `delta=f"{...}" if len(df) > 1 and best_ll == best_ll else None`.
+
+### Use `Model` ABC (Not `Any`) for `RunStore` Persistence Methods (Discovered Story 7.4 Code Review, 2026-02-24)
+
+When adding persistence methods that accept or return model objects, always use the `Model` ABC type rather than `Any`:
+
+```python
+# ❌ Loses type safety — mypy can't catch wrong types being passed
+def save_model(self, run_id: str, model: Any, ...) -> None: ...
+def load_model(self, run_id: str) -> Any | None: ...
+
+# ✅ Proper typing — mypy enforces Model contract (save/load classmethods)
+from ncaa_eval.model.base import Model
+
+def save_model(self, run_id: str, model: Model, ...) -> None: ...
+def load_model(self, run_id: str) -> Model | None: ...
+```
+
+The deferred import inside the method body (`from ncaa_eval.model.registry import get_model`) avoids circular imports at module load time while the class-level `from ncaa_eval.model.base import Model` is safe since `base.py` does not import from `tracking.py`.
+
+### Guard Feature Names / Importances Length Mismatch in Dashboard Loaders (Discovered Story 7.4 Code Review, 2026-02-24)
+
+When zipping feature names with importance arrays, always check both that feature names are non-empty AND that lengths match before zipping:
+
+```python
+# ❌ Silent truncation / empty result when feature_names is []
+feature_names = store.load_feature_names(run_id) or []
+pairs = sorted(zip(feature_names, importances.tolist()), ...)
+
+# ✅ Explicit guard — returns [] rather than silently producing wrong results
+if importances is None or not feature_names or len(feature_names) != len(importances):
+    return []
+pairs = sorted(zip(feature_names, importances.tolist()), ...)
+```
+
+This matters when `save_model()` was called without `feature_names=` (legitimate legacy behavior).
+
+### Keep `RunStore` Class Docstring Up-to-Date With Actual Directory Layout (Discovered Story 7.4 Code Review, 2026-02-24)
+
+When new persistence methods add files to the run directory, always update the `RunStore` class docstring layout comment. Stale layout comments mislead future developers about what files to expect. Template pattern: the docstring layout should serve as the canonical specification of the run directory contract.
+
+### Test CLI Persistence Beyond Metadata — Assert New Artifact Files Exist (Discovered Story 7.4 Code Review, 2026-02-24)
+
+When the CLI acquires new persistence responsibilities (e.g., `fold_predictions.parquet`, `model/`), always extend the CLI integration tests to assert those new files exist. Dev Notes may call this out explicitly ("extend `test_cli_train.py` to assert `fold_predictions.parquet` and `model/` are created") — treat that as a mandatory task, not a suggestion.
+
+### Use Pandas-Idiomatic `not df.empty` Instead of `len(df) > 0` (Discovered Story 7.4 Code Review, 2026-02-24)
+
+```python
+# ❌ Triggers pandas FutureWarning in newer versions; less readable
+if len(filtered) > 0:
+
+# ✅ Pandas-idiomatic; no warning; clearly expresses intent
+if not filtered.empty:
+```
+
+### Broaden Exception Catch in Dashboard Loaders to Include KeyError Subclasses (Discovered Story 7.4 Code Review 2, 2026-02-24)
+
+Dashboard loaders that call registry lookups (e.g., `get_model(run.model_type)`) can raise `ModelNotFoundError(KeyError)` — which is NOT a subclass of `OSError`. Catching only `OSError` leaves `KeyError` subclasses unhandled, causing an unhandled exception in the dashboard.
+
+**Rule:** Any `@st.cache_data` function that calls a plugin registry lookup must catch `(OSError, KeyError)`:
+
+```python
+# ❌ Misses ModelNotFoundError(KeyError)
+except OSError:
+    return []
+
+# ✅ Covers file errors AND registry misses
+except (OSError, KeyError):
+    return []
+```
+
+**When this applies:** Any loader that calls `store.load_model()` or similar functions that internally call `get_model(name)` from a plugin registry. Even if a model_type guard precedes the call, future refactors may bypass it.
+
+### Cap Plotly Chart Height With a Maximum (Discovered Story 7.4 Code Review 2, 2026-02-24)
+
+When computing chart height dynamically (e.g., `max(400, n_items * 25)`), always cap it with a maximum to prevent unusably tall charts for large datasets:
+
+```python
+# ❌ No upper bound — 200 features → 5000px chart
+height=max(400, len(feature_names) * 25)
+
+# ✅ Bounded: [400, 2000]
+height=min(max(400, len(feature_names) * 25), 2000)
+```
+
+### Test the Run-Not-Found Guard in Session-State-Driven Pages (Discovered Story 7.4 Code Review 2, 2026-02-24)
+
+Dashboard pages that use `st.session_state` to look up a run ID must test the case where the run ID is set but the run no longer exists (e.g., deleted run, stale session state after data cleanup). This guard path (`st.warning(f"Run {run_id} not found.")`) is a real production scenario and must be explicitly tested:
+
+```python
+def test_shows_warning_when_run_id_not_in_available_runs(self) -> None:
+    mock_st = MagicMock()
+    mock_st.session_state = {"selected_run_id": "nonexistent-run-id"}
+    with (
+        patch.object(_dd_mod, "st", mock_st),
+        patch.object(_dd_mod, "get_data_dir", return_value="/fake/data"),
+        patch.object(_dd_mod, "load_available_runs", return_value=[]),
+    ):
+        _dd_mod._render_deep_dive()
+    mock_st.warning.assert_called_once()
+    assert "not found" in mock_st.warning.call_args[0][0].lower()
+```
+
+### Strengthen Fold Predictions Column Assertions in CLI Tests (Discovered Story 7.4 Code Review 2, 2026-02-24)
+
+When adding new persistence methods to the CLI (e.g., `fold_predictions.parquet`), assert ALL expected columns — not just the columns referenced in the current page code. Future refactors may add or drop columns silently if tests only check a subset.
+
+```python
+# ❌ Only checks columns the page currently uses
+assert "pred_win_prob" in fold_preds.columns
+assert "team_a_won" in fold_preds.columns
+assert "year" in fold_preds.columns
+
+# ✅ Assert the complete contract defined in the story schema
+expected_cols = {"year", "game_id", "team_a_id", "team_b_id", "pred_win_prob", "team_a_won"}
+assert expected_cols.issubset(set(fold_preds.columns)), f"Missing: {expected_cols - set(fold_preds.columns)}"
+```

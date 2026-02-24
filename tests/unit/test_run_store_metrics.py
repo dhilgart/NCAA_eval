@@ -1,4 +1,4 @@
-"""Tests for RunStore metric persistence: save_metrics, load_metrics, load_all_summaries."""
+"""Tests for RunStore metric persistence and fold/model persistence."""
 
 from __future__ import annotations
 
@@ -135,3 +135,166 @@ class TestLoadAllSummaries:
 
         assert isinstance(result, pd.DataFrame)
         assert result.empty
+
+
+# ── Fold predictions tests ─────────────────────────────────────────────────
+
+
+def _make_fold_predictions() -> pd.DataFrame:
+    """Create a fold predictions DataFrame mimicking CV fold output."""
+    return pd.DataFrame(
+        {
+            "year": [2023, 2023, 2024, 2024],
+            "game_id": ["g1", "g2", "g3", "g4"],
+            "team_a_id": [101, 102, 103, 104],
+            "team_b_id": [201, 202, 203, 204],
+            "pred_win_prob": [0.7, 0.4, 0.6, 0.55],
+            "team_a_won": [1.0, 0.0, 1.0, 0.0],
+        }
+    )
+
+
+class TestSaveFoldPredictions:
+    def test_creates_fold_predictions_parquet(self, tmp_path: Path) -> None:
+        store = RunStore(tmp_path)
+        run = _make_run()
+        store.save_run(run, [])
+
+        store.save_fold_predictions(run.run_id, _make_fold_predictions())
+
+        assert (tmp_path / "runs" / run.run_id / "fold_predictions.parquet").exists()
+
+    def test_raises_for_missing_run(self, tmp_path: Path) -> None:
+        store = RunStore(tmp_path)
+
+        with pytest.raises(FileNotFoundError, match="Run directory not found"):
+            store.save_fold_predictions("nonexistent-run", _make_fold_predictions())
+
+
+class TestLoadFoldPredictions:
+    def test_round_trip(self, tmp_path: Path) -> None:
+        store = RunStore(tmp_path)
+        run = _make_run()
+        store.save_run(run, [])
+        original = _make_fold_predictions()
+
+        store.save_fold_predictions(run.run_id, original)
+        loaded = store.load_fold_predictions(run.run_id)
+
+        assert loaded is not None
+        pd.testing.assert_frame_equal(loaded, original)
+
+    def test_returns_none_for_legacy_run(self, tmp_path: Path) -> None:
+        store = RunStore(tmp_path)
+        run = _make_run()
+        store.save_run(run, [])
+
+        result = store.load_fold_predictions(run.run_id)
+        assert result is None
+
+    def test_preserves_dtypes(self, tmp_path: Path) -> None:
+        store = RunStore(tmp_path)
+        run = _make_run()
+        store.save_run(run, [])
+        original = _make_fold_predictions()
+
+        store.save_fold_predictions(run.run_id, original)
+        loaded = store.load_fold_predictions(run.run_id)
+
+        assert loaded is not None
+        assert loaded["year"].dtype == "int64"
+        assert loaded["pred_win_prob"].dtype == "float64"
+        assert loaded["team_a_won"].dtype == "float64"
+        assert loaded["team_a_id"].dtype == "int64"
+        assert loaded["team_b_id"].dtype == "int64"
+
+
+# ── Model persistence tests ────────────────────────────────────────────────
+
+
+class TestSaveModel:
+    def test_creates_model_directory(self, tmp_path: Path) -> None:
+        from ncaa_eval.model.elo import EloModel, EloModelConfig
+
+        store = RunStore(tmp_path)
+        run = _make_run()
+        store.save_run(run, [])
+
+        model = EloModel(EloModelConfig())
+        store.save_model(run.run_id, model)
+
+        model_dir = tmp_path / "runs" / run.run_id / "model"
+        assert model_dir.exists()
+        assert (model_dir / "config.json").exists()
+
+    def test_saves_feature_names(self, tmp_path: Path) -> None:
+        import json
+
+        from ncaa_eval.model.elo import EloModel, EloModelConfig
+
+        store = RunStore(tmp_path)
+        run = _make_run()
+        store.save_run(run, [])
+
+        model = EloModel(EloModelConfig())
+        names = ["elo_delta", "srs_delta", "seed_diff"]
+        store.save_model(run.run_id, model, feature_names=names)
+
+        fn_path = tmp_path / "runs" / run.run_id / "model" / "feature_names.json"
+        assert fn_path.exists()
+        assert json.loads(fn_path.read_text()) == names
+
+    def test_raises_for_missing_run(self, tmp_path: Path) -> None:
+        from ncaa_eval.model.elo import EloModel, EloModelConfig
+
+        store = RunStore(tmp_path)
+        model = EloModel(EloModelConfig())
+
+        with pytest.raises(FileNotFoundError, match="Run directory not found"):
+            store.save_model("nonexistent-run", model)
+
+
+class TestLoadModel:
+    def test_round_trip_elo(self, tmp_path: Path) -> None:
+        from ncaa_eval.model.elo import EloModel, EloModelConfig
+
+        store = RunStore(tmp_path)
+        run = _make_run()
+        store.save_run(run, [])
+
+        original = EloModel(EloModelConfig())
+        store.save_model(run.run_id, original)
+
+        loaded = store.load_model(run.run_id)
+        assert loaded is not None
+        assert isinstance(loaded, EloModel)
+
+    def test_returns_none_for_legacy_run(self, tmp_path: Path) -> None:
+        store = RunStore(tmp_path)
+        run = _make_run()
+        store.save_run(run, [])
+
+        result = store.load_model(run.run_id)
+        assert result is None
+
+    def test_loads_feature_names(self, tmp_path: Path) -> None:
+        from ncaa_eval.model.elo import EloModel, EloModelConfig
+
+        store = RunStore(tmp_path)
+        run = _make_run()
+        store.save_run(run, [])
+
+        model = EloModel(EloModelConfig())
+        names = ["elo_delta", "srs_delta"]
+        store.save_model(run.run_id, model, feature_names=names)
+
+        loaded_names = store.load_feature_names(run.run_id)
+        assert loaded_names == names
+
+    def test_feature_names_none_for_legacy(self, tmp_path: Path) -> None:
+        store = RunStore(tmp_path)
+        run = _make_run()
+        store.save_run(run, [])
+
+        result = store.load_feature_names(run.run_id)
+        assert result is None
