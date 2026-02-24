@@ -102,7 +102,7 @@ development_status:
   # Epic 7: Lab & Presentation Dashboard
   epic-7: in-progress
   7-1-build-plotly-adapters-jupyter-lab-visualization: done
-  7-2-build-streamlit-app-shell-navigation: backlog
+  7-2-build-streamlit-app-shell-navigation: ready-for-dev
   7-3-build-lab-page-backtest-leaderboard: backlog
   7-4-build-lab-page-model-deep-dive-reliability-diagrams: backlog
   7-5-build-presentation-page-bracket-visualizer: backlog
