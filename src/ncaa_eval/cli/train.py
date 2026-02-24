@@ -16,29 +16,12 @@ from rich.console import Console
 from rich.progress import Progress
 from rich.table import Table
 
+from ncaa_eval.evaluation.backtest import _feature_cols
 from ncaa_eval.ingest import ParquetRepository
 from ncaa_eval.model.base import Model, StatefulModel
 from ncaa_eval.model.tracking import ModelRun, Prediction, RunStore
 from ncaa_eval.transform.feature_serving import FeatureConfig, StatefulFeatureServer
 from ncaa_eval.transform.serving import ChronologicalDataServer
-
-# Metadata columns that must be stripped before feeding stateless models.
-METADATA_COLS = frozenset(
-    {
-        "game_id",
-        "season",
-        "day_num",
-        "date",
-        "team_a_id",
-        "team_b_id",
-        "is_tournament",
-        "loc_encoding",
-        "team_a_won",
-        "w_score",
-        "l_score",
-        "num_ot",
-    }
-)
 
 
 def _get_git_hash() -> str:
@@ -55,11 +38,6 @@ def _get_git_hash() -> str:
         return "unknown"
 
 
-def _feature_cols(df: pd.DataFrame) -> list[str]:
-    """Return feature column names (everything not in METADATA_COLS)."""
-    return [c for c in df.columns if c not in METADATA_COLS]
-
-
 def run_training(  # noqa: PLR0913
     model: Model,
     *,
@@ -72,26 +50,18 @@ def run_training(  # noqa: PLR0913
 ) -> ModelRun:
     """Execute the full train → predict → persist pipeline.
 
-    Parameters
-    ----------
-    model
-        An instantiated model (stateful or stateless).
-    start_year, end_year
-        Inclusive season range for training.
-    data_dir
-        Path to the local Parquet data store.
-    output_dir
-        Path where run artifacts are persisted.
-    model_name
-        Registered plugin name (used in the ModelRun record).
-    console
-        Rich Console instance for terminal output.  Defaults to a fresh
-        ``Console()`` so callers (e.g. tests) can suppress output by
-        passing ``Console(quiet=True)``.
+    Args:
+        model: An instantiated model (stateful or stateless).
+        start_year: First season year (inclusive) for training.
+        end_year: Last season year (inclusive) for training.
+        data_dir: Path to the local Parquet data store.
+        output_dir: Path where run artifacts are persisted.
+        model_name: Registered plugin name (used in the ModelRun record).
+        console: Rich Console instance for terminal output. Defaults to a
+            fresh ``Console()`` so callers (e.g. tests) can suppress output
+            by passing ``Console(quiet=True)``.
 
-    Returns
-    -------
-    ModelRun
+    Returns:
         The persisted run metadata record.
     """
     _console = console or Console()
