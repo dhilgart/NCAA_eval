@@ -17,6 +17,8 @@
 | [4. Small-Sample Mitigation](#4-small-sample-mitigation-strategies) | Game-level modeling, ensembles, Bayesian priors, conformal | Model at game level (200K obs), not tournament level (40 obs) |
 | [5. Implementation Recommendations](#5-implementation-recommendations-for-story-65) | Bracket repr, probability contract, scoring, perf targets | Analytical first; MC only for score-distribution analysis |
 | [6. Decision Matrix](#6-decision-matrix-analytical-vs-monte-carlo) | When to use each approach | Analytical for EP/advancement; MC for bracket-count/score-distribution |
+| [7. Pseudocode](#7-pseudocode-recommended-simulation-approach) | Analytical EP, two-layer bootstrap CI, MC fallback | provider_factory pattern for model-agnostic CI; batch prob matrix |
+| [8. Recommendations Summary](#8-key-recommendations-summary) | 8 concrete decisions for Story 6.5 | START HERE for Story 6.5 implementation |
 
 ---
 
@@ -424,9 +426,15 @@ p = model._predict_one(team_a, team_b)
 **Stateless models (XGBoost):**
 ```python
 # Need to generate a synthetic feature row for a hypothetical matchup.
-# The feature server already supports this:
-features = feature_server.serve_matchup_features(team_a, team_b, day_num)
-p = model.predict_proba(features)
+# NOTE: StatefulFeatureServer does NOT currently have this method.
+# Story 6.5 must add serve_matchup_features_batch() to StatefulFeatureServer.
+# The batch method (used via build_probability_matrix) generates a DataFrame
+# with one row per (team_a, team_b) pair and feeds it to model.predict_proba()
+# in a single call (NFR1-compliant).
+features_batch = feature_server.serve_matchup_features_batch(
+    team_a_ids, team_b_ids, context
+)
+probs = model.predict_proba(features_batch)  # pd.Series of P(a wins)
 ```
 
 **Recommended contract:**
@@ -438,11 +446,20 @@ class ProbabilityProvider(Protocol):
     def matchup_probability(
         self, team_a_id: int, team_b_id: int, context: MatchupContext
     ) -> float: ...
+
+    def batch_matchup_probabilities(
+        self,
+        team_a_ids: Sequence[int],
+        team_b_ids: Sequence[int],
+        context: MatchupContext,
+    ) -> np.ndarray: ...
 ```
 
-Where `MatchupContext` carries season, day_num, and neutral-court flag. This protocol is implementable by both stateful (Elo — ignore context, use internal ratings) and stateless (XGBoost — use context to generate features) models.
+Where `MatchupContext` carries season, day_num, and neutral-court flag. This protocol is implementable by both stateful (Elo — ignore context, use internal ratings) and stateless (XGBoost — use context to generate a batch feature matrix) models.
 
-**Batch interface for the probability matrix:**
+**Batch interface for the probability matrix (NFR1-compliant):**
+
+For stateless models (XGBoost), the probability matrix must be built using **batched inference**, not per-pair prediction loops, to comply with NFR1 (Vectorization):
 
 ```python
 def build_probability_matrix(
@@ -450,18 +467,32 @@ def build_probability_matrix(
     team_ids: Sequence[int],
     context: MatchupContext,
 ) -> np.ndarray:
-    """Build n×n matrix P where P[i,j] = P(team_i beats team_j)."""
+    """Build n×n matrix P where P[i,j] = P(team_i beats team_j).
+
+    Uses batch inference for stateless models (single predict_proba call
+    over all n*(n-1)/2 pairs) and scalar dispatch for stateful models.
+    Complies with NFR1 (Vectorization).
+    """
     n = len(team_ids)
+    # Generate upper-triangle indices: 2,016 pairs for n=64
+    rows, cols = np.triu_indices(n, k=1)
+    a_ids = [team_ids[i] for i in rows]
+    b_ids = [team_ids[j] for j in cols]
+
+    # Single batched call — provider builds feature matrix internally
+    probs = provider.batch_matchup_probabilities(a_ids, b_ids, context)
+
     P = np.zeros((n, n))
-    for i in range(n):
-        for j in range(i + 1, n):
-            p = provider.matchup_probability(team_ids[i], team_ids[j], context)
-            P[i, j] = p
-            P[j, i] = 1 - p
+    P[rows, cols] = probs
+    P[cols, rows] = 1 - probs
     return P
 ```
 
-For 64 teams: 64×63/2 = 2,016 probability computations. At ~1ms per XGBoost prediction, this takes ~2 seconds. For Elo: ~1ms total.
+**Implementation note for Story 6.5:** `batch_matchup_probabilities` for a stateless model (XGBoost) should call `feature_server.serve_matchup_features_batch(a_ids, b_ids, context)` — a **new method** Story 6.5 must add to `StatefulFeatureServer` — that returns a DataFrame with one row per (a, b) pair, then passes the whole matrix to `model.predict_proba()` in a single call.
+
+For Elo (stateful): the batch call simply loops over `_predict_one()` pairs since Elo is already O(1) per pair — no vectorization needed.
+
+For 64 teams: 64×63/2 = 2,016 probability computations. Batched XGBoost: ~50ms total (single inference). Elo: ~2ms total.
 
 ### 5.3 Scoring Rule Interface
 
@@ -513,14 +544,40 @@ Rationale:
 ```python
 @dataclass(frozen=True)
 class SimulationResult:
-    """Result of tournament simulation for one season."""
+    """Result of tournament simulation for one season.
+
+    Both the analytical path and the MC path produce a SimulationResult.
+    The difference is in method, n_simulations, and confidence_intervals.
+
+    expected_points: computed externally for each desired ScoringRule, then
+    passed in as a dict. compute_expected_points() returns a single np.ndarray
+    per ScoringRule; the caller computes EP for all desired rules and assembles
+    the dict before constructing SimulationResult.
+
+    Example (analytical path):
+        adv_probs = compute_advancement_probs(bracket, P)
+        ep_dict = {
+            rule.name: compute_expected_points(adv_probs, rule)
+            for rule in scoring_rules
+        }
+        result = SimulationResult(
+            season=context.season,
+            advancement_probs=adv_probs,
+            expected_points=ep_dict,
+            method="analytical",
+            n_simulations=None,
+            confidence_intervals=None,
+        )
+    """
 
     season: int
     advancement_probs: np.ndarray    # shape (n_teams, n_rounds)
-    expected_points: dict[str, np.ndarray]  # scoring_rule_name → per-team EP
+    expected_points: dict[str, np.ndarray]  # scoring_rule_name → per-team EP, shape (n_teams,)
     method: str                       # "analytical" or "monte_carlo"
-    n_simulations: int | None         # None for analytical
+    n_simulations: int | None         # None for analytical, N for MC
     confidence_intervals: dict[str, tuple[np.ndarray, np.ndarray]] | None
+    # ^ scoring_rule_name → (ep_lower, ep_upper), each shape (n_teams,)
+    # Populated only when compute_ep_confidence_intervals() is called
 ```
 
 ### 5.6 Data Requirements
@@ -566,21 +623,43 @@ def compute_advancement_probs(
     Uses post-order traversal of the bracket tree, computing
     Win Probability Vectors (WPVs) at each internal node.
 
+    round_index convention (0-indexed from first playable round):
+      0 = Round of 64  (R64, 32 games)
+      1 = Round of 32  (R32, 16 games)
+      2 = Sweet 16     (S16,  8 games)
+      3 = Elite Eight  (E8,   4 games)
+      4 = Final Four   (FF,   2 games)
+      5 = Championship (NCG,  1 game)
+
+    Each internal BracketNode stores its round_index. In a perfect binary
+    tree with n=64 leaves, the accumulation adv_probs[:, r] += wpv is safe
+    because each round has exactly one game slot per bracket half (disjoint
+    subtrees). A team appears in at most one internal node per round.
+
     Args:
         bracket: Tournament bracket structure (matchup tree).
+            Must have exactly n leaf nodes where n is a power of 2.
+            n=64 for NCAA post-First-Four bracket.
         P: Pairwise win probability matrix, shape (n, n).
 
     Returns:
-        Advancement probabilities, shape (n, n_rounds).
+        adv_probs, shape (n, n_rounds).
+        adv_probs[i, r] = P(team i advances past round r).
     """
     n = P.shape[0]
+    assert n > 0 and (n & (n - 1)) == 0, f"n must be a power of 2, got {n}"
     n_rounds = int(np.log2(n))  # 6 for 64 teams
 
     # Store per-round advancement probs
     adv_probs = np.zeros((n, n_rounds))
 
     def traverse(node: BracketNode) -> np.ndarray:
-        """Post-order traversal returning WPV at this node."""
+        """Post-order traversal returning WPV at this node.
+
+        The WPV at an internal node is the probability vector over all n
+        teams of being the team that wins this particular match slot.
+        For a leaf, it is the unit vector for that team.
+        """
         if node.is_leaf:
             wpv = np.zeros(n)
             wpv[node.team_index] = 1.0
@@ -590,12 +669,12 @@ def compute_advancement_probs(
         right_wpv = traverse(node.right)
 
         # Phylourny core: R = V ⊙ (P^T · W) + W ⊙ (P^T · V)
+        # R[i] = P(team i wins this match) given the left/right sub-brackets
         wpv = left_wpv * (P.T @ right_wpv) + right_wpv * (P.T @ left_wpv)
 
-        # Record advancement probs for this round
-        adv_probs[:, node.round_index] = (
-            adv_probs[:, node.round_index] + wpv
-        )
+        # Accumulate advancement probs: safe because each round writes to
+        # disjoint game slots (binary tree, no overlapping subtrees).
+        adv_probs[:, node.round_index] += wpv
         return wpv
 
     traverse(bracket.root)
@@ -625,7 +704,7 @@ def compute_expected_points(
 ```python
 def compute_ep_confidence_intervals(
     bracket: BracketStructure,
-    model: Model,
+    provider_factory: Callable[[], ProbabilityProvider],
     team_ids: Sequence[int],
     context: MatchupContext,
     scoring_rule: ScoringRule,
@@ -634,12 +713,20 @@ def compute_ep_confidence_intervals(
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Compute EP confidence intervals via two-layer bootstrap.
 
-    Outer loop: perturb model parameters (captures model uncertainty).
-    Inner loop: analytical EP computation (zero simulation noise).
+    Outer loop: draw a perturbed ProbabilityProvider (captures model
+    uncertainty). Inner loop: analytical EP computation (zero simulation
+    noise).
 
     Args:
         bracket: Tournament bracket structure.
-        model: Trained model with parameter perturbation support.
+        provider_factory: Callable that returns a new ProbabilityProvider
+            with independently perturbed model parameters on each call.
+            Story 6.5 must implement this for each model type:
+            - Elo (stateful): resample rating perturbation noise from the
+              Elo model's estimated rating uncertainty.
+            - XGBoost (stateless): refit on a bootstrap resample of the
+              training data (parametric bootstrap).
+            - Bayesian models: draw from the posterior directly.
         team_ids: Team IDs in bracket order.
         context: Matchup context (season, day_num, neutral court).
         scoring_rule: Scoring rule for EP computation.
@@ -653,13 +740,16 @@ def compute_ep_confidence_intervals(
     ep_samples = np.zeros((n_bootstrap, n))
 
     for b in range(n_bootstrap):
-        # Outer loop: perturb model parameters
-        perturbed_model = model.sample_from_posterior()
+        # Outer loop: obtain a perturbed probability provider
+        # (does NOT call model.sample_from_posterior() — that method
+        #  does not exist on the Model ABC; provider_factory encapsulates
+        #  the perturbation strategy for each model type)
+        perturbed_provider = provider_factory()
 
         # Build probability matrix with perturbed params
-        P = build_probability_matrix(perturbed_model, team_ids, context)
+        P = build_probability_matrix(perturbed_provider, team_ids, context)
 
-        # Inner loop: exact analytical computation
+        # Inner loop: exact analytical computation (zero simulation noise)
         adv_probs = compute_advancement_probs(bracket, P)
         ep_samples[b] = compute_expected_points(adv_probs, scoring_rule)
 
@@ -670,6 +760,13 @@ def compute_ep_confidence_intervals(
     return ep_median, ep_lower, ep_upper
 ```
 
+**Implementation note for Story 6.5:** The `provider_factory` pattern decouples CI computation from model internals. Story 6.5 must implement a `BootstrapProviderFactory` for each model type:
+- **Elo:** Store a snapshot of ratings; add Gaussian noise scaled to the Elo model's expected rating uncertainty (±50–100 Elo points).
+- **XGBoost:** Refit the XGBoost model on a resampled training dataset (expensive — use B=50–100 not 1000); or use XGBoost's internal `predict_leaf` for parametric variance estimation.
+- **Bayesian (PyMC/NumPyro):** Draw from the posterior sample cache directly — the cheapest outer loop.
+
+The `Model` ABC itself does **not** need a `sample_from_posterior()` method. The `provider_factory` callable captures the perturbation logic externally.
+
 ### 7.3 Monte Carlo Simulation (Fallback)
 
 ```python
@@ -677,6 +774,7 @@ def simulate_tournament_mc(
     bracket: BracketStructure,
     P: np.ndarray,
     scoring_rule: ScoringRule,
+    season: int,  # Required: populates SimulationResult.season
     n_simulations: int = 10_000,
     rng: np.random.Generator | None = None,
 ) -> SimulationResult:
@@ -689,6 +787,7 @@ def simulate_tournament_mc(
         bracket: Tournament bracket structure.
         P: Pairwise win probability matrix, shape (n, n).
         scoring_rule: Scoring rule for EP computation.
+        season: Tournament season year (e.g. 2024). Stored in result.
         n_simulations: Number of MC runs (≥10K recommended).
         rng: NumPy random generator for reproducibility.
 
@@ -699,6 +798,7 @@ def simulate_tournament_mc(
         rng = np.random.default_rng()
 
     n = P.shape[0]
+    assert n > 0 and (n & (n - 1)) == 0, f"n must be a power of 2, got {n}"
     n_rounds = int(np.log2(n))
 
     # Batch-sample all game outcomes at once for vectorization
@@ -716,9 +816,9 @@ def simulate_tournament_mc(
         pass
 
     return SimulationResult(
-        season=context.season,
+        season=season,
         advancement_probs=advancement_counts / n_simulations,
-        expected_points={"standard": scores.mean(axis=0)},
+        expected_points={scoring_rule.name: scores.mean(axis=0)},
         method="monte_carlo",
         n_simulations=n_simulations,
         confidence_intervals=None,

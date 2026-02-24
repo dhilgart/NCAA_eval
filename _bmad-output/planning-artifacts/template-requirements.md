@@ -2322,3 +2322,44 @@ When a public function calls another function that raises `ValueError` (or other
 ### Docstring Style Drift in Modified Files (Discovered Story 6.3 2nd Code Review, 2026-02-23)
 
 When a story modifies an existing file (e.g., to update an import), the dev agent should inspect the file's docstrings for style compliance. Files written before the Google-docstring mandate was established often still use NumPy style (`Parameters\n----------`). Any file **touched** by a story is an opportunity to correct docstring drift — failing to do so perpetuates the style inconsistency and will be flagged in every subsequent code review.
+
+### Research/Spike Docs Must Not Reference Fictional Model ABC Methods (Discovered Story 6.4 Code Review, 2026-02-23)
+
+When research documents include pseudocode, every method call must be verified against the actual existing ABCs/interfaces. A common failure mode: the spike author writes `model.sample_from_posterior()` or similar — a method that sounds like it should exist but is not in the `Model` ABC. Story 6.5's dev agent then treats this as a real API contract.
+
+**Pattern:** For multi-step algorithms that need a "parameterized provider," use a factory callable (`provider_factory: Callable[[], T]`) rather than a method on the model ABC. This decouples the perturbation strategy from the model interface:
+```python
+# WRONG — Model ABC has no sample_from_posterior():
+perturbed_model = model.sample_from_posterior()
+
+# CORRECT — factory callable encapsulates perturbation strategy externally:
+provider_factory: Callable[[], ProbabilityProvider]
+perturbed_provider = provider_factory()  # each call returns a new perturbed provider
+```
+
+### Probability Matrix Construction for 64 Teams Must Use Batch Inference (Discovered Story 6.4 Code Review, 2026-02-23)
+
+A 64-team bracket requires 64×63/2 = 2,016 pairwise win probabilities. Implementing this with a Python `for` loop that calls `model.predict_proba()` per pair violates NFR1 (Vectorization) and takes ~2 seconds for XGBoost. The correct approach is batched inference:
+
+1. Generate all (team_a, team_b) upper-triangle pairs using `np.triu_indices(n, k=1)`.
+2. Build a batch feature DataFrame with one row per pair using `feature_server.serve_matchup_features_batch(a_ids, b_ids, context)`.
+3. Call `model.predict_proba(batch_df)` once — returns all 2,016 probs as a Series.
+4. Fill the probability matrix using numpy advanced indexing: `P[rows, cols] = probs`.
+
+This reduces XGBoost inference from ~2s (2,016 serial calls) to ~50ms (1 batched call).
+
+**Story 6.5 requirement:** Add `serve_matchup_features_batch(a_ids, b_ids, context)` to `StatefulFeatureServer` — this method does not currently exist.
+
+### Research Docs Must Not Claim "Already Supports" Unimplemented APIs (Discovered Story 6.4 Code Review, 2026-02-23)
+
+A spike research document said "The feature server already supports this:" before showing a call to `feature_server.serve_matchup_features(team_a, team_b, day_num)`. This method does not exist. The claim was false.
+
+**Pattern:** Before writing "X already supports Y" in a research document, verify the method signature exists in the actual source file. Use `grep -n "def serve_matchup" src/` to confirm. If it doesn't exist, write "Story 6.5 must add `serve_matchup_features_batch()` to `StatefulFeatureServer`" instead.
+
+### Power-of-2 Bracket Sizes Must Be Asserted Explicitly (Discovered Story 6.4 Code Review, 2026-02-23)
+
+Pseudocode that computes `n_rounds = int(np.log2(n))` silently produces wrong results for non-power-of-2 inputs (e.g., 63 teams → 5 rounds instead of 6). Always add an assertion:
+```python
+assert n > 0 and (n & (n - 1)) == 0, f"n must be a power of 2, got {n}"
+```
+This catches First-Four inclusion bugs (63 or 65 teams) before they silently corrupt simulation results.

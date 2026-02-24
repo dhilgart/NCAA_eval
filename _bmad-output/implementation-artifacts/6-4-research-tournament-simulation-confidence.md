@@ -1,6 +1,6 @@
 # Story 6.4: Research Tournament Simulation Confidence
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -201,10 +201,11 @@ No debug issues — this is a research/spike story producing a document, not pro
 
 ### File List
 
-- `specs/research/tournament-simulation-confidence.md` — NEW: Research findings document (primary deliverable)
-- `_bmad-output/implementation-artifacts/6-4-research-tournament-simulation-confidence.md` — MODIFIED: Story file updates (task checkboxes, dev record, status)
-- `_bmad-output/implementation-artifacts/sprint-status.yaml` — MODIFIED: Status update ready-for-dev → in-progress → review
+- `specs/research/tournament-simulation-confidence.md` — NEW: Research findings document (primary deliverable); MODIFIED by code review (7 fixes applied)
+- `_bmad-output/implementation-artifacts/6-4-research-tournament-simulation-confidence.md` — MODIFIED: Story file updates (task checkboxes, dev record, status → done)
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — MODIFIED: Status update → done
 
 ### Change Log
 
 - 2026-02-23: Completed all 6 tasks for Story 6.4 spike. Produced `specs/research/tournament-simulation-confidence.md` with comprehensive findings on simulation convergence, analytical alternatives (Phylourny), confidence interval methods, small-sample mitigation, and implementation recommendations for Story 6.5. Key recommendation: use analytical computation (Phylourny algorithm) as primary method; MC simulation only for score-distribution/bracket-count analysis.
+- 2026-02-23: Code review (code-review workflow, YOLO mode). Found 2 HIGH + 5 MEDIUM + 3 LOW issues in the research document. Fixed all 7 HIGH/MEDIUM issues: (H1) replaced fictional `model.sample_from_posterior()` call with `provider_factory: Callable[[], ProbabilityProvider]` pattern; (H2) replaced non-vectorized per-pair probability loop with batched inference approach (NFR1-compliant); (M1) clarified `SimulationResult.expected_points` dict construction with example; (M2) documented `round_index` convention and accumulation safety invariant; (M3) corrected false claim that `serve_matchup_features_batch()` exists on `StatefulFeatureServer` (Story 6.5 must add it); (M4) added sections 7 and 8 to Quick-Navigation Table; (M5) added `season: int` parameter to `simulate_tournament_mc()` signature.
