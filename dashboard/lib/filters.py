@@ -39,7 +39,7 @@ def load_available_years(data_dir: str) -> list[int]:
         repo = ParquetRepository(path)
         seasons = repo.get_seasons()
         return sorted((s.year for s in seasons), reverse=True)
-    except Exception:
+    except OSError:
         return []
 
 
@@ -60,7 +60,7 @@ def load_available_runs(data_dir: str) -> list[dict[str, object]]:
     try:
         store = RunStore(path)
         return [run.model_dump() for run in store.list_runs()]
-    except Exception:
+    except OSError:
         return []
 
 

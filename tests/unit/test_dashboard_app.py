@@ -25,6 +25,21 @@ class TestDashboardImports:
     def test_import_components_package(self) -> None:
         importlib.import_module("dashboard.components")
 
+    def test_import_page_home(self) -> None:
+        importlib.import_module("dashboard.pages.home")
+
+    def test_import_page_lab(self) -> None:
+        importlib.import_module("dashboard.pages.1_Lab")
+
+    def test_import_page_presentation(self) -> None:
+        importlib.import_module("dashboard.pages.2_Presentation")
+
+    def test_import_page_model_deep_dive(self) -> None:
+        importlib.import_module("dashboard.pages.3_Model_Deep_Dive")
+
+    def test_import_page_pool_scorer(self) -> None:
+        importlib.import_module("dashboard.pages.4_Pool_Scorer")
+
 
 class TestFilterFunctionSignatures:
     """Verify filter functions are callable and decorated with cache_data."""
