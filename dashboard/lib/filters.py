@@ -171,7 +171,7 @@ def load_feature_importances(data_dir: str, run_id: str) -> list[dict[str, objec
         feature_names = store.load_feature_names(run_id) or []
         clf = getattr(model, "_clf", None)
         importances = getattr(clf, "feature_importances_", None)
-        if importances is None:
+        if importances is None or not feature_names or len(feature_names) != len(importances):
             return []
         pairs = sorted(
             zip(feature_names, importances.tolist()),

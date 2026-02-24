@@ -203,6 +203,86 @@ class TestCLITrain:
         assert "Available models" in result.output
 
     # -----------------------------------------------------------------------
+    # Task 7.4: Training persists fold predictions and model artifacts
+    # -----------------------------------------------------------------------
+
+    @patch(
+        "ncaa_eval.cli.train.StatefulFeatureServer.serve_season_features",
+        _mock_serve_season_features,
+    )
+    def test_train_persists_fold_predictions(self, tmp_path: Path) -> None:
+        """Training with ≥2 seasons writes fold_predictions.parquet."""
+        data_dir = tmp_path / "data"
+        data_dir.mkdir()
+        output_dir = tmp_path / "output"
+        output_dir.mkdir()
+
+        result = runner.invoke(
+            app,
+            [
+                "train",
+                "--model",
+                "logistic_regression",
+                "--start-year",
+                "2020",
+                "--end-year",
+                "2022",
+                "--data-dir",
+                str(data_dir),
+                "--output-dir",
+                str(output_dir),
+            ],
+        )
+        assert result.exit_code == 0, f"CLI failed: {result.output}"
+
+        store = RunStore(base_path=output_dir)
+        runs = store.list_runs()
+        assert len(runs) == 1
+        fold_preds = store.load_fold_predictions(runs[0].run_id)
+        assert fold_preds is not None, "fold_predictions.parquet must be created for ≥2 seasons"
+        assert "pred_win_prob" in fold_preds.columns
+        assert "team_a_won" in fold_preds.columns
+        assert "year" in fold_preds.columns
+
+    @patch(
+        "ncaa_eval.cli.train.StatefulFeatureServer.serve_season_features",
+        _mock_serve_season_features,
+    )
+    def test_train_persists_model_artifacts(self, tmp_path: Path) -> None:
+        """Training always creates model/ directory with saved model artifacts."""
+        data_dir = tmp_path / "data"
+        data_dir.mkdir()
+        output_dir = tmp_path / "output"
+        output_dir.mkdir()
+
+        result = runner.invoke(
+            app,
+            [
+                "train",
+                "--model",
+                "logistic_regression",
+                "--start-year",
+                "2020",
+                "--end-year",
+                "2021",
+                "--data-dir",
+                str(data_dir),
+                "--output-dir",
+                str(output_dir),
+            ],
+        )
+        assert result.exit_code == 0, f"CLI failed: {result.output}"
+
+        store = RunStore(base_path=output_dir)
+        runs = store.list_runs()
+        assert len(runs) == 1
+
+        run_id = runs[0].run_id
+        model_dir = output_dir / "runs" / run_id / "model"
+        assert model_dir.exists(), "model/ directory must be created during training"
+        assert (model_dir / "feature_names.json").exists(), "feature_names.json must be saved with model"
+
+    # -----------------------------------------------------------------------
     # Task 6.4: Config override applies custom hyperparameters
     # -----------------------------------------------------------------------
 

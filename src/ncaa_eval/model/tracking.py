@@ -17,6 +17,8 @@ import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.parquet as pq  # type: ignore[import-untyped]
 from pydantic import BaseModel, Field
 
+from ncaa_eval.model.base import Model
+
 # ── PyArrow schema for Prediction Parquet files ────────────────────────────
 
 _PREDICTION_SCHEMA = pa.schema(
@@ -69,9 +71,15 @@ class RunStore:
         base_path/
           runs/
             <run_id>/
-              run.json              # ModelRun metadata
-              predictions.parquet   # Prediction records (PyArrow)
-              summary.parquet       # BacktestResult.summary (year × metrics)
+              run.json                    # ModelRun metadata
+              predictions.parquet         # Prediction records (PyArrow)
+              summary.parquet             # BacktestResult.summary (year × metrics)
+              fold_predictions.parquet    # CV fold y_true/y_prob per year
+              model/                      # Trained model artifacts
+                model.ubj                 # XGBoost native format (XGBoost only)
+                model.json                # Elo ratings (Elo only)
+                config.json               # Model config
+                feature_names.json        # Feature column names used during training
     """
 
     def __init__(self, base_path: Path) -> None:
@@ -195,7 +203,7 @@ class RunStore:
     def save_model(
         self,
         run_id: str,
-        model: Any,
+        model: Model,
         *,
         feature_names: list[str] | None = None,
     ) -> None:
@@ -219,7 +227,7 @@ class RunStore:
         if feature_names is not None:
             (model_dir / "feature_names.json").write_text(json.dumps(feature_names))
 
-    def load_model(self, run_id: str) -> Any | None:
+    def load_model(self, run_id: str) -> Model | None:
         """Load a trained model from a run directory.
 
         Args:

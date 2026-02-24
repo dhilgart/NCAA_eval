@@ -28,7 +28,10 @@ _METRIC_COLS = ["log_loss", "brier_score", "roc_auc", "ece"]
 
 
 def _render_reliability_section(data_dir: str, run_id: str, label: str) -> None:
-    """Render fold predictions year selector and reliability diagram."""
+    """Render metric explorer with year drill-down and reliability diagram."""
+    st.subheader("Metric Explorer")
+    st.caption("Drill-down by year. Round, seed matchup, and conference filters are post-MVP.")
+
     fold_preds_raw = load_fold_predictions(data_dir, run_id)
     if not fold_preds_raw:
         st.warning("No fold predictions available. Re-run training to generate diagnostic data.")
@@ -47,7 +50,7 @@ def _render_reliability_section(data_dir: str, run_id: str, label: str) -> None:
         title_suffix = selected_year_str
 
     st.subheader("Reliability Diagram")
-    if len(filtered) > 0:
+    if not filtered.empty:
         y_true = filtered["team_a_won"].to_numpy().astype(np.float64)
         y_prob = filtered["pred_win_prob"].to_numpy().astype(np.float64)
         fig = plot_reliability_diagram(
