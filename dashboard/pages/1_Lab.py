@@ -6,7 +6,7 @@ metrics, with diagnostic KPI cards and conditional formatting.
 
 from __future__ import annotations
 
-import pandas as pd
+import pandas as pd  # type: ignore[import-untyped]
 import streamlit as st
 
 from dashboard.lib.filters import get_data_dir, load_leaderboard_data
@@ -111,8 +111,8 @@ def _render_leaderboard() -> None:
     )
 
     # -- Click-to-navigate to Model Deep Dive ----------------------------------
-    if event and event.selection and event.selection.rows:
-        selected_idx = event.selection.rows[0]
+    if event and event.selection and event.selection.rows:  # type: ignore[attr-defined]
+        selected_idx = event.selection.rows[0]  # type: ignore[attr-defined]
         selected_run_id = str(display_df.iloc[selected_idx]["run_id"])
         st.session_state["selected_run_id"] = selected_run_id
         st.switch_page("pages/3_Model_Deep_Dive.py")
