@@ -17,19 +17,17 @@ import pandas as pd  # type: ignore[import-untyped]
 from ncaa_eval.transform.feature_serving import StatefulFeatureServer
 from ncaa_eval.transform.serving import _NO_TOURNAMENT_SEASONS
 
+_VALID_MODES: frozenset[str] = frozenset({"batch", "stateful"})
+
 
 @dataclasses.dataclass(frozen=True)
 class CVFold:
     """A single cross-validation fold.
 
-    Attributes
-    ----------
-    train
-        All games from seasons strictly before the test year.
-    test
-        Tournament games only from the test year.
-    year
-        The test season year.
+    Attributes:
+        train: All games from seasons strictly before the test year.
+        test: Tournament games only from the test year.
+        year: The test season year.
     """
 
     train: pd.DataFrame
@@ -45,30 +43,28 @@ def walk_forward_splits(
 ) -> Iterator[CVFold]:
     """Generate walk-forward CV folds with Leave-One-Tournament-Out splits.
 
-    Parameters
-    ----------
-    seasons
-        Ordered sequence of season years to include (e.g., range(2008, 2026)).
-        Must contain at least 2 seasons.
-    feature_server
-        Configured StatefulFeatureServer for building feature matrices.
-    mode
-        Feature serving mode: "batch" (stateless models) or "stateful"
-        (sequential-update models like Elo).
+    Args:
+        seasons: Ordered sequence of season years to include
+            (e.g., ``range(2008, 2026)``). Must contain at least 2 seasons.
+        feature_server: Configured StatefulFeatureServer for building feature
+            matrices.
+        mode: Feature serving mode: ``"batch"`` (stateless models) or
+            ``"stateful"`` (sequential-update models like Elo).
 
-    Yields
-    ------
-    CVFold
-        For each eligible test year (skipping no-tournament years like 2020):
-        - train: All games from seasons strictly before the test year
-        - test: Tournament games only from the test year
-        - year: The test season year
+    Yields:
+        CVFold: For each eligible test year (skipping no-tournament years like
+        2020): ``train`` contains all games from seasons strictly before the
+        test year; ``test`` contains only tournament games from the test year;
+        ``year`` is the test season year.
 
-    Raises
-    ------
-    ValueError
-        If ``seasons`` has fewer than 2 elements.
+    Raises:
+        ValueError: If ``seasons`` has fewer than 2 elements, or if ``mode``
+            is not ``"batch"`` or ``"stateful"``.
     """
+    if mode not in _VALID_MODES:
+        msg = f"mode must be 'batch' or 'stateful', got {mode!r}"
+        raise ValueError(msg)
+
     sorted_seasons = sorted(seasons)
 
     if len(sorted_seasons) < 2:
@@ -86,13 +82,19 @@ def walk_forward_splits(
         if test_year in _NO_TOURNAMENT_SEASONS:
             continue
 
-        # Accumulate training data from all prior seasons
+        # Accumulate training data from all prior seasons.
+        # Empty seasons (e.g. feature server returned no games) are skipped —
+        # pd.concat of empty DataFrames produces a column-less frame that would
+        # confuse downstream consumers.  Including an empty frame in the list
+        # is harmless but produces dtype-mismatch warnings, so we filter them.
         train_frames: list[pd.DataFrame] = []
         for train_year in sorted_seasons[:i]:
             df = season_cache[train_year]
             if not df.empty:
                 train_frames.append(df)
 
+        # If all prior seasons were empty, yield a column-less DataFrame so the
+        # fold is still produced; Story 6.3 callers should check train.empty.
         train_df = pd.concat(train_frames, ignore_index=True) if train_frames else pd.DataFrame()
 
         # Test data: tournament games only from the test year

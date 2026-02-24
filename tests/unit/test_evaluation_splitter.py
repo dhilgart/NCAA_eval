@@ -8,6 +8,7 @@ from unittest.mock import MagicMock
 import numpy as np
 import pandas as pd  # type: ignore[import-untyped]
 import pytest
+from hypothesis import given, settings, strategies as st
 
 from ncaa_eval.evaluation.splitter import CVFold, walk_forward_splits
 
@@ -154,6 +155,13 @@ class TestWalkForwardSplits:
         with pytest.raises(ValueError, match="at least 2 seasons"):
             list(walk_forward_splits([], server))
 
+    def test_invalid_mode_raises(self) -> None:
+        """Invalid mode value raises ValueError at splitter boundary."""
+        seasons = [2010, 2011]
+        server = _make_feature_server({})
+        with pytest.raises(ValueError, match="mode must be"):
+            list(walk_forward_splits(seasons, server, mode="invalid"))
+
     def test_empty_season_still_yields(self) -> None:
         """3.7: Fold is still generated if repository returns data."""
         seasons = [2010, 2011, 2012]
@@ -165,8 +173,8 @@ class TestWalkForwardSplits:
         server = _make_feature_server(dfs)
 
         folds = list(walk_forward_splits(seasons, server))
-        # 2011 is empty but has no tournament games → skip
-        # 2012 should still yield a fold
+        # 2011 is empty → contributes nothing to 2012's training data (harmless).
+        # 2012 should still yield a fold.
         fold_years = [f.year for f in folds]
         assert 2012 in fold_years
 
@@ -205,11 +213,9 @@ class TestWalkForwardSplits:
 
         list(walk_forward_splits(seasons, server, mode="stateful"))
 
-        # Verify serve_season_features was called with mode="stateful"
+        # Verify serve_season_features was called with mode="stateful" for every season
         for call_args in server.serve_season_features.call_args_list:
-            assert call_args == ((call_args[0][0],), {"mode": "stateful"}) or (
-                call_args.kwargs.get("mode") == "stateful"
-            )
+            assert call_args.kwargs.get("mode") == "stateful"
 
 
 # ── TestEdgeCases ────────────────────────────────────────────────────────────
@@ -290,3 +296,51 @@ class TestEdgeCases:
 
         fold_years = [f.year for f in walk_forward_splits(seasons, server)]
         assert fold_years == sorted(fold_years)
+
+
+# ── Property-based Tests ─────────────────────────────────────────────────────
+
+
+@pytest.mark.property
+class TestTemporalIntegrityProperty:
+    """Property-based tests verifying temporal boundary invariants."""
+
+    @given(
+        season_list=st.lists(
+            st.integers(min_value=2000, max_value=2025),
+            min_size=2,
+            max_size=10,
+            unique=True,
+        )
+    )
+    @settings(max_examples=50)
+    def test_temporal_boundary_invariant(self, season_list: list[int]) -> None:
+        """∀ fold: ∀ s in fold.train['season']: s < fold.year (property)."""
+        dfs = {y: _make_season_df(y) for y in season_list}
+        server = _make_feature_server(dfs)
+
+        for fold in walk_forward_splits(season_list, server):
+            if not fold.train.empty:
+                train_seasons = fold.train["season"].unique()
+                for s in train_seasons:
+                    assert s < fold.year, f"Temporal violation: training season {s} ≥ test year {fold.year}"
+
+    @given(
+        season_list=st.lists(
+            st.integers(min_value=2000, max_value=2025),
+            min_size=2,
+            max_size=10,
+            unique=True,
+        )
+    )
+    @settings(max_examples=50)
+    def test_test_data_only_tournament_invariant(self, season_list: list[int]) -> None:
+        """∀ fold: fold.test contains only is_tournament=True rows (property)."""
+        dfs = {y: _make_season_df(y) for y in season_list}
+        server = _make_feature_server(dfs)
+
+        for fold in walk_forward_splits(season_list, server):
+            if not fold.test.empty:
+                assert fold.test[
+                    "is_tournament"
+                ].all(), f"Non-tournament game in test set for year {fold.year}"

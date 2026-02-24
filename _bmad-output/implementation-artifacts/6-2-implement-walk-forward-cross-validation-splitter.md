@@ -1,6 +1,6 @@
 # Story 6.2: Implement Walk-Forward Cross-Validation Splitter
 
-Status: review
+Status: done
 
 ## Story
 
@@ -232,10 +232,12 @@ No issues encountered during implementation.
 
 - `src/ncaa_eval/evaluation/splitter.py` — NEW: CVFold dataclass + walk_forward_splits function
 - `src/ncaa_eval/evaluation/__init__.py` — MODIFIED: added CVFold, walk_forward_splits exports
-- `tests/unit/test_evaluation_splitter.py` — NEW: 19 unit tests for splitter
+- `tests/unit/test_evaluation_splitter.py` — NEW: 22 unit tests for splitter (incl. 2 Hypothesis property tests)
 - `_bmad-output/implementation-artifacts/6-2-implement-walk-forward-cross-validation-splitter.md` — MODIFIED: story status/tasks
-- `_bmad-output/implementation-artifacts/sprint-status.yaml` — MODIFIED: story status → review
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — MODIFIED: story status → done
+- `_bmad-output/planning-artifacts/template-requirements.md` — MODIFIED: added 2 code review learnings
 
 ## Change Log
 
 - 2026-02-23: Implemented walk-forward CV splitter with Leave-One-Tournament-Out logic, 2020 COVID handling, feature caching, and comprehensive test suite (19 tests)
+- 2026-02-23: Code review fixes — `mode` validation at entry point, Google-style docstrings, property-based temporal boundary tests (Hypothesis), mode assertion fix in test suite (22 tests total)
