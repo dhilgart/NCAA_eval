@@ -569,8 +569,11 @@ class DictScoring:
     """
 
     def __init__(self, points: dict[int, float], scoring_name: str) -> None:
-        if len(points) != N_ROUNDS or set(points) != set(range(N_ROUNDS)):
+        if len(points) != N_ROUNDS:
             msg = f"DictScoring requires exactly 6 entries (rounds 0–5), got {len(points)}"
+            raise ValueError(msg)
+        if set(points) != set(range(N_ROUNDS)):
+            msg = f"DictScoring requires keys 0–5, got {sorted(points.keys())}"
             raise ValueError(msg)
         self._points = points
         self._name = scoring_name
@@ -645,6 +648,10 @@ class SimulationResult:
             ``rule_name → per-sim scores`` array, shape ``(n_simulations,)``.
         bracket_distributions: Optional mapping of
             ``rule_name → BracketDistribution`` (MC only; ``None`` for analytical).
+            Note: distributions are computed from the chalk-bracket score (how many
+            pre-game favorites won).  For pool scoring analysis ("how would *my*
+            chosen bracket score across all simulations?"), use ``sim_winners`` with
+            :func:`score_bracket_against_sims`.
         sim_winners: Optional array of per-simulation game winners,
             shape ``(n_simulations, n_games)`` (MC only; ``None`` for analytical).
     """
@@ -687,8 +694,10 @@ class MostLikelyBracket:
 
     Attributes:
         winners: Tuple of team indices for each game's predicted winner,
-            in bracket-tree pre-order (63 entries for 64-team bracket).
-        champion_team_id: Team index of the predicted champion.
+            in post-order (leaf games first, championship last;
+            63 entries for 64-team bracket).
+        champion_team_id: Canonical team ID of the predicted champion
+            (from BracketStructure.team_ids[champion_index]).
         log_likelihood: Sum of ``log(max(P[left, right], P[right, left]))``
             across all games.
     """
@@ -909,11 +918,11 @@ def compute_most_likely_bracket(
         winners.append(winner)
         return winner
 
-    champion = _traverse(bracket.root)
+    champion_index = _traverse(bracket.root)
 
     return MostLikelyBracket(
         winners=tuple(winners),
-        champion_team_id=champion,
+        champion_team_id=bracket.team_ids[champion_index],
         log_likelihood=log_likelihood,
     )
 
@@ -1037,8 +1046,11 @@ def simulate_tournament_mc(  # noqa: PLR0913
     # This is the initial survivor array: shape (n,) where n=64.
     leaf_order = _collect_leaves(bracket.root)
 
-    # Pre-generate all random numbers: shape (n_simulations, n_games)
-    randoms = rng.random((n_simulations, N_GAMES))
+    # Total games in single-elimination bracket: n-1
+    total_games = n - 1
+
+    # Pre-generate all random numbers: shape (n_simulations, total_games)
+    randoms = rng.random((n_simulations, total_games))
 
     # Survivor array: shape (n_simulations, n_teams_current_round)
     # Start with all 64 teams for all sims
@@ -1053,8 +1065,7 @@ def simulate_tournament_mc(  # noqa: PLR0913
     # simulations as upsets occur.
     chalk_results: list[npt.NDArray[np.bool_]] = []
 
-    # Track all game winners: shape (n_simulations, n_games)
-    total_games = n - 1  # n-1 games in single-elimination bracket
+    # Track all game winners: shape (n_simulations, total_games)
     all_winners = np.zeros((n_simulations, total_games), dtype=np.int32)
 
     game_offset = 0

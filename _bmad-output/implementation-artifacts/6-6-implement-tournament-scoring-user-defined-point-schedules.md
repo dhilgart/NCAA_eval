@@ -1,6 +1,6 @@
 # Story 6.6: Implement Tournament Scoring with User-Defined Point Schedules
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -243,3 +243,7 @@ No new dependencies. Everything uses:
 ### Completion Notes List
 
 ### File List
+
+- `src/ncaa_eval/evaluation/simulation.py` — decorator-based scoring registry, seed-diff EP, most-likely bracket, bracket distribution, sim_winners tracking, score_bracket_against_sims, DictScoring, scoring_from_config, SimulationResult new fields
+- `src/ncaa_eval/evaluation/__init__.py` — new public API exports (BracketDistribution, MostLikelyBracket, DictScoring, register_scoring, get_scoring, list_scorings, ScoringNotFoundError, compute_expected_points_seed_diff, compute_most_likely_bracket, compute_bracket_distribution, score_bracket_against_sims, scoring_from_config)
+- `tests/unit/test_evaluation_simulation.py` — new tests for all story-6.6 functionality

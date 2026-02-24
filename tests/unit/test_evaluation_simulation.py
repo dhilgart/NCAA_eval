@@ -839,6 +839,23 @@ class TestScoringRegistry:
         assert "fibonacci" in names
         assert "seed_diff_bonus" in names
 
+    def test_get_scoring_then_instantiate(self) -> None:
+        """Registry round-trip: retrieve class and instantiate to use it."""
+        std_cls = get_scoring("standard")
+        std = std_cls()
+        assert isinstance(std, StandardScoring)
+        assert std.points_per_round(0) == 1.0
+
+        fib_cls = get_scoring("fibonacci")
+        fib = fib_cls()
+        assert isinstance(fib, FibonacciScoring)
+        assert fib.points_per_round(5) == 21.0
+
+        sdb_cls = get_scoring("seed_diff_bonus")
+        sdb = sdb_cls(seed_map={1: 1, 2: 16})
+        assert isinstance(sdb, SeedDiffBonusScoring)
+        assert sdb.seed_diff_bonus(16, 1) == 15.0
+
     def test_duplicate_registration_raises(self) -> None:
         with pytest.raises(ValueError, match="already registered"):
 

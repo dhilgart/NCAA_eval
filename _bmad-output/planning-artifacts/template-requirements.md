@@ -782,6 +782,13 @@ class MyModelConfig(BaseModel):
   - **Why this matters:** Research spikes are not "done" when the document is approved. The SM still needs to propagate the findings back into the epic AC structure before the next story can be created with correct context. Without this AC, the create-story workflow operates on stale story descriptions that don't reflect research findings.
   - **Who does the work:** SM agent — not the dev agent. This is a sprint planning/story maintenance task, not implementation. (Discovered: Story 4.1, 2026-02-21)
 
+**Story 6.6 - Tournament Scoring / Plugin Registry (2026-02-24):**
+- ⚠️ **Field naming pitfall — `_id` vs `_index`**: When a field name implies an external ID (e.g. `champion_team_id`) but actually stores an internal array index, tests using fixtures where index==ID (0,1,2…) will silently pass while production code with real IDs (1139, 2345) fails. Always name fields to match what they actually store, or convert to the external ID at construction time.
+- ✅ **Registry stores classes, not instances**: `get_scoring("seed_diff_bonus")` returns `SeedDiffBonusScoring` (a class). Callers must instantiate with required args. Add a round-trip test (`get_scoring(name)(args)`) for each registered class, especially those with required constructor arguments.
+- ⚠️ **Error messages must match actual failure mode**: `DictScoring` had a single validation branch combining two distinct failures (wrong count, wrong keys) with a single message that was accurate only for wrong-count. Separate validation conditions require separate error messages.
+- ⚠️ **score_distribution vs bracket_distributions semantic ambiguity**: When storing a "score distribution" in a simulation result, document clearly whether it is computed from a fixed reference bracket (chalk), from random simulation outcomes, or requires a user-supplied chosen bracket. Ambiguous naming leads to callers misinterpreting what the distribution represents.
+- ✅ **Dev Agent Record File List must always be populated**: The review workflow depends on the file list for cross-referencing with git changes. An empty file list is a documentation failure even when all ACs are implemented.
+
 ---
 
 ## 8. Cookie-Cutter Improvements Feedback Loop
