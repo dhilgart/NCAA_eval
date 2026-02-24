@@ -27,7 +27,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
-from typing import Any, Protocol, runtime_checkable
+from typing import Any, Protocol, TypeVar, runtime_checkable
 
 import numpy as np
 import numpy.typing as npt
@@ -185,10 +185,7 @@ def build_bracket(seeds: list[TourneySeed], season: int) -> BracketStructure:
             team_a = seed_lookup.get((region, seed_a))
             team_b = seed_lookup.get((region, seed_b))
             if team_a is None or team_b is None:
-                msg = (
-                    f"Missing seed for region={region}: "
-                    f"seed {seed_a} → {team_a}, seed {seed_b} → {team_b}"
-                )
+                msg = f"Missing seed for region={region}: seed {seed_a} → {team_a}, seed {seed_b} → {team_b}"
                 raise ValueError(msg)
             team_ids_ordered.append(team_a)
             team_ids_ordered.append(team_b)
@@ -376,7 +373,7 @@ def build_probability_matrix(
 
 
 # ---------------------------------------------------------------------------
-# Scoring rules (Task 4)
+# Scoring rule protocol (defined before registry so _ST can reference it)
 # ---------------------------------------------------------------------------
 
 
@@ -401,6 +398,66 @@ class ScoringRule(Protocol):
         ...
 
 
+# ---------------------------------------------------------------------------
+# Scoring registry (decorator-based, mirrors model/registry.py)
+# ---------------------------------------------------------------------------
+
+_ST = TypeVar("_ST", bound="type[ScoringRule]")
+
+_SCORING_REGISTRY: dict[str, type] = {}
+
+
+class ScoringNotFoundError(KeyError):
+    """Raised when a requested scoring name is not in the registry."""
+
+
+def register_scoring(name: str) -> Callable[[_ST], _ST]:
+    """Class decorator that registers a scoring rule class.
+
+    Args:
+        name: Registry key for the scoring rule.
+
+    Returns:
+        Decorator that registers the class and returns it unchanged.
+
+    Raises:
+        ValueError: If *name* is already registered.
+    """
+
+    def decorator(cls: _ST) -> _ST:
+        if name in _SCORING_REGISTRY:
+            msg = f"Scoring name {name!r} is already registered to {_SCORING_REGISTRY[name].__name__}"
+            raise ValueError(msg)
+        _SCORING_REGISTRY[name] = cls
+        return cls
+
+    return decorator
+
+
+def get_scoring(name: str) -> type:
+    """Return the scoring class registered under *name*.
+
+    Raises:
+        ScoringNotFoundError: If *name* is not registered.
+    """
+    try:
+        return _SCORING_REGISTRY[name]
+    except KeyError:
+        msg = f"No scoring registered with name {name!r}. Available: {list_scorings()}"
+        raise ScoringNotFoundError(msg) from None
+
+
+def list_scorings() -> list[str]:
+    """Return all registered scoring names (sorted)."""
+    return sorted(_SCORING_REGISTRY)
+
+
+# ---------------------------------------------------------------------------
+# Scoring rule implementations (Task 4)
+# ---------------------------------------------------------------------------
+
+
+@register_scoring("standard")
 class StandardScoring:
     """ESPN-style scoring: 1-2-4-8-16-32 (192 total for perfect bracket)."""
 
@@ -416,6 +473,7 @@ class StandardScoring:
         return self._POINTS[round_idx]
 
 
+@register_scoring("fibonacci")
 class FibonacciScoring:
     """Fibonacci-style scoring: 2-3-5-8-13-21 (231 total for perfect bracket)."""
 
@@ -431,6 +489,7 @@ class FibonacciScoring:
         return self._POINTS[round_idx]
 
 
+@register_scoring("seed_diff_bonus")
 class SeedDiffBonusScoring:
     """Base points + seed-difference bonus when lower seed wins.
 
@@ -503,11 +562,82 @@ class CustomScoring:
         return self._fn(round_idx)
 
 
-#: Registry of built-in scoring rules (analogous to model registry).
-SCORING_REGISTRY: dict[str, type[StandardScoring] | type[FibonacciScoring]] = {
-    "standard": StandardScoring,
-    "fibonacci": FibonacciScoring,
-}
+class DictScoring:
+    """Scoring rule from a dict mapping round_idx to points.
+
+    Args:
+        points: Mapping of ``round_idx → points`` for rounds 0–5.
+        scoring_name: Name for this rule.
+
+    Raises:
+        ValueError: If *points* does not contain exactly 6 entries (rounds 0–5).
+    """
+
+    def __init__(self, points: dict[int, float], scoring_name: str) -> None:
+        if len(points) != N_ROUNDS:
+            msg = f"DictScoring requires exactly 6 entries (rounds 0–5), got {len(points)}"
+            raise ValueError(msg)
+        if set(points) != set(range(N_ROUNDS)):
+            msg = f"DictScoring requires keys 0–5, got {sorted(points.keys())}"
+            raise ValueError(msg)
+        self._points = points
+        self._name = scoring_name
+
+    @property
+    def name(self) -> str:
+        """Return the rule name."""
+        return self._name
+
+    def points_per_round(self, round_idx: int) -> float:
+        """Return points for *round_idx*."""
+        return self._points[round_idx]
+
+
+def scoring_from_config(config: dict[str, Any]) -> ScoringRule:
+    """Create a scoring rule from a configuration dict.
+
+    Dispatches on ``config["type"]``:
+
+    * ``"standard"`` → :class:`StandardScoring`
+    * ``"fibonacci"`` → :class:`FibonacciScoring`
+    * ``"seed_diff_bonus"`` → :class:`SeedDiffBonusScoring` (requires ``seed_map``)
+    * ``"dict"`` → :class:`DictScoring` (requires ``points`` and ``name``)
+    * ``"custom"`` → :class:`CustomScoring` (requires ``callable`` and ``name``)
+
+    Args:
+        config: Configuration dict with at least a ``"type"`` key.
+
+    Returns:
+        Instantiated scoring rule.
+
+    Raises:
+        ValueError: If ``type`` is unknown or required keys are missing.
+    """
+    if "type" not in config:
+        msg = "scoring config must contain a 'type' key"
+        raise ValueError(msg)
+    scoring_type = config["type"]
+    if scoring_type == "standard":
+        return StandardScoring()
+    if scoring_type == "fibonacci":
+        return FibonacciScoring()
+    if scoring_type == "seed_diff_bonus":
+        if "seed_map" not in config:
+            msg = "scoring config for 'seed_diff_bonus' requires a 'seed_map' key"
+            raise ValueError(msg)
+        return SeedDiffBonusScoring(config["seed_map"])
+    if scoring_type == "dict":
+        if "points" not in config:
+            msg = "scoring config for 'dict' requires a 'points' key"
+            raise ValueError(msg)
+        return DictScoring(config["points"], config.get("name", "dict"))
+    if scoring_type == "custom":
+        if "callable" not in config:
+            msg = "scoring config for 'custom' requires a 'callable' key"
+            raise ValueError(msg)
+        return CustomScoring(config["callable"], config.get("name", "custom"))
+    msg = f"Unknown scoring type: {scoring_type!r}"
+    raise ValueError(msg)
 
 
 # ---------------------------------------------------------------------------
@@ -533,6 +663,14 @@ class SimulationResult:
             ``rule_name → (lower, upper)`` arrays.
         score_distribution: Optional mapping of
             ``rule_name → per-sim scores`` array, shape ``(n_simulations,)``.
+        bracket_distributions: Optional mapping of
+            ``rule_name → BracketDistribution`` (MC only; ``None`` for analytical).
+            Note: distributions are computed from the chalk-bracket score (how many
+            pre-game favorites won).  For pool scoring analysis ("how would *my*
+            chosen bracket score across all simulations?"), use ``sim_winners`` with
+            :func:`score_bracket_against_sims`.
+        sim_winners: Optional array of per-simulation game winners,
+            shape ``(n_simulations, n_games)`` (MC only; ``None`` for analytical).
     """
 
     season: int
@@ -542,6 +680,51 @@ class SimulationResult:
     n_simulations: int | None
     confidence_intervals: dict[str, tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]] | None
     score_distribution: dict[str, npt.NDArray[np.float64]] | None
+    bracket_distributions: dict[str, BracketDistribution] | None = None
+    sim_winners: npt.NDArray[np.int32] | None = None
+
+
+@dataclass(frozen=True)
+class BracketDistribution:
+    """Score distribution statistics from Monte Carlo simulation.
+
+    Attributes:
+        scores: Raw per-simulation scores, shape ``(n_simulations,)``.
+        percentiles: Mapping of percentile → value for keys 5, 25, 50, 75, 95.
+        mean: Mean score across simulations.
+        std: Standard deviation of scores.
+        histogram_bins: Histogram bin edges, shape ``(n_bins + 1,)``.
+        histogram_counts: Histogram counts, shape ``(n_bins,)``.
+    """
+
+    scores: npt.NDArray[np.float64]
+    percentiles: dict[int, float]
+    mean: float
+    std: float
+    histogram_bins: npt.NDArray[np.float64]
+    histogram_counts: npt.NDArray[np.int64]
+
+
+@dataclass(frozen=True)
+class MostLikelyBracket:
+    """Maximum-likelihood bracket from greedy traversal.
+
+    Attributes:
+        winners: Tuple of team indices for each game's predicted winner,
+            in **round-major order** matching ``SimulationResult.sim_winners``
+            rows — all Round-of-64 games first (indices 0–31 for 64 teams),
+            then Round-of-32 (32–47), through to the championship (index 62).
+            63 entries for a 64-team bracket.  Pass directly to
+            :func:`score_bracket_against_sims` as ``chosen_bracket``.
+        champion_team_id: Canonical team ID of the predicted champion
+            (from BracketStructure.team_ids[champion_index]).
+        log_likelihood: Sum of ``log(max(P[left, right], P[right, left]))``
+            across all games.
+    """
+
+    winners: tuple[int, ...]
+    champion_team_id: int
+    log_likelihood: float
 
 
 # ---------------------------------------------------------------------------
@@ -632,6 +815,225 @@ def compute_expected_points(
     return result
 
 
+def compute_expected_points_seed_diff(
+    adv_probs: npt.NDArray[np.float64],
+    bracket: BracketStructure,
+    P: npt.NDArray[np.float64],
+    seed_map: dict[int, int],
+) -> npt.NDArray[np.float64]:
+    """Compute Expected Points with seed-difference upset bonus.
+
+    Extends standard EP by adding per-matchup seed-diff bonus.  For each
+    internal bracket node at round *r*, the bonus contribution for team *i*
+    beating opponent *j* is::
+
+        P(i reaches node) * P(i beats j) * P(j reaches node) * bonus(seed_i, seed_j)
+
+    where ``bonus = |seed_i - seed_j|`` when ``seed_i > seed_j`` (upset), else 0.
+
+    Uses ``SeedDiffBonusScoring`` base points for standard round points and
+    a post-order traversal of the bracket tree (reusing WPVs from
+    :func:`compute_advancement_probs` logic) for bonus computation.
+
+    Args:
+        adv_probs: Advancement probabilities, shape ``(n, n_rounds)``.
+        bracket: Tournament bracket structure (for tree traversal).
+        P: Pairwise win probability matrix, shape ``(n, n)``.
+        seed_map: Mapping of ``team_id → seed_num``.
+
+    Returns:
+        Expected Points per team, shape ``(n,)``, including base + bonus.
+    """
+    n = P.shape[0]
+
+    # Base EP from standard round points (same as StandardScoring)
+    base_rule = SeedDiffBonusScoring(seed_map)
+    base_ep = compute_expected_points(adv_probs, base_rule)
+
+    # Build seed vector indexed by team_index (bracket position)
+    seed_vec = np.zeros(n, dtype=np.float64)
+    for team_id, idx in bracket.team_index_map.items():
+        seed_vec[idx] = float(seed_map.get(team_id, 0))
+
+    # Precompute bonus matrix: bonus[i,j] = |seed_i - seed_j| if seed_i > seed_j else 0
+    seed_diff = seed_vec[:, None] - seed_vec[None, :]  # (n, n)
+    bonus_matrix = np.where(seed_diff > 0, seed_diff, 0.0)
+
+    # Bonus EP via bracket tree traversal
+    bonus_ep = np.zeros(n, dtype=np.float64)
+
+    def _traverse_bonus(node: BracketNode) -> npt.NDArray[np.float64]:
+        """Post-order traversal returning WPV and accumulating bonus EP."""
+        if node.is_leaf:
+            wpv = np.zeros(n, dtype=np.float64)
+            wpv[node.team_index] = 1.0
+            return wpv
+
+        if node.left is None or node.right is None:
+            msg = "Internal bracket node missing child — tree is malformed"
+            raise RuntimeError(msg)
+        left_wpv = _traverse_bonus(node.left)
+        right_wpv = _traverse_bonus(node.right)
+
+        # WPV at this node (same as Phylourny)
+        wpv = left_wpv * (P @ right_wpv) + right_wpv * (P @ left_wpv)
+
+        # Bonus: for each team i on the left beating opponent j on the right
+        # bonus_ep[i] += left_wpv[i] * P[i,j] * right_wpv[j] * bonus[i,j]
+        # Vectorized: left_wpv * ((P * bonus_matrix) @ right_wpv)
+        #           + right_wpv * ((P * bonus_matrix) @ left_wpv)
+        P_bonus = P * bonus_matrix  # element-wise: P[i,j] * bonus[i,j]
+        bonus_ep[:] += left_wpv * (P_bonus @ right_wpv)
+        bonus_ep[:] += right_wpv * (P_bonus @ left_wpv)
+
+        return wpv
+
+    _traverse_bonus(bracket.root)
+
+    result: npt.NDArray[np.float64] = base_ep + bonus_ep
+    return result
+
+
+def compute_most_likely_bracket(
+    bracket: BracketStructure,
+    P: npt.NDArray[np.float64],
+) -> MostLikelyBracket:
+    """Compute the maximum-likelihood bracket via greedy traversal.
+
+    At each internal node, picks the team with the higher win probability
+    (``argmax(P[left, right])``).  Returns the full bracket of winners and
+    the log-likelihood of the chosen bracket.
+
+    The ``winners`` array is in **round-major order** — the same order as
+    ``SimulationResult.sim_winners`` rows — so it can be passed directly to
+    :func:`score_bracket_against_sims`:
+    all Round-of-64 games first (indices 0–31), then Round-of-32 (32–47),
+    through to the championship game (index 62).
+
+    Args:
+        bracket: Tournament bracket structure.
+        P: Pairwise win probability matrix, shape ``(n, n)``.
+
+    Returns:
+        :class:`MostLikelyBracket` with winners, champion, and log-likelihood.
+    """
+    log_likelihood = 0.0
+    # Collect (round_index, game_order_within_round, winner) tuples so we can
+    # sort into round-major order matching sim_winners layout.
+    games: list[tuple[int, int, int]] = []
+    round_counters: dict[int, int] = {}
+
+    def _traverse(node: BracketNode) -> int:
+        """Return team index of the predicted winner at this node."""
+        nonlocal log_likelihood
+        if node.is_leaf:
+            return node.team_index
+
+        if node.left is None or node.right is None:
+            msg = "Internal bracket node missing child — tree is malformed"
+            raise RuntimeError(msg)
+
+        left_winner = _traverse(node.left)
+        right_winner = _traverse(node.right)
+
+        p_left = float(P[left_winner, right_winner])
+        if p_left >= 0.5:
+            winner = left_winner
+            log_likelihood += float(np.log(max(p_left, 1e-300)))
+        else:
+            winner = right_winner
+            log_likelihood += float(np.log(max(1.0 - p_left, 1e-300)))
+
+        r = node.round_index
+        game_idx = round_counters.get(r, 0)
+        round_counters[r] = game_idx + 1
+        games.append((r, game_idx, winner))
+        return winner
+
+    champion_index = _traverse(bracket.root)
+
+    # Sort by (round_index, game_index) to produce round-major order
+    games.sort(key=lambda x: (x[0], x[1]))
+    winners_ordered = tuple(w for _, _, w in games)
+
+    return MostLikelyBracket(
+        winners=winners_ordered,
+        champion_team_id=bracket.team_ids[champion_index],
+        log_likelihood=log_likelihood,
+    )
+
+
+def compute_bracket_distribution(
+    scores: npt.NDArray[np.float64],
+    n_bins: int = 50,
+) -> BracketDistribution:
+    """Compute score distribution statistics from raw MC scores.
+
+    Args:
+        scores: Raw per-simulation scores, shape ``(n_simulations,)``.
+        n_bins: Number of histogram bins (default 50).
+
+    Returns:
+        :class:`BracketDistribution` with percentiles, mean, std, and histogram.
+    """
+    percentile_keys = (5, 25, 50, 75, 95)
+    pct_values = np.percentile(scores, percentile_keys)
+    percentiles = {k: float(v) for k, v in zip(percentile_keys, pct_values)}
+
+    counts_arr, bins_arr = np.histogram(scores, bins=n_bins)
+
+    return BracketDistribution(
+        scores=scores,
+        percentiles=percentiles,
+        mean=float(np.mean(scores)),
+        std=float(np.std(scores)),
+        histogram_bins=bins_arr.astype(np.float64),
+        histogram_counts=counts_arr.astype(np.int64),
+    )
+
+
+def score_bracket_against_sims(
+    chosen_bracket: npt.NDArray[np.int32],
+    sim_winners: npt.NDArray[np.int32],
+    scoring_rules: Sequence[ScoringRule],
+) -> dict[str, npt.NDArray[np.float64]]:
+    """Score a chosen bracket against each simulated tournament outcome.
+
+    For each simulation, counts how many of the chosen bracket's picks
+    match the simulation's actual outcomes, weighted by round points.
+
+    Args:
+        chosen_bracket: Game winners for the chosen bracket, shape ``(n_games,)``.
+        sim_winners: Per-simulation game winners, shape ``(n_simulations, n_games)``.
+        scoring_rules: Scoring rules to score against.
+
+    Returns:
+        Mapping of ``rule_name → per-sim scores``, each shape ``(n_simulations,)``.
+    """
+    n_games = chosen_bracket.shape[0]
+    n_rounds = int(np.log2(n_games + 1))
+
+    # Boolean match array: (n_simulations, n_games)
+    matches = sim_winners == chosen_bracket[None, :]
+
+    result: dict[str, npt.NDArray[np.float64]] = {}
+    for rule in scoring_rules:
+        # Build per-game point values based on which round each game belongs to
+        game_points = np.zeros(n_games, dtype=np.float64)
+        game_offset = 0
+        games_in_round = n_games + 1  # n teams for first round → n/2 games
+        for r in range(n_rounds):
+            games_in_round = games_in_round // 2
+            game_points[game_offset : game_offset + games_in_round] = rule.points_per_round(r)
+            game_offset += games_in_round
+
+        # Per-sim score: sum of points for matching picks
+        scores: npt.NDArray[np.float64] = (matches * game_points[None, :]).sum(axis=1)
+        result[rule.name] = scores
+
+    return result
+
+
 # ---------------------------------------------------------------------------
 # Monte Carlo simulation engine (Task 6)
 # ---------------------------------------------------------------------------
@@ -680,8 +1082,11 @@ def simulate_tournament_mc(  # noqa: PLR0913
     # This is the initial survivor array: shape (n,) where n=64.
     leaf_order = _collect_leaves(bracket.root)
 
-    # Pre-generate all random numbers: shape (n_simulations, n_games)
-    randoms = rng.random((n_simulations, N_GAMES))
+    # Total games in single-elimination bracket: n-1
+    total_games = n - 1
+
+    # Pre-generate all random numbers: shape (n_simulations, total_games)
+    randoms = rng.random((n_simulations, total_games))
 
     # Survivor array: shape (n_simulations, n_teams_current_round)
     # Start with all 64 teams for all sims
@@ -695,6 +1100,9 @@ def simulate_tournament_mc(  # noqa: PLR0913
     # Used to compute a meaningful per-sim score distribution that varies across
     # simulations as upsets occur.
     chalk_results: list[npt.NDArray[np.bool_]] = []
+
+    # Track all game winners: shape (n_simulations, total_games)
+    all_winners = np.zeros((n_simulations, total_games), dtype=np.int32)
 
     game_offset = 0
     for r in range(n_rounds):
@@ -721,6 +1129,9 @@ def simulate_tournament_mc(  # noqa: PLR0913
         left_wins = round_randoms < probs  # shape (N, n_games_in_round)
 
         winners = np.where(left_wins, left_teams, right_teams)
+
+        # Store per-game winners
+        all_winners[:, game_offset : game_offset + n_games_in_round] = winners
 
         # Chalk-bracket tracking: for each game, did the pre-game favorite win?
         # This gives genuine per-sim variation: sims with many upsets score less.
@@ -757,6 +1168,11 @@ def simulate_tournament_mc(  # noqa: PLR0913
             total_scores += rule.points_per_round(r_idx) * chalk_won_r.sum(axis=1)
         score_dist_dict[rule.name] = total_scores
 
+    # Compute bracket distributions from score distributions
+    bracket_dist_dict: dict[str, BracketDistribution] = {
+        name: compute_bracket_distribution(scores) for name, scores in score_dist_dict.items()
+    }
+
     return SimulationResult(
         season=season,
         advancement_probs=adv_probs,
@@ -765,6 +1181,8 @@ def simulate_tournament_mc(  # noqa: PLR0913
         n_simulations=n_simulations,
         confidence_intervals=None,
         score_distribution=score_dist_dict,
+        bracket_distributions=bracket_dist_dict,
+        sim_winners=all_winners,
     )
 
 
@@ -834,7 +1252,12 @@ def simulate_tournament(  # noqa: PLR0913
 
     if method == "analytical":
         adv_probs = compute_advancement_probs(bracket, P)
-        ep_dict = {rule.name: compute_expected_points(adv_probs, rule) for rule in scoring_rules}
+        ep_dict: dict[str, npt.NDArray[np.float64]] = {}
+        for rule in scoring_rules:
+            if isinstance(rule, SeedDiffBonusScoring):
+                ep_dict[rule.name] = compute_expected_points_seed_diff(adv_probs, bracket, P, rule.seed_map)
+            else:
+                ep_dict[rule.name] = compute_expected_points(adv_probs, rule)
         return SimulationResult(
             season=context.season,
             advancement_probs=adv_probs,

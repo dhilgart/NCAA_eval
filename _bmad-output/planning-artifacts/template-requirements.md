@@ -782,6 +782,13 @@ class MyModelConfig(BaseModel):
   - **Why this matters:** Research spikes are not "done" when the document is approved. The SM still needs to propagate the findings back into the epic AC structure before the next story can be created with correct context. Without this AC, the create-story workflow operates on stale story descriptions that don't reflect research findings.
   - **Who does the work:** SM agent — not the dev agent. This is a sprint planning/story maintenance task, not implementation. (Discovered: Story 4.1, 2026-02-21)
 
+**Story 6.6 - Tournament Scoring / Plugin Registry (2026-02-24):**
+- ⚠️ **Field naming pitfall — `_id` vs `_index`**: When a field name implies an external ID (e.g. `champion_team_id`) but actually stores an internal array index, tests using fixtures where index==ID (0,1,2…) will silently pass while production code with real IDs (1139, 2345) fails. Always name fields to match what they actually store, or convert to the external ID at construction time.
+- ✅ **Registry stores classes, not instances**: `get_scoring("seed_diff_bonus")` returns `SeedDiffBonusScoring` (a class). Callers must instantiate with required args. Add a round-trip test (`get_scoring(name)(args)`) for each registered class, especially those with required constructor arguments.
+- ⚠️ **Error messages must match actual failure mode**: `DictScoring` had a single validation branch combining two distinct failures (wrong count, wrong keys) with a single message that was accurate only for wrong-count. Separate validation conditions require separate error messages.
+- ⚠️ **score_distribution vs bracket_distributions semantic ambiguity**: When storing a "score distribution" in a simulation result, document clearly whether it is computed from a fixed reference bracket (chalk), from random simulation outcomes, or requires a user-supplied chosen bracket. Ambiguous naming leads to callers misinterpreting what the distribution represents.
+- ✅ **Dev Agent Record File List must always be populated**: The review workflow depends on the file list for cross-referencing with git changes. An empty file list is a documentation failure even when all ACs are implemented.
+
 ---
 
 ## 8. Cookie-Cutter Improvements Feedback Loop
@@ -2433,3 +2440,45 @@ if node.left is None or node.right is None:
     msg = "Internal bracket node missing child — tree is malformed"
     raise RuntimeError(msg)
 ```
+
+### Tree Traversal Output Order Must Match Downstream Consumers (Discovered Story 6.6 Code Review, 2026-02-24)
+
+When a function traverses a tree in **post-order DFS** (left subtree fully, then right, then current node), its output array is NOT in the same order as arrays built in **round-major** (breadth-first) order. For a 4-team bracket both orderings coincide (each half has only 1 game per round), masking the bug. For 8+ teams they diverge:
+
+```
+Post-order DFS: [R0_g0, R0_g1, R1_g0, R0_g2, R0_g3, R1_g1, R2_g0]
+Round-major:    [R0_g0, R0_g1, R0_g2, R0_g3, R1_g0, R1_g1, R2_g0]
+```
+
+**Pattern:** If your MC engine stores winners in round-major order (all round-R games at a contiguous offset), any function that produces "a bracket of picks" must also use round-major order so callers can pass the output directly to comparison functions. Use a `(round_idx, game_within_round, winner)` accumulator then sort before returning.
+
+**Test requirement:** always include a compatibility test at n≥8 that scores `mlb.winners` against `sim_winners` and asserts the correct perfect-bracket total. A test at n=4 will pass by coincidence.
+
+### Protocol TypeVar Must Reference the Protocol Type (Discovered Story 6.6 Code Review, 2026-02-24)
+
+When a decorator registry restricts registration to classes implementing a Protocol, the `TypeVar` bound should reference that Protocol type, and the Protocol must be defined **before** the registry:
+
+```python
+# ❌ Unbound TypeVar — any class can be registered, no type safety
+_ST = TypeVar("_ST")
+
+# ✅ Bound TypeVar — only ScoringRule-compatible classes accepted
+class ScoringRule(Protocol): ...  # defined BEFORE registry
+_ST = TypeVar("_ST", bound="type[ScoringRule]")
+```
+
+### Config Factory Functions Must Raise ValueError, Not KeyError (Discovered Story 6.6 Code Review, 2026-02-24)
+
+Factory functions that dispatch on a config dict key (e.g., `config["type"]`) should **explicitly check** for missing required keys and raise `ValueError`, not let Python raise `KeyError` through dict indexing. Callers catching `ValueError` miss `KeyError`:
+
+```python
+# ❌ Raises KeyError — breaks documented API contract
+scoring_type = config["type"]  # KeyError if absent
+
+# ✅ Raises ValueError — consistent with documented behavior
+if "type" not in config:
+    raise ValueError("config must contain a 'type' key")
+scoring_type = config["type"]
+```
+
+Apply the same pattern to all required sub-keys (`"points"`, `"callable"`, `"seed_map"`, etc.).

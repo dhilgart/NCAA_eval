@@ -16,14 +16,18 @@ import numpy as np
 import pytest
 
 from ncaa_eval.evaluation.simulation import (
-    SCORING_REGISTRY,
+    _SCORING_REGISTRY,
+    BracketDistribution,
     BracketNode,
     BracketStructure,
     CustomScoring,
+    DictScoring,
     EloProvider,
     FibonacciScoring,
     MatchupContext,
     MatrixProvider,
+    MostLikelyBracket,
+    ScoringNotFoundError,
     ScoringRule,
     SeedDiffBonusScoring,
     SimulationResult,
@@ -31,7 +35,15 @@ from ncaa_eval.evaluation.simulation import (
     build_bracket,
     build_probability_matrix,
     compute_advancement_probs,
+    compute_bracket_distribution,
     compute_expected_points,
+    compute_expected_points_seed_diff,
+    compute_most_likely_bracket,
+    get_scoring,
+    list_scorings,
+    register_scoring,
+    score_bracket_against_sims,
+    scoring_from_config,
     simulate_tournament,
     simulate_tournament_mc,
 )
@@ -495,6 +507,258 @@ class TestComputeExpectedPoints:
         assert total == 192
 
 
+class TestComputeExpectedPointsSeedDiff:
+    """Tests for seed-diff bonus EP computation (Task 2)."""
+
+    def test_identical_seeds_equals_standard(self) -> None:
+        """When all seeds are the same, seed-diff bonus is always 0.
+
+        So seed-diff EP should equal standard EP.
+        """
+        bracket = _make_small_bracket(4)
+        P = _make_uniform_matrix(4)
+        adv = compute_advancement_probs(bracket, P)
+        # All teams have the same seed — no upset bonus possible
+        seed_map = {0: 1, 1: 1, 2: 1, 3: 1}
+        ep_seed = compute_expected_points_seed_diff(adv, bracket, P, seed_map)
+        ep_std = compute_expected_points(adv, StandardScoring())
+        np.testing.assert_allclose(ep_seed, ep_std, atol=1e-10)
+
+    def test_known_4team_fixture(self) -> None:
+        """4-team deterministic bracket with known seed-diff bonuses.
+
+        Teams: 0(seed=1), 1(seed=16), 2(seed=8), 3(seed=9)
+        Deterministic: lower-index always wins.
+        R0: 0 beats 1 (no upset, no bonus), 2 beats 3 (no upset since seed 8<9)
+        R1: 0 beats 2 (no upset, no bonus)
+        Standard EP for team 0: 1+2=3 (wins both rounds)
+        Seed-diff bonus for team 0: 0 (always favored)
+        """
+        bracket = _make_small_bracket(4)
+        P = _make_deterministic_matrix(4)
+        adv = compute_advancement_probs(bracket, P)
+        seed_map = {0: 1, 1: 16, 2: 8, 3: 9}
+        ep_seed = compute_expected_points_seed_diff(adv, bracket, P, seed_map)
+        # Team 0 always beats everyone, seed 1 = lowest (favored), no upset bonus
+        # Standard EP = 3.0, no bonus EP → should still be 3.0
+        assert ep_seed[0] == pytest.approx(3.0)
+        # Team 1 (seed 16) always loses R0 → EP = 0
+        assert ep_seed[1] == pytest.approx(0.0)
+
+    def test_upset_adds_bonus(self) -> None:
+        """When the higher-seeded team wins, seed-diff bonus is added.
+
+        4-team bracket, team 1 (seed=16) always beats team 0 (seed=1).
+        Deterministic matrix: lower-index always wins (P[i,j]=1 when i<j).
+        P_mod swaps only (0,1) pair so team 1 beats team 0.
+        But P_mod[1,2]=1 (team 1 still beats team 2 in R1 since 1<2).
+        So team 1 wins R0 and R1 → EP_std = 1+2 = 3.
+        Seed-diff bonus: R0 upset of seed 16 over seed 1 → bonus 15.
+        R1: team 1(seed=16) beats team 2(seed=8) → bonus |16-8|=8.
+        EP_seed = 3 + 15 + 8 = 26.
+        """
+        bracket = _make_small_bracket(4)
+        P = _make_deterministic_matrix(4)
+        P_mod = P.copy()
+        P_mod[0, 1] = 0.0
+        P_mod[1, 0] = 1.0
+        adv = compute_advancement_probs(bracket, P_mod)
+        seed_map = {0: 1, 1: 16, 2: 8, 3: 9}
+        ep_seed = compute_expected_points_seed_diff(adv, bracket, P_mod, seed_map)
+        ep_std = compute_expected_points(adv, StandardScoring())
+        # Team 1 wins both rounds (R0: beats team 0, R1: beats team 2)
+        assert ep_std[1] == pytest.approx(3.0)
+        # Seed-diff bonus: R0 upset (16 vs 1) = 15, R1 upset (16 vs 8) = 8
+        assert ep_seed[1] == pytest.approx(3.0 + 15.0 + 8.0)
+
+    def test_converges_with_mc(self) -> None:
+        """Seed-diff analytical EP converges with MC EP at large N."""
+        bracket = _make_small_bracket(8)
+        n = 8
+        rng_matrix = np.random.default_rng(456)
+        raw = rng_matrix.random((n, n))
+        P = raw / (raw + raw.T)
+        np.fill_diagonal(P, 0.0)
+        adv = compute_advancement_probs(bracket, P)
+        seed_map = {i: i + 1 for i in range(n)}
+
+        ep_analytical = compute_expected_points_seed_diff(adv, bracket, P, seed_map)
+
+        # MC approximation: run many sims, for each sim compute seed-diff score
+        rng = np.random.default_rng(42)
+        n_sims = 100_000
+        ep_mc = np.zeros(n, dtype=np.float64)
+        base_rule = SeedDiffBonusScoring(seed_map)
+        leaves = list(range(n))
+        for _ in range(n_sims):
+            survivors = list(leaves)
+            for r in range(int(np.log2(n))):
+                next_round = []
+                for g in range(0, len(survivors), 2):
+                    a, b = survivors[g], survivors[g + 1]
+                    if rng.random() < P[a, b]:
+                        winner, loser = a, b
+                    else:
+                        winner, loser = b, a
+                    next_round.append(winner)
+                    pts = base_rule.points_per_round(r)
+                    bonus = base_rule.seed_diff_bonus(seed_map[winner], seed_map[loser])
+                    ep_mc[winner] += pts + bonus
+                survivors = next_round
+        ep_mc /= n_sims
+
+        np.testing.assert_allclose(ep_analytical, ep_mc, atol=0.15)
+
+
+class TestComputeMostLikelyBracket:
+    """Tests for compute_most_likely_bracket (Task 3)."""
+
+    def test_deterministic_perfect_bracket(self) -> None:
+        """Deterministic matrix: most-likely bracket picks all correct winners."""
+        bracket = _make_small_bracket(4)
+        P = _make_deterministic_matrix(4)
+        result = compute_most_likely_bracket(bracket, P)
+        assert isinstance(result, MostLikelyBracket)
+        # With deterministic P, team 0 beats 1, team 2 beats 3, team 0 beats 2
+        assert result.winners == (0, 2, 0)
+        assert result.champion_team_id == 0
+        # Log-likelihood = sum of log(1.0) = 0.0
+        assert result.log_likelihood == pytest.approx(0.0)
+
+    def test_uniform_matrix_valid_bracket(self) -> None:
+        """Uniform matrix: any valid bracket is acceptable."""
+        bracket = _make_small_bracket(4)
+        P = _make_uniform_matrix(4)
+        result = compute_most_likely_bracket(bracket, P)
+        assert isinstance(result, MostLikelyBracket)
+        assert len(result.winners) == 3  # 3 games in 4-team bracket
+        # Log-likelihood should be negative (all probs are 0.5)
+        assert result.log_likelihood == pytest.approx(3 * np.log(0.5))
+
+    def test_log_likelihood_computation(self) -> None:
+        """Log-likelihood = sum of log(max(P[left, right], P[right, left]))."""
+        bracket = _make_small_bracket(4)
+        # Custom matrix: P[0,1]=0.8, P[2,3]=0.7, P[0,2]=0.6
+        P = np.zeros((4, 4), dtype=np.float64)
+        P[0, 1] = 0.8
+        P[1, 0] = 0.2
+        P[0, 2] = 0.6
+        P[2, 0] = 0.4
+        P[0, 3] = 0.9
+        P[3, 0] = 0.1
+        P[1, 2] = 0.3
+        P[2, 1] = 0.7
+        P[1, 3] = 0.4
+        P[3, 1] = 0.6
+        P[2, 3] = 0.7
+        P[3, 2] = 0.3
+        result = compute_most_likely_bracket(bracket, P)
+        # Greedy picks: R0 game 0→1: pick 0 (0.8), R0 game 2→3: pick 2 (0.7)
+        # R1: 0 vs 2: pick 0 (0.6)
+        expected_ll = np.log(0.8) + np.log(0.7) + np.log(0.6)
+        assert result.log_likelihood == pytest.approx(expected_ll)
+        assert result.winners == (0, 2, 0)
+        assert result.champion_team_id == 0
+
+    def test_frozen_dataclass(self) -> None:
+        """MostLikelyBracket is frozen."""
+        bracket = _make_small_bracket(4)
+        P = _make_deterministic_matrix(4)
+        result = compute_most_likely_bracket(bracket, P)
+        with pytest.raises(AttributeError):
+            result.champion_team_id = 99  # type: ignore[misc]
+
+    def test_8_team_bracket(self) -> None:
+        """8-team bracket produces 7 winners."""
+        bracket = _make_small_bracket(8)
+        P = _make_deterministic_matrix(8)
+        result = compute_most_likely_bracket(bracket, P)
+        assert len(result.winners) == 7
+        assert result.champion_team_id == 0
+
+    def test_winners_in_round_major_order_matches_sim_winners(self) -> None:
+        """MostLikelyBracket.winners must be in round-major order matching sim_winners.
+
+        For an 8-team deterministic bracket (team 0 always wins), the chosen
+        bracket from mlb.winners should score a perfect 12 points against all sims.
+        """
+        bracket = _make_small_bracket(8)
+        P = _make_deterministic_matrix(8)
+        result = simulate_tournament_mc(
+            bracket, P, [StandardScoring()], season=2024, n_simulations=200, rng=np.random.default_rng(55)
+        )
+        assert result.sim_winners is not None
+        mlb = compute_most_likely_bracket(bracket, P)
+        # mlb.winners must match the sim_winners row ordering
+        assert list(mlb.winners) == list(result.sim_winners[0])
+        # Scoring the MLB bracket against all deterministic sims should yield perfect score
+        # For 8 teams: R0: 4*1=4, R1: 2*2=4, R2: 1*4=4 → total = 12
+        chosen = np.array(mlb.winners, dtype=np.int32)
+        scores = score_bracket_against_sims(chosen, result.sim_winners, [StandardScoring()])
+        np.testing.assert_allclose(scores["standard"], 12.0)
+
+    def test_64_team_bracket_winners_length(self) -> None:
+        """64-team bracket produces exactly 63 winners."""
+        bracket = _make_bracket()
+        P = _make_uniform_matrix(64)
+        result = compute_most_likely_bracket(bracket, P)
+        assert len(result.winners) == 63
+
+
+class TestBracketDistribution:
+    """Tests for BracketDistribution and compute_bracket_distribution (Task 4)."""
+
+    def test_basic_distribution(self) -> None:
+        """Compute distribution from known scores array."""
+        scores = np.array([10.0, 20.0, 30.0, 40.0, 50.0], dtype=np.float64)
+        dist = compute_bracket_distribution(scores, n_bins=5)
+        assert isinstance(dist, BracketDistribution)
+        assert dist.mean == pytest.approx(30.0)
+        assert dist.std == pytest.approx(float(np.std(scores)))
+        assert len(dist.histogram_bins) == 6  # n_bins + 1 edges
+        assert len(dist.histogram_counts) == 5
+
+    def test_percentile_ordering(self) -> None:
+        """Percentiles must be monotonically non-decreasing."""
+        rng = np.random.default_rng(42)
+        scores = rng.normal(100, 20, size=1000).astype(np.float64)
+        dist = compute_bracket_distribution(scores)
+        assert dist.percentiles[5] <= dist.percentiles[25]
+        assert dist.percentiles[25] <= dist.percentiles[50]
+        assert dist.percentiles[50] <= dist.percentiles[75]
+        assert dist.percentiles[75] <= dist.percentiles[95]
+
+    def test_mean_std_match_numpy(self) -> None:
+        """Mean and std match numpy reference."""
+        rng = np.random.default_rng(99)
+        scores = rng.uniform(0, 200, size=5000).astype(np.float64)
+        dist = compute_bracket_distribution(scores)
+        assert dist.mean == pytest.approx(float(np.mean(scores)))
+        assert dist.std == pytest.approx(float(np.std(scores)))
+
+    def test_histogram_bin_count(self) -> None:
+        """Histogram has requested number of bins."""
+        scores = np.arange(100, dtype=np.float64)
+        dist = compute_bracket_distribution(scores, n_bins=20)
+        assert len(dist.histogram_counts) == 20
+        assert len(dist.histogram_bins) == 21
+        # Total histogram counts should equal number of scores
+        assert dist.histogram_counts.sum() == 100
+
+    def test_frozen_dataclass(self) -> None:
+        """BracketDistribution is frozen."""
+        scores = np.array([1.0, 2.0, 3.0], dtype=np.float64)
+        dist = compute_bracket_distribution(scores)
+        with pytest.raises(AttributeError):
+            dist.mean = 99.0  # type: ignore[misc]
+
+    def test_scores_stored(self) -> None:
+        """Raw scores are stored in the distribution."""
+        scores = np.array([5.0, 10.0, 15.0], dtype=np.float64)
+        dist = compute_bracket_distribution(scores)
+        np.testing.assert_array_equal(dist.scores, scores)
+
+
 class TestAnalyticalMatchesMC:
     """Verify analytical EP matches MC EP within statistical tolerance."""
 
@@ -575,11 +839,126 @@ class TestScoringRules:
         assert rule.points_per_round(0) == 1.0
         assert rule.points_per_round(5) == 6.0
 
-    def test_scoring_registry(self) -> None:
-        assert "standard" in SCORING_REGISTRY
-        assert "fibonacci" in SCORING_REGISTRY
-        assert SCORING_REGISTRY["standard"] is StandardScoring
-        assert SCORING_REGISTRY["fibonacci"] is FibonacciScoring
+    def test_scoring_registry_builtins_registered(self) -> None:
+        assert "standard" in _SCORING_REGISTRY
+        assert "fibonacci" in _SCORING_REGISTRY
+        assert "seed_diff_bonus" in _SCORING_REGISTRY
+        assert _SCORING_REGISTRY["standard"] is StandardScoring
+        assert _SCORING_REGISTRY["fibonacci"] is FibonacciScoring
+        assert _SCORING_REGISTRY["seed_diff_bonus"] is SeedDiffBonusScoring
+
+
+class TestScoringRegistry:
+    """Tests for the decorator-based scoring registry (Task 1)."""
+
+    def test_get_scoring_returns_correct_class(self) -> None:
+        assert get_scoring("standard") is StandardScoring
+        assert get_scoring("fibonacci") is FibonacciScoring
+        assert get_scoring("seed_diff_bonus") is SeedDiffBonusScoring
+
+    def test_get_scoring_unknown_raises(self) -> None:
+        with pytest.raises(ScoringNotFoundError):
+            get_scoring("nonexistent_scoring")
+
+    def test_list_scorings_returns_sorted(self) -> None:
+        names = list_scorings()
+        assert names == sorted(names)
+        assert "standard" in names
+        assert "fibonacci" in names
+        assert "seed_diff_bonus" in names
+
+    def test_get_scoring_then_instantiate(self) -> None:
+        """Registry round-trip: retrieve class and instantiate to use it."""
+        std_cls = get_scoring("standard")
+        std = std_cls()
+        assert isinstance(std, StandardScoring)
+        assert std.points_per_round(0) == 1.0
+
+        fib_cls = get_scoring("fibonacci")
+        fib = fib_cls()
+        assert isinstance(fib, FibonacciScoring)
+        assert fib.points_per_round(5) == 21.0
+
+        sdb_cls = get_scoring("seed_diff_bonus")
+        sdb = sdb_cls(seed_map={1: 1, 2: 16})
+        assert isinstance(sdb, SeedDiffBonusScoring)
+        assert sdb.seed_diff_bonus(16, 1) == 15.0
+
+    def test_duplicate_registration_raises(self) -> None:
+        with pytest.raises(ValueError, match="already registered"):
+
+            @register_scoring("standard")
+            class _Duplicate:
+                @property
+                def name(self) -> str:
+                    return "standard"
+
+                def points_per_round(self, round_idx: int) -> float:
+                    return 0.0
+
+
+class TestDictScoring:
+    """Tests for DictScoring and scoring_from_config (Task 5)."""
+
+    def test_dict_scoring_basic(self) -> None:
+        points = {0: 1.0, 1: 2.0, 2: 4.0, 3: 8.0, 4: 16.0, 5: 32.0}
+        rule = DictScoring(points, "test_dict")
+        assert rule.name == "test_dict"
+        for r in range(6):
+            assert rule.points_per_round(r) == points[r]
+
+    def test_dict_scoring_missing_rounds_raises(self) -> None:
+        with pytest.raises(ValueError, match="exactly 6"):
+            DictScoring({0: 1.0, 1: 2.0}, "incomplete")
+
+    def test_scoring_from_config_standard(self) -> None:
+        rule = scoring_from_config({"type": "standard"})
+        assert isinstance(rule, StandardScoring)
+
+    def test_scoring_from_config_fibonacci(self) -> None:
+        rule = scoring_from_config({"type": "fibonacci"})
+        assert isinstance(rule, FibonacciScoring)
+
+    def test_scoring_from_config_seed_diff(self) -> None:
+        rule = scoring_from_config({"type": "seed_diff_bonus", "seed_map": {1: 1, 2: 16}})
+        assert isinstance(rule, SeedDiffBonusScoring)
+
+    def test_scoring_from_config_dict(self) -> None:
+        config = {
+            "type": "dict",
+            "name": "custom_pts",
+            "points": {0: 10.0, 1: 20.0, 2: 30.0, 3: 40.0, 4: 50.0, 5: 60.0},
+        }
+        rule = scoring_from_config(config)
+        assert isinstance(rule, DictScoring)
+        assert rule.name == "custom_pts"
+        assert rule.points_per_round(0) == 10.0
+
+    def test_scoring_from_config_custom_callable(self) -> None:
+        config = {"type": "custom", "callable": lambda r: float(r * 10), "name": "times_ten"}
+        rule = scoring_from_config(config)
+        assert isinstance(rule, CustomScoring)
+        assert rule.points_per_round(3) == 30.0
+
+    def test_scoring_from_config_invalid_type(self) -> None:
+        with pytest.raises(ValueError, match="Unknown scoring type"):
+            scoring_from_config({"type": "nonexistent"})
+
+    def test_scoring_from_config_missing_type_raises_value_error(self) -> None:
+        with pytest.raises(ValueError, match="'type' key"):
+            scoring_from_config({"points": {0: 1.0}})
+
+    def test_scoring_from_config_seed_diff_requires_seed_map(self) -> None:
+        with pytest.raises(ValueError, match="'seed_map'"):
+            scoring_from_config({"type": "seed_diff_bonus"})
+
+    def test_scoring_from_config_dict_requires_points(self) -> None:
+        with pytest.raises(ValueError, match="'points'"):
+            scoring_from_config({"type": "dict", "name": "missing_points"})
+
+    def test_scoring_from_config_custom_requires_callable(self) -> None:
+        with pytest.raises(ValueError, match="'callable'"):
+            scoring_from_config({"type": "custom", "name": "missing_callable"})
 
 
 # ---------------------------------------------------------------------------
@@ -693,6 +1072,28 @@ class TestMonteCarlo:
         scores = result.score_distribution["standard"]
         assert float(scores.std()) > 0.0, "score_distribution should not be constant"
 
+    def test_bracket_distributions_populated(self) -> None:
+        bracket = _make_small_bracket(4)
+        P = _make_uniform_matrix(4)
+        rules = [StandardScoring()]
+        result = simulate_tournament_mc(
+            bracket, P, rules, season=2024, n_simulations=500, rng=np.random.default_rng(7)
+        )
+        assert result.bracket_distributions is not None
+        assert "standard" in result.bracket_distributions
+        dist = result.bracket_distributions["standard"]
+        assert isinstance(dist, BracketDistribution)
+        assert dist.scores.shape == (500,)
+        assert dist.percentiles[5] <= dist.percentiles[95]
+
+    def test_analytical_bracket_distributions_none(self) -> None:
+        bracket = _make_small_bracket(4)
+        P = _make_uniform_matrix(4)
+        provider = MatrixProvider(P, list(range(4)))
+        ctx = _make_context()
+        result = simulate_tournament(bracket, provider, ctx, method="analytical")
+        assert result.bracket_distributions is None
+
     def test_minimum_simulations(self) -> None:
         bracket = _make_small_bracket(4)
         P = _make_uniform_matrix(4)
@@ -723,6 +1124,93 @@ class TestMonteCarlo:
             bracket, P, rules, season=2024, n_simulations=200, rng=np.random.default_rng(42)
         )
         np.testing.assert_array_equal(r1.advancement_probs, r2.advancement_probs)
+
+    def test_sim_winners_populated(self) -> None:
+        """sim_winners should have shape (n_simulations, n_games)."""
+        bracket = _make_small_bracket(4)
+        P = _make_uniform_matrix(4)
+        rules = [StandardScoring()]
+        result = simulate_tournament_mc(
+            bracket, P, rules, season=2024, n_simulations=200, rng=np.random.default_rng(10)
+        )
+        assert result.sim_winners is not None
+        assert result.sim_winners.shape == (200, 3)  # 4 teams → 3 games
+        # All winner values should be valid team indices
+        assert np.all(result.sim_winners >= 0)
+        assert np.all(result.sim_winners < 4)
+
+    def test_sim_winners_deterministic(self) -> None:
+        """Deterministic matrix: all sims should produce the same winners."""
+        bracket = _make_small_bracket(4)
+        P = _make_deterministic_matrix(4)
+        rules = [StandardScoring()]
+        result = simulate_tournament_mc(
+            bracket, P, rules, season=2024, n_simulations=200, rng=np.random.default_rng(11)
+        )
+        assert result.sim_winners is not None
+        # All sims should have the same winners: [0, 2, 0]
+        for sim in range(200):
+            assert tuple(result.sim_winners[sim]) == (0, 2, 0)
+
+    def test_analytical_sim_winners_none(self) -> None:
+        bracket = _make_small_bracket(4)
+        P = _make_uniform_matrix(4)
+        provider = MatrixProvider(P, list(range(4)))
+        ctx = _make_context()
+        result = simulate_tournament(bracket, provider, ctx, method="analytical")
+        assert result.sim_winners is None
+
+
+class TestScoreBracketAgainstSims:
+    """Tests for score_bracket_against_sims (Task 6)."""
+
+    def test_perfect_bracket_max_score(self) -> None:
+        """When chosen bracket matches all sim outcomes, score is max."""
+        bracket = _make_small_bracket(4)
+        P = _make_deterministic_matrix(4)
+        rules = [StandardScoring()]
+        result = simulate_tournament_mc(
+            bracket, P, rules, season=2024, n_simulations=200, rng=np.random.default_rng(20)
+        )
+        assert result.sim_winners is not None
+        # Chosen bracket = same as deterministic outcome
+        chosen = result.sim_winners[0]  # All sims are identical
+        scores = score_bracket_against_sims(chosen, result.sim_winners, rules)
+        assert "standard" in scores
+        # Perfect bracket for 4 teams: R0: 2 games × 1pt, R1: 1 game × 2pt = 4
+        assert scores["standard"].shape == (200,)
+        # All scores should be 4.0 (perfect match every time)
+        np.testing.assert_allclose(scores["standard"], 4.0)
+
+    def test_wrong_bracket_lower_score(self) -> None:
+        """When chosen bracket differs from sim outcomes, score drops."""
+        bracket = _make_small_bracket(4)
+        P = _make_deterministic_matrix(4)
+        rules = [StandardScoring()]
+        result = simulate_tournament_mc(
+            bracket, P, rules, season=2024, n_simulations=200, rng=np.random.default_rng(21)
+        )
+        assert result.sim_winners is not None
+        # Chosen bracket: completely wrong (pick team 1 in all games)
+        chosen = np.array([1, 3, 1], dtype=np.int32)
+        scores = score_bracket_against_sims(chosen, result.sim_winners, rules)
+        # No picks match → score should be 0
+        np.testing.assert_allclose(scores["standard"], 0.0)
+
+    def test_score_distribution_has_variance(self) -> None:
+        """With uniform matrix, different brackets produce score variance."""
+        bracket = _make_small_bracket(8)
+        P = _make_uniform_matrix(8)
+        rules = [StandardScoring()]
+        result = simulate_tournament_mc(
+            bracket, P, rules, season=2024, n_simulations=2000, rng=np.random.default_rng(22)
+        )
+        assert result.sim_winners is not None
+        # Use first sim's outcome as chosen bracket
+        chosen = result.sim_winners[0]
+        scores = score_bracket_against_sims(chosen, result.sim_winners, rules)
+        # Should have genuine variance
+        assert float(scores["standard"].std()) > 0.0
 
 
 # ---------------------------------------------------------------------------
