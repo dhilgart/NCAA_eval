@@ -233,6 +233,14 @@ def run_backtest(  # noqa: PLR0913
     _console.print(f"Running backtest: {len(folds)} folds, n_jobs={n_jobs}")
 
     # Dispatch fold evaluation (with optional tqdm progress bar)
+    if progress and n_jobs != 1:
+        import warnings
+
+        warnings.warn(
+            "progress=True is only supported with n_jobs=1; progress bar skipped for parallel execution.",
+            UserWarning,
+            stacklevel=2,
+        )
     if progress and n_jobs == 1:
         from tqdm.auto import tqdm  # type: ignore[import-untyped]
 

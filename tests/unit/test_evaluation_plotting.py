@@ -237,6 +237,16 @@ class TestPlotBacktestSummary:
         assert isinstance(fig, go.Figure)
         assert len(fig.data[0].x) == 1
 
+    def test_empty_metrics_raises_value_error(self) -> None:
+        """ValueError raised when metrics list is empty or only elapsed_seconds."""
+        import pandas as pd
+
+        # Construct a BacktestResult whose summary has only elapsed_seconds
+        summary = pd.DataFrame({"year": [2020], "elapsed_seconds": [0.5]}).set_index("year")
+        bt = BacktestResult(fold_results=(), summary=summary, elapsed_seconds=0.5)
+        with pytest.raises(ValueError, match="No metric columns"):
+            plot_backtest_summary(bt)
+
 
 # ── TestPlotMetricComparison ────────────────────────────────────────────────
 
@@ -279,6 +289,12 @@ class TestPlotMetricComparison:
         results = {"M": _make_backtest_result()}
         fig = plot_metric_comparison(results, "brier_score")
         assert "brier_score" in fig.layout.title.text
+
+    def test_invalid_metric_raises_value_error(self) -> None:
+        """ValueError raised when requested metric is not in a model's summary."""
+        results = {"Model": _make_backtest_result(metric_names=["log_loss"])}
+        with pytest.raises(ValueError, match="not found"):
+            plot_metric_comparison(results, "nonexistent_metric")
 
 
 # ── TestPlotAdvancementHeatmap ──────────────────────────────────────────────

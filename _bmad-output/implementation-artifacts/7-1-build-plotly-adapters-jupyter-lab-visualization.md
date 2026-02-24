@@ -317,6 +317,7 @@ Claude Opus 4.6
 
 - 2026-02-24: Implemented Story 7.1 — Plotly visualization adapters, tqdm progress bars, 31 unit tests. All ACs satisfied.
 - 2026-02-24: Code review (Claude Sonnet 4.6) — fixed 5 issues: (H1) corrected `team_labels` docstring in `plot_advancement_heatmap` (keys are team indices 0..N-1, not team IDs); (H2) added `progress: bool = False` parameter to `simulate_tournament()` high-level orchestrator; (M1) improved progress bar tests to mock tqdm and assert it is called; (M2) added `ValueError` for invalid metric in `plot_metric_comparison`; (M3) added empty-metrics guard in `plot_backtest_summary`.
+- 2026-02-24: Code review pass 2 (Claude Sonnet 4.6) — fixed 5 more issues: (H1) added `bin_width` guard against `IndexError` in `plot_score_distribution` for edge-case `BracketDistribution` with <2 bin edges; (H2) added `UserWarning` in `run_backtest` when `progress=True` but `n_jobs != 1` (bar silently skipped); (M1) added `pytest.raises(ValueError)` test for `plot_metric_comparison` with nonexistent metric; (M2) added `pytest.raises(ValueError)` test for `plot_backtest_summary` with only `elapsed_seconds` column; (L3) fixed `_ROUND_LABELS` "NCG" → "Championship" per story spec; (L1) added `showgrid=False` to secondary y-axis in reliability diagram. Test count: 31 → 33.
 
 ### File List
 

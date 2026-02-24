@@ -42,7 +42,7 @@ _PALETTE: tuple[str, ...] = (
 TEMPLATE: str = "plotly_dark"
 
 # Round labels for advancement heatmap
-_ROUND_LABELS: tuple[str, ...] = ("R64", "R32", "S16", "E8", "F4", "NCG")
+_ROUND_LABELS: tuple[str, ...] = ("R64", "R32", "S16", "E8", "F4", "Championship")
 
 
 def plot_reliability_diagram(
@@ -117,6 +117,7 @@ def plot_reliability_diagram(
             "title": "Bin Count",
             "overlaying": "y",
             "side": "right",
+            "showgrid": False,
         },
         legend={"x": 0.01, "y": 0.99},
     )
@@ -289,7 +290,9 @@ def plot_score_distribution(
     """
     # Convert bin edges to bin centers for the bar chart
     bin_centers = (dist.histogram_bins[:-1] + dist.histogram_bins[1:]) / 2.0
-    bin_width = float(dist.histogram_bins[1] - dist.histogram_bins[0])
+    bin_width = (
+        float(dist.histogram_bins[1] - dist.histogram_bins[0]) if len(dist.histogram_bins) >= 2 else 1.0
+    )
 
     fig = go.Figure()
 
