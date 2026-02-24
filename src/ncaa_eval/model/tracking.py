@@ -7,6 +7,7 @@ persistence under ``base_path / "runs" / run_id /``.
 
 from __future__ import annotations
 
+import json
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Annotated, Any
@@ -190,6 +191,65 @@ class RunStore:
         if not path.exists():
             return None
         return pd.read_parquet(path)
+
+    def save_model(
+        self,
+        run_id: str,
+        model: Any,
+        *,
+        feature_names: list[str] | None = None,
+    ) -> None:
+        """Persist a trained model alongside a run.
+
+        Args:
+            run_id: The run identifier.
+            model: A fitted model implementing ``save(path)``.
+            feature_names: Feature column names used during training.
+
+        Raises:
+            FileNotFoundError: If the run directory does not exist.
+        """
+        run_dir = self._runs_dir / run_id
+        if not run_dir.exists():
+            msg = f"Run directory not found: {run_id}"
+            raise FileNotFoundError(msg)
+        model_dir = run_dir / "model"
+        model_dir.mkdir(exist_ok=True)
+        model.save(model_dir)
+        if feature_names is not None:
+            (model_dir / "feature_names.json").write_text(json.dumps(feature_names))
+
+    def load_model(self, run_id: str) -> Any | None:
+        """Load a trained model from a run directory.
+
+        Args:
+            run_id: The run identifier.
+
+        Returns:
+            Model instance or None if no model directory exists (legacy run).
+        """
+        from ncaa_eval.model.registry import get_model
+
+        model_dir = self._runs_dir / run_id / "model"
+        if not model_dir.exists():
+            return None
+        run = self.load_run(run_id)
+        model_cls = get_model(run.model_type)
+        return model_cls.load(model_dir)
+
+    def load_feature_names(self, run_id: str) -> list[str] | None:
+        """Load saved feature names for a run.
+
+        Args:
+            run_id: The run identifier.
+
+        Returns:
+            List of feature names or None if not saved.
+        """
+        path = self._runs_dir / run_id / "model" / "feature_names.json"
+        if not path.exists():
+            return None
+        return json.loads(path.read_text())  # type: ignore[no-any-return]
 
     def load_all_summaries(self) -> pd.DataFrame:
         """Load metric summaries for all runs that have them.

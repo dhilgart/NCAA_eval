@@ -227,6 +227,10 @@ def run_training(  # noqa: PLR0913, C901, PLR0912
     else:
         _console.print("[yellow]Skipping backtest: need ≥ 2 seasons.[/yellow]")
 
+    # -- Persist trained model --
+    store.save_model(run.run_id, model, feature_names=feat_cols)
+    _console.print("[green]Model artifacts persisted.[/green]")
+
     # -- Results summary --
     table = Table(title="Training Results")
     table.add_column("Field", style="cyan")
