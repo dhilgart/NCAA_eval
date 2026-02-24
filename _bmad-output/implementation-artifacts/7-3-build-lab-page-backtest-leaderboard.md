@@ -42,15 +42,15 @@ So that I can quickly identify the best-performing models and spot trends.
   - [x] 3.1 Implement `load_leaderboard_data(data_dir: str) -> list[dict[str, object]]` decorated with `@st.cache_data(ttl=300)` — calls `RunStore(Path(data_dir)).load_all_summaries()`, joins with `ModelRun` metadata (model_type, timestamp, start_year, end_year), returns list of dicts (cache-safe)
   - [x] 3.2 Write unit tests for `load_leaderboard_data` with mocked `RunStore` (4 tests: joined data, empty summaries, missing dir, OSError)
 
-- [ ] Task 4: Implement the leaderboard page in `dashboard/pages/1_Lab.py` (AC: #1–#7)
-  - [ ] 4.1 Read global filters from `st.session_state`: `selected_year`, `selected_run_id`
-  - [ ] 4.2 Call `load_leaderboard_data(str(get_data_dir()))` to get the full leaderboard DataFrame
-  - [ ] 4.3 Apply year filter: if `selected_year` is set, filter the summary to show only metrics for that tournament year; if no year filter, show aggregate (mean across years) per run
-  - [ ] 4.4 Render `st.metric` diagnostic cards in a row of 4 columns — best LogLoss, best Brier, best ROC-AUC, lowest ECE — with delta vs. the worst model's value (or vs. baseline if a "baseline" run exists)
-  - [ ] 4.5 Render the leaderboard as `st.dataframe(styled_df)` with `use_container_width=True`
-  - [ ] 4.6 Apply Pandas Styler `background_gradient(cmap=..., subset=[metric_cols])` with a Red-to-Green colormap for ROC-AUC (higher=better), Green-to-Red for LogLoss/Brier/ECE (lower=better)
-  - [ ] 4.7 Make the run_id column clickable — use `st.dataframe` with `on_select` callback or a button column; on click, set `st.session_state.selected_run_id` and call `st.switch_page("pages/3_Model_Deep_Dive.py")`
-  - [ ] 4.8 Handle empty state: if no runs exist, display `st.info("No model runs available. Train a model first: python -m ncaa_eval.cli train --model elo")`
+- [x] Task 4: Implement the leaderboard page in `dashboard/pages/1_Lab.py` (AC: #1–#7)
+  - [x] 4.1 Read global filters from `st.session_state`: `selected_year`, `selected_run_id`
+  - [x] 4.2 Call `load_leaderboard_data(str(get_data_dir()))` to get the full leaderboard DataFrame
+  - [x] 4.3 Apply year filter: if `selected_year` is set, filter the summary to show only metrics for that tournament year; if no year filter, show aggregate (mean across years) per run
+  - [x] 4.4 Render `st.metric` diagnostic cards in a row of 4 columns — best LogLoss, best Brier, best ROC-AUC, lowest ECE — with delta vs. the worst model's value (or vs. baseline if a "baseline" run exists)
+  - [x] 4.5 Render the leaderboard as `st.dataframe(styled_df)` with `use_container_width=True`
+  - [x] 4.6 Apply Pandas Styler `background_gradient(cmap=..., subset=[metric_cols])` with a Red-to-Green colormap for ROC-AUC (higher=better), Green-to-Red for LogLoss/Brier/ECE (lower=better)
+  - [x] 4.7 Make the run_id column clickable — use `st.dataframe` with `on_select="rerun"` and `selection_mode="single-row"`; on select, set `st.session_state.selected_run_id` and call `st.switch_page("pages/3_Model_Deep_Dive.py")`
+  - [x] 4.8 Handle empty state: if no runs exist, display `st.info("No model runs available. Train a model first: python -m ncaa_eval.cli train --model elo")`
 
 - [ ] Task 5: Write tests for the leaderboard page (AC: all)
   - [ ] 5.1 Smoke test: `import dashboard.pages.1_Lab` succeeds without error (update existing test)
@@ -332,11 +332,13 @@ Claude Opus 4.6
 - Task 1: Added `save_metrics()`, `load_metrics()`, `load_all_summaries()` to `RunStore` in tracking.py. 8 unit tests all pass covering round-trip, missing-file, empty-store, mixed legacy/new runs.
 - Task 2: Wired `run_training()` in `src/ncaa_eval/cli/train.py` to run walk-forward backtest after training and persist `summary.parquet` via `store.save_metrics()`. Skips backtest when <2 seasons. No existing CLI integration tests existed (story referenced wrong file path).
 - Task 3: Added `load_leaderboard_data()` to `dashboard/lib/filters.py` — cached, returns list[dict] joining summaries with run metadata. 4 unit tests pass.
+- Task 4: Replaced placeholder in `dashboard/pages/1_Lab.py` with full leaderboard: year filtering, st.metric KPI cards, Pandas Styler gradients, st.dataframe with on_select for row click navigation to Deep Dive, and empty state handling.
 
 ### File List
 
 - src/ncaa_eval/model/tracking.py (modified — added 3 new methods)
 - src/ncaa_eval/cli/train.py (modified — added backtest + save_metrics after training)
 - dashboard/lib/filters.py (modified — added load_leaderboard_data function)
+- dashboard/pages/1_Lab.py (rewritten — full leaderboard implementation)
 - tests/unit/test_run_store_metrics.py (new — 8 unit tests)
 - tests/unit/test_dashboard_filters.py (modified — added 4 leaderboard tests)
