@@ -50,10 +50,10 @@ So that I can evaluate model value under different pool scoring rules and optimi
   - [x] 4.4 Update `simulate_tournament_mc` to populate `bracket_distributions` from existing `score_distribution` arrays
   - [x] 4.5 Unit tests: verify percentile ordering, histogram bin count, mean/std against numpy reference, None for analytical path
 
-- [ ] Task 5: Implement dict-based custom scoring configuration (AC: #2)
-  - [ ] 5.1 Implement `DictScoring(ScoringRule)` — wraps a `dict[int, float]` mapping `round_idx → points`; validates exactly 6 entries (rounds 0–5); raises `ValueError` on missing rounds
-  - [ ] 5.2 Implement `scoring_from_config(config: dict[str, Any]) -> ScoringRule` factory — dispatches on `config["type"]`: `"standard"`, `"fibonacci"`, `"seed_diff_bonus"`, `"dict"` (reads `config["points"]`), `"custom"` (reads `config["callable"]`)
-  - [ ] 5.3 Unit tests: dict scoring round-trip, config factory for each type, invalid config raises ValueError
+- [x] Task 5: Implement dict-based custom scoring configuration (AC: #2)
+  - [x] 5.1 Implement `DictScoring(ScoringRule)` — wraps a `dict[int, float]` mapping `round_idx → points`; validates exactly 6 entries (rounds 0–5); raises `ValueError` on missing rounds
+  - [x] 5.2 Implement `scoring_from_config(config: dict[str, Any]) -> ScoringRule` factory — dispatches on `config["type"]`: `"standard"`, `"fibonacci"`, `"seed_diff_bonus"`, `"dict"` (reads `config["points"]`), `"custom"` (reads `config["callable"]`)
+  - [x] 5.3 Unit tests: dict scoring round-trip, config factory for each type, invalid config raises ValueError
 
 - [ ] Task 6: Fix MC score_distribution to use actual per-sim bracket scores (AC: #3, #4)
   - [ ] 6.1 Currently `score_distribution` tracks chalk-bracket scores (whether pre-game favorite won). Refactor MC engine to track the actual per-sim bracket outcome and score it: for each sim, the winners array records who won each game; score = sum of `points_per_round(r)` for each correct pick (if the sim's winner matches the scoring bracket's pick). For "Expected Points" style scoring, the existing `adv_probs @ points` path is correct. But for score_distribution, each sim should record its own total score = sum of points for all 63 games in that sim.

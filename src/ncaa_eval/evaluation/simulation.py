@@ -557,6 +557,69 @@ class CustomScoring:
         return self._fn(round_idx)
 
 
+class DictScoring:
+    """Scoring rule from a dict mapping round_idx to points.
+
+    Args:
+        points: Mapping of ``round_idx → points`` for rounds 0–5.
+        scoring_name: Name for this rule.
+
+    Raises:
+        ValueError: If *points* does not contain exactly 6 entries (rounds 0–5).
+    """
+
+    def __init__(self, points: dict[int, float], scoring_name: str) -> None:
+        if len(points) != N_ROUNDS or set(points) != set(range(N_ROUNDS)):
+            msg = f"DictScoring requires exactly 6 entries (rounds 0–5), got {len(points)}"
+            raise ValueError(msg)
+        self._points = points
+        self._name = scoring_name
+
+    @property
+    def name(self) -> str:
+        """Return the rule name."""
+        return self._name
+
+    def points_per_round(self, round_idx: int) -> float:
+        """Return points for *round_idx*."""
+        return self._points[round_idx]
+
+
+def scoring_from_config(config: dict[str, Any]) -> ScoringRule:
+    """Create a scoring rule from a configuration dict.
+
+    Dispatches on ``config["type"]``:
+
+    * ``"standard"`` → :class:`StandardScoring`
+    * ``"fibonacci"`` → :class:`FibonacciScoring`
+    * ``"seed_diff_bonus"`` → :class:`SeedDiffBonusScoring` (requires ``seed_map``)
+    * ``"dict"`` → :class:`DictScoring` (requires ``points`` and ``name``)
+    * ``"custom"`` → :class:`CustomScoring` (requires ``callable`` and ``name``)
+
+    Args:
+        config: Configuration dict with at least a ``"type"`` key.
+
+    Returns:
+        Instantiated scoring rule.
+
+    Raises:
+        ValueError: If ``type`` is unknown or required keys are missing.
+    """
+    scoring_type = config["type"]
+    if scoring_type == "standard":
+        return StandardScoring()
+    if scoring_type == "fibonacci":
+        return FibonacciScoring()
+    if scoring_type == "seed_diff_bonus":
+        return SeedDiffBonusScoring(config.get("seed_map", {}))
+    if scoring_type == "dict":
+        return DictScoring(config["points"], config.get("name", "dict"))
+    if scoring_type == "custom":
+        return CustomScoring(config["callable"], config.get("name", "custom"))
+    msg = f"Unknown scoring type: {scoring_type!r}"
+    raise ValueError(msg)
+
+
 # ---------------------------------------------------------------------------
 # SimulationResult (Task 5)
 # ---------------------------------------------------------------------------

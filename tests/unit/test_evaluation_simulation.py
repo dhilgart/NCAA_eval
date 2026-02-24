@@ -21,6 +21,7 @@ from ncaa_eval.evaluation.simulation import (
     BracketNode,
     BracketStructure,
     CustomScoring,
+    DictScoring,
     EloProvider,
     FibonacciScoring,
     MatchupContext,
@@ -41,6 +42,7 @@ from ncaa_eval.evaluation.simulation import (
     get_scoring,
     list_scorings,
     register_scoring,
+    scoring_from_config,
     simulate_tournament,
     simulate_tournament_mc,
 )
@@ -847,6 +849,54 @@ class TestScoringRegistry:
 
                 def points_per_round(self, round_idx: int) -> float:
                     return 0.0
+
+
+class TestDictScoring:
+    """Tests for DictScoring and scoring_from_config (Task 5)."""
+
+    def test_dict_scoring_basic(self) -> None:
+        points = {0: 1.0, 1: 2.0, 2: 4.0, 3: 8.0, 4: 16.0, 5: 32.0}
+        rule = DictScoring(points, "test_dict")
+        assert rule.name == "test_dict"
+        for r in range(6):
+            assert rule.points_per_round(r) == points[r]
+
+    def test_dict_scoring_missing_rounds_raises(self) -> None:
+        with pytest.raises(ValueError, match="exactly 6"):
+            DictScoring({0: 1.0, 1: 2.0}, "incomplete")
+
+    def test_scoring_from_config_standard(self) -> None:
+        rule = scoring_from_config({"type": "standard"})
+        assert isinstance(rule, StandardScoring)
+
+    def test_scoring_from_config_fibonacci(self) -> None:
+        rule = scoring_from_config({"type": "fibonacci"})
+        assert isinstance(rule, FibonacciScoring)
+
+    def test_scoring_from_config_seed_diff(self) -> None:
+        rule = scoring_from_config({"type": "seed_diff_bonus", "seed_map": {1: 1, 2: 16}})
+        assert isinstance(rule, SeedDiffBonusScoring)
+
+    def test_scoring_from_config_dict(self) -> None:
+        config = {
+            "type": "dict",
+            "name": "custom_pts",
+            "points": {0: 10.0, 1: 20.0, 2: 30.0, 3: 40.0, 4: 50.0, 5: 60.0},
+        }
+        rule = scoring_from_config(config)
+        assert isinstance(rule, DictScoring)
+        assert rule.name == "custom_pts"
+        assert rule.points_per_round(0) == 10.0
+
+    def test_scoring_from_config_custom_callable(self) -> None:
+        config = {"type": "custom", "callable": lambda r: float(r * 10), "name": "times_ten"}
+        rule = scoring_from_config(config)
+        assert isinstance(rule, CustomScoring)
+        assert rule.points_per_round(3) == 30.0
+
+    def test_scoring_from_config_invalid_type(self) -> None:
+        with pytest.raises(ValueError, match="Unknown scoring type"):
+            scoring_from_config({"type": "nonexistent"})
 
 
 # ---------------------------------------------------------------------------
