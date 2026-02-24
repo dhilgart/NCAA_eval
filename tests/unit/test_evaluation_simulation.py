@@ -24,6 +24,7 @@ from ncaa_eval.evaluation.simulation import (
     FibonacciScoring,
     MatchupContext,
     MatrixProvider,
+    MostLikelyBracket,
     ScoringNotFoundError,
     ScoringRule,
     SeedDiffBonusScoring,
@@ -34,6 +35,7 @@ from ncaa_eval.evaluation.simulation import (
     compute_advancement_probs,
     compute_expected_points,
     compute_expected_points_seed_diff,
+    compute_most_likely_bracket,
     get_scoring,
     list_scorings,
     register_scoring,
@@ -601,6 +603,73 @@ class TestComputeExpectedPointsSeedDiff:
         ep_mc /= n_sims
 
         np.testing.assert_allclose(ep_analytical, ep_mc, atol=0.15)
+
+
+class TestComputeMostLikelyBracket:
+    """Tests for compute_most_likely_bracket (Task 3)."""
+
+    def test_deterministic_perfect_bracket(self) -> None:
+        """Deterministic matrix: most-likely bracket picks all correct winners."""
+        bracket = _make_small_bracket(4)
+        P = _make_deterministic_matrix(4)
+        result = compute_most_likely_bracket(bracket, P)
+        assert isinstance(result, MostLikelyBracket)
+        # With deterministic P, team 0 beats 1, team 2 beats 3, team 0 beats 2
+        assert result.winners == (0, 2, 0)
+        assert result.champion_team_id == 0
+        # Log-likelihood = sum of log(1.0) = 0.0
+        assert result.log_likelihood == pytest.approx(0.0)
+
+    def test_uniform_matrix_valid_bracket(self) -> None:
+        """Uniform matrix: any valid bracket is acceptable."""
+        bracket = _make_small_bracket(4)
+        P = _make_uniform_matrix(4)
+        result = compute_most_likely_bracket(bracket, P)
+        assert isinstance(result, MostLikelyBracket)
+        assert len(result.winners) == 3  # 3 games in 4-team bracket
+        # Log-likelihood should be negative (all probs are 0.5)
+        assert result.log_likelihood == pytest.approx(3 * np.log(0.5))
+
+    def test_log_likelihood_computation(self) -> None:
+        """Log-likelihood = sum of log(max(P[left, right], P[right, left]))."""
+        bracket = _make_small_bracket(4)
+        # Custom matrix: P[0,1]=0.8, P[2,3]=0.7, P[0,2]=0.6
+        P = np.zeros((4, 4), dtype=np.float64)
+        P[0, 1] = 0.8
+        P[1, 0] = 0.2
+        P[0, 2] = 0.6
+        P[2, 0] = 0.4
+        P[0, 3] = 0.9
+        P[3, 0] = 0.1
+        P[1, 2] = 0.3
+        P[2, 1] = 0.7
+        P[1, 3] = 0.4
+        P[3, 1] = 0.6
+        P[2, 3] = 0.7
+        P[3, 2] = 0.3
+        result = compute_most_likely_bracket(bracket, P)
+        # Greedy picks: R0 game 0→1: pick 0 (0.8), R0 game 2→3: pick 2 (0.7)
+        # R1: 0 vs 2: pick 0 (0.6)
+        expected_ll = np.log(0.8) + np.log(0.7) + np.log(0.6)
+        assert result.log_likelihood == pytest.approx(expected_ll)
+        assert result.winners == (0, 2, 0)
+        assert result.champion_team_id == 0
+
+    def test_frozen_dataclass(self) -> None:
+        """MostLikelyBracket is frozen."""
+        bracket = _make_small_bracket(4)
+        P = _make_deterministic_matrix(4)
+        result = compute_most_likely_bracket(bracket, P)
+        with pytest.raises(AttributeError):
+            result.champion_team_id = 99  # type: ignore[misc]
+
+    def test_8_team_bracket(self) -> None:
+        """8-team bracket produces 7 winners."""
+        bracket = _make_small_bracket(8)
+        P = _make_deterministic_matrix(8)
+        result = compute_most_likely_bracket(bracket, P)
+        assert len(result.winners) == 7
+        assert result.champion_team_id == 0
 
 
 class TestAnalyticalMatchesMC:

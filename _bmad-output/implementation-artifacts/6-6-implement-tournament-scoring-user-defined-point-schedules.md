@@ -38,10 +38,10 @@ So that I can evaluate model value under different pool scoring rules and optimi
   - [x] 2.3 Integrate into `simulate_tournament` orchestrator: when a `SeedDiffBonusScoring` rule is in `scoring_rules`, use the seed-aware EP function instead of `compute_expected_points`
   - [x] 2.4 Unit tests: verify seed-diff EP for known small-bracket fixtures; verify equals standard EP when all seeds are identical; verify converges with MC at large N
 
-- [ ] Task 3: Implement `compute_most_likely_bracket` (AC: #4, deferred from 6.5)
-  - [ ] 3.1 Implement `compute_most_likely_bracket(bracket, P) -> tuple[ndarray, float]` — returns `(winners, log_likelihood)` where `winners` is shape `(n_games,)` array of team indices for the max-likelihood bracket; greedy traversal picking `argmax(P[left, right])` at each game
-  - [ ] 3.2 Return type is a frozen `MostLikelyBracket` dataclass with fields: `winners: tuple[int, ...]`, `champion_team_id: int`, `log_likelihood: float`
-  - [ ] 3.3 Unit tests: deterministic matrix yields perfect bracket; uniform matrix yields any valid bracket; log_likelihood is negative sum of log(max(P[i,j], P[j,i]))
+- [x] Task 3: Implement `compute_most_likely_bracket` (AC: #4, deferred from 6.5)
+  - [x] 3.1 Implement `compute_most_likely_bracket(bracket, P) -> tuple[ndarray, float]` — returns `(winners, log_likelihood)` where `winners` is shape `(n_games,)` array of team indices for the max-likelihood bracket; greedy traversal picking `argmax(P[left, right])` at each game
+  - [x] 3.2 Return type is a frozen `MostLikelyBracket` dataclass with fields: `winners: tuple[int, ...]`, `champion_team_id: int`, `log_likelihood: float`
+  - [x] 3.3 Unit tests: deterministic matrix yields perfect bracket; uniform matrix yields any valid bracket; log_likelihood is negative sum of log(max(P[i,j], P[j,i]))
 
 - [ ] Task 4: Implement `BracketDistribution` analysis (AC: #4)
   - [ ] 4.1 Implement `BracketDistribution` frozen dataclass with fields: `scores: ndarray` (raw per-sim scores), `percentiles: dict[int, float]` (5, 25, 50, 75, 95), `mean: float`, `std: float`, `histogram_bins: ndarray`, `histogram_counts: ndarray`

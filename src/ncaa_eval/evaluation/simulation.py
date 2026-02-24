@@ -591,6 +591,23 @@ class SimulationResult:
     score_distribution: dict[str, npt.NDArray[np.float64]] | None
 
 
+@dataclass(frozen=True)
+class MostLikelyBracket:
+    """Maximum-likelihood bracket from greedy traversal.
+
+    Attributes:
+        winners: Tuple of team indices for each game's predicted winner,
+            in bracket-tree pre-order (63 entries for 64-team bracket).
+        champion_team_id: Team index of the predicted champion.
+        log_likelihood: Sum of ``log(max(P[left, right], P[right, left]))``
+            across all games.
+    """
+
+    winners: tuple[int, ...]
+    champion_team_id: int
+    log_likelihood: float
+
+
 # ---------------------------------------------------------------------------
 # Analytical computation — Phylourny algorithm (Task 3)
 # ---------------------------------------------------------------------------
@@ -756,6 +773,59 @@ def compute_expected_points_seed_diff(
 
     result: npt.NDArray[np.float64] = base_ep + bonus_ep
     return result
+
+
+def compute_most_likely_bracket(
+    bracket: BracketStructure,
+    P: npt.NDArray[np.float64],
+) -> MostLikelyBracket:
+    """Compute the maximum-likelihood bracket via greedy traversal.
+
+    At each internal node, picks the team with the higher win probability
+    (``argmax(P[left, right])``).  Returns the full bracket of winners and
+    the log-likelihood of the chosen bracket.
+
+    Args:
+        bracket: Tournament bracket structure.
+        P: Pairwise win probability matrix, shape ``(n, n)``.
+
+    Returns:
+        :class:`MostLikelyBracket` with winners, champion, and log-likelihood.
+    """
+    winners: list[int] = []
+    log_likelihood = 0.0
+
+    def _traverse(node: BracketNode) -> int:
+        """Return team index of the predicted winner at this node."""
+        nonlocal log_likelihood
+        if node.is_leaf:
+            return node.team_index
+
+        if node.left is None or node.right is None:
+            msg = "Internal bracket node missing child — tree is malformed"
+            raise RuntimeError(msg)
+
+        left_winner = _traverse(node.left)
+        right_winner = _traverse(node.right)
+
+        p_left = float(P[left_winner, right_winner])
+        if p_left >= 0.5:
+            winner = left_winner
+            log_likelihood += float(np.log(max(p_left, 1e-300)))
+        else:
+            winner = right_winner
+            log_likelihood += float(np.log(max(1.0 - p_left, 1e-300)))
+
+        winners.append(winner)
+        return winner
+
+    champion = _traverse(bracket.root)
+
+    return MostLikelyBracket(
+        winners=tuple(winners),
+        champion_team_id=champion,
+        log_likelihood=log_likelihood,
+    )
 
 
 # ---------------------------------------------------------------------------
