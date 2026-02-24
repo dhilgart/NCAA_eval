@@ -25,7 +25,7 @@ References:
 from __future__ import annotations
 
 import logging
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass, field
 from typing import Any, Protocol, TypeVar, runtime_checkable
 
@@ -1046,6 +1046,7 @@ def simulate_tournament_mc(  # noqa: PLR0913
     season: int,
     n_simulations: int = 10_000,
     rng: np.random.Generator | None = None,
+    progress: bool = False,
 ) -> SimulationResult:
     """Vectorized Monte Carlo tournament simulation.
 
@@ -1060,6 +1061,7 @@ def simulate_tournament_mc(  # noqa: PLR0913
         season: Tournament season year.
         n_simulations: Number of simulations (default 10,000).
         rng: NumPy random generator for reproducibility.
+        progress: Display a tqdm progress bar for simulation rounds.
 
     Returns:
         :class:`SimulationResult` with MC-derived advancement probs,
@@ -1105,7 +1107,12 @@ def simulate_tournament_mc(  # noqa: PLR0913
     all_winners = np.zeros((n_simulations, total_games), dtype=np.int32)
 
     game_offset = 0
-    for r in range(n_rounds):
+    round_iter: Iterable[int] = range(n_rounds)
+    if progress:
+        from tqdm.auto import tqdm  # type: ignore[import-untyped]
+
+        round_iter = tqdm(round_iter, desc="MC rounds", total=n_rounds)
+    for r in round_iter:
         n_games_in_round = survivors.shape[1] // 2
 
         if n_simulations >= 10_000 and r == 0:
@@ -1216,6 +1223,7 @@ def simulate_tournament(  # noqa: PLR0913
     method: str = "analytical",
     n_simulations: int = 10_000,
     rng: np.random.Generator | None = None,
+    progress: bool = False,
 ) -> SimulationResult:
     """High-level tournament simulation orchestrator.
 
@@ -1231,6 +1239,8 @@ def simulate_tournament(  # noqa: PLR0913
         method: ``"analytical"`` (default) or ``"monte_carlo"``.
         n_simulations: Number of MC simulations (ignored for analytical).
         rng: NumPy random generator (MC only).
+        progress: Display a tqdm progress bar for MC simulation rounds.
+            Ignored when ``method="analytical"``.
 
     Returns:
         :class:`SimulationResult`.
@@ -1276,4 +1286,5 @@ def simulate_tournament(  # noqa: PLR0913
         season=context.season,
         n_simulations=n_simulations,
         rng=rng,
+        progress=progress,
     )

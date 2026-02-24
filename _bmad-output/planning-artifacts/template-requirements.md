@@ -2467,6 +2467,58 @@ class ScoringRule(Protocol): ...  # defined BEFORE registry
 _ST = TypeVar("_ST", bound="type[ScoringRule]")
 ```
 
+### Always Emit UserWarning When a Parameter Is Silently Ignored (Discovered Story 7.1 Code Review, 2026-02-24)
+
+When a function parameter can only be honoured under specific conditions, silently ignoring it is a footgun. Always emit `warnings.warn(..., UserWarning, stacklevel=2)` when a user-visible parameter has no effect:
+
+```python
+# ❌ Silent drop — user sees no progress bar and no explanation
+if progress and n_jobs == 1:
+    # ... use tqdm
+else:
+    # progress flag silently ignored
+
+# ✅ Warn when progress flag is ignored
+if progress and n_jobs != 1:
+    import warnings
+    warnings.warn(
+        "progress=True is only supported with n_jobs=1; progress bar skipped for parallel execution.",
+        UserWarning,
+        stacklevel=2,
+    )
+```
+
+### Always Test Error Guards Added During Code Review (Discovered Story 7.1 Code Review, 2026-02-24)
+
+When a code-review pass adds `ValueError` guards or other error-path logic, **tests for those guards must be added in the same pass**. A guard with no test is invisible to future refactors. Checklist:
+- `plot_metric_comparison` invalid metric → `pytest.raises(ValueError)`
+- `plot_backtest_summary` empty metric columns → `pytest.raises(ValueError)`
+- Any new `raise ValueError(msg)` line must have a corresponding `pytest.raises` test.
+
+### Cross-Check String Constants Against Dev Notes Spec (Discovered Story 7.1 Code Review, 2026-02-24)
+
+When a story's Dev Notes section specifies exact string labels (e.g., round names, axis labels), verify that module-level constants match exactly. Small discrepancies like `"NCG"` vs `"Championship"` are easy to miss during implementation but show up in the rendered UI:
+
+```python
+# ❌ Drifted from spec
+_ROUND_LABELS = ("R64", "R32", "S16", "E8", "F4", "NCG")
+
+# ✅ Matches story spec section verbatim
+_ROUND_LABELS = ("R64", "R32", "S16", "E8", "F4", "Championship")
+```
+
+### Guard Array Index Access on Externally-Constructable Dataclasses (Discovered Story 7.1 Code Review, 2026-02-24)
+
+When a function accepts a frozen dataclass and accesses `array[i]`, consider whether a caller could construct the dataclass with fewer elements than expected. Even if the normal factory produces safe values, add an inline guard for robustness:
+
+```python
+# ❌ IndexError if histogram_bins has < 2 elements
+bin_width = float(dist.histogram_bins[1] - dist.histogram_bins[0])
+
+# ✅ Defensive guard
+bin_width = float(dist.histogram_bins[1] - dist.histogram_bins[0]) if len(dist.histogram_bins) >= 2 else 1.0
+```
+
 ### Config Factory Functions Must Raise ValueError, Not KeyError (Discovered Story 6.6 Code Review, 2026-02-24)
 
 Factory functions that dispatch on a config dict key (e.g., `config["type"]`) should **explicitly check** for missing required keys and raise `ValueError`, not let Python raise `KeyError` through dict indexing. Callers catching `ValueError` miss `KeyError`:

@@ -191,6 +191,7 @@ def run_backtest(  # noqa: PLR0913
     ]
     | None = None,
     console: Console | None = None,
+    progress: bool = False,
 ) -> BacktestResult:
     """Run parallelized walk-forward cross-validation backtest.
 
@@ -203,6 +204,8 @@ def run_backtest(  # noqa: PLR0913
         metric_fns: Metric functions to compute per fold. Defaults to
             {log_loss, brier_score, roc_auc, expected_calibration_error}.
         console: Rich Console for progress output.
+        progress: Display a tqdm progress bar for fold evaluation.
+            Most useful with ``n_jobs=1`` (sequential execution).
 
     Returns:
         BacktestResult with per-fold results and summary DataFrame.
@@ -229,10 +232,30 @@ def run_backtest(  # noqa: PLR0913
     _console = console or Console()
     _console.print(f"Running backtest: {len(folds)} folds, n_jobs={n_jobs}")
 
-    # Dispatch parallel fold evaluation
-    results: list[FoldResult] = joblib.Parallel(n_jobs=n_jobs)(
-        joblib.delayed(_evaluate_fold)(fold, m, resolved_metrics) for fold, m in zip(folds, models)
-    )
+    # Dispatch fold evaluation (with optional tqdm progress bar)
+    if progress and n_jobs != 1:
+        import warnings
+
+        warnings.warn(
+            "progress=True is only supported with n_jobs=1; progress bar skipped for parallel execution.",
+            UserWarning,
+            stacklevel=2,
+        )
+    if progress and n_jobs == 1:
+        from tqdm.auto import tqdm  # type: ignore[import-untyped]
+
+        results: list[FoldResult] = [
+            _evaluate_fold(fold, m, resolved_metrics)
+            for fold, m in tqdm(
+                zip(folds, models),
+                total=len(folds),
+                desc="Backtest folds",
+            )
+        ]
+    else:
+        results = joblib.Parallel(n_jobs=n_jobs)(
+            joblib.delayed(_evaluate_fold)(fold, m, resolved_metrics) for fold, m in zip(folds, models)
+        )
 
     # Sort by year ascending (joblib may return out of order)
     results.sort(key=lambda r: r.year)
