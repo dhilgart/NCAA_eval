@@ -86,10 +86,34 @@ class TestYearFiltering:
 
 
 class TestEmptyStateHandling:
-    def test_empty_raw_data(self) -> None:
-        raw: list[dict[str, object]] = []
-        assert not raw  # This triggers the empty state in the page
+    def test_no_runs_triggers_info_message(self) -> None:
+        """When no runs AND no leaderboard data, st.info should be called."""
+        from unittest.mock import MagicMock, patch
 
-    def test_empty_dataframe_from_raw(self) -> None:
-        df = pd.DataFrame([])
-        assert df.empty
+        mock_st = MagicMock()
+        with (
+            patch.object(_lab_mod, "load_leaderboard_data", return_value=[]),
+            patch.object(_lab_mod, "load_available_runs", return_value=[]),
+            patch.object(_lab_mod, "st", mock_st),
+        ):
+            _lab_mod._render_leaderboard()
+
+        mock_st.info.assert_called_once()
+        call_args = mock_st.info.call_args[0][0]
+        assert "Train a model" in call_args
+
+    def test_legacy_runs_triggers_warning_message(self) -> None:
+        """When runs exist but no summaries, st.warning should be called."""
+        from unittest.mock import MagicMock, patch
+
+        mock_st = MagicMock()
+        with (
+            patch.object(_lab_mod, "load_leaderboard_data", return_value=[]),
+            patch.object(_lab_mod, "load_available_runs", return_value=[{"run_id": "old-run"}]),
+            patch.object(_lab_mod, "st", mock_st),
+        ):
+            _lab_mod._render_leaderboard()
+
+        mock_st.warning.assert_called_once()
+        call_args = mock_st.warning.call_args[0][0]
+        assert "Re-run training" in call_args

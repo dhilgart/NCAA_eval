@@ -66,7 +66,7 @@ DEFAULT_METRICS: Mapping[
 )
 
 
-def _feature_cols(df: pd.DataFrame) -> list[str]:
+def feature_cols(df: pd.DataFrame) -> list[str]:
     """Return feature column names (everything not in METADATA_COLS).
 
     Args:
@@ -146,7 +146,7 @@ def _evaluate_fold(
     y_test = fold.test["team_a_won"].astype(np.float64)
 
     is_stateful = isinstance(model, StatefulModel)
-    feat_cols = _feature_cols(fold.train)
+    feat_cols = feature_cols(fold.train)
 
     if is_stateful:
         model.fit(fold.train, y_train)

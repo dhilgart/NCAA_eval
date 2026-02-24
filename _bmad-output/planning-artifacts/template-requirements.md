@@ -2617,3 +2617,43 @@ scoring_type = config["type"]
 ```
 
 Apply the same pattern to all required sub-keys (`"points"`, `"callable"`, `"seed_map"`, etc.).
+
+### No `iterrows()` in Data-Loading / Cache Functions (Discovered Story 7.3 Code Review, 2026-02-24)
+
+`iterrows()` is banned project-wide for performance (returns a copy of each row; O(n) Python loop). The common `join + build list-of-dicts` pattern in `@st.cache_data` functions must use `pd.DataFrame.merge()` + `.to_dict("records")` instead:
+
+```python
+# ❌ iterrows — violates no-iterrows mandate
+for _, row in summaries.iterrows():
+    rows.append({"run_id": str(row["run_id"]), ...})
+
+# ✅ vectorized merge + to_dict
+runs_meta = pd.DataFrame([r.model_dump() for r in store.list_runs()])
+merged = summaries.merge(runs_meta, on="run_id", how="left")
+return cast(list[dict[str, object]], merged[keep_cols].to_dict("records"))
+```
+
+Note: `.to_dict("records")` returns `list[dict[str, Any]]`; use `cast(list[dict[str, object]], ...)` for mypy compatibility.
+
+### Public API Boundary — Promote Internal Functions Before Cross-Module Import (Discovered Story 7.3 Code Review, 2026-02-24)
+
+Functions with leading-underscore names (e.g. `_feature_cols`) are internal by convention. Never import them across module boundaries from unrelated packages (e.g., CLI importing from evaluation internals). If a function is needed externally:
+1. Rename to remove the underscore (make public)
+2. Add to `__init__.py` `__all__`
+3. Update all callers to the public name
+
+This prevents silent breakage when the internal module is refactored.
+
+### `mock.patch` Cannot Use Dotted Paths for Modules With Numeric-Prefixed Names (Discovered Story 7.3 Code Review, 2026-02-24)
+
+Streamlit pages with digit-prefixed filenames (e.g., `1_Lab.py`) cannot be patched via `patch("dashboard.pages.1_Lab.some_func")` — Python's `pkgutil.resolve_name` rejects names starting with a digit. Use `patch.object(module, ...)` instead:
+
+```python
+# ❌ Fails: ValueError: invalid format: 'dashboard.pages.1_Lab'
+patch("dashboard.pages.1_Lab.load_leaderboard_data", return_value=[])
+
+# ✅ Works: patch by reference on already-imported module object
+import importlib
+_lab_mod = importlib.import_module("dashboard.pages.1_Lab")
+patch.object(_lab_mod, "load_leaderboard_data", return_value=[])
+```

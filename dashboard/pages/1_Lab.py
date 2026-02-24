@@ -9,7 +9,7 @@ from __future__ import annotations
 import pandas as pd  # type: ignore[import-untyped]
 import streamlit as st
 
-from dashboard.lib.filters import get_data_dir, load_leaderboard_data
+from dashboard.lib.filters import get_data_dir, load_available_runs, load_leaderboard_data
 
 _METRIC_COLS = ["log_loss", "brier_score", "roc_auc", "ece"]
 
@@ -18,10 +18,17 @@ def _render_leaderboard() -> None:
     """Render the backtest leaderboard page."""
     st.header("Backtest Leaderboard")
 
-    raw = load_leaderboard_data(str(get_data_dir()))
+    data_dir = str(get_data_dir())
+    raw = load_leaderboard_data(data_dir)
 
     if not raw:
-        st.info("No model runs available. Train a model first: `python -m ncaa_eval.cli train --model elo`")
+        runs = load_available_runs(data_dir)
+        if runs:
+            st.warning("No backtest metrics available. Re-run training to generate metrics.")
+        else:
+            st.info(
+                "No model runs available. Train a model first: `python -m ncaa_eval.cli train --model elo`"
+            )
         return
 
     df = pd.DataFrame(raw)
@@ -30,7 +37,7 @@ def _render_leaderboard() -> None:
         return
 
     # -- Apply year filter -----------------------------------------------------
-    selected_year = st.session_state.get("selected_year")
+    selected_year = st.session_state.setdefault("selected_year", None)
 
     if selected_year is not None:
         year_df = df[df["year"] == selected_year]

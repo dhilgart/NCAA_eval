@@ -70,6 +70,7 @@ class RunStore:
             <run_id>/
               run.json              # ModelRun metadata
               predictions.parquet   # Prediction records (PyArrow)
+              summary.parquet       # BacktestResult.summary (year × metrics)
     """
 
     def __init__(self, base_path: Path) -> None:

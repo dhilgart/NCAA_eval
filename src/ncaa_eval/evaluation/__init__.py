@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ncaa_eval.evaluation.backtest import BacktestResult, FoldResult, run_backtest
+from ncaa_eval.evaluation.backtest import BacktestResult, FoldResult, feature_cols, run_backtest
 from ncaa_eval.evaluation.metrics import (
     ReliabilityData,
     brier_score,
@@ -70,6 +70,7 @@ __all__ = [
     "EloProvider",
     "FibonacciScoring",
     "FoldResult",
+    "feature_cols",
     "MatchupContext",
     "MatrixProvider",
     "MostLikelyBracket",

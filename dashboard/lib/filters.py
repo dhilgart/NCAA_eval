@@ -8,7 +8,9 @@ navigations hit the in-memory cache.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import cast
 
+import pandas as pd  # type: ignore[import-untyped]
 import streamlit as st
 
 from ncaa_eval.evaluation import list_scorings
@@ -84,26 +86,34 @@ def load_leaderboard_data(data_dir: str) -> list[dict[str, object]]:
         summaries = store.load_all_summaries()
         if summaries.empty:
             return []
-        runs = {r.run_id: r for r in store.list_runs()}
-        rows: list[dict[str, object]] = []
-        for _, row in summaries.iterrows():
-            run_id = str(row["run_id"])
-            meta = runs.get(run_id)
-            rows.append(
+        runs_meta = pd.DataFrame(
+            [
                 {
-                    "run_id": run_id,
-                    "model_type": meta.model_type if meta else "unknown",
-                    "timestamp": str(meta.timestamp) if meta else "",
-                    "start_year": meta.start_year if meta else 0,
-                    "end_year": meta.end_year if meta else 0,
-                    "year": int(row["year"]),
-                    "log_loss": float(row["log_loss"]),
-                    "brier_score": float(row["brier_score"]),
-                    "roc_auc": float(row["roc_auc"]),
-                    "ece": float(row["ece"]),
+                    "run_id": r.run_id,
+                    "model_type": r.model_type,
+                    "timestamp": str(r.timestamp),
+                    "start_year": r.start_year,
+                    "end_year": r.end_year,
                 }
-            )
-        return rows
+                for r in store.list_runs()
+            ]
+        )
+        if runs_meta.empty:
+            return []
+        _keep = [
+            "run_id",
+            "model_type",
+            "timestamp",
+            "start_year",
+            "end_year",
+            "year",
+            "log_loss",
+            "brier_score",
+            "roc_auc",
+            "ece",
+        ]
+        merged = summaries.merge(runs_meta, on="run_id", how="left")
+        return cast(list[dict[str, object]], merged[_keep].to_dict("records"))
     except OSError:
         return []
 
