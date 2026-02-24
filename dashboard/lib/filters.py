@@ -119,6 +119,70 @@ def load_leaderboard_data(data_dir: str) -> list[dict[str, object]]:
         return []
 
 
+@st.cache_data(ttl=300)
+def load_fold_predictions(data_dir: str, run_id: str) -> list[dict[str, object]]:
+    """Load fold-level CV predictions for a run.
+
+    Args:
+        data_dir: String path to the project data directory.
+        run_id: The model run identifier.
+
+    Returns:
+        List of dicts with keys [year, game_id, team_a_id, team_b_id,
+        pred_win_prob, team_a_won], or empty list if unavailable.
+    """
+    path = Path(data_dir)
+    if not path.exists():
+        return []
+    try:
+        store = RunStore(path)
+        df = store.load_fold_predictions(run_id)
+        if df is None:
+            return []
+        return cast(list[dict[str, object]], df.to_dict("records"))
+    except OSError:
+        return []
+
+
+@st.cache_data(ttl=300)
+def load_feature_importances(data_dir: str, run_id: str) -> list[dict[str, object]]:
+    """Load feature importances for a run (XGBoost only).
+
+    Args:
+        data_dir: String path to the project data directory.
+        run_id: The model run identifier.
+
+    Returns:
+        List of dicts ``{"feature": name, "importance": value}`` sorted
+        descending by importance. Empty list for non-XGBoost models,
+        legacy runs, or errors.
+    """
+    path = Path(data_dir)
+    if not path.exists():
+        return []
+    try:
+        store = RunStore(path)
+        run = store.load_run(run_id)
+        if run.model_type != "xgboost":
+            return []
+        model = store.load_model(run_id)
+        if model is None:
+            return []
+        feature_names = store.load_feature_names(run_id) or []
+        clf = getattr(model, "_clf", None)
+        importances = getattr(clf, "feature_importances_", None)
+        if importances is None:
+            return []
+        pairs = sorted(
+            zip(feature_names, importances.tolist()),
+            key=lambda p: p[1],
+            reverse=True,
+        )
+        return [{"feature": f, "importance": v} for f, v in pairs]
+    except OSError:
+        return []
+
+
 @st.cache_data(ttl=None)
 def load_available_scorings() -> list[str]:
     """Return registered scoring-rule names.
