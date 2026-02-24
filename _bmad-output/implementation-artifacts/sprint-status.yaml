@@ -92,7 +92,7 @@ development_status:
   # Epic 6: Evaluation & Validation Engine
   epic-6: in-progress
   6-1-implement-metric-library-scikit-learn-numpy: done
-  6-2-implement-walk-forward-cross-validation-splitter: backlog
+  6-2-implement-walk-forward-cross-validation-splitter: ready-for-dev
   6-3-implement-parallel-cross-validation-execution: backlog
   6-4-research-tournament-simulation-confidence: backlog
   6-5-implement-monte-carlo-tournament-simulator: backlog
