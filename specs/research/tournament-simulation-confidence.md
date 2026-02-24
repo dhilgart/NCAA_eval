@@ -2,7 +2,7 @@
 
 **Date:** 2026-02-23
 **Story:** 6.4 (Spike) — Research Tournament Simulation Confidence
-**Status:** Complete — Awaiting Review
+**Status:** Complete — Code Review Applied (2026-02-23, round 2)
 **Author:** Dev Agent (Claude Opus 4.6)
 
 ---
@@ -74,7 +74,7 @@ CI_width = 2 * 1.96 * sqrt(0.05 * 0.95 / N) = 0.854 / sqrt(N)
 
 ### 1.4 The Compound Variance Problem
 
-A 64-team single-elimination bracket requires estimating **384 advancement probabilities** (64 teams × 6 rounds), plus 64 team-level Expected Points and 1 bracket-level Expected Points — **449 total estimates**.
+A 64-team single-elimination bracket requires estimating advancement probabilities across a **64×6 matrix** (teams × rounds). However, only **63 entries are non-zero** — one per game, since each game produces exactly one winner. The remaining 320 entries are structurally zero (eliminated teams cannot advance). Together with 64 team-level Expected Points and 1 bracket-level Expected Points, there are **128 meaningful output quantities**.
 
 The compound variance issue arises because later-round estimates depend on earlier rounds:
 
@@ -83,11 +83,11 @@ P(A reaches Final Four) = P(A wins R1) × P(A wins R2 | A's R2 opponent)
                         × P(A wins Sweet 16 | A's S16 opponent)
 ```
 
-Each factor depends on the bracket outcomes of other games. The 384 probabilities are **not independent** — exactly one team advances per matchup. Variance compounds multiplicatively through the dependency chain.
+Each factor depends on the bracket outcomes of other games. The 63 non-zero advancement probabilities are **not independent** — exactly one team advances per matchup. Variance compounds multiplicatively through the dependency chain.
 
 **Practical consequence:** At N=10,000, while any single championship probability has a CI width of ~0.85 percentage points (for p=0.05), rare advancement events (e.g., a 16-seed reaching the Elite Eight, p ≈ 0.001) may have only ~10 occurrences across 10,000 simulations, giving CI widths comparable to the estimate itself.
 
-**This is the primary motivation for analytical computation** — it eliminates simulation noise for all 384 advancement probabilities simultaneously.
+**This is the primary motivation for analytical computation** — it eliminates simulation noise for all 63 non-zero advancement probabilities simultaneously.
 
 ---
 
@@ -287,7 +287,7 @@ Where Σ is the parameter covariance matrix.
 
 **Limitations for tournament brackets:**
 - The probability tree is highly nonlinear (products and sums across 6 rounds).
-- Jacobian has 384 outputs × hundreds of model parameters.
+- Jacobian has 63 non-zero advancement probability outputs × hundreds of model parameters.
 - First-order approximation poor when probabilities are near 0 or 1.
 
 **Verdict for ncaa_eval:** Not recommended. The two-layer bootstrap handles nonlinearity naturally and is simpler to implement.
@@ -350,7 +350,7 @@ Where q is estimated from historical data as the inverse of the average seed num
 
 **Goodness of fit:** χ² = 18.321 (p = 0.246 at 15 df) for Final Four seed distributions 1985–2019.
 
-**Advantage:** Instead of 384 individual advancement probabilities, estimates a single parameter per round — dramatically reducing parameters and leveraging the structured nature of seeded tournaments.
+**Advantage:** Instead of 63 individual per-game advancement probabilities (or a 64×6 matrix), estimates a single parameter per round — dramatically reducing parameters and leveraging the structured nature of seeded tournaments.
 
 **For ncaa_eval:** This is a useful validation tool (do our simulated seed distributions match the historical truncated geometric?), not a replacement for game-level modeling.
 
@@ -437,11 +437,34 @@ features_batch = feature_server.serve_matchup_features_batch(
 probs = model.predict_proba(features_batch)  # pd.Series of P(a wins)
 ```
 
+**`MatchupContext` — context passed to probability providers:**
+
+```python
+@dataclass(frozen=True)
+class MatchupContext:
+    """Context for a hypothetical matchup probability query.
+
+    Passed to ProbabilityProvider so that stateless models (XGBoost) can
+    construct the correct feature row for a hypothetical pairing.
+    Stateful models (Elo) typically ignore context and use internal ratings.
+    """
+
+    season: int         # Tournament season (e.g., 2024)
+    day_num: int        # Tournament day number (e.g., 136 for Round of 64)
+    is_neutral: bool    # True for all tournament games (played at neutral site)
+```
+
 **Recommended contract:**
 
 ```python
 class ProbabilityProvider(Protocol):
-    """Generate P(A beats B) for hypothetical matchups."""
+    """Generate P(A beats B) for hypothetical matchups.
+
+    CONTRACT: All implementations must satisfy P(A beats B) + P(B beats A) = 1
+    for every (A, B) pair (no draw probabilities, no ties). This allows
+    build_probability_matrix to set P[j, i] = 1 - P[i, j] without a second
+    provider call.
+    """
 
     def matchup_probability(
         self, team_a_id: int, team_b_id: int, context: MatchupContext
@@ -452,7 +475,14 @@ class ProbabilityProvider(Protocol):
         team_a_ids: Sequence[int],
         team_b_ids: Sequence[int],
         context: MatchupContext,
-    ) -> np.ndarray: ...
+    ) -> npt.NDArray[np.float64]:
+        """Return P(a_i beats b_i) for all (a_i, b_i) pairs.
+
+        Returns:
+            1-D float64 array of shape (len(team_a_ids),), with values in [0, 1].
+            Element i is P(team_a_ids[i] beats team_b_ids[i]).
+        """
+        ...
 ```
 
 Where `MatchupContext` carries season, day_num, and neutral-court flag. This protocol is implementable by both stateful (Elo — ignore context, use internal ratings) and stateless (XGBoost — use context to generate a batch feature matrix) models.
@@ -466,12 +496,19 @@ def build_probability_matrix(
     provider: ProbabilityProvider,
     team_ids: Sequence[int],
     context: MatchupContext,
-) -> np.ndarray:
+) -> npt.NDArray[np.float64]:
     """Build n×n matrix P where P[i,j] = P(team_i beats team_j).
 
     Uses batch inference for stateless models (single predict_proba call
     over all n*(n-1)/2 pairs) and scalar dispatch for stateful models.
     Complies with NFR1 (Vectorization).
+
+    Relies on the ProbabilityProvider contract: P[i,j] + P[j,i] = 1.
+    The lower triangle is filled as P[j,i] = 1 - P[i,j] — no second
+    provider call is made for the reverse pair.
+
+    Returns:
+        Float64 array of shape (n, n). Diagonal is zero (no self-matchup).
     """
     n = len(team_ids)
     # Generate upper-triangle indices: 2,016 pairs for n=64
@@ -578,6 +615,12 @@ class SimulationResult:
     confidence_intervals: dict[str, tuple[np.ndarray, np.ndarray]] | None
     # ^ scoring_rule_name → (ep_lower, ep_upper), each shape (n_teams,)
     # Populated only when compute_ep_confidence_intervals() is called
+    score_distribution: dict[str, np.ndarray] | None
+    # ^ scoring_rule_name → per-simulation total bracket scores, shape (n_simulations,)
+    # None for analytical path (distributions are not meaningful without MC sampling).
+    # For MC path: the raw per-simulation scores — NOT just their mean.
+    # This is the primary MC-only output: score-distribution and bracket-count analysis.
+    # Story 6.5 must populate this field from the bracket traversal's per-sim scores.
 ```
 
 ### 5.6 Data Requirements
@@ -644,7 +687,14 @@ def compute_advancement_probs(
 
     Returns:
         adv_probs, shape (n, n_rounds).
-        adv_probs[i, r] = P(team i advances past round r).
+        adv_probs[i, r] = P(team i wins their game in round r)
+            = P(team i is still alive after round r).
+        In single-elimination, each team plays at most one game per round,
+        so "winning the game in round r" and "advancing past round r" are
+        identical. Most entries are zero for eliminated teams; exactly 63
+        entries (one per game) are non-zero.
+        This is the value used in compute_expected_points: EP[i] = sum_r
+        adv_probs[i, r] * points(r).
     """
     n = P.shape[0]
     assert n > 0 and (n & (n - 1)) == 0, f"n must be a power of 2, got {n}"
@@ -761,7 +811,7 @@ def compute_ep_confidence_intervals(
 ```
 
 **Implementation note for Story 6.5:** The `provider_factory` pattern decouples CI computation from model internals. Story 6.5 must implement a `BootstrapProviderFactory` for each model type:
-- **Elo:** Store a snapshot of ratings; add Gaussian noise scaled to the Elo model's expected rating uncertainty (±50–100 Elo points).
+- **Elo:** Use **leave-season-out jackknife resampling** as the most principled approach — omit one season's games from the Elo update sequence, refit, observe rating variation across jackknife replicates. If adding Gaussian noise instead (simpler, but less principled), the noise scale must be derived from the Elo K-factor and typical game counts: `SE_rating ≈ sqrt(K × N_games × 0.25)`. For K=20 and 30 games, this is ~8 Elo points — not ±50–100. Use the model's calibrated K-factor, not an arbitrary heuristic.
 - **XGBoost:** Refit the XGBoost model on a resampled training dataset (expensive — use B=50–100 not 1000); or use XGBoost's internal `predict_leaf` for parametric variance estimation.
 - **Bayesian (PyMC/NumPyro):** Draw from the posterior sample cache directly — the cheapest outer loop.
 
@@ -801,19 +851,35 @@ def simulate_tournament_mc(
     assert n > 0 and (n & (n - 1)) == 0, f"n must be a power of 2, got {n}"
     n_rounds = int(np.log2(n))
 
-    # Batch-sample all game outcomes at once for vectorization
+    # Batch-sample all game outcomes at once for vectorization (NFR1-compliant).
     # Pre-generate uniform random numbers: shape (n_simulations, n_games)
+    # where n_games = n - 1 = 63 for 64 teams.
     n_games = n - 1  # 63 for 64 teams
     randoms = rng.random((n_simulations, n_games))
 
-    # Simulate brackets (vectorized across simulations)
+    # Story 6.5 must implement a fully vectorized bracket traversal here.
+    # DO NOT use a per-simulation Python loop (for sim in range(n_simulations))
+    # — that is an NFR1 violation. Instead, vectorize across simulations:
+    #
+    #   For each round r (0..n_rounds-1):
+    #     1. Determine current matchups: pairs of surviving teams per game slot.
+    #     2. For each game slot g, look up P(left_team beats right_team) from P.
+    #     3. Compare randoms[:, game_offset + g] against P(left wins) to decide
+    #        winner for all n_simulations at once (boolean array operation).
+    #     4. Update survivors: shape (n_simulations, n_teams_remaining_next_round).
+    #     5. Accumulate advancement_counts[team_idx, r] += count of simulations
+    #        where team_idx won their round-r game (vectorized boolean sum).
+    #
+    # score_distribution: to support score-distribution analysis (the primary
+    # reason to use MC over analytical), Story 6.5 should also accumulate
+    # per-simulation bracket scores (shape (n_simulations, n)) and return
+    # the raw distribution alongside the mean, not just scores.mean(axis=0).
     advancement_counts = np.zeros((n, n_rounds), dtype=int)
-    scores = np.zeros((n_simulations, n))
+    scores = np.zeros((n_simulations, n))  # per-simulation per-team scores
 
-    for sim in range(n_simulations):
-        # Traverse bracket, using randoms[sim] for game outcomes
-        # ... (implementation details in Story 6.5)
-        pass
+    # TODO(Story 6.5): Replace this block with vectorized round-by-round
+    # traversal (see comments above). The pass below is a scaffold placeholder.
+    pass
 
     return SimulationResult(
         season=season,

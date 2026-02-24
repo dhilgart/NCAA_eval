@@ -2363,3 +2363,32 @@ Pseudocode that computes `n_rounds = int(np.log2(n))` silently produces wrong re
 assert n > 0 and (n & (n - 1)) == 0, f"n must be a power of 2, got {n}"
 ```
 This catches First-Four inclusion bugs (63 or 65 teams) before they silently corrupt simulation results.
+
+### Mathematical Claim Verification in Research Docs (Discovered Story 6.4 Code Review Round 2, 2026-02-23)
+
+Code review of research documents must verify mathematical claims — not just documentation coverage. Example failure: "64 teams × 6 rounds = 384 advancement probabilities" is arithmetically correct but logically wrong: 320 of those 384 entries are structurally zero (eliminated teams). The actual count of *non-zero* probabilities is 63 (one per game). Overstated complexity metrics mislead downstream developers about the problem scale and the compound variance argument.
+
+**Pattern for code review of spike research documents:**
+- Check that N-team × N-round matrix counts account for structural zeros
+- Verify that "compound variance" claims cite the actual number of non-trivially correlated quantities, not the full matrix size
+- Verify all numbers that could be independently computed are consistent across all sections of the document
+
+### NFR1 Vectorization Must Be Enforced in Pseudocode — Not Just Code (Discovered Story 6.4 Code Review Round 2, 2026-02-23)
+
+A pseudocode scaffold had `for sim in range(n_simulations): pass` with a comment "Simulate brackets (vectorized across simulations)" — a direct contradiction. Story 6.5 implementers who follow this scaffold risk writing a non-vectorized simulation loop that violates NFR1.
+
+**Pattern:** In research doc pseudocode for MC simulation:
+- Either show the vectorized approach (preferred) using `randoms[:, game_idx]` batch comparisons
+- Or explicitly label the loop: `# TODO(Story 6.5): Implement as vectorized traversal — see comments. DO NOT loop over simulations in Python.`
+- Never label a Python loop as "vectorized" — that is worse than no comment.
+
+### Protocol Type Contracts Must Be Explicit in Research Docs (Discovered Story 6.4 Code Review Round 2, 2026-02-23)
+
+Protocol definitions in research pseudocode often omit critical constraints that implementers must satisfy. These constraints are non-obvious and, if violated, cause silent incorrect results rather than runtime errors.
+
+**Required elements in Protocol/ABC definitions in research docs:**
+1. **Return array shape:** `-> npt.NDArray[np.float64]  # shape (n,)` — not just `np.ndarray`
+2. **Complementarity constraints:** If `P(A)+P(B)=1` is assumed (which allows filling the lower triangle of a probability matrix from the upper triangle), state this explicitly in the protocol docstring
+3. **Context dataclasses:** If a method takes a `Context` parameter described only in prose, add a concrete dataclass definition in the same section. Research docs are self-contained references — implementers must not need to guess field names.
+
+**Anti-pattern:** `def batch_matchup_probabilities(...) -> np.ndarray` with no shape comment and no mention of the complementarity constraint.
