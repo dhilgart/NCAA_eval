@@ -1,6 +1,6 @@
 # Story 7.5: Build Presentation Page — Bracket Visualizer
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -24,32 +24,32 @@ so that I can visually inspect the full 64-team tournament bracket and identify 
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add seed and simulation data-loading functions to `dashboard/lib/filters.py` (AC: #1)
-  - [ ] 1.1: `load_tourney_seeds(data_dir, season)` — loads `TourneySeedTable` from Kaggle CSV, returns `list[TourneySeed]` for the selected season
-  - [ ] 1.2: `load_team_names(data_dir)` — loads team ID → team name mapping from `ParquetRepository.get_teams()`
-  - [ ] 1.3: `run_bracket_simulation(data_dir, run_id, season, scoring_name, method)` — orchestrates bracket construction, model loading, probability matrix computation, and `simulate_tournament()` call; returns `SimulationResult` + `BracketStructure` + `MostLikelyBracket`; cache with `@st.cache_data`
-- [ ] Task 2: Build the HTML/CSS bracket tree renderer (AC: #3)
-  - [ ] 2.1: Create `dashboard/lib/bracket_renderer.py` — pure function `render_bracket_html(bracket, most_likely, team_labels, seed_map, probabilities)` that returns an HTML string with embedded CSS for a 64-team bracket layout using flexbox or CSS grid
-  - [ ] 2.2: Use the project's functional color palette (green/red/neutral) for win-probability coloring
-  - [ ] 2.3: Display seed number, team name, and win probability at each node
-  - [ ] 2.4: Ensure the layout fits wide-mode desktop (all 4 regions visible simultaneously)
-- [ ] Task 3: Implement the bracket visualizer page in `dashboard/pages/2_Presentation.py` (AC: #1-6)
-  - [ ] 3.1: Replace placeholder with full page implementation
-  - [ ] 3.2: Add breadcrumb navigation matching existing pages
-  - [ ] 3.3: Add simulation method selector (Analytical / Monte Carlo with N slider)
-  - [ ] 3.4: Render advancement heatmap via `plot_advancement_heatmap()`
-  - [ ] 3.5: Render bracket tree via `st.components.html()` calling `render_bracket_html()`
-  - [ ] 3.6: Render score distribution (MC only) via `plot_score_distribution()`
-  - [ ] 3.7: Add expected-points table showing per-team EP for selected scoring rule
-  - [ ] 3.8: Handle empty states (no model, no seeds, no data)
-- [ ] Task 4: Write tests (AC: all)
-  - [ ] 4.1: Unit tests for new `filters.py` loader functions (mock RunStore / TourneySeedTable)
-  - [ ] 4.2: Unit tests for `bracket_renderer.py` (validate HTML output contains team names, seeds, probabilities)
-  - [ ] 4.3: Page rendering tests for `2_Presentation.py` (mock data, verify key elements render)
-- [ ] Task 5: Verify quality gates (AC: all)
-  - [ ] 5.1: `mypy --strict src/ncaa_eval tests dashboard`
-  - [ ] 5.2: `ruff check .`
-  - [ ] 5.3: `pytest` — all tests pass
+- [x] Task 1: Add seed and simulation data-loading functions to `dashboard/lib/filters.py` (AC: #1)
+  - [x] 1.1: `load_tourney_seeds(data_dir, season)` — loads `TourneySeedTable` from Kaggle CSV, returns serialized seed dicts for the selected season
+  - [x] 1.2: `load_team_names(data_dir)` — loads team ID → team name mapping from `ParquetRepository.get_teams()`
+  - [x] 1.3: `run_bracket_simulation(data_dir, run_id, season, scoring_name, method, n_simulations)` — orchestrates bracket construction, model loading, probability matrix computation, and `simulate_tournament()` call; returns `BracketSimulationResult` dataclass; cached with `@st.cache_resource(ttl=None)`
+- [x] Task 2: Build the HTML/CSS bracket tree renderer (AC: #3)
+  - [x] 2.1: Created `dashboard/lib/bracket_renderer.py` — pure function `render_bracket_html()` returning self-contained HTML/CSS string using CSS flexbox layout
+  - [x] 2.2: Used project functional color palette (green→neutral→red) interpolation for win-probability coloring
+  - [x] 2.3: Displays seed number, team name, and win probability at each node
+  - [x] 2.4: Layout fits wide-mode desktop with all 4 regions visible simultaneously (left/center/right flex)
+- [x] Task 3: Implement the bracket visualizer page in `dashboard/pages/2_Presentation.py` (AC: #1-6)
+  - [x] 3.1: Replaced placeholder with full page implementation
+  - [x] 3.2: Added breadcrumb navigation matching existing pages
+  - [x] 3.3: Added simulation method selector (Analytical / Monte Carlo with N slider)
+  - [x] 3.4: Renders advancement heatmap via `plot_advancement_heatmap()`
+  - [x] 3.5: Renders bracket tree via `st.components.html()` calling `render_bracket_html()`
+  - [x] 3.6: Renders score distribution (MC only) via `plot_score_distribution()`
+  - [x] 3.7: Added expected-points table showing per-team EP for selected scoring rule
+  - [x] 3.8: Handles empty states (no model, no seeds, no data, simulation failure)
+- [x] Task 4: Write tests (AC: all)
+  - [x] 4.1: Unit tests for new `filters.py` loader functions (mock TourneySeedTable / Team)
+  - [x] 4.2: Unit tests for `bracket_renderer.py` (64-team bracket, XSS escaping, all 4 regions, probability colors)
+  - [x] 4.3: Page rendering tests for `2_Presentation.py` (mock data, empty states, successful render)
+- [x] Task 5: Verify quality gates (AC: all)
+  - [x] 5.1: `mypy --strict src/ncaa_eval tests dashboard` — 0 errors (93 files)
+  - [x] 5.2: `ruff check .` — all modified files pass
+  - [x] 5.3: `pytest` — 836 passed, 1 skipped
 
 ## Dev Notes
 
@@ -194,10 +194,27 @@ Story 7.7 (spike) will research the mathematical mechanism for probability pertu
 
 ### Agent Model Used
 
-(to be filled by dev agent)
+Claude Opus 4.6
 
 ### Debug Log References
 
 ### Completion Notes List
 
+- Used `@st.cache_resource(ttl=None)` instead of `@st.cache_data` for simulation results — numpy arrays and nested dataclasses are cheaper with resource caching (avoids pickle/hash overhead)
+- For XGBoost models, builds `MatrixProvider` from `fold_predictions.parquet` filtered to tournament season — avoids re-running full feature pipeline in dashboard
+- Bracket renderer uses 64-team hardcoded layout (6 rounds) matching NCAA tournament structure — not generalized for arbitrary bracket sizes
+- HTML escaping applied to all team labels to prevent XSS via crafted team names
+- Extracted `_render_results()` from `_render_bracket_page()` to keep complexity under C901 threshold
+- Extracted `_build_provider_from_folds()` and `_build_team_labels()` helpers from `run_bracket_simulation()` for same reason
+
 ### File List
+
+**New files:**
+- `dashboard/lib/bracket_renderer.py` — HTML/CSS bracket tree renderer (315 lines)
+- `tests/unit/test_bracket_renderer.py` — 14 tests for bracket renderer
+- `tests/unit/test_bracket_page.py` — 5 tests for page rendering
+
+**Modified files:**
+- `dashboard/lib/filters.py` — added `load_tourney_seeds`, `load_team_names`, `BracketSimulationResult`, `run_bracket_simulation` + helpers
+- `dashboard/pages/2_Presentation.py` — replaced placeholder with full bracket visualizer implementation
+- `tests/unit/test_dashboard_filters.py` — added `TestLoadTourneySeeds` (3 tests) and `TestLoadTeamNames` (3 tests)

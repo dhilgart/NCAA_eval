@@ -8,8 +8,9 @@ from unittest.mock import MagicMock, patch
 
 import pandas as pd  # type: ignore[import-untyped]
 
-from ncaa_eval.ingest.schema import Season
+from ncaa_eval.ingest.schema import Season, Team
 from ncaa_eval.model.tracking import ModelRun
+from ncaa_eval.transform.normalization import TourneySeed
 
 
 def _unwrap(fn: Any) -> Any:
@@ -392,3 +393,82 @@ class TestLoadAvailableScorings:
 
         result: list[str] = _unwrap(load_available_scorings)()
         assert all(isinstance(s, str) for s in result)
+
+
+# ---------------------------------------------------------------------------
+# Story 7.5: Bracket Visualizer loader tests
+# ---------------------------------------------------------------------------
+
+
+class TestLoadTourneySeeds:
+    @patch("dashboard.lib.filters.TourneySeedTable")
+    def test_returns_serialised_seeds(self, mock_table_cls: MagicMock) -> None:
+        mock_table = MagicMock()
+        mock_table.all_seeds.return_value = [
+            TourneySeed(season=2023, team_id=100, seed_str="W01", region="W", seed_num=1, is_play_in=False),
+            TourneySeed(season=2023, team_id=200, seed_str="W16", region="W", seed_num=16, is_play_in=False),
+        ]
+        mock_table_cls.from_csv.return_value = mock_table
+
+        from dashboard.lib.filters import load_tourney_seeds
+
+        # Need to create the CSV path to exist for the function to proceed
+        with patch("dashboard.lib.filters.Path.exists", return_value=True):
+            result = _unwrap(load_tourney_seeds)("/fake/data", 2023)
+
+        assert len(result) == 2
+        assert result[0]["team_id"] == 100
+        assert result[0]["seed_num"] == 1
+        assert result[0]["region"] == "W"
+
+    def test_returns_empty_when_csv_missing(self) -> None:
+        from dashboard.lib.filters import load_tourney_seeds
+
+        result = _unwrap(load_tourney_seeds)("/nonexistent", 2023)
+        assert result == []
+
+    @patch("dashboard.lib.filters.TourneySeedTable")
+    def test_returns_empty_for_season_with_no_seeds(self, mock_table_cls: MagicMock) -> None:
+        mock_table = MagicMock()
+        mock_table.all_seeds.return_value = []
+        mock_table_cls.from_csv.return_value = mock_table
+
+        from dashboard.lib.filters import load_tourney_seeds
+
+        with patch("dashboard.lib.filters.Path.exists", return_value=True):
+            result = _unwrap(load_tourney_seeds)("/fake/data", 1900)
+
+        assert result == []
+
+
+class TestLoadTeamNames:
+    @patch("dashboard.lib.filters.Path.exists", return_value=True)
+    @patch("dashboard.lib.filters.ParquetRepository")
+    def test_returns_id_to_name_mapping(self, mock_repo_cls: MagicMock, mock_exists: MagicMock) -> None:
+        mock_repo = MagicMock()
+        mock_repo.get_teams.return_value = [
+            Team(team_id=100, team_name="Duke", canonical_name="Duke"),
+            Team(team_id=200, team_name="UNC", canonical_name="UNC"),
+        ]
+        mock_repo_cls.return_value = mock_repo
+
+        from dashboard.lib.filters import load_team_names
+
+        result = _unwrap(load_team_names)("/fake/data")
+        assert result == {100: "Duke", 200: "UNC"}
+
+    def test_returns_empty_when_data_dir_missing(self) -> None:
+        from dashboard.lib.filters import load_team_names
+
+        result = _unwrap(load_team_names)("/nonexistent")
+        assert result == {}
+
+    @patch("dashboard.lib.filters.Path.exists", return_value=True)
+    @patch("dashboard.lib.filters.ParquetRepository")
+    def test_returns_empty_on_exception(self, mock_repo_cls: MagicMock, mock_exists: MagicMock) -> None:
+        mock_repo_cls.side_effect = OSError("disk error")
+
+        from dashboard.lib.filters import load_team_names
+
+        result = _unwrap(load_team_names)("/fake/data")
+        assert result == {}
