@@ -2196,3 +2196,31 @@ When a shared validation helper (`_validate_inputs`) covers N metrics, edge-case
 - `test_empty_arrays_raise_<metric>` → 5 tests for 5 metrics ✓
 - `test_mismatched_lengths_<metric>` → 5 tests ✓
 - `test_non_binary_y_true_<metric>` → must cover ALL metrics (log_loss, brier, roc_auc, ece, reliability) — Story 6.1 originally missed `roc_auc`.
+
+### NumPy Docstring Style Drift: Enforce Google Style for All src/ Modules (Discovered Story 6.2 Code Review, 2026-02-23)
+
+Dev agents default to **NumPy docstring style** (`Parameters\n----------`, `Returns\n-------`, `Raises\n------`) when writing docstrings for data-science-oriented code. This project mandates **Google style** (`Args:`, `Returns:`, `Raises:`) per STYLE_GUIDE Section 1 and `pyproject.toml` pydocstyle convention.
+
+**Drift is invisible to Ruff** — the Google convention in `[tool.ruff.lint.pydocstyle]` only activates when `D` rules are added to `extend-select`. Until then, NumPy-style docstrings pass all linters silently.
+
+**Template requirement:** Code review must explicitly verify all new docstrings in `src/` use Google style. Flag NumPy-style docs as a MEDIUM finding. Add a reminder to Dev Agent story notes: *"Use Google docstring style (Args:, Returns:, Raises:), NOT NumPy style (Parameters\n----------)"*.
+
+### `mode: str` Public APIs Must Validate at Entry Point (Discovered Story 6.2 Code Review, 2026-02-23)
+
+When a public function accepts a `mode: str` (or any str standing in for an enum), validation must happen **at the function's entry point**, not delegated to a downstream internal call. The delegation pattern causes:
+1. Cryptic stack traces pointing into library internals rather than the user's call site
+2. Potential for partial side effects (e.g., cache population) before the error surfaces
+3. Violation of the "fail fast" principle
+
+**Pattern:** Always validate enum-like strings immediately before any other logic:
+```python
+_VALID_MODES: frozenset[str] = frozenset({"batch", "stateful"})
+
+def walk_forward_splits(seasons, feature_server, *, mode: str = "batch") -> ...:
+    if mode not in _VALID_MODES:
+        msg = f"mode must be 'batch' or 'stateful', got {mode!r}"
+        raise ValueError(msg)
+    # ... rest of function
+```
+
+Consider `typing.Literal["batch", "stateful"]` as the type annotation when the valid set is small and stable — mypy catches invalid literals at call sites without runtime overhead.
