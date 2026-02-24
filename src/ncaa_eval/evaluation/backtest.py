@@ -88,6 +88,9 @@ class FoldResult:
         actuals: Actual binary outcomes for tournament games.
         metrics: Mapping of metric name to computed value.
         elapsed_seconds: Wall-clock time for the fold evaluation.
+        test_game_ids: Game IDs from the test fold (aligned to predictions).
+        test_team_a_ids: team_a IDs from the test fold.
+        test_team_b_ids: team_b IDs from the test fold.
     """
 
     year: int
@@ -95,6 +98,15 @@ class FoldResult:
     actuals: pd.Series
     metrics: Mapping[str, float]
     elapsed_seconds: float
+    test_game_ids: pd.Series = dataclasses.field(
+        default_factory=lambda: pd.Series(dtype=object),
+    )
+    test_team_a_ids: pd.Series = dataclasses.field(
+        default_factory=lambda: pd.Series(dtype="int64"),
+    )
+    test_team_b_ids: pd.Series = dataclasses.field(
+        default_factory=lambda: pd.Series(dtype="int64"),
+    )
 
 
 @dataclasses.dataclass(frozen=True)
@@ -140,6 +152,9 @@ def _evaluate_fold(
             actuals=pd.Series(dtype=np.float64),
             metrics={name: float("nan") for name in metric_fns},
             elapsed_seconds=elapsed,
+            test_game_ids=pd.Series(dtype=object),
+            test_team_a_ids=pd.Series(dtype="int64"),
+            test_team_b_ids=pd.Series(dtype="int64"),
         )
 
     y_train = fold.train["team_a_won"].astype(np.float64)
@@ -175,6 +190,9 @@ def _evaluate_fold(
         actuals=y_test,
         metrics=metrics,
         elapsed_seconds=elapsed,
+        test_game_ids=fold.test["game_id"].reset_index(drop=True),
+        test_team_a_ids=fold.test["team_a_id"].reset_index(drop=True),
+        test_team_b_ids=fold.test["team_b_id"].reset_index(drop=True),
     )
 
 

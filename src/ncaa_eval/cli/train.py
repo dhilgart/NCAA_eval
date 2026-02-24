@@ -17,7 +17,7 @@ from rich.console import Console
 from rich.progress import Progress
 from rich.table import Table
 
-from ncaa_eval.evaluation import feature_cols as _feature_cols, run_backtest
+from ncaa_eval.evaluation import BacktestResult, feature_cols as _feature_cols, run_backtest
 from ncaa_eval.ingest import ParquetRepository
 from ncaa_eval.model.base import Model, StatefulModel
 from ncaa_eval.model.tracking import ModelRun, Prediction, RunStore
@@ -39,7 +39,38 @@ def _get_git_hash() -> str:
         return "unknown"
 
 
-def run_training(  # noqa: PLR0913
+def _build_fold_predictions(result: BacktestResult) -> pd.DataFrame | None:
+    """Build a fold predictions DataFrame from backtest results.
+
+    Args:
+        result: Backtest result containing fold results with game metadata.
+
+    Returns:
+        DataFrame with columns [year, game_id, team_a_id, team_b_id,
+        pred_win_prob, team_a_won], or None if no fold predictions exist.
+    """
+    fold_frames: list[pd.DataFrame] = []
+    for fr in result.fold_results:
+        if fr.predictions.empty:
+            continue
+        fold_frames.append(
+            pd.DataFrame(
+                {
+                    "year": fr.year,
+                    "game_id": fr.test_game_ids.values,
+                    "team_a_id": fr.test_team_a_ids.values,
+                    "team_b_id": fr.test_team_b_ids.values,
+                    "pred_win_prob": fr.predictions.values,
+                    "team_a_won": fr.actuals.values,
+                }
+            )
+        )
+    if not fold_frames:
+        return None
+    return pd.concat(fold_frames, ignore_index=True)
+
+
+def run_training(  # noqa: PLR0913, C901, PLR0912
     model: Model,
     *,
     start_year: int,
@@ -187,6 +218,11 @@ def run_training(  # noqa: PLR0913
             console=_console,
         )
         store.save_metrics(run.run_id, result.summary)
+
+        fold_preds = _build_fold_predictions(result)
+        if fold_preds is not None:
+            store.save_fold_predictions(run.run_id, fold_preds)
+
         _console.print("[green]Backtest metrics persisted.[/green]")
     else:
         _console.print("[yellow]Skipping backtest: need ≥ 2 seasons.[/yellow]")
