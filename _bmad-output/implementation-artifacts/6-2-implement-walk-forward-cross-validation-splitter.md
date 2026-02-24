@@ -1,6 +1,6 @@
 # Story 6.2: Implement Walk-Forward Cross-Validation Splitter
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -20,26 +20,26 @@ So that I can backtest models across multiple years without data leakage.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `src/ncaa_eval/evaluation/splitter.py` (AC: #1–#5, #7)
-  - [ ] 1.1 Define `CVFold` frozen dataclass: `train: pd.DataFrame`, `test: pd.DataFrame`, `year: int`
-  - [ ] 1.2 Implement `walk_forward_splits(seasons: Sequence[int], feature_server: StatefulFeatureServer, *, mode: str = "batch") -> Iterator[CVFold]`
-  - [ ] 1.3 Implement temporal boundary logic: for test year `Y`, training data = all seasons `< Y`
-  - [ ] 1.4 Skip 2020 as a test year: include 2020 regular-season data in training folds for subsequent years, but never yield a fold with `year=2020` (no tournament to evaluate)
-  - [ ] 1.5 Support `mode` parameter for stateful (`"stateful"`) vs stateless (`"batch"`) feature serving
-  - [ ] 1.6 Ensure deterministic output: same inputs always produce identical fold DataFrames
-- [ ] Task 2: Export public API from `src/ncaa_eval/evaluation/__init__.py` (AC: #4)
-  - [ ] 2.1 Add `CVFold` and `walk_forward_splits` to imports and `__all__`
-- [ ] Task 3: Create `tests/unit/test_evaluation_splitter.py` (AC: #6)
-  - [ ] 3.1 Test basic fold generation: correct number of folds for a season range
-  - [ ] 3.2 Test temporal integrity: for every fold, all training data seasons < test year
-  - [ ] 3.3 Test 2020 exclusion: no fold has `year=2020`
-  - [ ] 3.4 Test 2020 training inclusion: folds for years > 2020 include 2020 regular-season data in training
-  - [ ] 3.5 Test fold determinism: two identical calls produce identical results
-  - [ ] 3.6 Test single-season range: raises `ValueError` (need at least 2 seasons for train + test)
-  - [ ] 3.7 Test empty season: fold is still generated if repository returns data
-  - [ ] 3.8 Test that test data contains only tournament games (the evaluation target)
-  - [ ] 3.9 Test that training data contains all games (regular season + tournament) from prior years
-  - [ ] 3.10 Test `mode` parameter is passed through to feature server
+- [x] Task 1: Create `src/ncaa_eval/evaluation/splitter.py` (AC: #1–#5, #7)
+  - [x] 1.1 Define `CVFold` frozen dataclass: `train: pd.DataFrame`, `test: pd.DataFrame`, `year: int`
+  - [x] 1.2 Implement `walk_forward_splits(seasons: Sequence[int], feature_server: StatefulFeatureServer, *, mode: str = "batch") -> Iterator[CVFold]`
+  - [x] 1.3 Implement temporal boundary logic: for test year `Y`, training data = all seasons `< Y`
+  - [x] 1.4 Skip 2020 as a test year: include 2020 regular-season data in training folds for subsequent years, but never yield a fold with `year=2020` (no tournament to evaluate)
+  - [x] 1.5 Support `mode` parameter for stateful (`"stateful"`) vs stateless (`"batch"`) feature serving
+  - [x] 1.6 Ensure deterministic output: same inputs always produce identical fold DataFrames
+- [x] Task 2: Export public API from `src/ncaa_eval/evaluation/__init__.py` (AC: #4)
+  - [x] 2.1 Add `CVFold` and `walk_forward_splits` to imports and `__all__`
+- [x] Task 3: Create `tests/unit/test_evaluation_splitter.py` (AC: #6)
+  - [x] 3.1 Test basic fold generation: correct number of folds for a season range
+  - [x] 3.2 Test temporal integrity: for every fold, all training data seasons < test year
+  - [x] 3.3 Test 2020 exclusion: no fold has `year=2020`
+  - [x] 3.4 Test 2020 training inclusion: folds for years > 2020 include 2020 regular-season data in training
+  - [x] 3.5 Test fold determinism: two identical calls produce identical results
+  - [x] 3.6 Test single-season range: raises `ValueError` (need at least 2 seasons for train + test)
+  - [x] 3.7 Test empty season: fold is still generated if repository returns data
+  - [x] 3.8 Test that test data contains only tournament games (the evaluation target)
+  - [x] 3.9 Test that training data contains all games (regular season + tournament) from prior years
+  - [x] 3.10 Test `mode` parameter is passed through to feature server
 
 ## Dev Notes
 
@@ -209,10 +209,33 @@ Use `unittest.mock.MagicMock` or a simple wrapper class for `StatefulFeatureServ
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+No issues encountered during implementation.
+
 ### Completion Notes List
 
+- Implemented `CVFold` frozen dataclass and `walk_forward_splits` iterator in `splitter.py`
+- Uses `_NO_TOURNAMENT_SEASONS` from `serving.py` for 2020 skip logic (not hardcoded year check)
+- Feature caching: each season served exactly once, cached in dict for O(1) lookup across folds
+- Training accumulation via `pd.concat(..., ignore_index=True)` prevents duplicate indices
+- Tournament filtering via boolean indexing (`is_tournament == True`) — vectorized, no Python loops
+- Seasons sorted internally for deterministic output regardless of input order
+- Input validation raises `ValueError` for < 2 seasons
+- Exported `CVFold` and `walk_forward_splits` from `evaluation/__init__.py` and `__all__`
+- 19 unit tests covering: fold count, temporal integrity, 2020 exclusion/inclusion, determinism, edge cases (empty seasons, unsorted input, single fold, feature caching, index reset, ascending fold order)
+- All 572 project tests pass. Ruff and mypy --strict clean.
+
 ### File List
+
+- `src/ncaa_eval/evaluation/splitter.py` — NEW: CVFold dataclass + walk_forward_splits function
+- `src/ncaa_eval/evaluation/__init__.py` — MODIFIED: added CVFold, walk_forward_splits exports
+- `tests/unit/test_evaluation_splitter.py` — NEW: 19 unit tests for splitter
+- `_bmad-output/implementation-artifacts/6-2-implement-walk-forward-cross-validation-splitter.md` — MODIFIED: story status/tasks
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — MODIFIED: story status → review
+
+## Change Log
+
+- 2026-02-23: Implemented walk-forward CV splitter with Leave-One-Tournament-Out logic, 2020 COVID handling, feature caching, and comprehensive test suite (19 tests)
