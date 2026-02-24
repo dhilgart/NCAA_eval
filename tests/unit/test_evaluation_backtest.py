@@ -15,7 +15,7 @@ from ncaa_eval.evaluation.backtest import (
     DEFAULT_METRICS,
     FoldResult,
     _evaluate_fold,
-    _feature_cols,
+    feature_cols as _feature_cols,
     run_backtest,
 )
 from ncaa_eval.evaluation.splitter import CVFold

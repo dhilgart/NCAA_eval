@@ -8,7 +8,9 @@ navigations hit the in-memory cache.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import cast
 
+import pandas as pd  # type: ignore[import-untyped]
 import streamlit as st
 
 from ncaa_eval.evaluation import list_scorings
@@ -60,6 +62,59 @@ def load_available_runs(data_dir: str) -> list[dict[str, object]]:
     try:
         store = RunStore(path)
         return [run.model_dump() for run in store.list_runs()]
+    except OSError:
+        return []
+
+
+@st.cache_data(ttl=300)
+def load_leaderboard_data(data_dir: str) -> list[dict[str, object]]:
+    """Load leaderboard data: run metadata joined with metric summaries.
+
+    Args:
+        data_dir: String path to the project data directory.
+
+    Returns:
+        List of dicts (serializable for st.cache_data) with keys:
+        run_id, model_type, timestamp, start_year, end_year, year,
+        log_loss, brier_score, roc_auc, ece.
+    """
+    path = Path(data_dir)
+    if not path.exists():
+        return []
+    try:
+        store = RunStore(path)
+        runs = store.list_runs()
+        summaries = store.load_all_summaries()
+        if summaries.empty:
+            return []
+        runs_meta = pd.DataFrame(
+            [
+                {
+                    "run_id": r.run_id,
+                    "model_type": r.model_type,
+                    "timestamp": str(r.timestamp),
+                    "start_year": r.start_year,
+                    "end_year": r.end_year,
+                }
+                for r in runs
+            ]
+        )
+        if runs_meta.empty:
+            return []
+        _keep = [
+            "run_id",
+            "model_type",
+            "timestamp",
+            "start_year",
+            "end_year",
+            "year",
+            "log_loss",
+            "brier_score",
+            "roc_auc",
+            "ece",
+        ]
+        merged = summaries.merge(runs_meta, on="run_id", how="left")
+        return cast(list[dict[str, object]], merged[_keep].to_dict("records"))
     except OSError:
         return []
 

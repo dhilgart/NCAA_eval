@@ -70,6 +70,7 @@ class RunStore:
             <run_id>/
               run.json              # ModelRun metadata
               predictions.parquet   # Prediction records (PyArrow)
+              summary.parquet       # BacktestResult.summary (year × metrics)
     """
 
     def __init__(self, base_path: Path) -> None:
@@ -127,6 +128,57 @@ class RunStore:
             msg = f"No predictions found for run {run_id!r} at {pq_path}"
             raise FileNotFoundError(msg)
         return pq.read_table(pq_path).to_pandas()
+
+    def save_metrics(self, run_id: str, summary: pd.DataFrame) -> None:
+        """Persist backtest metric summary for a run.
+
+        Args:
+            run_id: The run identifier.
+            summary: BacktestResult.summary DataFrame (index=year,
+                columns=[log_loss, brier_score, roc_auc, ece, elapsed_seconds]).
+
+        Raises:
+            FileNotFoundError: If the run directory does not exist.
+        """
+        run_dir = self._runs_dir / run_id
+        if not run_dir.exists():
+            msg = f"Run directory not found: {run_id}"
+            raise FileNotFoundError(msg)
+        summary.to_parquet(run_dir / "summary.parquet")
+
+    def load_metrics(self, run_id: str) -> pd.DataFrame | None:
+        """Load backtest metric summary for a run.
+
+        Args:
+            run_id: The run identifier.
+
+        Returns:
+            Summary DataFrame or None if no summary exists (legacy run).
+        """
+        path = self._runs_dir / run_id / "summary.parquet"
+        if not path.exists():
+            return None
+        return pd.read_parquet(path)
+
+    def load_all_summaries(self) -> pd.DataFrame:
+        """Load metric summaries for all runs that have them.
+
+        Returns:
+            DataFrame with columns [run_id, year, log_loss, brier_score,
+            roc_auc, ece, elapsed_seconds]. Empty DataFrame if no summaries.
+        """
+        frames: list[pd.DataFrame] = []
+        for run in self.list_runs():
+            summary = self.load_metrics(run.run_id)
+            if summary is not None:
+                df = summary.reset_index()
+                df["run_id"] = run.run_id
+                frames.append(df)
+        if not frames:
+            return pd.DataFrame(
+                columns=["run_id", "year", "log_loss", "brier_score", "roc_auc", "ece", "elapsed_seconds"]
+            )
+        return pd.concat(frames, ignore_index=True)
 
     def list_runs(self) -> list[ModelRun]:
         """Scan the runs directory and return all saved ModelRun records."""

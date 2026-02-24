@@ -7,6 +7,7 @@ Typer CLI entry point.
 
 from __future__ import annotations
 
+import copy
 import subprocess
 import uuid
 from pathlib import Path
@@ -16,7 +17,7 @@ from rich.console import Console
 from rich.progress import Progress
 from rich.table import Table
 
-from ncaa_eval.evaluation.backtest import _feature_cols
+from ncaa_eval.evaluation import feature_cols as _feature_cols, run_backtest
 from ncaa_eval.ingest import ParquetRepository
 from ncaa_eval.model.base import Model, StatefulModel
 from ncaa_eval.model.tracking import ModelRun, Prediction, RunStore
@@ -170,6 +171,25 @@ def run_training(  # noqa: PLR0913
     )
     store = RunStore(base_path=output_dir)
     store.save_run(run, predictions)
+
+    # -- Backtest and persist metrics --
+    seasons = list(range(start_year, end_year + 1))
+    if len(seasons) >= 2:
+        _console.print("Running walk-forward backtest...")
+        backtest_model = copy.deepcopy(model)
+        mode = "stateful" if is_stateful else "batch"
+        result = run_backtest(
+            backtest_model,
+            server,
+            seasons=seasons,
+            mode=mode,
+            n_jobs=1,
+            console=_console,
+        )
+        store.save_metrics(run.run_id, result.summary)
+        _console.print("[green]Backtest metrics persisted.[/green]")
+    else:
+        _console.print("[yellow]Skipping backtest: need ≥ 2 seasons.[/yellow]")
 
     # -- Results summary --
     table = Table(title="Training Results")

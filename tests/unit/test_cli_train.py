@@ -141,6 +141,53 @@ class TestCLITrain:
         run_dir = output_dir / "runs" / run.run_id
         assert (run_dir / "run.json").exists()
         assert (run_dir / "predictions.parquet").exists()
+        assert (
+            run_dir / "summary.parquet"
+        ).exists(), "summary.parquet must be created alongside run artifacts"
+
+    # -----------------------------------------------------------------------
+    # Task 7.3: CLI persists backtest summary.parquet via save_metrics
+    # -----------------------------------------------------------------------
+
+    @patch(
+        "ncaa_eval.cli.train.StatefulFeatureServer.serve_season_features",
+        _mock_serve_season_features,
+    )
+    def test_train_persists_backtest_metrics(self, tmp_path: Path) -> None:
+        """Training with ≥2 seasons writes summary.parquet with metric columns."""
+        data_dir = tmp_path / "data"
+        data_dir.mkdir()
+        output_dir = tmp_path / "output"
+        output_dir.mkdir()
+
+        result = runner.invoke(
+            app,
+            [
+                "train",
+                "--model",
+                "logistic_regression",
+                "--start-year",
+                "2020",
+                "--end-year",
+                "2022",  # 3 seasons → backtest runs
+                "--data-dir",
+                str(data_dir),
+                "--output-dir",
+                str(output_dir),
+            ],
+        )
+        assert result.exit_code == 0, f"CLI failed: {result.output}"
+
+        store = RunStore(base_path=output_dir)
+        runs = store.list_runs()
+        assert len(runs) == 1
+
+        summary = store.load_metrics(runs[0].run_id)
+        assert summary is not None, "save_metrics must persist summary.parquet"
+        expected_cols = {"log_loss", "brier_score", "roc_auc", "ece"}
+        assert expected_cols.issubset(
+            set(summary.columns)
+        ), f"Missing metric columns: {expected_cols - set(summary.columns)}"
 
     # -----------------------------------------------------------------------
     # Task 6.3: Invalid model name prints error with available models
