@@ -26,11 +26,11 @@ So that I can evaluate model value under different pool scoring rules and optimi
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Fix SCORING_REGISTRY type and add decorator-based registration (AC: #5)
-  - [ ] 1.1 Widen `SCORING_REGISTRY` type from `dict[str, type[StandardScoring] | type[FibonacciScoring]]` to `dict[str, type]` or a proper `Callable[[], ScoringRule]` factory — addresses 6.5 review follow-up [AI-Review][LOW]
-  - [ ] 1.2 Implement `register_scoring(name: str)` decorator (mirror `register_model` from `model/registry.py`) and `get_scoring(name: str) -> ScoringRule`, `list_scorings() -> list[str]`
-  - [ ] 1.3 Register all built-in rules (`StandardScoring`, `FibonacciScoring`, `SeedDiffBonusScoring`) via the decorator
-  - [ ] 1.4 Unit tests: duplicate registration raises `ValueError`, unknown name raises `ScoringNotFoundError`, `list_scorings` returns sorted names
+- [x] Task 1: Fix SCORING_REGISTRY type and add decorator-based registration (AC: #5)
+  - [x] 1.1 Widen `SCORING_REGISTRY` type from `dict[str, type[StandardScoring] | type[FibonacciScoring]]` to `dict[str, type]` or a proper `Callable[[], ScoringRule]` factory — addresses 6.5 review follow-up [AI-Review][LOW]
+  - [x] 1.2 Implement `register_scoring(name: str)` decorator (mirror `register_model` from `model/registry.py`) and `get_scoring(name: str) -> ScoringRule`, `list_scorings() -> list[str]`
+  - [x] 1.3 Register all built-in rules (`StandardScoring`, `FibonacciScoring`, `SeedDiffBonusScoring`) via the decorator
+  - [x] 1.4 Unit tests: duplicate registration raises `ValueError`, unknown name raises `ScoringNotFoundError`, `list_scorings` returns sorted names
 
 - [ ] Task 2: Implement seed-aware Expected Points computation (AC: #1, #3)
   - [ ] 2.1 Implement `compute_expected_points_seed_diff(adv_probs, bracket, P, seed_map) -> ndarray` — per-team EP that includes seed-diff bonus for upset wins, computed analytically (extend Phylourny output with per-matchup seed lookup)

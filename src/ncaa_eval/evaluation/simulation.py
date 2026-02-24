@@ -27,7 +27,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
-from typing import Any, Protocol, runtime_checkable
+from typing import Any, Protocol, TypeVar, runtime_checkable
 
 import numpy as np
 import numpy.typing as npt
@@ -185,10 +185,7 @@ def build_bracket(seeds: list[TourneySeed], season: int) -> BracketStructure:
             team_a = seed_lookup.get((region, seed_a))
             team_b = seed_lookup.get((region, seed_b))
             if team_a is None or team_b is None:
-                msg = (
-                    f"Missing seed for region={region}: "
-                    f"seed {seed_a} → {team_a}, seed {seed_b} → {team_b}"
-                )
+                msg = f"Missing seed for region={region}: seed {seed_a} → {team_a}, seed {seed_b} → {team_b}"
                 raise ValueError(msg)
             team_ids_ordered.append(team_a)
             team_ids_ordered.append(team_b)
@@ -376,6 +373,60 @@ def build_probability_matrix(
 
 
 # ---------------------------------------------------------------------------
+# Scoring registry (decorator-based, mirrors model/registry.py)
+# ---------------------------------------------------------------------------
+
+_ST = TypeVar("_ST")
+
+_SCORING_REGISTRY: dict[str, type] = {}
+
+
+class ScoringNotFoundError(KeyError):
+    """Raised when a requested scoring name is not in the registry."""
+
+
+def register_scoring(name: str) -> Callable[[_ST], _ST]:
+    """Class decorator that registers a scoring rule class.
+
+    Args:
+        name: Registry key for the scoring rule.
+
+    Returns:
+        Decorator that registers the class and returns it unchanged.
+
+    Raises:
+        ValueError: If *name* is already registered.
+    """
+
+    def decorator(cls: _ST) -> _ST:
+        if name in _SCORING_REGISTRY:
+            msg = f"Scoring name {name!r} is already registered to {_SCORING_REGISTRY[name].__name__}"
+            raise ValueError(msg)
+        _SCORING_REGISTRY[name] = cls  # type: ignore[assignment]
+        return cls
+
+    return decorator
+
+
+def get_scoring(name: str) -> type:
+    """Return the scoring class registered under *name*.
+
+    Raises:
+        ScoringNotFoundError: If *name* is not registered.
+    """
+    try:
+        return _SCORING_REGISTRY[name]
+    except KeyError:
+        msg = f"No scoring registered with name {name!r}. Available: {list_scorings()}"
+        raise ScoringNotFoundError(msg) from None
+
+
+def list_scorings() -> list[str]:
+    """Return all registered scoring names (sorted)."""
+    return sorted(_SCORING_REGISTRY)
+
+
+# ---------------------------------------------------------------------------
 # Scoring rules (Task 4)
 # ---------------------------------------------------------------------------
 
@@ -401,6 +452,7 @@ class ScoringRule(Protocol):
         ...
 
 
+@register_scoring("standard")
 class StandardScoring:
     """ESPN-style scoring: 1-2-4-8-16-32 (192 total for perfect bracket)."""
 
@@ -416,6 +468,7 @@ class StandardScoring:
         return self._POINTS[round_idx]
 
 
+@register_scoring("fibonacci")
 class FibonacciScoring:
     """Fibonacci-style scoring: 2-3-5-8-13-21 (231 total for perfect bracket)."""
 
@@ -431,6 +484,7 @@ class FibonacciScoring:
         return self._POINTS[round_idx]
 
 
+@register_scoring("seed_diff_bonus")
 class SeedDiffBonusScoring:
     """Base points + seed-difference bonus when lower seed wins.
 
@@ -501,13 +555,6 @@ class CustomScoring:
     def points_per_round(self, round_idx: int) -> float:
         """Return points from the wrapped callable."""
         return self._fn(round_idx)
-
-
-#: Registry of built-in scoring rules (analogous to model registry).
-SCORING_REGISTRY: dict[str, type[StandardScoring] | type[FibonacciScoring]] = {
-    "standard": StandardScoring,
-    "fibonacci": FibonacciScoring,
-}
 
 
 # ---------------------------------------------------------------------------

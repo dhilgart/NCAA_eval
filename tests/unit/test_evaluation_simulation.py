@@ -16,7 +16,7 @@ import numpy as np
 import pytest
 
 from ncaa_eval.evaluation.simulation import (
-    SCORING_REGISTRY,
+    _SCORING_REGISTRY,
     BracketNode,
     BracketStructure,
     CustomScoring,
@@ -24,6 +24,7 @@ from ncaa_eval.evaluation.simulation import (
     FibonacciScoring,
     MatchupContext,
     MatrixProvider,
+    ScoringNotFoundError,
     ScoringRule,
     SeedDiffBonusScoring,
     SimulationResult,
@@ -32,6 +33,9 @@ from ncaa_eval.evaluation.simulation import (
     build_probability_matrix,
     compute_advancement_probs,
     compute_expected_points,
+    get_scoring,
+    list_scorings,
+    register_scoring,
     simulate_tournament,
     simulate_tournament_mc,
 )
@@ -575,11 +579,45 @@ class TestScoringRules:
         assert rule.points_per_round(0) == 1.0
         assert rule.points_per_round(5) == 6.0
 
-    def test_scoring_registry(self) -> None:
-        assert "standard" in SCORING_REGISTRY
-        assert "fibonacci" in SCORING_REGISTRY
-        assert SCORING_REGISTRY["standard"] is StandardScoring
-        assert SCORING_REGISTRY["fibonacci"] is FibonacciScoring
+    def test_scoring_registry_builtins_registered(self) -> None:
+        assert "standard" in _SCORING_REGISTRY
+        assert "fibonacci" in _SCORING_REGISTRY
+        assert "seed_diff_bonus" in _SCORING_REGISTRY
+        assert _SCORING_REGISTRY["standard"] is StandardScoring
+        assert _SCORING_REGISTRY["fibonacci"] is FibonacciScoring
+        assert _SCORING_REGISTRY["seed_diff_bonus"] is SeedDiffBonusScoring
+
+
+class TestScoringRegistry:
+    """Tests for the decorator-based scoring registry (Task 1)."""
+
+    def test_get_scoring_returns_correct_class(self) -> None:
+        assert get_scoring("standard") is StandardScoring
+        assert get_scoring("fibonacci") is FibonacciScoring
+        assert get_scoring("seed_diff_bonus") is SeedDiffBonusScoring
+
+    def test_get_scoring_unknown_raises(self) -> None:
+        with pytest.raises(ScoringNotFoundError):
+            get_scoring("nonexistent_scoring")
+
+    def test_list_scorings_returns_sorted(self) -> None:
+        names = list_scorings()
+        assert names == sorted(names)
+        assert "standard" in names
+        assert "fibonacci" in names
+        assert "seed_diff_bonus" in names
+
+    def test_duplicate_registration_raises(self) -> None:
+        with pytest.raises(ValueError, match="already registered"):
+
+            @register_scoring("standard")
+            class _Duplicate:
+                @property
+                def name(self) -> str:
+                    return "standard"
+
+                def points_per_round(self, round_idx: int) -> float:
+                    return 0.0
 
 
 # ---------------------------------------------------------------------------
