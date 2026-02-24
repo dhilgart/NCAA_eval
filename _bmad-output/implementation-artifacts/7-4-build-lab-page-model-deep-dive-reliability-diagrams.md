@@ -381,14 +381,14 @@ Claude Opus 4.6
 - `src/ncaa_eval/model/tracking.py` — Added `save_fold_predictions`, `load_fold_predictions`, `save_model`, `load_model`, `load_feature_names` to RunStore; typed model params as `Model` ABC; updated class docstring with full directory layout
 - `src/ncaa_eval/evaluation/backtest.py` — Extended `FoldResult` with `test_game_ids`, `test_team_a_ids`, `test_team_b_ids` fields; updated `_evaluate_fold()` to populate them
 - `src/ncaa_eval/cli/train.py` — Added `_build_fold_predictions()` helper; wired fold prediction and model persistence into `run_training()`
-- `dashboard/lib/filters.py` — Added `load_fold_predictions()` and `load_feature_importances()` cached loaders; added feature_names/importances length guard
-- `dashboard/pages/3_Model_Deep_Dive.py` — Full rewrite from placeholder to diagnostic page with Metric Explorer section, reliability diagram, metric summary, feature importance, hyperparameters; fixed pandas `.empty` idiom
+- `dashboard/lib/filters.py` — Added `load_fold_predictions()` and `load_feature_importances()` cached loaders; added feature_names/importances length guard; [review] broadened exception catch to `(OSError, KeyError)` in `load_feature_importances`
+- `dashboard/pages/3_Model_Deep_Dive.py` — Full rewrite from placeholder to diagnostic page with Metric Explorer section, reliability diagram, metric summary, feature importance, hyperparameters; fixed pandas `.empty` idiom; [review] capped feature importance chart height at 2000px
 - `tests/unit/test_run_store_metrics.py` — Added 12 tests for fold predictions and model persistence
-- `tests/unit/test_dashboard_filters.py` — Added 8 tests for new data loader functions
-- `tests/unit/test_cli_train.py` — Added 2 tests asserting fold_predictions.parquet and model/ directory creation
+- `tests/unit/test_dashboard_filters.py` — Added 8 tests for new data loader functions; [review] added `test_returns_empty_on_oserror_from_load_run` test
+- `tests/unit/test_cli_train.py` — Added 2 tests asserting fold_predictions.parquet and model/ directory creation; [review] strengthened column assertions in `test_train_persists_fold_predictions`
 
 **New:**
-- `tests/unit/test_deep_dive_page.py` — 6 tests for Model Deep Dive page rendering logic
+- `tests/unit/test_deep_dive_page.py` — 6 tests for Model Deep Dive page rendering logic; [review] added `TestRunNotFound::test_shows_warning_when_run_id_not_in_available_runs`
 
 ### Change Log
 
@@ -401,4 +401,5 @@ Claude Opus 4.6
 | `8500265` | feat(dashboard): implement Model Deep Dive page |
 | `f75d8ed` | test(dashboard): add Model Deep Dive page tests |
 | `730f5cd` | docs(story): mark story 7.4 as review |
-| (review) | fix(review): 7.4 code review — 2 high + 4 medium issues fixed |
+| `ba18576` | fix(review): story 7.4 code review — 6 issues fixed |
+| (review-2) | fix(review): story 7.4 second review — 1 high + 3 medium + 1 low fixed |

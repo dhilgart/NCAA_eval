@@ -105,7 +105,7 @@ def _render_feature_importance(data_dir: str, run_id: str, model_type: str) -> N
         xaxis_title="Importance",
         yaxis_title="Feature",
         yaxis=dict(autorange="reversed"),
-        height=max(400, len(feature_names) * 25),
+        height=min(max(400, len(feature_names) * 25), 2000),
     )
     st.plotly_chart(fig, use_container_width=True)
 

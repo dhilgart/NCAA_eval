@@ -179,7 +179,7 @@ def load_feature_importances(data_dir: str, run_id: str) -> list[dict[str, objec
             reverse=True,
         )
         return [{"feature": f, "importance": v} for f, v in pairs]
-    except OSError:
+    except (OSError, KeyError):
         return []
 
 

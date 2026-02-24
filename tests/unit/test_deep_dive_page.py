@@ -84,6 +84,22 @@ class TestNoRunSelected:
         assert "1_Lab.py" in mock_st.page_link.call_args[0][0]
 
 
+class TestRunNotFound:
+    def test_shows_warning_when_run_id_not_in_available_runs(self) -> None:
+        mock_st = MagicMock()
+        mock_st.session_state = {"selected_run_id": "nonexistent-run-id"}
+
+        with (
+            patch.object(_dd_mod, "st", mock_st),
+            patch.object(_dd_mod, "get_data_dir", return_value="/fake/data"),
+            patch.object(_dd_mod, "load_available_runs", return_value=[]),
+        ):
+            _dd_mod._render_deep_dive()
+
+        mock_st.warning.assert_called_once()
+        assert "not found" in mock_st.warning.call_args[0][0].lower()
+
+
 class TestWithFoldPredictions:
     def test_renders_plotly_chart(self) -> None:
         mock_st = MagicMock()

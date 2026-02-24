@@ -359,6 +359,20 @@ class TestLoadFeatureImportances:
         result: list[dict[str, object]] = _unwrap(load_feature_importances)("/nonexistent", "run-1")
         assert result == []
 
+    @patch("dashboard.lib.filters.Path.exists", return_value=True)
+    @patch("dashboard.lib.filters.RunStore")
+    def test_returns_empty_on_oserror_from_load_run(
+        self, mock_store_cls: MagicMock, mock_exists: MagicMock
+    ) -> None:
+        mock_store = MagicMock()
+        mock_store.load_run.side_effect = FileNotFoundError("no run.json")
+        mock_store_cls.return_value = mock_store
+
+        from dashboard.lib.filters import load_feature_importances
+
+        result: list[dict[str, object]] = _unwrap(load_feature_importances)("/fake/data", "missing-run")
+        assert result == []
+
 
 class TestLoadAvailableScorings:
     @patch("dashboard.lib.filters.list_scorings")

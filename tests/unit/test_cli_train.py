@@ -240,9 +240,10 @@ class TestCLITrain:
         assert len(runs) == 1
         fold_preds = store.load_fold_predictions(runs[0].run_id)
         assert fold_preds is not None, "fold_predictions.parquet must be created for ≥2 seasons"
-        assert "pred_win_prob" in fold_preds.columns
-        assert "team_a_won" in fold_preds.columns
-        assert "year" in fold_preds.columns
+        expected_cols = {"year", "game_id", "team_a_id", "team_b_id", "pred_win_prob", "team_a_won"}
+        assert expected_cols.issubset(
+            set(fold_preds.columns)
+        ), f"Missing fold_predictions columns: {expected_cols - set(fold_preds.columns)}"
 
     @patch(
         "ncaa_eval.cli.train.StatefulFeatureServer.serve_season_features",
