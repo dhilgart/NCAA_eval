@@ -6,6 +6,8 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, patch
 
+import pandas as pd  # type: ignore[import-untyped]
+
 from ncaa_eval.ingest.schema import Season
 from ncaa_eval.model.tracking import ModelRun
 
@@ -143,6 +145,79 @@ class TestLoadAvailableRuns:
         from dashboard.lib.filters import load_available_runs
 
         result: list[dict[str, object]] = _unwrap(load_available_runs)("/fake/data")
+        assert result == []
+
+
+class TestLoadLeaderboardData:
+    @patch("dashboard.lib.filters.Path.exists", return_value=True)
+    @patch("dashboard.lib.filters.RunStore")
+    def test_returns_joined_data(self, mock_store_cls: MagicMock, mock_exists: MagicMock) -> None:
+        mock_store = MagicMock()
+        run = ModelRun(
+            run_id="run-1",
+            model_type="elo",
+            hyperparameters={"k": 32},
+            git_hash="abc1234",
+            start_year=2015,
+            end_year=2025,
+            prediction_count=100,
+        )
+        mock_store.list_runs.return_value = [run]
+        summary = pd.DataFrame(
+            {
+                "run_id": ["run-1", "run-1"],
+                "year": [2023, 2024],
+                "log_loss": [0.55, 0.52],
+                "brier_score": [0.20, 0.19],
+                "roc_auc": [0.73, 0.76],
+                "ece": [0.035, 0.028],
+                "elapsed_seconds": [1.2, 1.1],
+            }
+        )
+        mock_store.load_all_summaries.return_value = summary
+        mock_store_cls.return_value = mock_store
+
+        from dashboard.lib.filters import load_leaderboard_data
+
+        result: list[dict[str, object]] = _unwrap(load_leaderboard_data)("/fake/data")
+        assert len(result) == 2
+        assert result[0]["run_id"] == "run-1"
+        assert result[0]["model_type"] == "elo"
+        assert result[0]["year"] == 2023
+        assert result[0]["log_loss"] == 0.55
+
+    @patch("dashboard.lib.filters.Path.exists", return_value=True)
+    @patch("dashboard.lib.filters.RunStore")
+    def test_returns_empty_when_no_summaries(self, mock_store_cls: MagicMock, mock_exists: MagicMock) -> None:
+        mock_store = MagicMock()
+        mock_store.load_all_summaries.return_value = pd.DataFrame(
+            columns=["run_id", "year", "log_loss", "brier_score", "roc_auc", "ece", "elapsed_seconds"]
+        )
+        mock_store_cls.return_value = mock_store
+
+        from dashboard.lib.filters import load_leaderboard_data
+
+        result: list[dict[str, object]] = _unwrap(load_leaderboard_data)("/fake/data")
+        assert result == []
+
+    def test_returns_empty_when_data_dir_missing(self) -> None:
+        from dashboard.lib.filters import load_leaderboard_data
+
+        result: list[dict[str, object]] = _unwrap(load_leaderboard_data)(
+            "/nonexistent/path/that/cannot/exist"
+        )
+        assert result == []
+
+    @patch("dashboard.lib.filters.Path.exists", return_value=True)
+    @patch("dashboard.lib.filters.RunStore")
+    def test_returns_empty_on_store_exception(
+        self, mock_store_cls: MagicMock, mock_exists: MagicMock
+    ) -> None:
+        mock_store_cls.side_effect = OSError("disk error")
+
+        from dashboard.lib.filters import load_leaderboard_data
+
+        result: list[dict[str, object]] = _unwrap(load_leaderboard_data)("/fake/data")
         assert result == []
 
 

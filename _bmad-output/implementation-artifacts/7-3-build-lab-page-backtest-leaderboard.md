@@ -38,9 +38,9 @@ So that I can quickly identify the best-performing models and spot trends.
   - [x] 2.1 In `src/ncaa_eval/cli/train.py` `run_training()`, after `store.save_run()`, run walk-forward backtest and call `store.save_metrics(run.run_id, result.summary)` to persist the backtest summary alongside the run
   - [x] 2.2 No existing CLI integration tests to update (story referenced nonexistent `src/ncaa_eval/model/cli.py`; actual file is `src/ncaa_eval/cli/train.py`)
 
-- [ ] Task 3: Add leaderboard data-loading function to `dashboard/lib/filters.py` (AC: #1, #6, #7)
-  - [ ] 3.1 Implement `load_leaderboard_data(data_dir: str) -> pd.DataFrame` decorated with `@st.cache_data(ttl=300)` — calls `RunStore(Path(data_dir)).load_all_summaries()`, joins with `ModelRun` metadata (model_type, timestamp, start_year, end_year), returns a flat DataFrame
-  - [ ] 3.2 Write unit test for `load_leaderboard_data` with mocked `RunStore`
+- [x] Task 3: Add leaderboard data-loading function to `dashboard/lib/filters.py` (AC: #1, #6, #7)
+  - [x] 3.1 Implement `load_leaderboard_data(data_dir: str) -> list[dict[str, object]]` decorated with `@st.cache_data(ttl=300)` — calls `RunStore(Path(data_dir)).load_all_summaries()`, joins with `ModelRun` metadata (model_type, timestamp, start_year, end_year), returns list of dicts (cache-safe)
+  - [x] 3.2 Write unit tests for `load_leaderboard_data` with mocked `RunStore` (4 tests: joined data, empty summaries, missing dir, OSError)
 
 - [ ] Task 4: Implement the leaderboard page in `dashboard/pages/1_Lab.py` (AC: #1–#7)
   - [ ] 4.1 Read global filters from `st.session_state`: `selected_year`, `selected_run_id`
@@ -331,9 +331,12 @@ Claude Opus 4.6
 
 - Task 1: Added `save_metrics()`, `load_metrics()`, `load_all_summaries()` to `RunStore` in tracking.py. 8 unit tests all pass covering round-trip, missing-file, empty-store, mixed legacy/new runs.
 - Task 2: Wired `run_training()` in `src/ncaa_eval/cli/train.py` to run walk-forward backtest after training and persist `summary.parquet` via `store.save_metrics()`. Skips backtest when <2 seasons. No existing CLI integration tests existed (story referenced wrong file path).
+- Task 3: Added `load_leaderboard_data()` to `dashboard/lib/filters.py` — cached, returns list[dict] joining summaries with run metadata. 4 unit tests pass.
 
 ### File List
 
 - src/ncaa_eval/model/tracking.py (modified — added 3 new methods)
 - src/ncaa_eval/cli/train.py (modified — added backtest + save_metrics after training)
+- dashboard/lib/filters.py (modified — added load_leaderboard_data function)
 - tests/unit/test_run_store_metrics.py (new — 8 unit tests)
+- tests/unit/test_dashboard_filters.py (modified — added 4 leaderboard tests)
