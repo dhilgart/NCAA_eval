@@ -100,8 +100,8 @@ development_status:
   epic-6-retrospective: optional
 
   # Epic 7: Lab & Presentation Dashboard
-  epic-7: backlog
-  7-1-build-plotly-adapters-jupyter-lab-visualization: backlog
+  epic-7: in-progress
+  7-1-build-plotly-adapters-jupyter-lab-visualization: ready-for-dev
   7-2-build-streamlit-app-shell-navigation: backlog
   7-3-build-lab-page-backtest-leaderboard: backlog
   7-4-build-lab-page-model-deep-dive-reliability-diagrams: backlog
