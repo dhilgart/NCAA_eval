@@ -1,6 +1,6 @@
 # Story 6.4: Research Tournament Simulation Confidence
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -26,45 +26,45 @@ So that I can make informed decisions about simulation methodology and result in
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Research simulation convergence and sample-size requirements (AC: #1, #2)
-  - [ ] 1.1 Document the 1/sqrt(N) convergence rate and its implications for tournament simulation
-  - [ ] 1.2 Compute concrete error bounds: for a team with P(championship)=0.05, calculate 95% CI widths at N=100, 1K, 10K, 100K
-  - [ ] 1.3 Survey industry/competition practice: FiveThirtyEight (100K), Kaggle competitors (10K), BracketOdds, Dimers, SportsLine
-  - [ ] 1.4 Document the compound variance issue: Expected Points requires stable per-round advancement probabilities for all 64 teams across 6 rounds
+- [x] Task 1: Research simulation convergence and sample-size requirements (AC: #1, #2)
+  - [x] 1.1 Document the 1/sqrt(N) convergence rate and its implications for tournament simulation
+  - [x] 1.2 Compute concrete error bounds: for a team with P(championship)=0.05, calculate 95% CI widths at N=100, 1K, 10K, 100K
+  - [x] 1.3 Survey industry/competition practice: FiveThirtyEight (100K), Kaggle competitors (10K), BracketOdds, Dimers, SportsLine
+  - [x] 1.4 Document the compound variance issue: Expected Points requires stable per-round advancement probabilities for all 64 teams across 6 rounds
 
-- [ ] Task 2: Research analytical alternatives to Monte Carlo (AC: #4)
-  - [ ] 2.1 Evaluate Phylourny (Bettisworth & Jordan 2023, *Statistics and Computing*): O(n^2) exact computation via Felsenstein pruning; 599us for 64-team bracket vs. 15ms for 1K MC runs
-  - [ ] 2.2 Evaluate "Stop Simulating!" (Brandes, Marmulla & Smokovic 2025, *Journal of Sports Analytics*): exact computation of tournament winning probabilities
-  - [ ] 2.3 Document FiveThirtyEight's approach: conditional probability tree traversal (not MC) for their March Madness model
-  - [ ] 2.4 Assess feasibility for ncaa_eval: can we implement analytical computation and fall back to MC only when needed (e.g., score-distribution modeling)?
+- [x] Task 2: Research analytical alternatives to Monte Carlo (AC: #4)
+  - [x] 2.1 Evaluate Phylourny (Bettisworth & Jordan 2023, *Statistics and Computing*): O(n^2) exact computation via Felsenstein pruning; 599us for 64-team bracket vs. 15ms for 1K MC runs
+  - [x] 2.2 Evaluate "Stop Simulating!" (Brandes, Marmulla & Smokovic 2025, *Journal of Sports Analytics*): exact computation of tournament winning probabilities
+  - [x] 2.3 Document FiveThirtyEight's approach: conditional probability tree traversal (not MC) for their March Madness model
+  - [x] 2.4 Assess feasibility for ncaa_eval: can we implement analytical computation and fall back to MC only when needed (e.g., score-distribution modeling)?
 
-- [ ] Task 3: Research confidence interval methods (AC: #3)
-  - [ ] 3.1 Standard MC confidence intervals: p_hat +/- 1.96 * sqrt(p*(1-p)/N)
-  - [ ] 3.2 Bootstrap methods: nonparametric, BCa (bias-corrected and accelerated), parametric bootstrap
-  - [ ] 3.3 Two-layer bootstrap: perturb model params (outer loop, B=500–1K) x analytical EP computation (inner loop) — separates model uncertainty from simulation noise
-  - [ ] 3.4 Bayesian credible intervals: sample from posterior, compute advancement probs per draw, report quantiles
-  - [ ] 3.5 Delta method / analytical uncertainty propagation through the probability computation tree
+- [x] Task 3: Research confidence interval methods (AC: #3)
+  - [x] 3.1 Standard MC confidence intervals: p_hat +/- 1.96 * sqrt(p*(1-p)/N)
+  - [x] 3.2 Bootstrap methods: nonparametric, BCa (bias-corrected and accelerated), parametric bootstrap
+  - [x] 3.3 Two-layer bootstrap: perturb model params (outer loop, B=500–1K) x analytical EP computation (inner loop) — separates model uncertainty from simulation noise
+  - [x] 3.4 Bayesian credible intervals: sample from posterior, compute advancement probs per draw, report quantiles
+  - [x] 3.5 Delta method / analytical uncertainty propagation through the probability computation tree
 
-- [ ] Task 4: Research small-sample mitigation strategies (AC: #1)
-  - [ ] 4.1 Game-level modeling (~200K observations) vs. tournament-level modeling (~40 observations)
-  - [ ] 4.2 Ensemble / composite ratings (FiveThirtyEight's 6-system blend)
-  - [ ] 4.3 Parametric assumptions: BracketOdds' truncated geometric distribution for seed advancement
-  - [ ] 4.4 Bayesian logistic regression with informative priors (Duquesne thesis, won MMLM 2015 & 2017)
-  - [ ] 4.5 Conformal prediction (*The American Statistician*, 2023): distribution-free calibration with fewer assumptions
+- [x] Task 4: Research small-sample mitigation strategies (AC: #1)
+  - [x] 4.1 Game-level modeling (~200K observations) vs. tournament-level modeling (~40 observations)
+  - [x] 4.2 Ensemble / composite ratings (FiveThirtyEight's 6-system blend)
+  - [x] 4.3 Parametric assumptions: BracketOdds' truncated geometric distribution for seed advancement
+  - [x] 4.4 Bayesian logistic regression with informative priors (Duquesne thesis, won MMLM 2015 & 2017)
+  - [x] 4.5 Conformal prediction (*The American Statistician*, 2023): distribution-free calibration with fewer assumptions
 
-- [ ] Task 5: Produce implementation recommendations for Story 6.5 (AC: #5)
-  - [ ] 5.1 Bracket representation: tree vs. DataFrame vs. array — recommend approach for 64-team single-elimination
-  - [ ] 5.2 Probability input contract: how to generate P(A beats B) for hypothetical matchups; stateful vs. stateless model dispatch
-  - [ ] 5.3 Scoring rule interface: Standard (1-2-4-8-16-32), Fibonacci, Seed-Difference Bonus, custom callable — plugin-registry compatible
-  - [ ] 5.4 Performance targets: exact analytical computation for fixed brackets; MC only for score-distribution or bracket-count analysis
-  - [ ] 5.5 Integration with existing evaluation pipeline: separate `SimulationResult` vs. extension of `BacktestResult`
-  - [ ] 5.6 Data requirements: tournament seeds (from `MNCAATourneySeeds.csv` already ingested in Story 4.3), bracket structure (hardcoded or data-driven)
+- [x] Task 5: Produce implementation recommendations for Story 6.5 (AC: #5)
+  - [x] 5.1 Bracket representation: tree vs. DataFrame vs. array — recommend approach for 64-team single-elimination
+  - [x] 5.2 Probability input contract: how to generate P(A beats B) for hypothetical matchups; stateful vs. stateless model dispatch
+  - [x] 5.3 Scoring rule interface: Standard (1-2-4-8-16-32), Fibonacci, Seed-Difference Bonus, custom callable — plugin-registry compatible
+  - [x] 5.4 Performance targets: exact analytical computation for fixed brackets; MC only for score-distribution or bracket-count analysis
+  - [x] 5.5 Integration with existing evaluation pipeline: separate `SimulationResult` vs. extension of `BacktestResult`
+  - [x] 5.6 Data requirements: tournament seeds (from `MNCAATourneySeeds.csv` already ingested in Story 4.3), bracket structure (hardcoded or data-driven)
 
-- [ ] Task 6: Write and commit findings document (AC: #6)
-  - [ ] 6.1 Write `specs/research/tournament-simulation-confidence.md` with all findings
-  - [ ] 6.2 Include a decision matrix: analytical vs. MC for each use case
-  - [ ] 6.3 Include concrete pseudocode for the recommended simulation approach
-  - [ ] 6.4 Commit the findings document
+- [x] Task 6: Write and commit findings document (AC: #6)
+  - [x] 6.1 Write `specs/research/tournament-simulation-confidence.md` with all findings
+  - [x] 6.2 Include a decision matrix: analytical vs. MC for each use case
+  - [x] 6.3 Include concrete pseudocode for the recommended simulation approach
+  - [x] 6.4 Commit the findings document
 
 ## Dev Notes
 
@@ -179,10 +179,32 @@ All three stories follow the same pattern: frozen dataclasses for results, vecto
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+No debug issues — this is a research/spike story producing a document, not production code.
+
 ### Completion Notes List
 
+- **Task 1 (Convergence):** Documented 1/sqrt(N) convergence rate with concrete error bounds table. For P(championship)=0.05: N=100 gives useless CI [0.7%, 9.3%]; N=10K gives reasonable +/-0.4pp; N=100K gives precise +/-0.14pp. Surveyed FiveThirtyEight (analytical, not MC), BracketOdds (50K), Kaggle MMLM (10K), Dimers/SportsLine (10K). Documented compound variance across 384 advancement probabilities.
+
+- **Task 2 (Analytical Alternatives):** Evaluated Phylourny (Bettisworth & Jordan 2023) — O(n^2) exact computation via Felsenstein pruning, 599μs for 64-team bracket, 25x faster than 1K MC. No PyPI package exists (C++ implementation) but algorithm is ~30 lines of NumPy. Evaluated "Stop Simulating!" (Brandes et al. 2025) — same insight extended to group-stage formats. Documented FiveThirtyEight's conditional probability tree traversal (analytical, not MC). Assessed feasibility: analytical is primary, MC is fallback only.
+
+- **Task 3 (Confidence Intervals):** Documented all 5 methods: standard MC CI, nonparametric/BCa/parametric bootstrap, two-layer bootstrap, Bayesian credible intervals (ETI + HDI), delta method. Recommended two-layer bootstrap (perturb params × analytical EP) as primary approach — eliminates simulation noise, captures model uncertainty, <5 seconds for B=1000.
+
+- **Task 4 (Small-Sample Mitigation):** Documented game-level modeling (200K obs) vs. tournament-level (40 obs) — consensus approach across all sources. Covered FiveThirtyEight's 6-system blend, BracketOdds' truncated geometric distribution (χ²=18.321, p=0.246), Bayesian logistic regression (Kaggle MMLM 2015 & 2017 winners), and conformal prediction (distribution-free calibration).
+
+- **Task 5 (Implementation Recommendations):** Recommended NumPy array bracket representation, ProbabilityProvider protocol for stateful/stateless dispatch, ScoringRule plugin-registry pattern (Standard/Fibonacci/Seed-Diff-Bonus), performance targets (<1ms analytical, <5s bootstrap CIs), separate SimulationResult dataclass, and hardcoded bracket structure (unchanged since 1985).
+
+- **Task 6 (Document):** Wrote comprehensive findings document at `specs/research/tournament-simulation-confidence.md` with 8 sections including decision matrix and pseudocode for analytical EP computation, two-layer bootstrap CIs, and MC fallback.
+
 ### File List
+
+- `specs/research/tournament-simulation-confidence.md` — NEW: Research findings document (primary deliverable)
+- `_bmad-output/implementation-artifacts/6-4-research-tournament-simulation-confidence.md` — MODIFIED: Story file updates (task checkboxes, dev record, status)
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — MODIFIED: Status update ready-for-dev → in-progress → review
+
+### Change Log
+
+- 2026-02-23: Completed all 6 tasks for Story 6.4 spike. Produced `specs/research/tournament-simulation-confidence.md` with comprehensive findings on simulation convergence, analytical alternatives (Phylourny), confidence interval methods, small-sample mitigation, and implementation recommendations for Story 6.5. Key recommendation: use analytical computation (Phylourny algorithm) as primary method; MC simulation only for score-distribution/bracket-count analysis.
