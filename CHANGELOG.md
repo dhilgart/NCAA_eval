@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.0 (2026-02-24)
+
+### Feat
+
+- **dashboard**: Model Deep Dive page with reliability diagrams and feature importance (#40)
+
 ## 0.6.0 (2026-02-24)
 
 ### Feat

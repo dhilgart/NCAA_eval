@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ncaa-eval"
-version = "0.6.0"
+version = "0.7.0"
 description = "Evaluator for self-evaluation of NCAA March Mania Kaggle Competition models"
 authors = ["Dan Hilgart <dhilgart@gmail.com>"]
 readme = "README.md"
@@ -157,7 +157,7 @@ command = "pytest tests/ -m smoke --tb=short -q"
 
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "0.6.0"
+version = "0.7.0"
 tag_format = "$version"
 version_files = ["pyproject.toml:version", "docs/conf.py:release"]
 
