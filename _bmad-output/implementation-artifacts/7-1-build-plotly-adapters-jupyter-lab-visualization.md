@@ -1,6 +1,6 @@
 # Story 7.1: Build Plotly Adapters for Jupyter Lab Visualization
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -34,40 +34,40 @@ So that I can visualize calibration, metrics, and results directly in Jupyter no
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add `tqdm` dependency (AC: #9)
-  - [ ] 1.1 Add `tqdm` to `[tool.poetry.dependencies]` in `pyproject.toml`
-  - [ ] 1.2 Ensure `tqdm` is installed in the conda env (`pip install tqdm` if needed)
+- [x] Task 1: Add `tqdm` dependency (AC: #9)
+  - [x] 1.1 Add `tqdm` to `[tool.poetry.dependencies]` in `pyproject.toml`
+  - [x] 1.2 Ensure `tqdm` is installed in the conda env (`pip install tqdm` if needed)
 
-- [ ] Task 2: Create `src/ncaa_eval/evaluation/plotting.py` module (AC: #1–7)
-  - [ ] 2.1 Implement `plot_reliability_diagram(y_true, y_prob, *, n_bins=10, title=None) -> go.Figure` — scatter + bar overlay showing calibration bins, diagonal reference line, bin counts as text annotations
-  - [ ] 2.2 Implement `plot_backtest_summary(result: BacktestResult, *, metrics=None) -> go.Figure` — grouped bar chart (x=year, grouped by metric) or line chart showing per-year metric values from `result.summary` DataFrame
-  - [ ] 2.3 Implement `plot_metric_comparison(results: dict[str, BacktestResult], metric: str) -> go.Figure` — multi-model overlay line chart: one line per model, x=year, y=metric value
-  - [ ] 2.4 Implement `plot_advancement_heatmap(result: SimulationResult, team_labels: dict[int, str] | None = None) -> go.Figure` — heatmap with teams on y-axis, rounds on x-axis, cell values = P(advance)
-  - [ ] 2.5 Implement `plot_score_distribution(dist: BracketDistribution, *, title=None) -> go.Figure` — histogram from `dist.histogram_bins`/`dist.histogram_counts` with vertical lines at percentile markers
-  - [ ] 2.6 Define module-level color constants: `COLOR_GREEN`, `COLOR_RED`, `COLOR_NEUTRAL` from UX spec
-  - [ ] 2.7 Apply consistent dark-mode-compatible Plotly template (`plotly_dark`) and functional color palette to all figures
+- [x] Task 2: Create `src/ncaa_eval/evaluation/plotting.py` module (AC: #1–7)
+  - [x] 2.1 Implement `plot_reliability_diagram(y_true, y_prob, *, n_bins=10, title=None) -> go.Figure` — scatter + bar overlay showing calibration bins, diagonal reference line, bin counts as text annotations
+  - [x] 2.2 Implement `plot_backtest_summary(result: BacktestResult, *, metrics=None) -> go.Figure` — grouped bar chart (x=year, grouped by metric) or line chart showing per-year metric values from `result.summary` DataFrame
+  - [x] 2.3 Implement `plot_metric_comparison(results: dict[str, BacktestResult], metric: str) -> go.Figure` — multi-model overlay line chart: one line per model, x=year, y=metric value
+  - [x] 2.4 Implement `plot_advancement_heatmap(result: SimulationResult, team_labels: dict[int, str] | None = None) -> go.Figure` — heatmap with teams on y-axis, rounds on x-axis, cell values = P(advance)
+  - [x] 2.5 Implement `plot_score_distribution(dist: BracketDistribution, *, title=None) -> go.Figure` — histogram from `dist.histogram_bins`/`dist.histogram_counts` with vertical lines at percentile markers
+  - [x] 2.6 Define module-level color constants: `COLOR_GREEN`, `COLOR_RED`, `COLOR_NEUTRAL` from UX spec
+  - [x] 2.7 Apply consistent dark-mode-compatible Plotly template (`plotly_dark`) and functional color palette to all figures
 
-- [ ] Task 3: Integrate progress bars into backtest and simulation (AC: #9)
-  - [ ] 3.1 Add optional `progress: bool = False` parameter to `run_backtest()` — when True, wrap fold iteration with `tqdm.auto.tqdm` for Jupyter-aware progress bar display
-  - [ ] 3.2 Add optional `progress: bool = False` parameter to `simulate_tournament_mc()` — when True, wrap simulation batch iteration with `tqdm.auto.tqdm`
-  - [ ] 3.3 Ensure progress bars are no-ops in non-interactive environments (tqdm.auto handles this)
+- [x] Task 3: Integrate progress bars into backtest and simulation (AC: #9)
+  - [x] 3.1 Add optional `progress: bool = False` parameter to `run_backtest()` — when True, wrap fold iteration with `tqdm.auto.tqdm` for Jupyter-aware progress bar display
+  - [x] 3.2 Add optional `progress: bool = False` parameter to `simulate_tournament_mc()` — when True, wrap simulation batch iteration with `tqdm.auto.tqdm`
+  - [x] 3.3 Ensure progress bars are no-ops in non-interactive environments (tqdm.auto handles this)
 
-- [ ] Task 4: Export public API (AC: all)
-  - [ ] 4.1 Add all plotting functions to `evaluation/__init__.py` and `__all__`
-  - [ ] 4.2 Re-export from top-level `ncaa_eval.__init__` if appropriate (follow existing pattern)
+- [x] Task 4: Export public API (AC: all)
+  - [x] 4.1 Add all plotting functions to `evaluation/__init__.py` and `__all__`
+  - [x] 4.2 Re-export from top-level `ncaa_eval.__init__` if appropriate (follow existing pattern)
 
-- [ ] Task 5: Write unit tests (AC: #10)
-  - [ ] 5.1 Test each plotting function returns `go.Figure`
-  - [ ] 5.2 Test figure data content: correct number of traces, correct axis labels, correct data values
-  - [ ] 5.3 Test reliability diagram: diagonal reference line present, bin counts in annotations
-  - [ ] 5.4 Test color palette application: traces use `COLOR_GREEN`, `COLOR_RED`, `COLOR_NEUTRAL`
-  - [ ] 5.5 Test edge cases: empty BacktestResult (1 fold), single-point reliability diagram, SimulationResult with no bracket distributions
-  - [ ] 5.6 Test progress bar integration: verify `run_backtest(progress=True)` and `simulate_tournament_mc(progress=True)` don't error (mock tqdm)
+- [x] Task 5: Write unit tests (AC: #10)
+  - [x] 5.1 Test each plotting function returns `go.Figure`
+  - [x] 5.2 Test figure data content: correct number of traces, correct axis labels, correct data values
+  - [x] 5.3 Test reliability diagram: diagonal reference line present, bin counts in annotations
+  - [x] 5.4 Test color palette application: traces use `COLOR_GREEN`, `COLOR_RED`, `COLOR_NEUTRAL`
+  - [x] 5.5 Test edge cases: empty BacktestResult (1 fold), single-point reliability diagram, SimulationResult with no bracket distributions
+  - [x] 5.6 Test progress bar integration: verify `run_backtest(progress=True)` and `simulate_tournament_mc(progress=True)` don't error (mock tqdm)
 
-- [ ] Task 6: Verify quality gates (AC: all)
-  - [ ] 6.1 `mypy --strict src/ncaa_eval tests`
-  - [ ] 6.2 `ruff check .`
-  - [ ] 6.3 Full test suite passes
+- [x] Task 6: Verify quality gates (AC: all)
+  - [x] 6.1 `mypy --strict src/ncaa_eval tests`
+  - [x] 6.2 `ruff check .`
+  - [x] 6.3 Full test suite passes
 
 ## Dev Notes
 
@@ -298,10 +298,33 @@ Plotly 6.5.x is the current latest (as of Feb 2026). Key points:
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+- Template assertion fix: `go.layout.Template("plotly_dark")` does not accept string arg in Plotly 6.x; used `pio.templates[TEMPLATE]` comparison instead.
+
 ### Completion Notes List
 
+- **Task 1**: Added `tqdm = "*"` to `pyproject.toml` dependencies; already installed in conda env (v4.67.3); regenerated `poetry.lock`.
+- **Task 2**: Created `src/ncaa_eval/evaluation/plotting.py` with 5 standalone functions: `plot_reliability_diagram`, `plot_backtest_summary`, `plot_metric_comparison`, `plot_advancement_heatmap`, `plot_score_distribution`. Module-level color constants (`COLOR_GREEN`, `COLOR_RED`, `COLOR_NEUTRAL`) and `TEMPLATE = "plotly_dark"`. Extended palette `_PALETTE` for multi-trace color cycling. Uses `reliability_diagram_data()` from `metrics.py` (no reimplementation). All functions return `go.Figure` with dual-axis layout, hover tooltips, and `plotly_dark` template.
+- **Task 3**: Added `progress: bool = False` parameter to `run_backtest()` in `backtest.py` — when `progress=True` and `n_jobs=1`, evaluates folds sequentially via list comprehension wrapped in `tqdm.auto.tqdm` instead of `joblib.Parallel`. Added `progress: bool = False` to `simulate_tournament_mc()` in `simulation.py` — wraps the round loop iterator with `tqdm.auto.tqdm`. Both default to `False` for backwards compatibility. `tqdm.auto` handles non-interactive environments as no-ops.
+- **Task 4**: Added all 5 plotting functions + 3 color constants + `TEMPLATE` to `evaluation/__init__.py` imports and `__all__`. Top-level `ncaa_eval.__init__` left unchanged (existing pattern is empty).
+- **Task 5**: Created `tests/unit/test_evaluation_plotting.py` with 31 tests across 6 test classes: `TestPlotReliabilityDiagram` (7 tests), `TestPlotBacktestSummary` (6 tests), `TestPlotMetricComparison` (4 tests), `TestPlotAdvancementHeatmap` (6 tests), `TestPlotScoreDistribution` (6 tests), `TestProgressBarIntegration` (2 tests). Tests validate: return type, trace count, axis values, color palette usage, dark template, edge cases (single fold, single point), and progress parameter acceptance.
+- **Task 6**: `mypy --strict` passes (74 files, 0 errors). `ruff check src/ tests/` passes. Full test suite: 728 passed, 1 skipped (expected performance test skip), 0 failures.
+
+### Change Log
+
+- 2026-02-24: Implemented Story 7.1 — Plotly visualization adapters, tqdm progress bars, 31 unit tests. All ACs satisfied.
+
 ### File List
+
+- `pyproject.toml` — added `tqdm` dependency
+- `poetry.lock` — regenerated after dependency change
+- `src/ncaa_eval/evaluation/plotting.py` — NEW: 5 Plotly visualization functions + color/template constants
+- `src/ncaa_eval/evaluation/backtest.py` — MODIFIED: added `progress: bool = False` parameter to `run_backtest()`
+- `src/ncaa_eval/evaluation/simulation.py` — MODIFIED: added `progress: bool = False` parameter to `simulate_tournament_mc()`, added `Iterable` import
+- `src/ncaa_eval/evaluation/__init__.py` — MODIFIED: added plotting exports to imports and `__all__`
+- `tests/unit/test_evaluation_plotting.py` — NEW: 31 unit tests for plotting and progress bar features
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — MODIFIED: story status → in-progress → review
+- `_bmad-output/implementation-artifacts/7-1-build-plotly-adapters-jupyter-lab-visualization.md` — MODIFIED: tasks checked, dev agent record updated

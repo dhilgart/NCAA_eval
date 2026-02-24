@@ -21,6 +21,7 @@ pydantic = "^2.12.5"
 pyarrow = "^23.0.1"
 kaggle = "^2.0.0"
 cbbpy = "^2.1.2"
+tqdm = "*"
 typer = {version = ">=0.15,<2", extras = ["all"]}
 
 [tool.poetry.group.dev.dependencies]
