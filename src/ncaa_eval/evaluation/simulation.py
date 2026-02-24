@@ -417,7 +417,7 @@ class StandardScoring:
 
 
 class FibonacciScoring:
-    """Fibonacci-style scoring: 2-3-5-8-13-21 (164 total for perfect)."""
+    """Fibonacci-style scoring: 2-3-5-8-13-21 (231 total for perfect bracket)."""
 
     _POINTS: tuple[float, ...] = (2.0, 3.0, 5.0, 8.0, 13.0, 21.0)
 
@@ -438,9 +438,9 @@ class SeedDiffBonusScoring:
     seed (higher seed number) wins, adds ``|seed_a - seed_b|`` bonus.
 
     Note: This scoring rule's ``points_per_round`` returns only the base
-    points.  The seed-diff bonus is computed separately in
-    :func:`compute_expected_points_seed_diff` because it requires per-matchup
-    seed information that is not available from round index alone.
+    points.  Full EP computation for seed-diff scoring (which requires
+    per-matchup seed information) is deferred to Story 6.6, which will add
+    a dedicated ``compute_expected_points_seed_diff`` function.
 
     Args:
         seed_map: Mapping of ``team_id → seed_num``.
@@ -592,8 +592,9 @@ def compute_advancement_probs(
             wpv[node.team_index] = 1.0
             return wpv
 
-        assert node.left is not None
-        assert node.right is not None
+        if node.left is None or node.right is None:
+            msg = "Internal bracket node missing child — tree is malformed"
+            raise RuntimeError(msg)
         left_wpv = _traverse(node.left)
         right_wpv = _traverse(node.right)
 
@@ -689,9 +690,11 @@ def simulate_tournament_mc(  # noqa: PLR0913
     # Track advancement counts: shape (n, n_rounds)
     advancement_counts = np.zeros((n, n_rounds), dtype=np.int64)
 
-    # Track per-sim per-team per-round wins for scoring
-    # We'll accumulate scores separately per scoring rule
-    per_sim_round_winners: list[npt.NDArray[np.int32]] = []
+    # Per-round chalk results: list of (n_simulations, n_games_in_round) bool arrays.
+    # For each game, True if the pre-game favorite (P >= 0.5) actually won.
+    # Used to compute a meaningful per-sim score distribution that varies across
+    # simulations as upsets occur.
+    chalk_results: list[npt.NDArray[np.bool_]] = []
 
     game_offset = 0
     for r in range(n_rounds):
@@ -719,14 +722,14 @@ def simulate_tournament_mc(  # noqa: PLR0913
 
         winners = np.where(left_wins, left_teams, right_teams)
 
-        # Record winners for scoring
-        per_sim_round_winners.append(winners)
+        # Chalk-bracket tracking: for each game, did the pre-game favorite win?
+        # This gives genuine per-sim variation: sims with many upsets score less.
+        left_favored = probs >= 0.5  # shape (N, n_games_in_round)
+        chalk_won: npt.NDArray[np.bool_] = np.where(left_favored, left_wins, ~left_wins)
+        chalk_results.append(chalk_won)
 
-        # Accumulate advancement counts
-        # For each team index, count how many sims they won in this round
-        for team_idx in range(n):
-            count = int(np.sum(winners == team_idx))
-            advancement_counts[team_idx, r] = count
+        # Accumulate advancement counts (vectorized via np.bincount — no Python loop)
+        advancement_counts[:, r] = np.bincount(winners.ravel().astype(np.intp), minlength=n)
 
         # Update survivors for next round
         survivors = winners
@@ -743,26 +746,15 @@ def simulate_tournament_mc(  # noqa: PLR0913
     score_dist_dict: dict[str, npt.NDArray[np.float64]] = {}
 
     for rule in scoring_rules:
-        # Per-sim total scores: shape (n_simulations,)
-        sim_scores = np.zeros(n_simulations, dtype=np.float64)
-
-        for r, round_winners in enumerate(per_sim_round_winners):
-            points = rule.points_per_round(r)
-            # Each winner in each sim earns points for this round
-            # round_winners shape: (n_simulations, n_games_in_round)
-            # Each sim gets points * n_games_in_round worth of correct picks
-            # But we want per-team EP, not per-sim total
-            sim_scores += points * round_winners.shape[1]
-
         # Per-team EP from advancement probs
         ep_dict[rule.name] = compute_expected_points(adv_probs, rule)
 
-        # Score distribution: total bracket score per sim
-        # Recompute properly: sum of points for all games in each sim
+        # Score distribution: per-sim chalk bracket score.
+        # For each simulation, sum points for games where the pre-game favorite won.
+        # Upsets reduce the chalk score, producing a genuine distribution.
         total_scores = np.zeros(n_simulations, dtype=np.float64)
-        for r, round_winners in enumerate(per_sim_round_winners):
-            points = rule.points_per_round(r)
-            total_scores += points * round_winners.shape[1]
+        for r_idx, chalk_won_r in enumerate(chalk_results):
+            total_scores += rule.points_per_round(r_idx) * chalk_won_r.sum(axis=1)
         score_dist_dict[rule.name] = total_scores
 
     return SimulationResult(
@@ -787,8 +779,9 @@ def _collect_leaves(node: BracketNode) -> list[int]:
     """
     if node.is_leaf:
         return [node.team_index]
-    assert node.left is not None
-    assert node.right is not None
+    if node.left is None or node.right is None:
+        msg = "Internal bracket node missing child — tree is malformed"
+        raise RuntimeError(msg)
     return _collect_leaves(node.left) + _collect_leaves(node.right)
 
 

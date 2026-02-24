@@ -84,13 +84,7 @@ def _make_uniform_matrix(n: int) -> np.ndarray:
 
 def _make_deterministic_matrix(n: int) -> np.ndarray:
     """Create an n×n matrix where team i always beats team j when i < j."""
-    P = np.zeros((n, n), dtype=np.float64)
-    for i in range(n):
-        for j in range(n):
-            if i < j:
-                P[i, j] = 1.0
-            elif i > j:
-                P[i, j] = 0.0
+    P: np.ndarray = np.triu(np.ones((n, n), dtype=np.float64), k=1)
     return P
 
 
@@ -221,6 +215,14 @@ class TestBracketStructure:
         seeds = _make_seeds(2024)
         with pytest.raises(ValueError, match="Missing seed"):
             build_bracket(seeds, 2023)  # No seeds for 2023
+
+    def test_too_few_seeds_raises(self) -> None:
+        """Missing a region seed should raise ValueError."""
+        seeds = _make_seeds(2024)
+        # Remove one non-play-in seed to create an incomplete bracket
+        incomplete = [s for s in seeds if not (s.region == "W" and s.seed_num == 1)]
+        with pytest.raises(ValueError, match="Missing seed"):
+            build_bracket(incomplete, 2024)
 
 
 class TestMatchupContext:
@@ -686,6 +688,10 @@ class TestMonteCarlo:
         assert result.score_distribution is not None
         assert "standard" in result.score_distribution
         assert result.score_distribution["standard"].shape == (500,)
+        # Score distribution must have genuine variance — all-identical scores
+        # would indicate the broken "total_games * points" computation.
+        scores = result.score_distribution["standard"]
+        assert float(scores.std()) > 0.0, "score_distribution should not be constant"
 
     def test_minimum_simulations(self) -> None:
         bracket = _make_small_bracket(4)
