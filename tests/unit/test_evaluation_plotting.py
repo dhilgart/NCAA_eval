@@ -389,8 +389,8 @@ class TestProgressBarIntegration:
     """Tests for tqdm progress bar integration."""
 
     def test_run_backtest_progress_param_accepted(self) -> None:
-        """run_backtest accepts progress parameter without error."""
-        from unittest.mock import MagicMock
+        """run_backtest(progress=True, n_jobs=1) invokes tqdm and completes."""
+        from unittest.mock import MagicMock, patch
 
         from rich.console import Console
 
@@ -444,20 +444,25 @@ class TestProgressBarIntegration:
                 return ModelConfig(model_name="stub")
 
         console = Console(quiet=True)
-        result = run_backtest(
-            _Stub(),
-            server,
-            seasons=seasons,
-            n_jobs=1,
-            metric_fns={"const": lambda yt, yp: 0.42},
-            console=console,
-            progress=True,
-        )
+        # Patch tqdm.auto.tqdm to verify it is called and to isolate from tqdm output
+        with patch("tqdm.auto.tqdm", wraps=lambda it, **kw: it) as mock_tqdm:
+            result = run_backtest(
+                _Stub(),
+                server,
+                seasons=seasons,
+                n_jobs=1,
+                metric_fns={"const": lambda yt, yp: 0.42},
+                console=console,
+                progress=True,
+            )
+            mock_tqdm.assert_called_once()
 
         assert len(result.fold_results) > 0
 
     def test_simulate_tournament_mc_progress_param_accepted(self) -> None:
-        """simulate_tournament_mc accepts progress parameter without error."""
+        """simulate_tournament_mc(progress=True) invokes tqdm and completes."""
+        from unittest.mock import patch
+
         from ncaa_eval.evaluation.simulation import (
             BracketNode,
             BracketStructure,
@@ -481,15 +486,18 @@ class TestProgressBarIntegration:
         P = np.full((n, n), 0.5, dtype=np.float64)
         np.fill_diagonal(P, 0.0)
 
-        result = simulate_tournament_mc(
-            bracket=bracket,
-            P=P,
-            scoring_rules=[StandardScoring()],
-            season=2024,
-            n_simulations=100,
-            rng=np.random.default_rng(42),
-            progress=True,
-        )
+        # Patch tqdm.auto.tqdm to verify it is called and to isolate from tqdm output
+        with patch("tqdm.auto.tqdm", wraps=lambda it, **kw: it) as mock_tqdm:
+            result = simulate_tournament_mc(
+                bracket=bracket,
+                P=P,
+                scoring_rules=[StandardScoring()],
+                season=2024,
+                n_simulations=100,
+                rng=np.random.default_rng(42),
+                progress=True,
+            )
+            mock_tqdm.assert_called_once()
 
         assert result.method == "monte_carlo"
         assert result.advancement_probs.shape == (n, 2)

@@ -145,6 +145,10 @@ def plot_backtest_summary(
     else:
         metric_cols = list(metrics)
 
+    if not metric_cols:
+        msg = "No metric columns to plot. BacktestResult.summary has no columns besides 'elapsed_seconds'."
+        raise ValueError(msg)
+
     years = summary.index.tolist()
 
     fig = go.Figure()
@@ -187,6 +191,10 @@ def plot_metric_comparison(
     fig = go.Figure()
 
     for i, (model_name, bt) in enumerate(results.items()):
+        if metric not in bt.summary.columns:
+            available = [c for c in bt.summary.columns if c != "elapsed_seconds"]
+            msg = f"metric {metric!r} not found in results[{model_name!r}].summary. Available: {available}"
+            raise ValueError(msg)
         color = _PALETTE[i % len(_PALETTE)]
         years = bt.summary.index.tolist()
         values = bt.summary[metric].tolist()
@@ -220,8 +228,11 @@ def plot_advancement_heatmap(
 
     Args:
         result: Simulation result with ``advancement_probs`` array.
-        team_labels: Optional mapping of team_id to display name.
-            When ``None``, team indices (0..n-1) are shown.
+        team_labels: Optional mapping of **team index** (0..n-1, bracket
+            position order) to display name.  When ``None``, team indices
+            are shown as-is.  Note: keys are bracket indices, not canonical
+            team IDs — use ``BracketStructure.team_index_map`` to translate
+            from team IDs to indices before passing this argument.
 
     Returns:
         Interactive Plotly Figure showing a heatmap with teams on

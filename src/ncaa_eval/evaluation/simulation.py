@@ -1223,6 +1223,7 @@ def simulate_tournament(  # noqa: PLR0913
     method: str = "analytical",
     n_simulations: int = 10_000,
     rng: np.random.Generator | None = None,
+    progress: bool = False,
 ) -> SimulationResult:
     """High-level tournament simulation orchestrator.
 
@@ -1238,6 +1239,8 @@ def simulate_tournament(  # noqa: PLR0913
         method: ``"analytical"`` (default) or ``"monte_carlo"``.
         n_simulations: Number of MC simulations (ignored for analytical).
         rng: NumPy random generator (MC only).
+        progress: Display a tqdm progress bar for MC simulation rounds.
+            Ignored when ``method="analytical"``.
 
     Returns:
         :class:`SimulationResult`.
@@ -1283,4 +1286,5 @@ def simulate_tournament(  # noqa: PLR0913
         season=context.season,
         n_simulations=n_simulations,
         rng=rng,
+        progress=progress,
     )

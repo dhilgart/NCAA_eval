@@ -1,6 +1,6 @@
 # Story 7.1: Build Plotly Adapters for Jupyter Lab Visualization
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -316,6 +316,7 @@ Claude Opus 4.6
 ### Change Log
 
 - 2026-02-24: Implemented Story 7.1 — Plotly visualization adapters, tqdm progress bars, 31 unit tests. All ACs satisfied.
+- 2026-02-24: Code review (Claude Sonnet 4.6) — fixed 5 issues: (H1) corrected `team_labels` docstring in `plot_advancement_heatmap` (keys are team indices 0..N-1, not team IDs); (H2) added `progress: bool = False` parameter to `simulate_tournament()` high-level orchestrator; (M1) improved progress bar tests to mock tqdm and assert it is called; (M2) added `ValueError` for invalid metric in `plot_metric_comparison`; (M3) added empty-metrics guard in `plot_backtest_summary`.
 
 ### File List
 
@@ -323,7 +324,7 @@ Claude Opus 4.6
 - `poetry.lock` — regenerated after dependency change
 - `src/ncaa_eval/evaluation/plotting.py` — NEW: 5 Plotly visualization functions + color/template constants
 - `src/ncaa_eval/evaluation/backtest.py` — MODIFIED: added `progress: bool = False` parameter to `run_backtest()`
-- `src/ncaa_eval/evaluation/simulation.py` — MODIFIED: added `progress: bool = False` parameter to `simulate_tournament_mc()`, added `Iterable` import
+- `src/ncaa_eval/evaluation/simulation.py` — MODIFIED: added `progress: bool = False` parameter to `simulate_tournament_mc()`, added `Iterable` import; (code review) also added `progress: bool = False` to `simulate_tournament()` and threaded through to MC call
 - `src/ncaa_eval/evaluation/__init__.py` — MODIFIED: added plotting exports to imports and `__all__`
 - `tests/unit/test_evaluation_plotting.py` — NEW: 31 unit tests for plotting and progress bar features
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` — MODIFIED: story status → in-progress → review
