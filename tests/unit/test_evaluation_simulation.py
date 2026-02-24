@@ -42,6 +42,7 @@ from ncaa_eval.evaluation.simulation import (
     get_scoring,
     list_scorings,
     register_scoring,
+    score_bracket_against_sims,
     scoring_from_config,
     simulate_tournament,
     simulate_tournament_mc,
@@ -1062,6 +1063,93 @@ class TestMonteCarlo:
             bracket, P, rules, season=2024, n_simulations=200, rng=np.random.default_rng(42)
         )
         np.testing.assert_array_equal(r1.advancement_probs, r2.advancement_probs)
+
+    def test_sim_winners_populated(self) -> None:
+        """sim_winners should have shape (n_simulations, n_games)."""
+        bracket = _make_small_bracket(4)
+        P = _make_uniform_matrix(4)
+        rules = [StandardScoring()]
+        result = simulate_tournament_mc(
+            bracket, P, rules, season=2024, n_simulations=200, rng=np.random.default_rng(10)
+        )
+        assert result.sim_winners is not None
+        assert result.sim_winners.shape == (200, 3)  # 4 teams → 3 games
+        # All winner values should be valid team indices
+        assert np.all(result.sim_winners >= 0)
+        assert np.all(result.sim_winners < 4)
+
+    def test_sim_winners_deterministic(self) -> None:
+        """Deterministic matrix: all sims should produce the same winners."""
+        bracket = _make_small_bracket(4)
+        P = _make_deterministic_matrix(4)
+        rules = [StandardScoring()]
+        result = simulate_tournament_mc(
+            bracket, P, rules, season=2024, n_simulations=200, rng=np.random.default_rng(11)
+        )
+        assert result.sim_winners is not None
+        # All sims should have the same winners: [0, 2, 0]
+        for sim in range(200):
+            assert tuple(result.sim_winners[sim]) == (0, 2, 0)
+
+    def test_analytical_sim_winners_none(self) -> None:
+        bracket = _make_small_bracket(4)
+        P = _make_uniform_matrix(4)
+        provider = MatrixProvider(P, list(range(4)))
+        ctx = _make_context()
+        result = simulate_tournament(bracket, provider, ctx, method="analytical")
+        assert result.sim_winners is None
+
+
+class TestScoreBracketAgainstSims:
+    """Tests for score_bracket_against_sims (Task 6)."""
+
+    def test_perfect_bracket_max_score(self) -> None:
+        """When chosen bracket matches all sim outcomes, score is max."""
+        bracket = _make_small_bracket(4)
+        P = _make_deterministic_matrix(4)
+        rules = [StandardScoring()]
+        result = simulate_tournament_mc(
+            bracket, P, rules, season=2024, n_simulations=200, rng=np.random.default_rng(20)
+        )
+        assert result.sim_winners is not None
+        # Chosen bracket = same as deterministic outcome
+        chosen = result.sim_winners[0]  # All sims are identical
+        scores = score_bracket_against_sims(chosen, result.sim_winners, rules)
+        assert "standard" in scores
+        # Perfect bracket for 4 teams: R0: 2 games × 1pt, R1: 1 game × 2pt = 4
+        assert scores["standard"].shape == (200,)
+        # All scores should be 4.0 (perfect match every time)
+        np.testing.assert_allclose(scores["standard"], 4.0)
+
+    def test_wrong_bracket_lower_score(self) -> None:
+        """When chosen bracket differs from sim outcomes, score drops."""
+        bracket = _make_small_bracket(4)
+        P = _make_deterministic_matrix(4)
+        rules = [StandardScoring()]
+        result = simulate_tournament_mc(
+            bracket, P, rules, season=2024, n_simulations=200, rng=np.random.default_rng(21)
+        )
+        assert result.sim_winners is not None
+        # Chosen bracket: completely wrong (pick team 1 in all games)
+        chosen = np.array([1, 3, 1], dtype=np.int32)
+        scores = score_bracket_against_sims(chosen, result.sim_winners, rules)
+        # No picks match → score should be 0
+        np.testing.assert_allclose(scores["standard"], 0.0)
+
+    def test_score_distribution_has_variance(self) -> None:
+        """With uniform matrix, different brackets produce score variance."""
+        bracket = _make_small_bracket(8)
+        P = _make_uniform_matrix(8)
+        rules = [StandardScoring()]
+        result = simulate_tournament_mc(
+            bracket, P, rules, season=2024, n_simulations=2000, rng=np.random.default_rng(22)
+        )
+        assert result.sim_winners is not None
+        # Use first sim's outcome as chosen bracket
+        chosen = result.sim_winners[0]
+        scores = score_bracket_against_sims(chosen, result.sim_winners, rules)
+        # Should have genuine variance
+        assert float(scores["standard"].std()) > 0.0
 
 
 # ---------------------------------------------------------------------------

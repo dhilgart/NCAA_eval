@@ -645,6 +645,8 @@ class SimulationResult:
             ``rule_name → per-sim scores`` array, shape ``(n_simulations,)``.
         bracket_distributions: Optional mapping of
             ``rule_name → BracketDistribution`` (MC only; ``None`` for analytical).
+        sim_winners: Optional array of per-simulation game winners,
+            shape ``(n_simulations, n_games)`` (MC only; ``None`` for analytical).
     """
 
     season: int
@@ -655,6 +657,7 @@ class SimulationResult:
     confidence_intervals: dict[str, tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]] | None
     score_distribution: dict[str, npt.NDArray[np.float64]] | None
     bracket_distributions: dict[str, BracketDistribution] | None = None
+    sim_winners: npt.NDArray[np.int32] | None = None
 
 
 @dataclass(frozen=True)
@@ -944,6 +947,48 @@ def compute_bracket_distribution(
     )
 
 
+def score_bracket_against_sims(
+    chosen_bracket: npt.NDArray[np.int32],
+    sim_winners: npt.NDArray[np.int32],
+    scoring_rules: Sequence[ScoringRule],
+) -> dict[str, npt.NDArray[np.float64]]:
+    """Score a chosen bracket against each simulated tournament outcome.
+
+    For each simulation, counts how many of the chosen bracket's picks
+    match the simulation's actual outcomes, weighted by round points.
+
+    Args:
+        chosen_bracket: Game winners for the chosen bracket, shape ``(n_games,)``.
+        sim_winners: Per-simulation game winners, shape ``(n_simulations, n_games)``.
+        scoring_rules: Scoring rules to score against.
+
+    Returns:
+        Mapping of ``rule_name → per-sim scores``, each shape ``(n_simulations,)``.
+    """
+    n_games = chosen_bracket.shape[0]
+    n_rounds = int(np.log2(n_games + 1))
+
+    # Boolean match array: (n_simulations, n_games)
+    matches = sim_winners == chosen_bracket[None, :]
+
+    result: dict[str, npt.NDArray[np.float64]] = {}
+    for rule in scoring_rules:
+        # Build per-game point values based on which round each game belongs to
+        game_points = np.zeros(n_games, dtype=np.float64)
+        game_offset = 0
+        games_in_round = n_games + 1  # n teams for first round → n/2 games
+        for r in range(n_rounds):
+            games_in_round = games_in_round // 2
+            game_points[game_offset : game_offset + games_in_round] = rule.points_per_round(r)
+            game_offset += games_in_round
+
+        # Per-sim score: sum of points for matching picks
+        scores: npt.NDArray[np.float64] = (matches * game_points[None, :]).sum(axis=1)
+        result[rule.name] = scores
+
+    return result
+
+
 # ---------------------------------------------------------------------------
 # Monte Carlo simulation engine (Task 6)
 # ---------------------------------------------------------------------------
@@ -1008,6 +1053,10 @@ def simulate_tournament_mc(  # noqa: PLR0913
     # simulations as upsets occur.
     chalk_results: list[npt.NDArray[np.bool_]] = []
 
+    # Track all game winners: shape (n_simulations, n_games)
+    total_games = n - 1  # n-1 games in single-elimination bracket
+    all_winners = np.zeros((n_simulations, total_games), dtype=np.int32)
+
     game_offset = 0
     for r in range(n_rounds):
         n_games_in_round = survivors.shape[1] // 2
@@ -1033,6 +1082,9 @@ def simulate_tournament_mc(  # noqa: PLR0913
         left_wins = round_randoms < probs  # shape (N, n_games_in_round)
 
         winners = np.where(left_wins, left_teams, right_teams)
+
+        # Store per-game winners
+        all_winners[:, game_offset : game_offset + n_games_in_round] = winners
 
         # Chalk-bracket tracking: for each game, did the pre-game favorite win?
         # This gives genuine per-sim variation: sims with many upsets score less.
@@ -1083,6 +1135,7 @@ def simulate_tournament_mc(  # noqa: PLR0913
         confidence_intervals=None,
         score_distribution=score_dist_dict,
         bracket_distributions=bracket_dist_dict,
+        sim_winners=all_winners,
     )
 
 
