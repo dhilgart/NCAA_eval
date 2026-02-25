@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.9.0 (2026-02-25)
+
+### Feat
+
+- **dashboard**: Pool Scorer page with MC outcome analysis and CSV export (#42)
+
 ## 0.8.0 (2026-02-25)
 
 ### Feat
