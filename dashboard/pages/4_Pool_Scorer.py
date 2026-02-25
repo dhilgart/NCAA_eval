@@ -21,32 +21,26 @@ from dashboard.lib.filters import (
     score_chosen_bracket,
 )
 from ncaa_eval.evaluation.plotting import plot_score_distribution
-from ncaa_eval.evaluation.simulation import get_scoring
+from ncaa_eval.evaluation.simulation import BracketDistribution, get_scoring
 
 # ---------------------------------------------------------------------------
 # Rendering helpers (split out for C901 compliance)
 # ---------------------------------------------------------------------------
 
 
-def _render_outcome_summary(dist: object) -> None:
+def _render_outcome_summary(dist: BracketDistribution) -> None:
     """Render point outcome summary metrics as ``st.metric`` cards."""
-    # BracketDistribution fields: percentiles, mean, std, scores
-    percentiles: dict[int, float] = getattr(dist, "percentiles", {})
-    mean: float = getattr(dist, "mean", 0.0)
-    std: float = getattr(dist, "std", 0.0)
-    scores = getattr(dist, "scores", None)
-
-    min_score = float(scores.min()) if scores is not None and len(scores) > 0 else 0.0
-    max_score = float(scores.max()) if scores is not None and len(scores) > 0 else 0.0
+    min_score = float(dist.scores.min()) if len(dist.scores) > 0 else 0.0
+    max_score = float(dist.scores.max()) if len(dist.scores) > 0 else 0.0
 
     st.subheader("Outcome Summary")
     row1 = st.columns(3)
     with row1[0]:
-        st.metric("Median", f"{percentiles.get(50, 0.0):.1f} pts")
+        st.metric("Median", f"{dist.percentiles.get(50, 0.0):.1f} pts")
     with row1[1]:
-        st.metric("Mean", f"{mean:.1f} pts")
+        st.metric("Mean", f"{dist.mean:.1f} pts")
     with row1[2]:
-        st.metric("Std Dev", f"{std:.1f} pts")
+        st.metric("Std Dev", f"{dist.std:.1f} pts")
 
     row2 = st.columns(2)
     with row2[0]:
@@ -56,18 +50,18 @@ def _render_outcome_summary(dist: object) -> None:
 
     row3 = st.columns(4)
     with row3[0]:
-        st.metric("5th %ile", f"{percentiles.get(5, 0.0):.1f} pts")
+        st.metric("5th %ile", f"{dist.percentiles.get(5, 0.0):.1f} pts")
     with row3[1]:
-        st.metric("25th %ile", f"{percentiles.get(25, 0.0):.1f} pts")
+        st.metric("25th %ile", f"{dist.percentiles.get(25, 0.0):.1f} pts")
     with row3[2]:
-        st.metric("75th %ile", f"{percentiles.get(75, 0.0):.1f} pts")
+        st.metric("75th %ile", f"{dist.percentiles.get(75, 0.0):.1f} pts")
     with row3[3]:
-        st.metric("95th %ile", f"{percentiles.get(95, 0.0):.1f} pts")
+        st.metric("95th %ile", f"{dist.percentiles.get(95, 0.0):.1f} pts")
 
 
-def _render_distribution_chart(dist: object, scoring_label: str) -> None:
+def _render_distribution_chart(dist: BracketDistribution, scoring_label: str) -> None:
     """Render score distribution histogram via ``plot_score_distribution``."""
-    fig = plot_score_distribution(dist, title=f"Bracket Score Distribution — {scoring_label}")  # type: ignore[arg-type]
+    fig = plot_score_distribution(dist, title=f"Bracket Score Distribution — {scoring_label}")
     st.plotly_chart(fig, use_container_width=True)
 
 
@@ -81,6 +75,8 @@ def _render_results(
     # Determine which scoring rule to use
     if use_custom:
         scoring_rule = build_custom_scoring(custom_points)
+        # Cache key encodes custom points so different schedules get different entries
+        scoring_key = f"custom:{custom_points}"
     else:
         scoring_cls = get_scoring(scoring_label)
         sig = inspect.signature(scoring_cls)
@@ -88,12 +84,13 @@ def _render_results(
             scoring_rule = scoring_cls(sim_data.bracket.seed_map)
         else:
             scoring_rule = scoring_cls()
+        scoring_key = scoring_label
 
     rule_name: str = scoring_rule.name
 
-    # Score bracket against simulations
+    # Score bracket against simulations (cached by sim_data + scoring_key)
     with st.spinner("Scoring bracket against simulations..."):
-        distributions = score_chosen_bracket(sim_data, [scoring_rule])
+        distributions = score_chosen_bracket(sim_data, [scoring_rule], scoring_key)
 
     if rule_name not in distributions:
         st.warning(f"Scoring failed for rule '{rule_name}'.")

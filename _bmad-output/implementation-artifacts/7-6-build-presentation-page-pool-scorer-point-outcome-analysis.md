@@ -1,6 +1,6 @@
 # Story 7.6: Build Presentation Page — Pool Scorer & Point Outcome Analysis
 
-Status: review
+Status: done
 
 ## Story
 
@@ -234,10 +234,12 @@ Claude Opus 4.6
 - Task 2: Replaced Pool Scorer placeholder with full page implementation. Breadcrumbs, custom scoring config (6 number inputs), MC simulation with spinner, outcome summary metrics (9 st.metric cards), score distribution histogram via plot_score_distribution(), CSV download button, and empty state handling. Refactored into `_render_scoring_config()`, `_run_simulation()`, `_render_results()`, `_render_outcome_summary()`, `_render_distribution_chart()` for C901 compliance.
 - Task 3: 14 tests total — 7 filter helper tests (score_chosen_bracket, build_custom_scoring, export_bracket_csv) and 7 page rendering tests (empty states: no run, no year, no seeds, sim failure, no sim_winners; success: metrics + chart + download; button triggers MC sim).
 - Task 4: All quality gates pass — mypy --strict (94 files, 0 errors), ruff check (all modified files pass), pytest (864 passed, 1 skipped).
+- Code Review (Claude Sonnet 4.6): 5 issues fixed — (H1) added `@st.cache_data` to `score_chosen_bracket` with `_scoring_rules`+`scoring_key` pattern for unhashable Protocol lists; (M1) replaced `object` type annotations with `BracketDistribution` in page, removing `# type: ignore`; (M2) added `TestCustomScoringPath` page test for custom scoring path; (M3) added `Raises` section to `build_custom_scoring` docstring; (M4) condensed 12-line comment block to 3 lines. Final: 865 passed, 1 skipped.
 
 ### Change Log
 
 - 2026-02-24: Story 7.6 implementation complete — Pool Scorer page with scoring helpers, MC outcome analysis, score distribution visualization, CSV export, and comprehensive test suite (14 new tests).
+- 2026-02-24: Code review fixes applied — caching, type safety, test coverage, documentation improvements (5 issues fixed, 1 test added).
 
 ### File List
 

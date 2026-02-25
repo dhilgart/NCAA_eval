@@ -763,7 +763,7 @@ class TestScoreChosenBracket:
         mock_rule.name = "standard"
         mock_rule.points_per_round.side_effect = lambda r: [1, 2, 4, 8, 16, 32][r]
 
-        result = score_chosen_bracket(sim_data, [mock_rule])
+        result = score_chosen_bracket(sim_data, [mock_rule], "standard")
 
         assert "standard" in result
         dist = result["standard"]
@@ -783,7 +783,7 @@ class TestScoreChosenBracket:
         sim_data.sim_result = mock_sim_result
 
         with pytest.raises(ValueError, match="MC sim_winners required"):
-            score_chosen_bracket(sim_data, [MagicMock()])
+            score_chosen_bracket(sim_data, [MagicMock()], "standard")
 
 
 class TestBuildCustomScoring:

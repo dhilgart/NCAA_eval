@@ -218,6 +218,61 @@ class TestSuccessfulRender:
         )
 
 
+class TestCustomScoringPath:
+    def test_renders_with_custom_scoring_when_checked(self) -> None:
+        """Custom scoring path: build_custom_scoring called, get_scoring NOT called."""
+        sim_data = _make_sim_data()
+        dist = _make_distribution()
+        mock_dist_fig = MagicMock()
+        mock_custom_rule = MagicMock()
+        mock_custom_rule.name = "custom"
+
+        mock_st = MagicMock()
+        mock_st.session_state = {
+            "selected_run_id": "abc123",
+            "selected_year": 2023,
+            "selected_scoring": "standard",
+            "pool_sim_data": sim_data,
+            "pool_sim_key": ("abc123", 2023, 10_000),
+            "pool_use_custom": True,
+        }
+        mock_st.columns.side_effect = lambda n: [
+            MagicMock() for _ in range(n if isinstance(n, int) else len(n))
+        ]
+        mock_st.checkbox.return_value = True
+        mock_st.number_input.return_value = 4
+        mock_st.slider.return_value = 10_000
+        mock_st.button.return_value = False
+
+        with (
+            patch.object(_page_mod, "st", mock_st),
+            patch.object(_page_mod, "get_data_dir", return_value="/fake/data"),
+            patch.object(_page_mod, "load_tourney_seeds", return_value=[{"seed": "W01"}]),
+            patch.object(
+                _page_mod,
+                "score_chosen_bracket",
+                return_value={"custom": dist},
+            ),
+            patch.object(_page_mod, "build_custom_scoring", return_value=mock_custom_rule) as mock_build,
+            patch.object(_page_mod, "get_scoring") as mock_get_scoring,
+            patch.object(_page_mod, "plot_score_distribution", return_value=mock_dist_fig),
+            patch.object(
+                _page_mod,
+                "export_bracket_csv",
+                return_value="game_number,round\n1,R64\n",
+            ),
+        ):
+            _page_mod._render_pool_scorer_page()
+
+        # build_custom_scoring should be called (not get_scoring)
+        mock_build.assert_called_once()
+        mock_get_scoring.assert_not_called()
+
+        # Metrics and chart should still render
+        mock_st.metric.assert_called()
+        mock_st.plotly_chart.assert_called()
+
+
 class TestAnalyzeOutcomesButton:
     def test_button_triggers_simulation(self) -> None:
         mock_st = MagicMock()

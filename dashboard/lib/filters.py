@@ -469,11 +469,18 @@ def run_bracket_simulation(  # noqa: PLR0913
 _ROUND_LABELS: tuple[str, ...] = ("R64", "R32", "S16", "E8", "F4", "Championship")
 
 
+@st.cache_data(ttl=None)
 def score_chosen_bracket(
     sim_data: BracketSimulationResult,
-    scoring_rules: Sequence[ScoringRule],
+    _scoring_rules: Sequence[ScoringRule],
+    scoring_key: str,
 ) -> dict[str, BracketDistribution]:
     """Score the most-likely bracket against MC simulations.
+
+    Results are cached via ``@st.cache_data``.  ``_scoring_rules`` is prefixed
+    with ``_`` so Streamlit skips hashing the list of rule objects (which are
+    not hashable); ``scoring_key`` provides the cache discriminator instead,
+    ensuring different rules produce different cache entries.
 
     Calls :func:`score_bracket_against_sims` with the most-likely bracket's
     ``winners`` array and the ``sim_result.sim_winners``, then computes
@@ -481,7 +488,9 @@ def score_chosen_bracket(
 
     Args:
         sim_data: Bracket simulation result (must have MC sim_winners).
-        scoring_rules: Scoring rules to evaluate.
+        _scoring_rules: Scoring rules to evaluate (not hashed by Streamlit).
+        scoring_key: Cache-discriminating string (e.g. rule name or custom
+            points repr) that uniquely identifies the scoring configuration.
 
     Returns:
         Mapping of ``rule_name → BracketDistribution``.
@@ -496,7 +505,7 @@ def score_chosen_bracket(
         raise ValueError(msg)
 
     chosen = np.array(sim_data.most_likely.winners, dtype=np.int32)
-    raw_scores = score_bracket_against_sims(chosen, sim_winners, scoring_rules)
+    raw_scores = score_bracket_against_sims(chosen, sim_winners, _scoring_rules)
 
     return {name: compute_bracket_distribution(scores) for name, scores in raw_scores.items()}
 
@@ -506,9 +515,13 @@ def build_custom_scoring(points_per_round: tuple[float, ...]) -> DictScoring:
 
     Args:
         points_per_round: Points for rounds 0–5 (R64 through Championship).
+            Must contain exactly 6 elements.
 
     Returns:
         A ``DictScoring`` instance named ``"custom"``.
+
+    Raises:
+        ValueError: If ``points_per_round`` does not contain exactly 6 entries.
     """
     points_dict = dict(enumerate(points_per_round))
     return DictScoring(points=points_dict, scoring_name="custom")
@@ -555,18 +568,9 @@ def export_bracket_csv(
             # Strip seed prefix from label if present (e.g., "[1] Duke" → "Duke")
             name = label.split("] ", 1)[1] if "] " in label else label
 
-            # Win probability: for R64 games, use prob_matrix directly;
-            # for later rounds, use the advancement-based winning probability.
-            # Approximate with the winner's average matchup prob in the round.
-            # For simplicity, use the max probability the winner had in any
-            # matchup within their bracket region (but exact per-game prob is
-            # only available for R64 from the pairwise matrix).
-            # Simpler approach: use the winner's probability in the specific game.
-            # In round-major order, game g in round r pits the winner of two
-            # sub-brackets. For R64, direct pairwise probs are available.
-            # For later rounds, the best approximation is the advancement prob.
-            # We'll use a simplified approach: for each game, report the winner's
-            # probability of winning the overall matchup position.
+            # Win probability: pairwise head-to-head probability between the
+            # two most-likely participants in this game (R64 uses direct
+            # pairwise probs; later rounds trace back to actual advancing teams).
             win_prob = _game_win_probability(
                 r,
                 g,
