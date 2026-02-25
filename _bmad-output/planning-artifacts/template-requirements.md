@@ -2910,3 +2910,51 @@ mock_st.selectbox.return_value = "analytical"
 # ✅ Each call returns the expected type
 mock_st.selectbox.side_effect = ["analytical", "[1] Duke", "[16] Norfolk St"]
 ```
+
+### `@st.cache_data` Cannot Hash Protocol Objects — Use `_` Prefix + String Key (Discovered Story 7.6 Code Review, 2026-02-24)
+
+`@st.cache_data` hashes all function arguments to build a cache key. Lists of Protocol objects (e.g., `Sequence[ScoringRule]`) are not hashable by Streamlit and raise `UnhashableParamError` at runtime.
+
+**Pattern**: Prefix the Protocol parameter with `_` (Streamlit skips hashing prefixed params) and add a string `scoring_key` parameter as the cache discriminator:
+
+```python
+# ❌ Fails at runtime: UnhashableParamError for list[ScoringRule]
+@st.cache_data(ttl=None)
+def score_chosen_bracket(sim_data, scoring_rules: Sequence[ScoringRule]) -> ...: ...
+
+# ✅ Protocol list skipped from hash; scoring_key string provides cache discrimination
+@st.cache_data(ttl=None)
+def score_chosen_bracket(
+    sim_data: BracketSimulationResult,
+    _scoring_rules: Sequence[ScoringRule],  # _ prefix = not hashed
+    scoring_key: str,                        # cache discriminator (e.g. rule name or custom repr)
+) -> dict[str, BracketDistribution]: ...
+
+# Caller builds the key from the scoring configuration:
+scoring_key = scoring_label  # for named rules
+scoring_key = f"custom:{custom_points}"  # for user-defined schedules
+distributions = score_chosen_bracket(sim_data, [scoring_rule], scoring_key)
+```
+
+**Why not `hash_funcs`**: `hash_funcs` requires specifying concrete types as keys. Protocol types cannot be used as `hash_funcs` keys because they are structural (not nominal) — instances of a Protocol don't share a common concrete class.
+
+### Avoid `object` Type Annotations in Streamlit Pages — Import the Real Type (Discovered Story 7.6 Code Review, 2026-02-24)
+
+Using `dist: object` to avoid a cross-module import forces `getattr(dist, "field", default)` calls throughout the function and requires `# type: ignore[arg-type]` at every typed call site. This defeats static analysis entirely.
+
+**Pattern**: Import the actual type (e.g., `BracketDistribution`) directly in the page module, even if it originates in `ncaa_eval.evaluation.simulation`. The import is cheap and the type safety is valuable:
+
+```python
+# ❌ Avoids import but loses all type safety
+def _render_outcome_summary(dist: object) -> None:
+    percentiles: dict[int, float] = getattr(dist, "percentiles", {})
+    mean: float = getattr(dist, "mean", 0.0)
+    fig = plot_score_distribution(dist, ...)  # type: ignore[arg-type]
+
+# ✅ Import the real type — mypy catches errors, no getattr needed
+from ncaa_eval.evaluation.simulation import BracketDistribution
+
+def _render_outcome_summary(dist: BracketDistribution) -> None:
+    min_score = float(dist.scores.min())
+    fig = plot_score_distribution(dist, ...)  # no type: ignore needed
+```

@@ -736,3 +736,144 @@ class TestRunBracketSimulation:
         result = _unwrap(run_bracket_simulation)("/fake/data", "run-xgb", 2023, "standard")
 
         assert result is None
+
+
+# ---------------------------------------------------------------------------
+# Story 7.6: Pool Scorer helper tests
+# ---------------------------------------------------------------------------
+
+
+class TestScoreChosenBracket:
+    def test_returns_bracket_distributions(self) -> None:
+        from dashboard.lib.filters import score_chosen_bracket
+
+        n_sims = 100
+        sim_winners = np.random.default_rng(42).integers(0, 4, size=(n_sims, 3)).astype(np.int32)
+        mock_sim_result = MagicMock()
+        mock_sim_result.sim_winners = sim_winners
+
+        mock_most_likely = MagicMock()
+        mock_most_likely.winners = (0, 2, 0)
+
+        sim_data = MagicMock()
+        sim_data.sim_result = mock_sim_result
+        sim_data.most_likely = mock_most_likely
+
+        mock_rule = MagicMock()
+        mock_rule.name = "standard"
+        mock_rule.points_per_round.side_effect = lambda r: [1, 2, 4, 8, 16, 32][r]
+
+        result = score_chosen_bracket(sim_data, [mock_rule], "standard")
+
+        assert "standard" in result
+        dist = result["standard"]
+        assert hasattr(dist, "mean")
+        assert hasattr(dist, "percentiles")
+        assert 50 in dist.percentiles
+
+    def test_raises_when_no_sim_winners(self) -> None:
+        import pytest
+
+        from dashboard.lib.filters import score_chosen_bracket
+
+        mock_sim_result = MagicMock()
+        mock_sim_result.sim_winners = None
+
+        sim_data = MagicMock()
+        sim_data.sim_result = mock_sim_result
+
+        with pytest.raises(ValueError, match="MC sim_winners required"):
+            score_chosen_bracket(sim_data, [MagicMock()], "standard")
+
+
+class TestBuildCustomScoring:
+    def test_wraps_six_element_tuple(self) -> None:
+        from dashboard.lib.filters import build_custom_scoring
+
+        scoring = build_custom_scoring((1.0, 2.0, 4.0, 8.0, 16.0, 32.0))
+
+        assert scoring.name == "custom"
+        assert scoring.points_per_round(0) == 1.0
+        assert scoring.points_per_round(5) == 32.0
+
+    def test_raises_on_wrong_length(self) -> None:
+        import pytest
+
+        from dashboard.lib.filters import build_custom_scoring
+
+        with pytest.raises(ValueError, match="exactly 6 entries"):
+            build_custom_scoring((1.0, 2.0, 4.0))  # only 3 elements
+
+
+class TestExportBracketCsv:
+    def test_csv_has_correct_structure(self) -> None:
+        from dashboard.lib.filters import export_bracket_csv
+
+        # 4-team bracket: 3 games (2 R64 + 1 Championship equivalent)
+        team_ids = (100, 200, 300, 400)
+        bracket = MagicMock()
+        bracket.team_ids = team_ids
+        bracket.team_index_map = {100: 0, 200: 1, 300: 2, 400: 3}
+        bracket.seed_map = {100: 1, 200: 16, 300: 2, 400: 15}
+
+        most_likely = MagicMock()
+        most_likely.winners = (0, 2, 0)  # 3 games in a 4-team bracket
+
+        labels = {0: "[1] Duke", 1: "[16] Norfolk St", 2: "[2] UConn", 3: "[15] Wagner"}
+        P = np.full((4, 4), 0.5)
+        P[0, 1] = 0.9
+        P[1, 0] = 0.1
+        P[2, 3] = 0.8
+        P[3, 2] = 0.2
+        P[0, 2] = 0.6
+        P[2, 0] = 0.4
+
+        csv_str = export_bracket_csv(bracket, most_likely, labels, P)
+
+        lines = csv_str.strip().split("\n")
+        assert lines[0] == "game_number,round,team_id,team_name,seed,win_probability"
+        assert len(lines) == 4  # header + 3 games
+
+    def test_csv_columns_match_spec(self) -> None:
+        from dashboard.lib.filters import export_bracket_csv
+
+        team_ids = (100, 200, 300, 400)
+        bracket = MagicMock()
+        bracket.team_ids = team_ids
+        bracket.team_index_map = {100: 0, 200: 1, 300: 2, 400: 3}
+        bracket.seed_map = {100: 1, 200: 16, 300: 2, 400: 15}
+
+        most_likely = MagicMock()
+        most_likely.winners = (0, 2, 0)
+
+        labels = {0: "[1] Duke", 1: "[16] Norfolk St", 2: "[2] UConn", 3: "[15] Wagner"}
+        P = np.full((4, 4), 0.5)
+
+        csv_str = export_bracket_csv(bracket, most_likely, labels, P)
+
+        import csv as csv_mod
+
+        reader = csv_mod.reader(csv_str.strip().split("\n"))
+        header = next(reader)
+        assert header == ["game_number", "round", "team_id", "team_name", "seed", "win_probability"]
+
+    def test_round_labels_present(self) -> None:
+        from dashboard.lib.filters import export_bracket_csv
+
+        team_ids = (100, 200, 300, 400)
+        bracket = MagicMock()
+        bracket.team_ids = team_ids
+        bracket.team_index_map = {100: 0, 200: 1, 300: 2, 400: 3}
+        bracket.seed_map = {100: 1, 200: 16, 300: 2, 400: 15}
+
+        most_likely = MagicMock()
+        most_likely.winners = (0, 2, 0)
+
+        labels = {0: "[1] Duke", 1: "[16] Norfolk St", 2: "[2] UConn", 3: "[15] Wagner"}
+        P = np.full((4, 4), 0.5)
+
+        csv_str = export_bracket_csv(bracket, most_likely, labels, P)
+
+        # 4-team bracket has 2 rounds: R64 (2 games) and R32 (1 game)
+        assert "R64" in csv_str
+        assert "R32" in csv_str
