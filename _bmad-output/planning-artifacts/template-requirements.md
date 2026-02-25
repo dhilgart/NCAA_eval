@@ -782,6 +782,21 @@ class MyModelConfig(BaseModel):
   - **Why this matters:** Research spikes are not "done" when the document is approved. The SM still needs to propagate the findings back into the epic AC structure before the next story can be created with correct context. Without this AC, the create-story workflow operates on stale story descriptions that don't reflect research findings.
   - **Who does the work:** SM agent — not the dev agent. This is a sprint planning/story maintenance task, not implementation. (Discovered: Story 4.1, 2026-02-21)
 
+**Story 7.5 - Bracket Visualizer Dashboard Page (2026-02-24 Code Review):**
+- ❌ **`@st.cache_data` key includes ALL parameters — normalize method-independent params before caching** — `run_bracket_simulation` accepted `n_simulations` as a cache key, but for `method="analytical"` this parameter is completely ignored. Switching the slider from 10k to 50k while in analytical mode creates two identical-result cache entries. **Template pattern: When a cached function has parameters that are irrelevant for some branches, use a public wrapper that normalizes before delegating to the private cached helper:**
+  ```python
+  def run_simulation(method: str, n_sims: int) -> Result:
+      # Normalize method-independent params before the cache sees them
+      _n_sims = n_sims if method == "monte_carlo" else 0
+      return _run_simulation_cached(method, _n_sims)
+
+  @st.cache_data(ttl=None)
+  def _run_simulation_cached(method: str, n_sims: int) -> Result: ...
+  ```
+  (Discovered: Story 7.5 Code Review, 2026-02-24)
+- ❌ **Dashboard page tests must cover ALL rendering branches — one `TestSuccessfulRender` is insufficient** — The initial `test_bracket_page.py` had one happy-path test (`TestSuccessfulRender`) using `method="analytical"`, leaving the entire MC mode branch (score distribution rendering, missing-scoring-key fallback) completely untested. **Template pattern: For Streamlit pages with conditional rendering branches, create a test class per distinct rendering mode: `TestAnalyticalRender`, `TestMCModeRender`, `TestMCMissingDataFallback`.** One test class per mode ensures all `if method == "..."` branches have assertion coverage. (Discovered: Story 7.5 Code Review, 2026-02-24)
+- ❌ **AC #5 "Team Detail Expansion" had no page-level test assertion** — The pairwise win probability expander was implemented and verified by code review, but `TestSuccessfulRender` never asserted `mock_st.expander.assert_called()`. **Template pattern: After a code review adds a new UI component as an AC fix, the reviewer must also add a corresponding assertion in the page test — do not assume existing tests cover the new code path.** (Discovered: Story 7.5 Code Review, 2026-02-24)
+
 **Story 6.6 - Tournament Scoring / Plugin Registry (2026-02-24):**
 - ⚠️ **Field naming pitfall — `_id` vs `_index`**: When a field name implies an external ID (e.g. `champion_team_id`) but actually stores an internal array index, tests using fixtures where index==ID (0,1,2…) will silently pass while production code with real IDs (1139, 2345) fails. Always name fields to match what they actually store, or convert to the external ID at construction time.
 - ✅ **Registry stores classes, not instances**: `get_scoring("seed_diff_bonus")` returns `SeedDiffBonusScoring` (a class). Callers must instantiate with required args. Add a round-trip test (`get_scoring(name)(args)`) for each registered class, especially those with required constructor arguments.
@@ -2821,4 +2836,77 @@ assert "year" in fold_preds.columns
 # ✅ Assert the complete contract defined in the story schema
 expected_cols = {"year", "game_id", "team_a_id", "team_b_id", "pred_win_prob", "team_a_won"}
 assert expected_cols.issubset(set(fold_preds.columns)), f"Missing: {expected_cols - set(fold_preds.columns)}"
+```
+
+### Never Populate a Numpy Matrix Using `DataFrame.iterrows()` — Use Vectorized Indexing (Discovered Story 7.5 Code Review, 2026-02-24)
+
+Building a pairwise probability matrix from a DataFrame row-by-row with `iterrows()` violates the Style Guide's hard "vectorization first" rule (Section 5). With 1,000+ prediction rows per season this is also measurably slow.
+
+**Correct vectorized pattern** (uses `.map()` + array indexing):
+
+```python
+# ❌ Banned — iterrows() over DataFrame
+for _, row in tourney_preds.iterrows():
+    i = bracket.team_index_map[int(row["team_a_id"])]
+    j = bracket.team_index_map[int(row["team_b_id"])]
+    P[i, j] = float(row["pred_win_prob"])
+    P[j, i] = 1.0 - float(row["pred_win_prob"])
+
+# ✅ Vectorized — .map() produces a Series of indices; notna() filters non-bracket teams
+a_indices = tourney_preds["team_a_id"].map(bracket.team_index_map)
+b_indices = tourney_preds["team_b_id"].map(bracket.team_index_map)
+valid = a_indices.notna() & b_indices.notna()
+a_valid = a_indices[valid].astype(int).to_numpy()
+b_valid = b_indices[valid].astype(int).to_numpy()
+probs = tourney_preds.loc[valid, "pred_win_prob"].to_numpy(dtype=np.float64)
+P[a_valid, b_valid] = probs
+P[b_valid, a_valid] = 1.0 - probs
+```
+
+### `@st.cache_resource` vs `@st.cache_data` — Use `cache_data` for Serializable Outputs (Discovered Story 7.5 Code Review, 2026-02-24)
+
+`@st.cache_resource` is designed for non-serializable global resources (database connections, ML models loaded from disk). It returns the **same object reference** to all users/sessions — meaning mutations are shared across concurrent users.
+
+`@st.cache_data` serializes the return value (via pickle) and returns a **new copy** per caller — safe for dataclasses and numpy arrays.
+
+**Rule**: Use `@st.cache_data` for functions that return plain data (DataFrames, dataclasses, dicts, numpy arrays). Only use `@st.cache_resource` for true global resources that cannot be pickled.
+
+```python
+# ❌ Wrong — cache_resource for a serializable result dataclass
+@st.cache_resource(ttl=None)
+def run_bracket_simulation(...) -> BracketSimulationResult | None: ...
+
+# ✅ Correct — cache_data for serializable dataclass output
+@st.cache_data(ttl=None)
+def run_bracket_simulation(...) -> BracketSimulationResult | None: ...
+```
+
+### Use `inspect.signature(cls)` Not `inspect.signature(cls.__init__)` for Class Constructor Inspection (Discovered Story 7.5 Code Review, 2026-02-24)
+
+To detect whether a class constructor requires specific arguments (avoiding hardcoded `if class_name == "foo"` checks), use `inspect.signature(cls)` directly — not `inspect.signature(cls.__init__)`. Mypy rejects the `.__init__` form with `[misc]: Accessing "__init__" on an instance is unsound`.
+
+```python
+# ❌ Mypy error: Accessing "__init__" on an instance is unsound [misc]
+sig = inspect.signature(scoring_cls.__init__)
+
+# ✅ Correct — inspect the class itself
+sig = inspect.signature(scoring_cls)
+if "seed_map" in sig.parameters:
+    rule = scoring_cls(seed_map=bracket.seed_map)
+else:
+    rule = scoring_cls()
+```
+
+### Streamlit Page Tests: Use `side_effect` for Multi-Call `selectbox` Mocks (Discovered Story 7.5 Code Review, 2026-02-24)
+
+When a Streamlit page calls `st.selectbox` multiple times (e.g., simulation method selector AND pairwise team selectors), a single `mock_st.selectbox.return_value = "some_value"` will return the same value for all calls. This causes type errors when the second selectbox expects a team label but receives `"analytical"`.
+
+**Pattern**: Use `side_effect` to return appropriate values per call:
+
+```python
+# ❌ All calls return "analytical" — breaks pairwise team selectors
+mock_st.selectbox.return_value = "analytical"
+
+# ✅ Each call returns the expected type
+mock_st.selectbox.side_effect = ["analytical", "[1] Duke", "[16] Norfolk St"]
 ```

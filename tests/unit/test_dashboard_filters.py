@@ -6,10 +6,12 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, patch
 
+import numpy as np
 import pandas as pd  # type: ignore[import-untyped]
 
-from ncaa_eval.ingest.schema import Season
+from ncaa_eval.ingest.schema import Season, Team
 from ncaa_eval.model.tracking import ModelRun
+from ncaa_eval.transform.normalization import TourneySeed
 
 
 def _unwrap(fn: Any) -> Any:
@@ -392,3 +394,345 @@ class TestLoadAvailableScorings:
 
         result: list[str] = _unwrap(load_available_scorings)()
         assert all(isinstance(s, str) for s in result)
+
+
+# ---------------------------------------------------------------------------
+# Story 7.5: Bracket Visualizer loader tests
+# ---------------------------------------------------------------------------
+
+
+class TestLoadTourneySeeds:
+    @patch("dashboard.lib.filters.TourneySeedTable")
+    def test_returns_serialised_seeds(self, mock_table_cls: MagicMock) -> None:
+        mock_table = MagicMock()
+        mock_table.all_seeds.return_value = [
+            TourneySeed(season=2023, team_id=100, seed_str="W01", region="W", seed_num=1, is_play_in=False),
+            TourneySeed(season=2023, team_id=200, seed_str="W16", region="W", seed_num=16, is_play_in=False),
+        ]
+        mock_table_cls.from_csv.return_value = mock_table
+
+        from dashboard.lib.filters import load_tourney_seeds
+
+        # Need to create the CSV path to exist for the function to proceed
+        with patch("dashboard.lib.filters.Path.exists", return_value=True):
+            result = _unwrap(load_tourney_seeds)("/fake/data", 2023)
+
+        assert len(result) == 2
+        assert result[0]["team_id"] == 100
+        assert result[0]["seed_num"] == 1
+        assert result[0]["region"] == "W"
+
+    def test_returns_empty_when_csv_missing(self) -> None:
+        from dashboard.lib.filters import load_tourney_seeds
+
+        result = _unwrap(load_tourney_seeds)("/nonexistent", 2023)
+        assert result == []
+
+    @patch("dashboard.lib.filters.TourneySeedTable")
+    def test_returns_empty_for_season_with_no_seeds(self, mock_table_cls: MagicMock) -> None:
+        mock_table = MagicMock()
+        mock_table.all_seeds.return_value = []
+        mock_table_cls.from_csv.return_value = mock_table
+
+        from dashboard.lib.filters import load_tourney_seeds
+
+        with patch("dashboard.lib.filters.Path.exists", return_value=True):
+            result = _unwrap(load_tourney_seeds)("/fake/data", 1900)
+
+        assert result == []
+
+
+class TestLoadTeamNames:
+    @patch("dashboard.lib.filters.Path.exists", return_value=True)
+    @patch("dashboard.lib.filters.ParquetRepository")
+    def test_returns_id_to_name_mapping(self, mock_repo_cls: MagicMock, mock_exists: MagicMock) -> None:
+        mock_repo = MagicMock()
+        mock_repo.get_teams.return_value = [
+            Team(team_id=100, team_name="Duke", canonical_name="Duke"),
+            Team(team_id=200, team_name="UNC", canonical_name="UNC"),
+        ]
+        mock_repo_cls.return_value = mock_repo
+
+        from dashboard.lib.filters import load_team_names
+
+        result = _unwrap(load_team_names)("/fake/data")
+        assert result == {100: "Duke", 200: "UNC"}
+
+    def test_returns_empty_when_data_dir_missing(self) -> None:
+        from dashboard.lib.filters import load_team_names
+
+        result = _unwrap(load_team_names)("/nonexistent")
+        assert result == {}
+
+    @patch("dashboard.lib.filters.Path.exists", return_value=True)
+    @patch("dashboard.lib.filters.ParquetRepository")
+    def test_returns_empty_on_exception(self, mock_repo_cls: MagicMock, mock_exists: MagicMock) -> None:
+        mock_repo_cls.side_effect = OSError("disk error")
+
+        from dashboard.lib.filters import load_team_names
+
+        result = _unwrap(load_team_names)("/fake/data")
+        assert result == {}
+
+
+# ---------------------------------------------------------------------------
+# Story 7.5: _build_provider_from_folds and _build_team_labels tests
+# ---------------------------------------------------------------------------
+
+
+def _make_mock_bracket(
+    team_ids: tuple[int, ...],
+    seed_map: dict[int, int] | None = None,
+) -> MagicMock:
+    """Return a MagicMock that mimics BracketStructure."""
+    bracket = MagicMock()
+    bracket.team_ids = team_ids
+    bracket.team_index_map = {tid: i for i, tid in enumerate(team_ids)}
+    bracket.seed_map = seed_map or {tid: (i % 16) + 1 for i, tid in enumerate(team_ids)}
+    return bracket
+
+
+class TestBuildProviderFromFolds:
+    def test_returns_matrix_provider_for_valid_preds(self) -> None:
+        from dashboard.lib.filters import _build_provider_from_folds
+
+        team_ids = (100, 200, 300, 400)
+        bracket = _make_mock_bracket(team_ids)
+        fold_df = pd.DataFrame(
+            {
+                "year": [2023, 2023],
+                "team_a_id": [100, 300],
+                "team_b_id": [200, 400],
+                "pred_win_prob": [0.7, 0.6],
+            }
+        )
+        mock_store = MagicMock()
+        mock_store.load_fold_predictions.return_value = fold_df
+
+        result = _build_provider_from_folds(mock_store, "run-1", 2023, bracket)
+
+        assert result is not None
+        # Verify the probability matrix was filled correctly
+        # P[0,1] should be 0.7 (team_a=100→idx=0 beats team_b=200→idx=1)
+        assert abs(result._P[0, 1] - 0.7) < 1e-6
+        assert abs(result._P[1, 0] - 0.3) < 1e-6
+
+    def test_returns_none_when_no_fold_predictions(self) -> None:
+        from dashboard.lib.filters import _build_provider_from_folds
+
+        bracket = _make_mock_bracket((100, 200))
+        mock_store = MagicMock()
+        mock_store.load_fold_predictions.return_value = None
+
+        result = _build_provider_from_folds(mock_store, "run-1", 2023, bracket)
+
+        assert result is None
+
+    def test_returns_none_when_no_preds_for_season(self) -> None:
+        from dashboard.lib.filters import _build_provider_from_folds
+
+        bracket = _make_mock_bracket((100, 200))
+        fold_df = pd.DataFrame(
+            {"year": [2022], "team_a_id": [100], "team_b_id": [200], "pred_win_prob": [0.7]}
+        )
+        mock_store = MagicMock()
+        mock_store.load_fold_predictions.return_value = fold_df
+
+        result = _build_provider_from_folds(mock_store, "run-1", 2023, bracket)
+
+        assert result is None
+
+    def test_ignores_teams_not_in_bracket(self) -> None:
+        from dashboard.lib.filters import _build_provider_from_folds
+
+        team_ids = (100, 200)
+        bracket = _make_mock_bracket(team_ids)
+        fold_df = pd.DataFrame(
+            {
+                "year": [2023, 2023],
+                "team_a_id": [100, 999],  # 999 is NOT in bracket
+                "team_b_id": [200, 888],  # 888 is NOT in bracket
+                "pred_win_prob": [0.7, 0.5],
+            }
+        )
+        mock_store = MagicMock()
+        mock_store.load_fold_predictions.return_value = fold_df
+
+        result = _build_provider_from_folds(mock_store, "run-1", 2023, bracket)
+
+        assert result is not None
+        # Only the valid row (100 vs 200) should be filled; 999/888 row ignored
+        assert abs(result._P[0, 1] - 0.7) < 1e-6
+
+
+class TestBuildTeamLabels:
+    @patch("dashboard.lib.filters.Path.exists", return_value=True)
+    @patch("dashboard.lib.filters.ParquetRepository")
+    def test_builds_seed_name_labels(self, mock_repo_cls: MagicMock, mock_exists: MagicMock) -> None:
+        from dashboard.lib.filters import _build_team_labels
+
+        mock_repo = MagicMock()
+        mock_repo.get_teams.return_value = [
+            Team(team_id=100, team_name="Duke"),
+            Team(team_id=200, team_name="Norfolk St"),
+        ]
+        mock_repo_cls.return_value = mock_repo
+
+        bracket = _make_mock_bracket((100, 200), seed_map={100: 1, 200: 16})
+        result = _build_team_labels("/fake/data", bracket)
+
+        assert result[0] == "[1] Duke"
+        assert result[1] == "[16] Norfolk St"
+
+    @patch("dashboard.lib.filters.Path.exists", return_value=True)
+    @patch("dashboard.lib.filters.ParquetRepository")
+    def test_falls_back_to_team_id_when_name_missing(
+        self, mock_repo_cls: MagicMock, mock_exists: MagicMock
+    ) -> None:
+        from dashboard.lib.filters import _build_team_labels
+
+        mock_repo = MagicMock()
+        mock_repo.get_teams.return_value = []  # no team names available
+        mock_repo_cls.return_value = mock_repo
+
+        bracket = _make_mock_bracket((100,), seed_map={100: 5})
+        result = _build_team_labels("/fake/data", bracket)
+
+        assert result[0] == "[5] 100"
+
+
+class TestRunBracketSimulation:
+    @patch("dashboard.lib.filters.Path.exists", return_value=True)
+    @patch("dashboard.lib.filters.TourneySeedTable")
+    @patch("dashboard.lib.filters.RunStore")
+    @patch("dashboard.lib.filters.build_bracket")
+    @patch("dashboard.lib.filters.build_probability_matrix")
+    @patch("dashboard.lib.filters.compute_most_likely_bracket")
+    @patch("dashboard.lib.filters.simulate_tournament")
+    @patch("dashboard.lib.filters.get_scoring")
+    @patch("dashboard.lib.filters._build_team_labels")
+    def test_returns_result_for_elo_model(  # noqa: PLR0913
+        self,
+        mock_labels: MagicMock,
+        mock_get_scoring: MagicMock,
+        mock_simulate: MagicMock,
+        mock_most_likely: MagicMock,
+        mock_prob_matrix: MagicMock,
+        mock_build_bracket: MagicMock,
+        mock_run_store: MagicMock,
+        mock_seed_table: MagicMock,
+        mock_exists: MagicMock,
+    ) -> None:
+        from dashboard.lib.filters import run_bracket_simulation
+
+        bracket = _make_mock_bracket((100, 200))
+        mock_build_bracket.return_value = bracket
+        mock_prob_matrix.return_value = np.full((2, 2), 0.5)
+        mock_most_likely.return_value = MagicMock()
+        mock_simulate.return_value = MagicMock()
+        mock_labels.return_value = {0: "[1] Duke", 1: "[16] Norfolk St"}
+        mock_get_scoring.return_value = MagicMock(return_value=MagicMock())
+
+        mock_store = MagicMock()
+        mock_run = MagicMock()
+        mock_run.model_type = "elo"
+        mock_store.load_run.return_value = mock_run
+        mock_store.load_model.return_value = MagicMock()
+        mock_run_store.return_value = mock_store
+
+        mock_table = MagicMock()
+        mock_table.all_seeds.return_value = [MagicMock()]
+        mock_seed_table.from_csv.return_value = mock_table
+
+        result = _unwrap(run_bracket_simulation)("/fake/data", "run-elo", 2023, "standard")
+
+        assert result is not None
+        assert result.team_labels == {0: "[1] Duke", 1: "[16] Norfolk St"}
+
+    @patch("dashboard.lib.filters.Path.exists", return_value=False)
+    def test_returns_none_when_seed_csv_missing(self, mock_exists: MagicMock) -> None:
+        from dashboard.lib.filters import run_bracket_simulation
+
+        result = _unwrap(run_bracket_simulation)("/fake/data", "run-1", 2023, "standard")
+
+        assert result is None
+
+    @patch("dashboard.lib.filters.Path.exists", return_value=True)
+    @patch("dashboard.lib.filters.TourneySeedTable")
+    @patch("dashboard.lib.filters.RunStore")
+    @patch("dashboard.lib.filters.build_bracket")
+    def test_returns_none_when_model_missing(
+        self,
+        mock_build_bracket: MagicMock,
+        mock_run_store: MagicMock,
+        mock_seed_table: MagicMock,
+        mock_exists: MagicMock,
+    ) -> None:
+        from dashboard.lib.filters import run_bracket_simulation
+
+        bracket = _make_mock_bracket((100, 200))
+        mock_build_bracket.return_value = bracket
+
+        mock_table = MagicMock()
+        mock_table.all_seeds.return_value = [MagicMock()]
+        mock_seed_table.from_csv.return_value = mock_table
+
+        mock_store = MagicMock()
+        mock_store.load_run.return_value = MagicMock(model_type="elo")
+        mock_store.load_model.return_value = None  # model not found
+        mock_run_store.return_value = mock_store
+
+        result = _unwrap(run_bracket_simulation)("/fake/data", "run-1", 2023, "standard")
+
+        assert result is None
+
+    @patch("dashboard.lib.filters.Path.exists", return_value=True)
+    @patch("dashboard.lib.filters.TourneySeedTable")
+    @patch("dashboard.lib.filters.RunStore")
+    def test_returns_none_when_no_seeds_for_season(
+        self,
+        mock_run_store: MagicMock,
+        mock_seed_table: MagicMock,
+        mock_exists: MagicMock,
+    ) -> None:
+        from dashboard.lib.filters import run_bracket_simulation
+
+        mock_table = MagicMock()
+        mock_table.all_seeds.return_value = []  # empty seeds
+        mock_seed_table.from_csv.return_value = mock_table
+
+        result = _unwrap(run_bracket_simulation)("/fake/data", "run-1", 2023, "standard")
+
+        assert result is None
+
+    @patch("dashboard.lib.filters.Path.exists", return_value=True)
+    @patch("dashboard.lib.filters.TourneySeedTable")
+    @patch("dashboard.lib.filters.RunStore")
+    @patch("dashboard.lib.filters.build_bracket")
+    @patch("dashboard.lib.filters._build_provider_from_folds")
+    def test_returns_none_when_xgboost_fold_provider_fails(
+        self,
+        mock_build_provider: MagicMock,
+        mock_build_bracket: MagicMock,
+        mock_run_store: MagicMock,
+        mock_seed_table: MagicMock,
+        mock_exists: MagicMock,
+    ) -> None:
+        from dashboard.lib.filters import run_bracket_simulation
+
+        bracket = _make_mock_bracket((100, 200))
+        mock_build_bracket.return_value = bracket
+        mock_build_provider.return_value = None  # no fold predictions
+
+        mock_table = MagicMock()
+        mock_table.all_seeds.return_value = [MagicMock()]
+        mock_seed_table.from_csv.return_value = mock_table
+
+        mock_store = MagicMock()
+        mock_store.load_run.return_value = MagicMock(model_type="xgboost")
+        mock_store.load_model.return_value = MagicMock()
+        mock_run_store.return_value = mock_store
+
+        result = _unwrap(run_bracket_simulation)("/fake/data", "run-xgb", 2023, "standard")
+
+        assert result is None
