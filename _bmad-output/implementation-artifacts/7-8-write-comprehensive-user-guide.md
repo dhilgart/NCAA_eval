@@ -1,6 +1,6 @@
 # Story 7.8: Write Comprehensive User Guide
 
-Status: review
+Status: done
 
 ## Story
 
@@ -239,10 +239,47 @@ None — clean implementation with no debugging required.
 ### Change Log
 
 - 2026-02-25: Story 7.8 implementation complete — created comprehensive user guide and integrated into Sphinx docs
+- 2026-02-25: Code review fixes — corrected StatefulModel plugin hook docs (H1), fixed broken README relative link (M2), committed sphinx-apidoc generated docs/api/*.rst files (M1)
 
 ### File List
 
 - `docs/user-guide.md` (new) — comprehensive user guide
 - `docs/index.rst` (modified) — added User Guide toctree section
+- `docs/api/ncaa_eval.rst` (modified) — added ncaa_eval.cli subpackage
+- `docs/api/ncaa_eval.evaluation.rst` (modified) — added submodule toctree
+- `docs/api/ncaa_eval.ingest.rst` (modified) — added subpackage/submodule toctrees
+- `docs/api/ncaa_eval.model.rst` (modified) — added submodule toctree
+- `docs/api/ncaa_eval.transform.rst` (modified) — added submodule toctree
+- `docs/api/ncaa_eval.utils.rst` (modified) — added submodule toctree
+- `docs/api/ncaa_eval.cli.rst` (new) — sphinx-apidoc generated
+- `docs/api/ncaa_eval.cli.main.rst` (new) — sphinx-apidoc generated
+- `docs/api/ncaa_eval.cli.train.rst` (new) — sphinx-apidoc generated
+- `docs/api/ncaa_eval.evaluation.backtest.rst` (new) — sphinx-apidoc generated
+- `docs/api/ncaa_eval.evaluation.metrics.rst` (new) — sphinx-apidoc generated
+- `docs/api/ncaa_eval.evaluation.plotting.rst` (new) — sphinx-apidoc generated
+- `docs/api/ncaa_eval.evaluation.simulation.rst` (new) — sphinx-apidoc generated
+- `docs/api/ncaa_eval.evaluation.splitter.rst` (new) — sphinx-apidoc generated
+- `docs/api/ncaa_eval.ingest.connectors.rst` (new) — sphinx-apidoc generated
+- `docs/api/ncaa_eval.ingest.connectors.base.rst` (new) — sphinx-apidoc generated
+- `docs/api/ncaa_eval.ingest.connectors.espn.rst` (new) — sphinx-apidoc generated
+- `docs/api/ncaa_eval.ingest.connectors.kaggle.rst` (new) — sphinx-apidoc generated
+- `docs/api/ncaa_eval.ingest.repository.rst` (new) — sphinx-apidoc generated
+- `docs/api/ncaa_eval.ingest.schema.rst` (new) — sphinx-apidoc generated
+- `docs/api/ncaa_eval.ingest.sync.rst` (new) — sphinx-apidoc generated
+- `docs/api/ncaa_eval.model.base.rst` (new) — sphinx-apidoc generated
+- `docs/api/ncaa_eval.model.elo.rst` (new) — sphinx-apidoc generated
+- `docs/api/ncaa_eval.model.logistic_regression.rst` (new) — sphinx-apidoc generated
+- `docs/api/ncaa_eval.model.registry.rst` (new) — sphinx-apidoc generated
+- `docs/api/ncaa_eval.model.tracking.rst` (new) — sphinx-apidoc generated
+- `docs/api/ncaa_eval.model.xgboost_model.rst` (new) — sphinx-apidoc generated
+- `docs/api/ncaa_eval.transform.calibration.rst` (new) — sphinx-apidoc generated
+- `docs/api/ncaa_eval.transform.elo.rst` (new) — sphinx-apidoc generated
+- `docs/api/ncaa_eval.transform.feature_serving.rst` (new) — sphinx-apidoc generated
+- `docs/api/ncaa_eval.transform.graph.rst` (new) — sphinx-apidoc generated
+- `docs/api/ncaa_eval.transform.normalization.rst` (new) — sphinx-apidoc generated
+- `docs/api/ncaa_eval.transform.opponent.rst` (new) — sphinx-apidoc generated
+- `docs/api/ncaa_eval.transform.sequential.rst` (new) — sphinx-apidoc generated
+- `docs/api/ncaa_eval.transform.serving.rst` (new) — sphinx-apidoc generated
+- `docs/api/ncaa_eval.utils.logger.rst` (new) — sphinx-apidoc generated
 - `_bmad-output/implementation-artifacts/7-8-write-comprehensive-user-guide.md` (modified) — story file updates
-- `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified) — status: ready-for-dev → in-progress → review
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified) — status: ready-for-dev → in-progress → review → done
