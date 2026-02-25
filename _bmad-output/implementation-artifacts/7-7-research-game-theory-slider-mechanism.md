@@ -1,6 +1,6 @@
 # Story 7.7: Research Game Theory Slider Mechanism
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -20,31 +20,31 @@ so that the Bracket Visualizer (Story 7.5) can implement real-time probability p
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Survey candidate mathematical transformations (AC: #1)
-  - [ ] 1.1: Research and document logit-space additive adjustment (`logit(p') = logit(p) + alpha * f(seed_diff)`)
-  - [ ] 1.2: Research and document temperature/power scaling (`p' = p^(1/T) / (p^(1/T) + (1-p)^(1/T))`)
-  - [ ] 1.3: Research and document linear blend with seed-prior (`p' = (1-w)*p + w*seed_prior(a, b)`)
-  - [ ] 1.4: Research and document entropy-based lambda parameterization (chalk-to-uniform interpolation)
-  - [ ] 1.5: Evaluate each candidate on the three assessment criteria (intuition, stability, reversibility)
-- [ ] Task 2: Select and fully specify the recommended approach (AC: #2)
-  - [ ] 2.1: Choose the best candidate (or hybrid) with rationale
-  - [ ] 2.2: Write the full mathematical specification with formulas
-  - [ ] 2.3: Compute worked examples for representative matchups: 1v16 (p=0.99), 5v12 (p=0.65), 8v9 (p=0.52), and 11v6 (p=0.40)
-  - [ ] 2.4: Analyze edge cases: p=0.0, p=1.0, p=0.5, extreme slider values
-  - [ ] 2.5: Document the relationship between the three sliders (independent vs. coupled)
-- [ ] Task 3: Define slider parameter specifications (AC: #3)
-  - [ ] 3.1: Specify Upset Aggression slider: range, default, step, UI label, mathematical effect
-  - [ ] 3.2: Specify Chalk Bias slider: range, default, step, UI label, mathematical effect
-  - [ ] 3.3: Specify Seed-Weight slider: range, default, step, UI label, mathematical effect
-  - [ ] 3.4: Document interaction effects when multiple sliders are non-default simultaneously
-- [ ] Task 4: Document UI integration design for future implementation (AC: #2, #3)
-  - [ ] 4.1: Specify where perturbation hooks into the existing simulation pipeline
-  - [ ] 4.2: Specify what needs to re-render when sliders change (bracket tree, heatmap, EP table) vs. what does not (MC simulation)
-  - [ ] 4.3: Propose function signature for the perturbation function
-  - [ ] 4.4: Propose file location and module structure
-- [ ] Task 5: Write and commit the spike research document (AC: #4)
-  - [ ] 5.1: Write `specs/research/game-theory-slider-mechanism.md`
-  - [ ] 5.2: Commit the document
+- [x] Task 1: Survey candidate mathematical transformations (AC: #1)
+  - [x] 1.1: Research and document logit-space additive adjustment (`logit(p') = logit(p) + alpha * f(seed_diff)`)
+  - [x] 1.2: Research and document temperature/power scaling (`p' = p^(1/T) / (p^(1/T) + (1-p)^(1/T))`)
+  - [x] 1.3: Research and document linear blend with seed-prior (`p' = (1-w)*p + w*seed_prior(a, b)`)
+  - [x] 1.4: Research and document entropy-based lambda parameterization (chalk-to-uniform interpolation)
+  - [x] 1.5: Evaluate each candidate on the three assessment criteria (intuition, stability, reversibility)
+- [x] Task 2: Select and fully specify the recommended approach (AC: #2)
+  - [x] 2.1: Choose the best candidate (or hybrid) with rationale
+  - [x] 2.2: Write the full mathematical specification with formulas
+  - [x] 2.3: Compute worked examples for representative matchups: 1v16 (p=0.99), 5v12 (p=0.65), 8v9 (p=0.52), and 11v6 (p=0.40)
+  - [x] 2.4: Analyze edge cases: p=0.0, p=1.0, p=0.5, extreme slider values
+  - [x] 2.5: Document the relationship between the three sliders (independent vs. coupled)
+- [x] Task 3: Define slider parameter specifications (AC: #3)
+  - [x] 3.1: Specify Upset Aggression slider: range, default, step, UI label, mathematical effect
+  - [x] 3.2: Specify Chalk Bias slider: range, default, step, UI label, mathematical effect
+  - [x] 3.3: Specify Seed-Weight slider: range, default, step, UI label, mathematical effect
+  - [x] 3.4: Document interaction effects when multiple sliders are non-default simultaneously
+- [x] Task 4: Document UI integration design for future implementation (AC: #2, #3)
+  - [x] 4.1: Specify where perturbation hooks into the existing simulation pipeline
+  - [x] 4.2: Specify what needs to re-render when sliders change (bracket tree, heatmap, EP table) vs. what does not (MC simulation)
+  - [x] 4.3: Propose function signature for the perturbation function
+  - [x] 4.4: Propose file location and module structure
+- [x] Task 5: Write and commit the spike research document (AC: #4)
+  - [x] 5.1: Write `specs/research/game-theory-slider-mechanism.md`
+  - [x] 5.2: Commit the document
 
 ## Dev Notes
 
@@ -210,10 +210,26 @@ Recent commits show Epic 7 is nearly complete (7.1-7.6 all done). Patterns:
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+- Verified all worked examples programmatically (Python numpy) — corrected 8 values where hand calculations were imprecise
+
 ### Completion Notes List
 
+- **Task 1**: Surveyed four candidate transformations: logit-space additive, power/temperature scaling, linear blend with seed prior, and entropy-based lambda. Documented formulas, properties, and behavior for each. Built 7-criteria assessment matrix.
+- **Task 2**: Selected hybrid approach (power transform + seed blend) as recommended. Justified orthogonality of the two parameters. Computed and verified worked examples for 4 representative matchups at 5 temperature levels and 5 seed weight levels, plus combined examples. Analyzed 7 edge cases including p=0, p=1, p=0.5, extreme sliders, diagonal entries, and simultaneous extremes.
+- **Task 3**: Specified two-slider configuration (Upset Aggression [-5,+5] mapping to T=2^(v/3); Seed Weight 0-100%). Also documented three-slider alternative where Chalk Bias is a threshold-gated sharpener for top seeds. Recommended two-slider as default with three-slider as optional extension.
+- **Task 4**: Documented pipeline insertion point (post-matrix, pre-analytical), re-render scope (bracket/heatmap/EP: yes; MC simulation: no), proposed `perturb_probability_matrix()` function signature with full type annotations, and proposed `src/ncaa_eval/evaluation/perturbation.py` module with helper functions.
+- **Task 5**: Wrote comprehensive 9-section spike research document at `specs/research/game-theory-slider-mechanism.md` with quick-navigation table, verified numerical examples, and full reference list.
+
+### Change Log
+
+- 2026-02-24: Created spike research document — all 5 tasks complete, all 4 ACs satisfied
+
 ### File List
+
+- `specs/research/game-theory-slider-mechanism.md` (new) — Spike research document
+- `_bmad-output/implementation-artifacts/7-7-research-game-theory-slider-mechanism.md` (modified) — Story file updates
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified) — Status: ready-for-dev → review
