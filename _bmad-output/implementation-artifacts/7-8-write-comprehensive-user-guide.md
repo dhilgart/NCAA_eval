@@ -1,6 +1,6 @@
 # Story 7.8: Write Comprehensive User Guide
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -24,23 +24,23 @@ so that I can understand what the platform measures and make informed decisions 
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create the user guide document (AC: #1, #2, #3, #4, #5)
-  - [ ] 1.1: Write the "Getting Started" overview section (quick-start: sync, train, evaluate, dashboard)
-  - [ ] 1.2: Write the "Evaluation Metrics" section (Log Loss, Brier Score, ROC-AUC, ECE — with intuitive explanations, formulas, and "good vs bad" value ranges)
-  - [ ] 1.3: Write the "Model Types" section (Stateful vs Stateless, Elo reference, XGBoost reference, Model ABC plugin system)
-  - [ ] 1.4: Write the "Interpreting Results" section (reliability diagrams, calibration, over-confidence vs under-confidence)
-  - [ ] 1.5: Write the "Tournament Simulation" section (Monte Carlo methodology, bracket distribution, Expected Points, confidence intervals)
-  - [ ] 1.6: Write the "Tournament Scoring" section (Standard, Fibonacci, Seed-Difference Bonus — with worked examples and point tables)
-  - [ ] 1.7: Write the "Dashboard Guide" section (Lab pages: Leaderboard, Model Deep Dive; Presentation pages: Bracket Visualizer, Pool Scorer — what each page shows and how to use it)
-  - [ ] 1.8: Write the "Game Theory Sliders" subsection (Upset Aggression, Seed-Weight — what they do mathematically in plain language, practical usage tips)
-- [ ] Task 2: Integrate into Sphinx documentation (AC: #5, #6)
-  - [ ] 2.1: Add `user-guide` to the `docs/index.rst` toctree (new "User Guide" section)
-  - [ ] 2.2: Verify the guide builds cleanly with `nox -s docs` (no warnings/errors)
-- [ ] Task 3: Quality gates (AC: all)
-  - [ ] 3.1: Run `ruff check .` — pass
-  - [ ] 3.2: Run `mypy --strict src/ncaa_eval tests dashboard` — pass (no changes to Python code expected, but verify no regressions)
-  - [ ] 3.3: Run `pytest` — pass (no test changes expected, but verify no regressions)
-  - [ ] 3.4: Verify `nox -s docs` builds without errors
+- [x] Task 1: Create the user guide document (AC: #1, #2, #3, #4, #5)
+  - [x] 1.1: Write the "Getting Started" overview section (quick-start: sync, train, evaluate, dashboard)
+  - [x] 1.2: Write the "Evaluation Metrics" section (Log Loss, Brier Score, ROC-AUC, ECE — with intuitive explanations, formulas, and "good vs bad" value ranges)
+  - [x] 1.3: Write the "Model Types" section (Stateful vs Stateless, Elo reference, XGBoost reference, Model ABC plugin system)
+  - [x] 1.4: Write the "Interpreting Results" section (reliability diagrams, calibration, over-confidence vs under-confidence)
+  - [x] 1.5: Write the "Tournament Simulation" section (Monte Carlo methodology, bracket distribution, Expected Points, confidence intervals)
+  - [x] 1.6: Write the "Tournament Scoring" section (Standard, Fibonacci, Seed-Difference Bonus — with worked examples and point tables)
+  - [x] 1.7: Write the "Dashboard Guide" section (Lab pages: Leaderboard, Model Deep Dive; Presentation pages: Bracket Visualizer, Pool Scorer — what each page shows and how to use it)
+  - [x] 1.8: Write the "Game Theory Sliders" subsection (Upset Aggression, Seed-Weight — what they do mathematically in plain language, practical usage tips)
+- [x] Task 2: Integrate into Sphinx documentation (AC: #5, #6)
+  - [x] 2.1: Add `user-guide` to the `docs/index.rst` toctree (new "User Guide" section)
+  - [x] 2.2: Verify the guide builds cleanly with `nox -s docs` (no warnings/errors)
+- [x] Task 3: Quality gates (AC: all)
+  - [x] 3.1: Run `ruff check .` — pass
+  - [x] 3.2: Run `mypy --strict src/ncaa_eval tests dashboard` — pass (no changes to Python code expected, but verify no regressions)
+  - [x] 3.3: Run `pytest` — pass (no test changes expected, but verify no regressions)
+  - [x] 3.4: Verify `nox -s docs` builds without errors
 
 ## Dev Notes
 
@@ -213,10 +213,36 @@ Pattern: all dashboard stories are complete and merged. This is a documentation-
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+None — clean implementation with no debugging required.
+
 ### Completion Notes List
 
+- Created `docs/user-guide.md` — comprehensive end-user guide covering:
+  - Getting Started: 4-step workflow (sync → train → dashboard → iterate) with CLI flag reference table
+  - Evaluation Metrics: Log Loss, Brier Score, ROC-AUC, ECE — each with formula, value-range table, intuitive explanation, and tip/warning admonitions
+  - Model Types: Stateful (Elo) vs Stateless (XGBoost), plugin registry, key hyperparameter tables
+  - Interpreting Results: Reliability diagram reading guide, calibration plain-language explanation, over-/under-confidence diagnostic table
+  - Tournament Simulation: Analytical (Phylourny) and Monte Carlo methodology, bracket distribution statistics, Expected Points formula
+  - Tournament Scoring: Standard, Fibonacci, Seed-Difference Bonus — with full point tables and worked examples
+  - Dashboard Guide: All 4 pages (Leaderboard, Model Deep Dive, Bracket Visualizer, Pool Scorer) with "what you see" and "how to use it" sections
+  - Game Theory Sliders: Documented as planned feature per Story 7.7 spike research — temperature/power transform and seed-weight blend with slider-to-value mapping tables and pool strategy tips
+- Added new "User Guide" toctree section to `docs/index.rst` before "Developer Guides"
+- Used MyST features: `{contents}` directive, `{tip}`, `{warning}`, `{note}` admonitions, `$$` math blocks for formulas
+- All quality gates pass: ruff clean (src/tests/dashboard/docs), mypy strict clean, 865 tests passed, nox docs builds successfully
+- Game Theory Sliders section correctly marked as "planned feature" with `{note}` admonition since sliders are not yet implemented in the dashboard
+- Fibonacci scoring values corrected to match actual codebase implementation (2-3-5-8-13-21, not 1-1-2-3-5-8 from story Dev Notes which was inaccurate)
+
+### Change Log
+
+- 2026-02-25: Story 7.8 implementation complete — created comprehensive user guide and integrated into Sphinx docs
+
 ### File List
+
+- `docs/user-guide.md` (new) — comprehensive user guide
+- `docs/index.rst` (modified) — added User Guide toctree section
+- `_bmad-output/implementation-artifacts/7-8-write-comprehensive-user-guide.md` (modified) — story file updates
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified) — status: ready-for-dev → in-progress → review
