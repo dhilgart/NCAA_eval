@@ -1,6 +1,6 @@
 # Story 7.6: Build Presentation Page — Pool Scorer & Point Outcome Analysis
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -42,10 +42,10 @@ so that I can understand my bracket's scoring potential under different pool for
   - [x] 3.2: Unit tests for `build_custom_scoring()` (validate DictScoring wrapping)
   - [x] 3.3: Unit tests for `export_bracket_csv()` (validate CSV structure, column names, row count)
   - [x] 3.4: Page rendering tests for `4_Pool_Scorer.py` (mock data, empty states, successful render)
-- [ ] Task 4: Verify quality gates (AC: all)
-  - [ ] 4.1: `mypy --strict src/ncaa_eval tests dashboard` — 0 errors
-  - [ ] 4.2: `ruff check .` — all modified files pass
-  - [ ] 4.3: `pytest` — all tests pass
+- [x] Task 4: Verify quality gates (AC: all)
+  - [x] 4.1: `mypy --strict src/ncaa_eval tests dashboard` — 0 errors (94 files checked)
+  - [x] 4.2: `ruff check .` — all modified files pass
+  - [x] 4.3: `pytest` — 864 passed, 1 skipped
 
 ## Dev Notes
 
@@ -233,6 +233,11 @@ Claude Opus 4.6
 - Task 1: Added `score_chosen_bracket()`, `build_custom_scoring()`, `export_bracket_csv()`, and `_game_win_probability()` helper to `dashboard/lib/filters.py`. All 7 new unit tests pass. Added imports for `BracketDistribution`, `DictScoring`, `compute_bracket_distribution`, `score_bracket_against_sims` from simulation module.
 - Task 2: Replaced Pool Scorer placeholder with full page implementation. Breadcrumbs, custom scoring config (6 number inputs), MC simulation with spinner, outcome summary metrics (9 st.metric cards), score distribution histogram via plot_score_distribution(), CSV download button, and empty state handling. Refactored into `_render_scoring_config()`, `_run_simulation()`, `_render_results()`, `_render_outcome_summary()`, `_render_distribution_chart()` for C901 compliance.
 - Task 3: 14 tests total — 7 filter helper tests (score_chosen_bracket, build_custom_scoring, export_bracket_csv) and 7 page rendering tests (empty states: no run, no year, no seeds, sim failure, no sim_winners; success: metrics + chart + download; button triggers MC sim).
+- Task 4: All quality gates pass — mypy --strict (94 files, 0 errors), ruff check (all modified files pass), pytest (864 passed, 1 skipped).
+
+### Change Log
+
+- 2026-02-24: Story 7.6 implementation complete — Pool Scorer page with scoring helpers, MC outcome analysis, score distribution visualization, CSV export, and comprehensive test suite (14 new tests).
 
 ### File List
 
