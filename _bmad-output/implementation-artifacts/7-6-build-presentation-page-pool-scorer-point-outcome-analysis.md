@@ -28,15 +28,15 @@ so that I can understand my bracket's scoring potential under different pool for
   - [x] 1.1: `score_chosen_bracket(sim_data, scoring_rules)` — calls `score_bracket_against_sims()` with the most-likely bracket's `winners` array against `sim_result.sim_winners`; returns `dict[str, BracketDistribution]`
   - [x] 1.2: `build_custom_scoring(points_per_round)` — wraps a 6-element tuple in `DictScoring` from `ncaa_eval.evaluation.simulation`
   - [x] 1.3: `export_bracket_csv(bracket, most_likely, team_labels, prob_matrix)` — builds CSV string from most-likely bracket picks for download
-- [ ] Task 2: Build the Pool Scorer page in `dashboard/pages/4_Pool_Scorer.py` (AC: #1-6)
-  - [ ] 2.1: Replace placeholder with full page implementation
-  - [ ] 2.2: Add breadcrumb navigation matching existing pages (`Home > Presentation > Pool Scorer`)
-  - [ ] 2.3: Add custom scoring rule input (6 `st.number_input` fields for per-round points)
-  - [ ] 2.4: Add "Analyze Outcomes" button that triggers MC simulation + scoring
-  - [ ] 2.5: Render point outcome summary metrics (min, max, median, mean, percentiles, std) via `st.metric` cards
-  - [ ] 2.6: Render score distribution histogram via `plot_score_distribution()`
-  - [ ] 2.7: Add "Generate Submission" download button via `st.download_button()` with CSV export
-  - [ ] 2.8: Handle empty states (no model, no seeds, no MC data)
+- [x] Task 2: Build the Pool Scorer page in `dashboard/pages/4_Pool_Scorer.py` (AC: #1-6)
+  - [x] 2.1: Replace placeholder with full page implementation
+  - [x] 2.2: Add breadcrumb navigation matching existing pages (`Home > Presentation > Pool Scorer`)
+  - [x] 2.3: Add custom scoring rule input (6 `st.number_input` fields for per-round points)
+  - [x] 2.4: Add "Analyze Outcomes" button that triggers MC simulation + scoring
+  - [x] 2.5: Render point outcome summary metrics (min, max, median, mean, percentiles, std) via `st.metric` cards
+  - [x] 2.6: Render score distribution histogram via `plot_score_distribution()`
+  - [x] 2.7: Add "Generate Submission" download button via `st.download_button()` with CSV export
+  - [x] 2.8: Handle empty states (no model, no seeds, no MC data)
 - [ ] Task 3: Write tests (AC: all)
   - [ ] 3.1: Unit tests for `score_chosen_bracket()` (mock sim_data, validate distribution output)
   - [ ] 3.2: Unit tests for `build_custom_scoring()` (validate DictScoring wrapping)
@@ -231,8 +231,10 @@ Claude Opus 4.6
 ### Completion Notes List
 
 - Task 1: Added `score_chosen_bracket()`, `build_custom_scoring()`, `export_bracket_csv()`, and `_game_win_probability()` helper to `dashboard/lib/filters.py`. All 7 new unit tests pass. Added imports for `BracketDistribution`, `DictScoring`, `compute_bracket_distribution`, `score_bracket_against_sims` from simulation module.
+- Task 2: Replaced Pool Scorer placeholder with full page implementation. Breadcrumbs, custom scoring config (6 number inputs), MC simulation with spinner, outcome summary metrics (9 st.metric cards), score distribution histogram via plot_score_distribution(), CSV download button, and empty state handling. Refactored into `_render_scoring_config()`, `_run_simulation()`, `_render_results()`, `_render_outcome_summary()`, `_render_distribution_chart()` for C901 compliance.
 
 ### File List
 
 - `dashboard/lib/filters.py` — added 3 Pool Scorer helper functions + internal `_game_win_probability` helper
+- `dashboard/pages/4_Pool_Scorer.py` — replaced placeholder with full Pool Scorer page implementation
 - `tests/unit/test_dashboard_filters.py` — added 7 tests for new helpers (TestScoreChosenBracket, TestBuildCustomScoring, TestExportBracketCsv)
