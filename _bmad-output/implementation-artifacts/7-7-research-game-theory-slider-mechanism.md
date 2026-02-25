@@ -244,10 +244,23 @@ Claude Opus 4.6
 - [L3 FIXED] Seed prior limitation note added to Section 8.5 (later-round matchups use coarse 8v9 approximation for top-seed pairs)
 - [L4 FIXED] PO approval gate added to Section 3.4 for the two-slider vs three-slider UX spec change recommendation
 
+### Senior Developer Review #2 (AI)
+
+**Reviewer:** Claude Sonnet 4.6 (Code Review Agent)
+**Date:** 2026-02-24
+**Outcome:** ✅ APPROVED — status remains done; 1 High + 2 Medium + 1 Low issues fixed in-place
+
+**Issues Fixed (4 total — 1 High, 2 Medium, 1 Low):**
+- [H1 FIXED] Section 6.2 three-slider Chalk Bias formula: condition changed from `seed_i ≤ seed_threshold` to `min(seed_i, seed_j) ≤ seed_threshold`; added complementarity enforcement (`p_temp[j,i] = 1 - p_temp[i,j]`) and explicit warning note. Previous formula would produce P[i,j] + P[j,i] ≠ 1 for top-seeded matchups.
+- [M1 FIXED] Section 5.4 factual numerical error: "T=0.3 makes a 65% favorite into ~78%" corrected to "T≈0.315 makes a 65% favorite into ~89%". The ~78% value actually corresponds to T=0.5 (verified from Table 4.2).
+- [M2 FIXED] Section 8.5 interpolation: replaced vague "interpolate linearly between known points" with an explicit formula and worked example for even seed differences not present in FIRST_ROUND_SEED_PRIORS.
+- [L1 FIXED] Section 6.1 table: T_min standardized from "0.31" to "0.315" (consistent with actual `2^(-5/3) ≈ 0.315`).
+
 ### Change Log
 
 - 2026-02-24: Created spike research document — all 5 tasks complete, all 4 ACs satisfied
-- 2026-02-24: Code review complete — 6 issues fixed; status set to done
+- 2026-02-24: Code review #1 complete — 6 issues fixed; status set to done
+- 2026-02-24: Code review #2 complete — 4 issues fixed (1 High, 2 Medium, 1 Low); status remains done
 
 ### File List
 

@@ -370,7 +370,7 @@ Seed blend CAN move a 50-50 game toward the seed prior, which is correct behavio
 - `p' → 0.5` for all `p ∈ (0, 1)`
 - Every game becomes a coin flip
 
-**Practical bounds:** T should be bounded to [0.3, 3.2] via the slider range [-5, +5] with mapping `T = 2^(v/3)`. Even T=3.2 makes a 99% favorite drop to ~80% (well into chaos territory). T=0.3 makes a 65% favorite into ~78% (strong chalk).
+**Practical bounds:** T should be bounded to [0.3, 3.2] via the slider range [-5, +5] with mapping `T = 2^(v/3)`. Even T=3.2 makes a 99% favorite drop to ~80% (well into chaos territory). T≈0.315 (slider=-5) makes a 65% favorite into ~89% (strong chalk).
 
 ### 5.5 Extreme Seed Weight Values
 
@@ -413,7 +413,7 @@ Seed blend CAN move a 50-50 game toward the seed prior, which is correct behavio
 
 | Slider | T | Interpretation |
 |-------:|----:|:---|
-| -5 | 0.31 | Extreme chalk — near-deterministic bracket |
+| -5 | 0.315 | Extreme chalk — near-deterministic bracket |
 | -3 | 0.50 | Strong chalk — favorites heavily reinforced |
 | -1 | 0.79 | Slight chalk — mild favorite reinforcement |
 | 0 | 1.00 | Neutral — model probabilities unchanged |
@@ -472,13 +472,16 @@ If the UX requires three distinct sliders (preserving the original spec), the th
 ```
 seed_threshold = max(1, 5 - chalk_bias_value)  # slider=0 → threshold=5, slider=5 → threshold=1 (never reaches 0 due to max)
 
-For each matchup (i, j) where seed_i ≤ seed_threshold:
+For each matchup (i, j) where min(seed_i, seed_j) ≤ seed_threshold:
   T_effective = T * 2^(-chalk_bias_value / 3)   # reduces temperature for protected matchups
   p_temp[i,j] = power_transform(p[i,j], T_effective)
+  p_temp[j,i] = 1 - p_temp[i,j]   # CRITICAL: enforce complementarity using the SAME T_effective
 
-For other matchups:
+For other matchups (i, j) where min(seed_i, seed_j) > seed_threshold:
   p_temp[i,j] = power_transform(p[i,j], T)       # standard temperature
 ```
+
+> **⚠️ Complementarity note:** The condition `min(seed_i, seed_j) ≤ seed_threshold` is applied to the MATCHUP as a whole (both matrix entries at once), not to individual cells independently. If you apply `T_effective` to `p_temp[i,j]` but `T` to `p_temp[j,i]` separately, you will get `P'[i,j] + P'[j,i] ≠ 1`, breaking the probability constraint. Always set `p_temp[j,i] = 1 - p_temp[i,j]` explicitly when applying a per-matchup T_effective.
 
 This makes Chalk Bias genuinely independent — it selectively protects top seeds from upset perturbation without affecting mid-seed or low-seed games.
 
@@ -639,9 +642,13 @@ FIRST_ROUND_SEED_PRIORS: dict[int, float] = {
 
 For later-round matchups with arbitrary seed pairings:
 - Compute `seed_diff = |seed_a - seed_b|`
-- Look up the closest known prior from the table
 - If `seed_diff = 0` (same seed), use `0.5`
-- For seed differences not in the table, interpolate linearly between known points
+- If `seed_diff` is in the table (odd values 1, 3, 5, 7, 9, 11, 13, 15), use directly
+- For seed differences NOT in the table (even values 2, 4, 6, 8, 10, 12, 14):
+  - Find the nearest lower and upper tabulated values `d_low < seed_diff < d_high`
+  - Linear interpolation: `p = prior[d_low] + (seed_diff - d_low) / (d_high - d_low) * (prior[d_high] - prior[d_low])`
+  - Example: seed_diff=2 → between d_low=1 (0.521) and d_high=3 (0.604): `0.521 + 1/2 * 0.083 = 0.5625`
+- For `seed_diff > 15` (impossible in a 1-16 seeded bracket, but guard against bad input): clamp to prior[15]=0.993
 
 **Limitation:** This seed_diff-based approximation performs best for first-round matchups. For later-round games between top seeds (e.g., a 1-seed vs. 2-seed Elite Eight matchup with seed_diff=1), the lookup returns the 8v9 first-round rate (52.1%), which understates how similar top-seeds actually are as opponents. Implementors should treat the seed prior as a coarse anchor, not a precise historical estimate, for non-first-round matchups.
 
