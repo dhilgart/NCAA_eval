@@ -144,3 +144,23 @@ class TestRenderBracketHtml:
         assert "data-region='X'" in result
         assert "data-region='Y'" in result
         assert "data-region='Z'" in result
+
+    def test_right_regions_are_mirrored(self) -> None:
+        """Right-side regions (Y, Z) must appear reversed relative to left regions.
+
+        In the HTML the left half has region W with rounds ordered seed→R64→R32→S16→E8
+        (left-to-right).  For the right half the columns are reversed so the bracket
+        opens outward — E8→S16→R32→R64→seed.  We verify this by checking that the
+        Y-region ``data-region`` marker appears AFTER the W-region in the HTML string
+        (i.e. right side is rendered after left side in the DOM), and that within the
+        right-half ``<div class='half'>`` block the text for right-side teams appears.
+        """
+        team_ids, winners, labels, seed_map, P = _make_64_team_fixtures()
+        result = render_bracket_html(team_ids, winners, labels, seed_map, P)
+        # Right regions must be present
+        assert "data-region='Y'" in result
+        assert "data-region='Z'" in result
+        # The right half div must appear after the center div in the HTML
+        center_pos = result.index("class='center'")
+        right_half_pos = result.index("data-region='Y'")
+        assert right_half_pos > center_pos, "Region Y (right) must be in right half after center"

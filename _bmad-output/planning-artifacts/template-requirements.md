@@ -2822,3 +2822,76 @@ assert "year" in fold_preds.columns
 expected_cols = {"year", "game_id", "team_a_id", "team_b_id", "pred_win_prob", "team_a_won"}
 assert expected_cols.issubset(set(fold_preds.columns)), f"Missing: {expected_cols - set(fold_preds.columns)}"
 ```
+
+### Never Populate a Numpy Matrix Using `DataFrame.iterrows()` — Use Vectorized Indexing (Discovered Story 7.5 Code Review, 2026-02-24)
+
+Building a pairwise probability matrix from a DataFrame row-by-row with `iterrows()` violates the Style Guide's hard "vectorization first" rule (Section 5). With 1,000+ prediction rows per season this is also measurably slow.
+
+**Correct vectorized pattern** (uses `.map()` + array indexing):
+
+```python
+# ❌ Banned — iterrows() over DataFrame
+for _, row in tourney_preds.iterrows():
+    i = bracket.team_index_map[int(row["team_a_id"])]
+    j = bracket.team_index_map[int(row["team_b_id"])]
+    P[i, j] = float(row["pred_win_prob"])
+    P[j, i] = 1.0 - float(row["pred_win_prob"])
+
+# ✅ Vectorized — .map() produces a Series of indices; notna() filters non-bracket teams
+a_indices = tourney_preds["team_a_id"].map(bracket.team_index_map)
+b_indices = tourney_preds["team_b_id"].map(bracket.team_index_map)
+valid = a_indices.notna() & b_indices.notna()
+a_valid = a_indices[valid].astype(int).to_numpy()
+b_valid = b_indices[valid].astype(int).to_numpy()
+probs = tourney_preds.loc[valid, "pred_win_prob"].to_numpy(dtype=np.float64)
+P[a_valid, b_valid] = probs
+P[b_valid, a_valid] = 1.0 - probs
+```
+
+### `@st.cache_resource` vs `@st.cache_data` — Use `cache_data` for Serializable Outputs (Discovered Story 7.5 Code Review, 2026-02-24)
+
+`@st.cache_resource` is designed for non-serializable global resources (database connections, ML models loaded from disk). It returns the **same object reference** to all users/sessions — meaning mutations are shared across concurrent users.
+
+`@st.cache_data` serializes the return value (via pickle) and returns a **new copy** per caller — safe for dataclasses and numpy arrays.
+
+**Rule**: Use `@st.cache_data` for functions that return plain data (DataFrames, dataclasses, dicts, numpy arrays). Only use `@st.cache_resource` for true global resources that cannot be pickled.
+
+```python
+# ❌ Wrong — cache_resource for a serializable result dataclass
+@st.cache_resource(ttl=None)
+def run_bracket_simulation(...) -> BracketSimulationResult | None: ...
+
+# ✅ Correct — cache_data for serializable dataclass output
+@st.cache_data(ttl=None)
+def run_bracket_simulation(...) -> BracketSimulationResult | None: ...
+```
+
+### Use `inspect.signature(cls)` Not `inspect.signature(cls.__init__)` for Class Constructor Inspection (Discovered Story 7.5 Code Review, 2026-02-24)
+
+To detect whether a class constructor requires specific arguments (avoiding hardcoded `if class_name == "foo"` checks), use `inspect.signature(cls)` directly — not `inspect.signature(cls.__init__)`. Mypy rejects the `.__init__` form with `[misc]: Accessing "__init__" on an instance is unsound`.
+
+```python
+# ❌ Mypy error: Accessing "__init__" on an instance is unsound [misc]
+sig = inspect.signature(scoring_cls.__init__)
+
+# ✅ Correct — inspect the class itself
+sig = inspect.signature(scoring_cls)
+if "seed_map" in sig.parameters:
+    rule = scoring_cls(seed_map=bracket.seed_map)
+else:
+    rule = scoring_cls()
+```
+
+### Streamlit Page Tests: Use `side_effect` for Multi-Call `selectbox` Mocks (Discovered Story 7.5 Code Review, 2026-02-24)
+
+When a Streamlit page calls `st.selectbox` multiple times (e.g., simulation method selector AND pairwise team selectors), a single `mock_st.selectbox.return_value = "some_value"` will return the same value for all calls. This causes type errors when the second selectbox expects a team label but receives `"analytical"`.
+
+**Pattern**: Use `side_effect` to return appropriate values per call:
+
+```python
+# ❌ All calls return "analytical" — breaks pairwise team selectors
+mock_st.selectbox.return_value = "analytical"
+
+# ✅ Each call returns the expected type
+mock_st.selectbox.side_effect = ["analytical", "[1] Duke", "[16] Norfolk St"]
+```

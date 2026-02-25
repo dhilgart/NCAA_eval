@@ -161,7 +161,8 @@ class TestSuccessfulRender:
             "bracket_sim_method": "analytical",
         }
         mock_st.columns.return_value = [MagicMock(), MagicMock()]
-        mock_st.selectbox.return_value = "analytical"
+        # First selectbox call = simulation method, subsequent = pairwise team selectors
+        mock_st.selectbox.side_effect = ["analytical", "[1] Duke", "[16] Norfolk St"]
 
         sim_data = _make_sim_data()
         mock_heatmap = MagicMock()

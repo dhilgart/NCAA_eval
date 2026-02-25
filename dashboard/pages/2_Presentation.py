@@ -52,6 +52,33 @@ def _render_results(sim_data: BracketSimulationResult, scoring: str) -> None:
     fig_heatmap = plot_advancement_heatmap(result, team_labels=sim_data.team_labels)
     st.plotly_chart(fig_heatmap, use_container_width=True)
 
+    # Team Detail Expansion — pairwise win probabilities (AC #5)
+    with st.expander("Pairwise Win Probabilities", expanded=False):
+        st.caption("Select two teams to see the head-to-head win probability and seed matchup.")
+        team_options = [sim_data.team_labels[i] for i in range(len(bracket.team_ids))]
+        col_a, col_b = st.columns(2)
+        with col_a:
+            team_a_label = st.selectbox("Team A", options=team_options, key="pairwise_team_a")
+        with col_b:
+            team_b_label = st.selectbox(
+                "Team B",
+                options=[t for t in team_options if t != team_a_label],
+                key="pairwise_team_b",
+            )
+        if team_a_label and team_b_label:
+            idx_a = team_options.index(team_a_label)
+            idx_b = team_options.index(team_b_label)
+            tid_a = bracket.team_ids[idx_a]
+            tid_b = bracket.team_ids[idx_b]
+            seed_a = bracket.seed_map.get(tid_a, 0)
+            seed_b = bracket.seed_map.get(tid_b, 0)
+            prob_a_beats_b = float(sim_data.prob_matrix[idx_a, idx_b])
+            st.metric(
+                label=f"{team_a_label} (#{seed_a}) vs {team_b_label} (#{seed_b})",
+                value=f"{prob_a_beats_b:.1%}",
+                delta=f"{prob_a_beats_b - 0.5:+.1%} vs. 50%",
+            )
+
     # Expected points table
     st.subheader(f"Expected Points ({scoring})")
     if scoring in result.expected_points:
@@ -61,7 +88,7 @@ def _render_results(sim_data: BracketSimulationResult, scoring: str) -> None:
             team_id = bracket.team_ids[idx]
             label = sim_data.team_labels.get(idx, str(team_id))
             ep_data.append({"Team": label, "Expected Points": round(float(ep[idx]), 2)})
-        ep_data.sort(key=lambda d: float(str(d["Expected Points"])), reverse=True)
+        ep_data.sort(key=lambda d: float(d["Expected Points"]), reverse=True)  # type: ignore[arg-type]
         st.dataframe(ep_data, use_container_width=True, height=400)
     else:
         st.info("Expected points not available for the selected scoring rule.")

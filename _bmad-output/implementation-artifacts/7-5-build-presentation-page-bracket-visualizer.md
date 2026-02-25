@@ -1,6 +1,6 @@
 # Story 7.5: Build Presentation Page — Bracket Visualizer
 
-Status: review
+Status: done
 
 ## Story
 
@@ -49,7 +49,18 @@ so that I can visually inspect the full 64-team tournament bracket and identify 
 - [x] Task 5: Verify quality gates (AC: all)
   - [x] 5.1: `mypy --strict src/ncaa_eval tests dashboard` — 0 errors (93 files)
   - [x] 5.2: `ruff check .` — all modified files pass
-  - [x] 5.3: `pytest` — 836 passed, 1 skipped
+  - [x] 5.3: `pytest` — 848 passed, 1 skipped (12 new tests from code review)
+
+#### Review Follow-ups (AI) — Applied by Code Review
+- [x] [AI-Review][HIGH] `_build_provider_from_folds` used `iterrows()` — replaced with vectorized `.map()` + numpy indexing [dashboard/lib/filters.py:328]
+- [x] [AI-Review][HIGH] AC #5 (Team Detail Expansion) not implemented — added pairwise win probability expander to `_render_results()` [dashboard/pages/2_Presentation.py]
+- [x] [AI-Review][MEDIUM] `run_bracket_simulation`, `_build_provider_from_folds`, `_build_team_labels` had zero unit tests — added 12 new tests [tests/unit/test_dashboard_filters.py]
+- [x] [AI-Review][MEDIUM] Magic number `136` (day_num) — extracted to `_ROUND_OF_64_DAY_NUM` constant [dashboard/lib/filters.py]
+- [x] [AI-Review][MEDIUM] Hardcoded `"seed_diff_bonus"` string check for scoring constructor — replaced with `inspect.signature(cls)` [dashboard/lib/filters.py]
+- [x] [AI-Review][MEDIUM] `@st.cache_resource` used for serializable `BracketSimulationResult` — changed to `@st.cache_data` [dashboard/lib/filters.py]
+- [x] [AI-Review][LOW] Double-cast `float(str(d["Expected Points"]))` in EP table sort — simplified to `float(d["Expected Points"])` [dashboard/pages/2_Presentation.py]
+- [x] [AI-Review][LOW] Module docstring claimed all functions use `@st.cache_data` — updated to reflect `@st.cache_data` usage [dashboard/lib/filters.py]
+- [x] [AI-Review][LOW] No test for mirrored right-region layout — added `test_right_regions_are_mirrored` [tests/unit/test_bracket_renderer.py]
 
 ## Dev Notes
 
@@ -200,12 +211,14 @@ Claude Opus 4.6
 
 ### Completion Notes List
 
-- Used `@st.cache_resource(ttl=None)` instead of `@st.cache_data` for simulation results — numpy arrays and nested dataclasses are cheaper with resource caching (avoids pickle/hash overhead)
-- For XGBoost models, builds `MatrixProvider` from `fold_predictions.parquet` filtered to tournament season — avoids re-running full feature pipeline in dashboard
+- Used `@st.cache_data(ttl=None)` for simulation results — correct decorator for serializable dataclass outputs (code review corrected the original `@st.cache_resource` choice)
+- For XGBoost models, builds `MatrixProvider` from `fold_predictions.parquet` filtered to tournament season — avoids re-running full feature pipeline in dashboard; matrix fill uses vectorized `.map()` + numpy indexing (no `iterrows()`)
 - Bracket renderer uses 64-team hardcoded layout (6 rounds) matching NCAA tournament structure — not generalized for arbitrary bracket sizes
 - HTML escaping applied to all team labels to prevent XSS via crafted team names
 - Extracted `_render_results()` from `_render_bracket_page()` to keep complexity under C901 threshold
 - Extracted `_build_provider_from_folds()` and `_build_team_labels()` helpers from `run_bracket_simulation()` for same reason
+- Scoring instantiation uses `inspect.signature(cls)` to detect `seed_map` parameter — avoids hardcoded `if scoring_name == "seed_diff_bonus"` check
+- AC #5 pairwise win probability expander added to `_render_results()` — selectbox pair lets user choose any two teams and see head-to-head probability
 
 ### File List
 

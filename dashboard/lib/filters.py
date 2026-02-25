@@ -1,12 +1,14 @@
 """Shared data-loading and filter helpers for the dashboard.
 
 All data access goes through ``ncaa_eval`` public APIs — no direct file IO.
-Functions are decorated with ``@st.cache_data`` so repeated calls across page
-navigations hit the in-memory cache.
+Most functions are decorated with ``@st.cache_data`` so repeated calls across
+page navigations hit the in-memory cache.  ``run_bracket_simulation`` uses
+``@st.cache_data`` as well, since its outputs are serializable dataclasses.
 """
 
 from __future__ import annotations
 
+import inspect
 import logging
 from dataclasses import dataclass
 from pathlib import Path
@@ -36,6 +38,10 @@ from ncaa_eval.model.tracking import RunStore
 from ncaa_eval.transform.normalization import TourneySeedTable
 
 logger = logging.getLogger(__name__)
+
+# Kaggle day-number for the Round of 64 (first day of the NCAA tournament).
+# Used as the MatchupContext day_num when running bracket simulations.
+_ROUND_OF_64_DAY_NUM: int = 136
 
 
 def get_data_dir() -> Path:
@@ -325,15 +331,16 @@ def _build_provider_from_folds(
 
     n = len(bracket.team_ids)
     P = np.full((n, n), 0.5, dtype=np.float64)
-    for _, row in tourney_preds.iterrows():
-        a_id = int(row["team_a_id"])
-        b_id = int(row["team_b_id"])
-        if a_id in bracket.team_index_map and b_id in bracket.team_index_map:
-            i = bracket.team_index_map[a_id]
-            j = bracket.team_index_map[b_id]
-            prob = float(row["pred_win_prob"])
-            P[i, j] = prob
-            P[j, i] = 1.0 - prob
+
+    # Vectorized matrix fill: map team IDs to bracket indices, then assign
+    a_indices = tourney_preds["team_a_id"].map(bracket.team_index_map)
+    b_indices = tourney_preds["team_b_id"].map(bracket.team_index_map)
+    valid = a_indices.notna() & b_indices.notna()
+    a_valid = a_indices[valid].astype(int).to_numpy()
+    b_valid = b_indices[valid].astype(int).to_numpy()
+    probs = tourney_preds.loc[valid, "pred_win_prob"].to_numpy(dtype=np.float64)
+    P[a_valid, b_valid] = probs
+    P[b_valid, a_valid] = 1.0 - probs
     return MatrixProvider(P, list(bracket.team_ids))
 
 
@@ -351,7 +358,7 @@ def _build_team_labels(
     return labels
 
 
-@st.cache_resource(ttl=None)
+@st.cache_data(ttl=None)
 def run_bracket_simulation(  # noqa: PLR0913
     data_dir: str,
     run_id: str,
@@ -410,12 +417,17 @@ def run_bracket_simulation(  # noqa: PLR0913
 
         team_labels = _build_team_labels(data_dir, bracket)
 
-        # Get scoring rule
+        # Get scoring rule — detect constructor needs via inspection to avoid
+        # hardcoded name checks when new scoring rules are added in future.
         scoring_cls = get_scoring(scoring_name)
-        scoring_rule = scoring_cls(bracket.seed_map) if scoring_name == "seed_diff_bonus" else scoring_cls()
+        sig = inspect.signature(scoring_cls)
+        if "seed_map" in sig.parameters:
+            scoring_rule = scoring_cls(bracket.seed_map)
+        else:
+            scoring_rule = scoring_cls()
 
-        # Context for tournament games (neutral site, day 136 = R64)
-        context = MatchupContext(season=season, day_num=136, is_neutral=True)
+        # Context for tournament games (neutral site, R64 tip-off day)
+        context = MatchupContext(season=season, day_num=_ROUND_OF_64_DAY_NUM, is_neutral=True)
 
         sim_result = simulate_tournament(
             bracket=bracket,
