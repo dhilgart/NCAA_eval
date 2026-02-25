@@ -1,5 +1,5 @@
-ncaa\_eval.utils package
-========================
+ncaa\_eval.cli package
+======================
 
 Submodules
 ----------
@@ -7,12 +7,13 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   ncaa_eval.utils.logger
+   ncaa_eval.cli.main
+   ncaa_eval.cli.train
 
 Module contents
 ---------------
 
-.. automodule:: ncaa_eval.utils
+.. automodule:: ncaa_eval.cli
    :members:
    :show-inheritance:
    :undoc-members:

@@ -7,7 +7,7 @@
 
 ## Getting Started
 
-This guide picks up where the [README](../README.md) left off.
+This guide picks up where the `README.md` (project root) left off.
 Once you have installed the project and synced data, the typical workflow is:
 
 1. **Sync data** — download NCAA game results from Kaggle (and optionally ESPN):
@@ -231,7 +231,10 @@ Models register themselves via the `@register_model("name")` decorator.  To crea
 a custom model:
 
 1. Subclass `Model` (stateless) or `StatefulModel` (stateful)
-2. Implement the required methods: `fit`, `predict_proba`, `save`, `load`, `get_config`
+2. Implement the required methods:
+   - **Stateless (`Model`):** `fit`, `predict_proba`, `save`, `load`, `get_config`
+   - **Stateful (`StatefulModel`):** `update`, `start_season`, `get_state`, `set_state`,
+     `save`, `load`, `get_config` — `fit` and `predict_proba` are provided by the template
 3. Decorate with `@register_model("my_model")`
 4. Import the module before training so the decorator fires
 
