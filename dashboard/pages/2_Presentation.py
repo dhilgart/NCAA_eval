@@ -83,12 +83,12 @@ def _render_results(sim_data: BracketSimulationResult, scoring: str) -> None:
     st.subheader(f"Expected Points ({scoring})")
     if scoring in result.expected_points:
         ep = result.expected_points[scoring]
-        ep_data: list[dict[str, object]] = []
+        ep_data: list[dict[str, str | float]] = []
         for idx in range(len(bracket.team_ids)):
             team_id = bracket.team_ids[idx]
             label = sim_data.team_labels.get(idx, str(team_id))
             ep_data.append({"Team": label, "Expected Points": round(float(ep[idx]), 2)})
-        ep_data.sort(key=lambda d: float(d["Expected Points"]), reverse=True)  # type: ignore[arg-type]
+        ep_data.sort(key=lambda d: float(d["Expected Points"]), reverse=True)
         st.dataframe(ep_data, use_container_width=True, height=400)
     else:
         st.info("Expected points not available for the selected scoring rule.")
@@ -100,6 +100,8 @@ def _render_results(sim_data: BracketSimulationResult, scoring: str) -> None:
             dist = result.bracket_distributions[scoring]
             fig_dist = plot_score_distribution(dist, title=f"Bracket Score Distribution — {scoring}")
             st.plotly_chart(fig_dist, use_container_width=True)
+        else:
+            st.info(f"Score distribution not available for scoring rule '{scoring}'.")
 
 
 def _render_bracket_page() -> None:

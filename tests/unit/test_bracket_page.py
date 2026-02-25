@@ -191,3 +191,127 @@ class TestSuccessfulRender:
 
         # Should render EP dataframe
         mock_st.dataframe.assert_called()
+
+        # Should render pairwise win probability expander (AC #5)
+        mock_st.expander.assert_called()
+        expander_title = mock_st.expander.call_args[0][0]
+        assert "Pairwise" in expander_title
+
+
+class TestMCModeRender:
+    """Verify AC #4: Monte Carlo score distribution renders correctly."""
+
+    def _make_mc_sim_data(self) -> _FakeBracketSimResult:
+        """Create a simulation result fixture with MC mode outputs."""
+        n = 4
+        adv = np.ones((n, 2), dtype=np.float64) * 0.5
+        ep = np.array([10.0, 5.0, 8.0, 3.0])
+        P = np.full((n, n), 0.5)
+        np.fill_diagonal(P, 0.0)
+        mock_dist = MagicMock()
+        return _FakeBracketSimResult(
+            sim_result=_FakeSimResult(
+                advancement_probs=adv,
+                expected_points={"standard": ep},
+                method="monte_carlo",
+                bracket_distributions={"standard": mock_dist},
+            ),
+            bracket=_FakeBracket(
+                team_ids=(100, 200, 300, 400),
+                team_index_map={100: 0, 200: 1, 300: 2, 400: 3},
+                seed_map={100: 1, 200: 16, 300: 1, 400: 16},
+            ),
+            most_likely=_FakeMostLikely(
+                winners=(0, 2, 0),
+                champion_team_id=100,
+                log_likelihood=-1.5,
+            ),
+            prob_matrix=P,
+            team_labels={0: "[1] Duke", 1: "[16] Norfolk St", 2: "[1] UConn", 3: "[16] Wagner"},
+        )
+
+    def test_mc_renders_score_distribution(self) -> None:
+        mock_st = MagicMock()
+        mock_st.session_state = {
+            "selected_run_id": "abc123",
+            "selected_year": 2023,
+            "selected_scoring": "standard",
+        }
+        mock_st.columns.return_value = [MagicMock(), MagicMock()]
+        mock_st.selectbox.side_effect = ["monte_carlo", "[1] Duke", "[16] Norfolk St"]
+
+        sim_data = self._make_mc_sim_data()
+        mock_dist_fig = MagicMock()
+        mock_components = MagicMock()
+        mock_plot_score = MagicMock(return_value=mock_dist_fig)
+
+        with (
+            patch.object(_page_mod, "st", mock_st),
+            patch.object(_page_mod, "components", mock_components),
+            patch.object(_page_mod, "get_data_dir", return_value="/fake/data"),
+            patch.object(_page_mod, "load_tourney_seeds", return_value=[{"seed": "W01"}]),
+            patch.object(_page_mod, "run_bracket_simulation", return_value=sim_data),
+            patch.object(_page_mod, "render_bracket_html", return_value="<html></html>"),
+            patch.object(_page_mod, "plot_advancement_heatmap", return_value=MagicMock()),
+            patch.object(_page_mod, "plot_score_distribution", mock_plot_score),
+        ):
+            _page_mod._render_bracket_page()
+
+        # Score distribution chart must be rendered via plotly_chart
+        mock_st.plotly_chart.assert_called()
+        # plot_score_distribution must have been called (AC #4)
+        mock_plot_score.assert_called_once()
+
+    def test_mc_missing_scoring_key_shows_info(self) -> None:
+        """When bracket_distributions lacks the scoring key, st.info is shown (L2 fix)."""
+        mock_st = MagicMock()
+        mock_st.session_state = {
+            "selected_run_id": "abc123",
+            "selected_year": 2023,
+            "selected_scoring": "fibonacci",  # not in bracket_distributions
+        }
+        mock_st.columns.return_value = [MagicMock(), MagicMock()]
+        mock_st.selectbox.side_effect = ["monte_carlo", "[1] Duke", "[16] Norfolk St"]
+
+        # MC result but bracket_distributions only has "standard", not "fibonacci"
+        n = 4
+        adv = np.ones((n, 2), dtype=np.float64) * 0.5
+        ep = np.array([10.0, 5.0, 8.0, 3.0])
+        P = np.full((n, n), 0.5)
+        np.fill_diagonal(P, 0.0)
+        sim_data = _FakeBracketSimResult(
+            sim_result=_FakeSimResult(
+                advancement_probs=adv,
+                expected_points={"fibonacci": ep},
+                method="monte_carlo",
+                bracket_distributions={"standard": MagicMock()},  # fibonacci missing
+            ),
+            bracket=_FakeBracket(
+                team_ids=(100, 200, 300, 400),
+                team_index_map={100: 0, 200: 1, 300: 2, 400: 3},
+                seed_map={100: 1, 200: 16, 300: 1, 400: 16},
+            ),
+            most_likely=_FakeMostLikely(
+                winners=(0, 2, 0),
+                champion_team_id=100,
+                log_likelihood=-1.5,
+            ),
+            prob_matrix=P,
+            team_labels={0: "[1] Duke", 1: "[16] Norfolk St", 2: "[1] UConn", 3: "[16] Wagner"},
+        )
+
+        with (
+            patch.object(_page_mod, "st", mock_st),
+            patch.object(_page_mod, "components", MagicMock()),
+            patch.object(_page_mod, "get_data_dir", return_value="/fake/data"),
+            patch.object(_page_mod, "load_tourney_seeds", return_value=[{"seed": "W01"}]),
+            patch.object(_page_mod, "run_bracket_simulation", return_value=sim_data),
+            patch.object(_page_mod, "render_bracket_html", return_value="<html></html>"),
+            patch.object(_page_mod, "plot_advancement_heatmap", return_value=MagicMock()),
+        ):
+            _page_mod._render_bracket_page()
+
+        # st.info must have been called for the missing scoring key in MC mode
+        mock_st.info.assert_called()
+        info_msgs = [call[0][0] for call in mock_st.info.call_args_list]
+        assert any("fibonacci" in msg for msg in info_msgs)

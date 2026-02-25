@@ -49,9 +49,9 @@ so that I can visually inspect the full 64-team tournament bracket and identify 
 - [x] Task 5: Verify quality gates (AC: all)
   - [x] 5.1: `mypy --strict src/ncaa_eval tests dashboard` — 0 errors (93 files)
   - [x] 5.2: `ruff check .` — all modified files pass
-  - [x] 5.3: `pytest` — 848 passed, 1 skipped (12 new tests from code review)
+  - [x] 5.3: `pytest` — 850 passed, 1 skipped (14 new tests from code review round 2)
 
-#### Review Follow-ups (AI) — Applied by Code Review
+#### Review Follow-ups (AI) — Applied by Code Review (Round 1)
 - [x] [AI-Review][HIGH] `_build_provider_from_folds` used `iterrows()` — replaced with vectorized `.map()` + numpy indexing [dashboard/lib/filters.py:328]
 - [x] [AI-Review][HIGH] AC #5 (Team Detail Expansion) not implemented — added pairwise win probability expander to `_render_results()` [dashboard/pages/2_Presentation.py]
 - [x] [AI-Review][MEDIUM] `run_bracket_simulation`, `_build_provider_from_folds`, `_build_team_labels` had zero unit tests — added 12 new tests [tests/unit/test_dashboard_filters.py]
@@ -61,6 +61,13 @@ so that I can visually inspect the full 64-team tournament bracket and identify 
 - [x] [AI-Review][LOW] Double-cast `float(str(d["Expected Points"]))` in EP table sort — simplified to `float(d["Expected Points"])` [dashboard/pages/2_Presentation.py]
 - [x] [AI-Review][LOW] Module docstring claimed all functions use `@st.cache_data` — updated to reflect `@st.cache_data` usage [dashboard/lib/filters.py]
 - [x] [AI-Review][LOW] No test for mirrored right-region layout — added `test_right_regions_are_mirrored` [tests/unit/test_bracket_renderer.py]
+
+#### Review Follow-ups (AI) — Applied by Code Review (Round 2)
+- [x] [AI-Review][HIGH] AC #4 (MC score distribution) had zero test coverage — added `TestMCModeRender` with 2 tests [tests/unit/test_bracket_page.py]
+- [x] [AI-Review][MEDIUM] `ep_data` typed as `dict[str, object]` required `type: ignore[arg-type]` on sort — changed annotation to `list[dict[str, str | float]]` [dashboard/pages/2_Presentation.py:86]
+- [x] [AI-Review][MEDIUM] AC #5 pairwise expander had no assertion in `TestSuccessfulRender` — added `mock_st.expander.assert_called()` check [tests/unit/test_bracket_page.py]
+- [x] [AI-Review][LOW] No user feedback when MC mode's scoring key absent from `bracket_distributions` — added `st.info()` message [dashboard/pages/2_Presentation.py:103]
+- [ ] [AI-Review][MEDIUM] `n_simulations` is a cache key for analytical mode causing spurious cache misses; `scoring_name` as cache key causes full re-simulation when switching scoring rules — architectural refactor (split cache into prob-matrix/bracket layer and scoring layer) deferred to future story
 
 ## Dev Notes
 
@@ -229,5 +236,7 @@ Claude Opus 4.6
 
 **Modified files:**
 - `dashboard/lib/filters.py` — added `load_tourney_seeds`, `load_team_names`, `BracketSimulationResult`, `run_bracket_simulation` + helpers
-- `dashboard/pages/2_Presentation.py` — replaced placeholder with full bracket visualizer implementation
+- `dashboard/pages/2_Presentation.py` — replaced placeholder with full bracket visualizer implementation; CR2 fixes: `ep_data` typing, MC missing-scoring feedback
 - `tests/unit/test_dashboard_filters.py` — added `TestLoadTourneySeeds` (3 tests) and `TestLoadTeamNames` (3 tests)
+- `tests/unit/test_bracket_page.py` — CR2: added `TestMCModeRender` (2 tests), expander assertion in `TestSuccessfulRender`
+- `_bmad-output/planning-artifacts/template-requirements.md` — added Story 7.5 template learnings

@@ -782,6 +782,21 @@ class MyModelConfig(BaseModel):
   - **Why this matters:** Research spikes are not "done" when the document is approved. The SM still needs to propagate the findings back into the epic AC structure before the next story can be created with correct context. Without this AC, the create-story workflow operates on stale story descriptions that don't reflect research findings.
   - **Who does the work:** SM agent — not the dev agent. This is a sprint planning/story maintenance task, not implementation. (Discovered: Story 4.1, 2026-02-21)
 
+**Story 7.5 - Bracket Visualizer Dashboard Page (2026-02-24 Code Review):**
+- ❌ **`@st.cache_data` key includes ALL parameters — normalize method-independent params before caching** — `run_bracket_simulation` accepted `n_simulations` as a cache key, but for `method="analytical"` this parameter is completely ignored. Switching the slider from 10k to 50k while in analytical mode creates two identical-result cache entries. **Template pattern: When a cached function has parameters that are irrelevant for some branches, use a public wrapper that normalizes before delegating to the private cached helper:**
+  ```python
+  def run_simulation(method: str, n_sims: int) -> Result:
+      # Normalize method-independent params before the cache sees them
+      _n_sims = n_sims if method == "monte_carlo" else 0
+      return _run_simulation_cached(method, _n_sims)
+
+  @st.cache_data(ttl=None)
+  def _run_simulation_cached(method: str, n_sims: int) -> Result: ...
+  ```
+  (Discovered: Story 7.5 Code Review, 2026-02-24)
+- ❌ **Dashboard page tests must cover ALL rendering branches — one `TestSuccessfulRender` is insufficient** — The initial `test_bracket_page.py` had one happy-path test (`TestSuccessfulRender`) using `method="analytical"`, leaving the entire MC mode branch (score distribution rendering, missing-scoring-key fallback) completely untested. **Template pattern: For Streamlit pages with conditional rendering branches, create a test class per distinct rendering mode: `TestAnalyticalRender`, `TestMCModeRender`, `TestMCMissingDataFallback`.** One test class per mode ensures all `if method == "..."` branches have assertion coverage. (Discovered: Story 7.5 Code Review, 2026-02-24)
+- ❌ **AC #5 "Team Detail Expansion" had no page-level test assertion** — The pairwise win probability expander was implemented and verified by code review, but `TestSuccessfulRender` never asserted `mock_st.expander.assert_called()`. **Template pattern: After a code review adds a new UI component as an AC fix, the reviewer must also add a corresponding assertion in the page test — do not assume existing tests cover the new code path.** (Discovered: Story 7.5 Code Review, 2026-02-24)
+
 **Story 6.6 - Tournament Scoring / Plugin Registry (2026-02-24):**
 - ⚠️ **Field naming pitfall — `_id` vs `_index`**: When a field name implies an external ID (e.g. `champion_team_id`) but actually stores an internal array index, tests using fixtures where index==ID (0,1,2…) will silently pass while production code with real IDs (1139, 2345) fails. Always name fields to match what they actually store, or convert to the external ID at construction time.
 - ✅ **Registry stores classes, not instances**: `get_scoring("seed_diff_bonus")` returns `SeedDiffBonusScoring` (a class). Callers must instantiate with required args. Add a round-trip test (`get_scoring(name)(args)`) for each registered class, especially those with required constructor arguments.
