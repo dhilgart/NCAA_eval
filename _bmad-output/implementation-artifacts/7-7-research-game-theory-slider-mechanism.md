@@ -1,6 +1,6 @@
 # Story 7.7: Research Game Theory Slider Mechanism
 
-Status: review
+Status: done
 
 ## Story
 
@@ -224,9 +224,30 @@ Claude Opus 4.6
 - **Task 4**: Documented pipeline insertion point (post-matrix, pre-analytical), re-render scope (bracket/heatmap/EP: yes; MC simulation: no), proposed `perturb_probability_matrix()` function signature with full type annotations, and proposed `src/ncaa_eval/evaluation/perturbation.py` module with helper functions.
 - **Task 5**: Wrote comprehensive 9-section spike research document at `specs/research/game-theory-slider-mechanism.md` with quick-navigation table, verified numerical examples, and full reference list.
 
+### Senior Developer Review (AI)
+
+**Reviewer:** Claude Sonnet 4.6 (Code Review Agent)
+**Date:** 2026-02-24
+**Outcome:** ✅ APPROVED — all ACs satisfied; 2 Medium + 4 Low issues fixed in-place
+
+**AC Validation:**
+- AC1 (≥3 candidates): ✅ 4 candidates evaluated on 7 criteria
+- AC2 (recommended approach + worked examples + edge cases): ✅ Hybrid power+blend; 4 matchups verified numerically; 7 edge cases analyzed
+- AC3 (slider ranges/defaults/neutrals for all 3): ✅ Section 6.1 (Upset Aggression, Seed-Weight) + Section 6.2 (Chalk Bias alternative)
+- AC4 (document committed to specs/research/): ✅ Committed in 18ab069
+
+**Issues Fixed (6 total — 0 Critical/High, 2 Medium, 4 Low):**
+- [M1 FIXED] Section 8.4 module outline corrected: `SEED_PRIOR_TABLE: dict[tuple,float]` → `FIRST_ROUND_SEED_PRIORS: dict[int, float]` (matches actual Section 8.5 code)
+- [M2 FIXED] Chalk Bias Section 6.2 comment corrected: `slider=5 → threshold=0` → `threshold=1` (max(1,5-5)=1 not 0); effect description updated to match formula
+- [L1 FIXED] Reference attribution corrected: "Clair & Letscher (2024)" → "Brown, Caro & Sullivan (2024)" for PMC11354004
+- [L2 FIXED] Slider naming aligned to UX spec: "Seed Weight" → "Seed-Weight" (hyphenated) in Section 6.1 heading and UI Label
+- [L3 FIXED] Seed prior limitation note added to Section 8.5 (later-round matchups use coarse 8v9 approximation for top-seed pairs)
+- [L4 FIXED] PO approval gate added to Section 3.4 for the two-slider vs three-slider UX spec change recommendation
+
 ### Change Log
 
 - 2026-02-24: Created spike research document — all 5 tasks complete, all 4 ACs satisfied
+- 2026-02-24: Code review complete — 6 issues fixed; status set to done
 
 ### File List
 

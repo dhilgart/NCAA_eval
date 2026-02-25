@@ -156,7 +156,7 @@ Where `lambda ∈ [0, 1]`:
 
 This is a special case of linear blend (Section 1.3) where the "prior" is always 0.5 (maximum entropy / uniform).
 
-**Source:** Inspired by Clair & Letscher (2024) entropy-based bracket optimization strategies, which use entropy as a diversity mechanism in multi-bracket pool strategies.
+**Source:** Inspired by Brown, Caro & Sullivan (2024) entropy-based bracket optimization strategies, which use entropy as a diversity mechanism in multi-bracket pool strategies. (Note: Clair & Letscher (2007) is a separate citation for pool strategy optimization; the 2024 PMC11354004 paper is Brown et al.)
 
 **Properties:**
 - Preserves (0, 1) range: convex combination with 0.5
@@ -259,6 +259,8 @@ The UX spec names three sliders: **Upset Aggression**, **Chalk Bias**, and **See
 **Recommendation:** Collapse Upset Aggression and Chalk Bias into a **single bidirectional slider** called "Upset Aggression" (or "Chalk ↔ Chaos"). The left end means "more chalk" (T < 1), the center means "no adjustment" (T = 1), and the right end means "more upsets" (T > 1).
 
 Keeping them as two separate sliders that inversely control the same parameter would be confusing — moving both simultaneously would cancel out, and the UI would have a redundant degree of freedom.
+
+> **⚠️ UX Spec Change Request:** The UX spec (04-front-end-spec.md §3.1, §4.1) defines three distinct sliders: Upset Aggression, Chalk Bias, and Seed-Weight. This spike recommends collapsing Chalk Bias into Upset Aggression (two sliders total). **This requires PO approval before the implementation story begins.** The three-slider alternative (Section 6.2) is fully specified as a fallback if the PO requires preserving all three sliders.
 
 **Alternative (if three sliders are required by UX):** Define Chalk Bias as a threshold-gated sharpener that only affects games where the favorite has seed ≤ N (e.g., top-4 seeds). This makes it genuinely independent from Upset Aggression but adds complexity. See Section 6.2 for this alternative specification.
 
@@ -425,11 +427,11 @@ The mapping `T = 2^(v/3)` is chosen because:
 - It avoids T=0 (which would be undefined)
 - Slider range of [-5, +5] covers the useful spectrum without hitting degenerate extremes
 
-#### Slider 2: Seed Weight
+#### Slider 2: Seed-Weight
 
 | Property | Value |
 |---|---|
-| **UI Label** | "Seed Weight" |
+| **UI Label** | "Seed-Weight" |
 | **Subtitle** | "Model ← → Seeds" |
 | **Range** | 0 to 100 (integer, displayed as %) |
 | **Default** | 0 |
@@ -464,11 +466,11 @@ If the UX requires three distinct sliders (preserving the original spec), the th
 | **Step** | 1 |
 | **Neutral value** | 0 (no extra chalk protection) |
 | **Mathematical mapping** | See below |
-| **Effect** | Applies additional sharpening ONLY to matchups where the favorite has seed ≤ (4 - slider_value). Higher values protect more seeds. |
+| **Effect** | Applies additional sharpening ONLY to matchups where the favorite has seed ≤ max(1, 5 - slider_value). Higher values protect more seeds. |
 
 **Formula for Chalk Bias (three-slider mode):**
 ```
-seed_threshold = max(1, 5 - chalk_bias_value)  # slider=0 → threshold=5, slider=5 → threshold=0
+seed_threshold = max(1, 5 - chalk_bias_value)  # slider=0 → threshold=5, slider=5 → threshold=1 (never reaches 0 due to max)
 
 For each matchup (i, j) where seed_i ≤ seed_threshold:
   T_effective = T * 2^(-chalk_bias_value / 3)   # reduces temperature for protected matchups
@@ -601,7 +603,7 @@ def perturb_probability_matrix(
 
 ```
 src/ncaa_eval/evaluation/perturbation.py    # NEW module
-├── SEED_PRIOR_TABLE: dict[tuple[int,int], float]   # Historical seed-vs-seed win rates
+├── FIRST_ROUND_SEED_PRIORS: dict[int, float]   # seed_diff → P(higher seed wins); historical win rates
 ├── build_seed_prior_matrix(seed_map, team_ids) → (n,n) float64
 ├── power_transform(P, temperature) → (n,n) float64
 ├── perturb_probability_matrix(P, seed_map, team_ids, temperature, seed_weight) → (n,n) float64
@@ -640,6 +642,8 @@ For later-round matchups with arbitrary seed pairings:
 - Look up the closest known prior from the table
 - If `seed_diff = 0` (same seed), use `0.5`
 - For seed differences not in the table, interpolate linearly between known points
+
+**Limitation:** This seed_diff-based approximation performs best for first-round matchups. For later-round games between top seeds (e.g., a 1-seed vs. 2-seed Elite Eight matchup with seed_diff=1), the lookup returns the 8v9 first-round rate (52.1%), which understates how similar top-seeds actually are as opponents. Implementors should treat the seed prior as a coarse anchor, not a precise historical estimate, for non-first-round matchups.
 
 ---
 

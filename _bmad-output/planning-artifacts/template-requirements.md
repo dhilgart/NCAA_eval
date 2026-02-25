@@ -2958,3 +2958,23 @@ def _render_outcome_summary(dist: BracketDistribution) -> None:
     min_score = float(dist.scores.min())
     fig = plot_score_distribution(dist, ...)  # no type: ignore needed
 ```
+
+### Research Spike: Flag UX Spec Divergences as PO-Gated Decisions (Discovered Story 7.7 Code Review, 2026-02-24)
+
+When a research spike recommends a design that diverges from the existing UX spec (e.g., collapsing three sliders into two), the research document must:
+1. **Explicitly mark the divergence** as a "UX Spec Change Request" — not just describe the recommendation
+2. **Gate implementation on PO approval** — the implementation story must not begin until the PO has approved the spec deviation
+3. **Document the fallback** — fully specify the original-spec approach so either path can be implemented
+
+**Anti-pattern:** Spike document recommends a spec deviation inline, without flagging it as a decision requiring approval. The implementation story inherits the recommendation as if it were settled, causing a UX regression when the implementor discovers the original spec required something different.
+
+**Pattern:** In the relevant section of the research document, add a callout:
+```
+> **⚠️ UX Spec Change Request:** This recommendation deviates from [spec reference].
+> Requires PO approval before the implementation story begins. See Section X.Y for the
+> original-spec-compliant alternative.
+```
+
+**Applies to:** Any spike story where research findings suggest deviating from an approved UX or architecture spec.
+
+*(Discovered: Story 7.7 Code Review — two-slider recommendation vs three-slider UX spec, 2026-02-24)*
