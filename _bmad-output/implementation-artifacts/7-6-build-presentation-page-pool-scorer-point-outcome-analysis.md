@@ -24,10 +24,10 @@ so that I can understand my bracket's scoring potential under different pool for
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add scoring helper functions to `dashboard/lib/filters.py` (AC: #1, #2, #6)
-  - [ ] 1.1: `score_chosen_bracket(sim_data, scoring_rules)` — calls `score_bracket_against_sims()` with the most-likely bracket's `winners` array against `sim_result.sim_winners`; returns `dict[str, BracketDistribution]`
-  - [ ] 1.2: `build_custom_scoring(points_per_round)` — wraps a 6-element tuple in `DictScoring` from `ncaa_eval.evaluation.simulation`
-  - [ ] 1.3: `export_bracket_csv(bracket, most_likely, team_labels, prob_matrix)` — builds CSV string from most-likely bracket picks for download
+- [x] Task 1: Add scoring helper functions to `dashboard/lib/filters.py` (AC: #1, #2, #6)
+  - [x] 1.1: `score_chosen_bracket(sim_data, scoring_rules)` — calls `score_bracket_against_sims()` with the most-likely bracket's `winners` array against `sim_result.sim_winners`; returns `dict[str, BracketDistribution]`
+  - [x] 1.2: `build_custom_scoring(points_per_round)` — wraps a 6-element tuple in `DictScoring` from `ncaa_eval.evaluation.simulation`
+  - [x] 1.3: `export_bracket_csv(bracket, most_likely, team_labels, prob_matrix)` — builds CSV string from most-likely bracket picks for download
 - [ ] Task 2: Build the Pool Scorer page in `dashboard/pages/4_Pool_Scorer.py` (AC: #1-6)
   - [ ] 2.1: Replace placeholder with full page implementation
   - [ ] 2.2: Add breadcrumb navigation matching existing pages (`Home > Presentation > Pool Scorer`)
@@ -224,10 +224,15 @@ from ncaa_eval.evaluation.simulation import (
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
 ### Completion Notes List
 
+- Task 1: Added `score_chosen_bracket()`, `build_custom_scoring()`, `export_bracket_csv()`, and `_game_win_probability()` helper to `dashboard/lib/filters.py`. All 7 new unit tests pass. Added imports for `BracketDistribution`, `DictScoring`, `compute_bracket_distribution`, `score_bracket_against_sims` from simulation module.
+
 ### File List
+
+- `dashboard/lib/filters.py` — added 3 Pool Scorer helper functions + internal `_game_win_probability` helper
+- `tests/unit/test_dashboard_filters.py` — added 7 tests for new helpers (TestScoreChosenBracket, TestBuildCustomScoring, TestExportBracketCsv)
