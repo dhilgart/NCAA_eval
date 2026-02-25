@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.0 (2026-02-25)
+
+### Feat
+
+- **dashboard**: Build Presentation Page — Bracket Visualizer (Story 7.5) (#41)
+
 ## 0.7.0 (2026-02-24)
 
 ### Feat
