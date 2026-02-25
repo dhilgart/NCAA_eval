@@ -37,11 +37,11 @@ so that I can understand my bracket's scoring potential under different pool for
   - [x] 2.6: Render score distribution histogram via `plot_score_distribution()`
   - [x] 2.7: Add "Generate Submission" download button via `st.download_button()` with CSV export
   - [x] 2.8: Handle empty states (no model, no seeds, no MC data)
-- [ ] Task 3: Write tests (AC: all)
-  - [ ] 3.1: Unit tests for `score_chosen_bracket()` (mock sim_data, validate distribution output)
-  - [ ] 3.2: Unit tests for `build_custom_scoring()` (validate DictScoring wrapping)
-  - [ ] 3.3: Unit tests for `export_bracket_csv()` (validate CSV structure, column names, row count)
-  - [ ] 3.4: Page rendering tests for `4_Pool_Scorer.py` (mock data, empty states, successful render)
+- [x] Task 3: Write tests (AC: all)
+  - [x] 3.1: Unit tests for `score_chosen_bracket()` (mock sim_data, validate distribution output)
+  - [x] 3.2: Unit tests for `build_custom_scoring()` (validate DictScoring wrapping)
+  - [x] 3.3: Unit tests for `export_bracket_csv()` (validate CSV structure, column names, row count)
+  - [x] 3.4: Page rendering tests for `4_Pool_Scorer.py` (mock data, empty states, successful render)
 - [ ] Task 4: Verify quality gates (AC: all)
   - [ ] 4.1: `mypy --strict src/ncaa_eval tests dashboard` — 0 errors
   - [ ] 4.2: `ruff check .` — all modified files pass
@@ -232,9 +232,11 @@ Claude Opus 4.6
 
 - Task 1: Added `score_chosen_bracket()`, `build_custom_scoring()`, `export_bracket_csv()`, and `_game_win_probability()` helper to `dashboard/lib/filters.py`. All 7 new unit tests pass. Added imports for `BracketDistribution`, `DictScoring`, `compute_bracket_distribution`, `score_bracket_against_sims` from simulation module.
 - Task 2: Replaced Pool Scorer placeholder with full page implementation. Breadcrumbs, custom scoring config (6 number inputs), MC simulation with spinner, outcome summary metrics (9 st.metric cards), score distribution histogram via plot_score_distribution(), CSV download button, and empty state handling. Refactored into `_render_scoring_config()`, `_run_simulation()`, `_render_results()`, `_render_outcome_summary()`, `_render_distribution_chart()` for C901 compliance.
+- Task 3: 14 tests total — 7 filter helper tests (score_chosen_bracket, build_custom_scoring, export_bracket_csv) and 7 page rendering tests (empty states: no run, no year, no seeds, sim failure, no sim_winners; success: metrics + chart + download; button triggers MC sim).
 
 ### File List
 
 - `dashboard/lib/filters.py` — added 3 Pool Scorer helper functions + internal `_game_win_probability` helper
 - `dashboard/pages/4_Pool_Scorer.py` — replaced placeholder with full Pool Scorer page implementation
 - `tests/unit/test_dashboard_filters.py` — added 7 tests for new helpers (TestScoreChosenBracket, TestBuildCustomScoring, TestExportBracketCsv)
+- `tests/unit/test_pool_scorer_page.py` — new file with 7 page rendering tests
