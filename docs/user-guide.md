@@ -233,8 +233,9 @@ a custom model:
 1. Subclass `Model` (stateless) or `StatefulModel` (stateful)
 2. Implement the required methods:
    - **Stateless (`Model`):** `fit`, `predict_proba`, `save`, `load`, `get_config`
-   - **Stateful (`StatefulModel`):** `update`, `start_season`, `get_state`, `set_state`,
-     `save`, `load`, `get_config` — `fit` and `predict_proba` are provided by the template
+   - **Stateful (`StatefulModel`):** `_predict_one`, `update`, `start_season`, `get_state`,
+     `set_state`, `save`, `load`, `get_config` — `fit` and `predict_proba` are provided by
+     the template (`_predict_one` is the per-pair hook that `predict_proba` calls)
 3. Decorate with `@register_model("my_model")`
 4. Import the module before training so the decorator fires
 
@@ -267,7 +268,7 @@ probabilities against observed win rates:
 | Points on the diagonal | Well-calibrated | No action needed |
 | Points **above** the diagonal | Under-confident — actual win rates exceed predictions | Model could be sharper |
 | Points **below** the diagonal | Over-confident — predictions overstate win likelihood | Model needs calibration |
-| S-shaped curve | Probabilities are too extreme on both ends | Apply temperature scaling (see Game Theory Sliders) |
+| S-shaped curve | Probabilities are too extreme on both ends | Retrain with calibration regularization; temperature scaling via Game Theory Sliders (planned feature) |
 | Flat line near 0.5 | Model lacks discrimination | Improve features or model architecture |
 
 ```{tip}

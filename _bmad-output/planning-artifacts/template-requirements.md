@@ -2987,4 +2987,42 @@ When a research spike recommends a design that diverges from the existing UX spe
 
 **Applies to:** Any spike story where research findings suggest deviating from an approved UX or architecture spec.
 
+### Documentation Stories: Private Abstract Hooks Must Appear in Plugin Docs (Discovered Story 7.8 Code Review, 2026-02-27)
+
+When a base class uses a **private** abstract hook (e.g., `_predict_one`) to implement a template-method pattern, documentation stories must explicitly verify that the plugin documentation covers the private hook — not just the public-facing API.
+
+**Why it's missed:** Code reviewers and LLM agents focus on the public API (`fit`, `predict_proba`, `save`, `load`, `get_config`). The private hook (`_predict_one`) that `predict_proba` delegates to is equally abstract and required, but its leading underscore marks it as "internal" and it's easily overlooked.
+
+**Consequence:** A developer following the plugin guide implements all documented methods but gets `TypeError: Can't instantiate abstract class … with abstract method _predict_one` at runtime.
+
+**Fix:** When writing or reviewing plugin documentation, always read the actual ABC source (`base.py`) and enumerate **all** `@abc.abstractmethod` declarations, including private ones.
+
+**Applies to:** Any story that documents a plugin/extension API backed by an abstract base class.
+
+### "Mark Story Done" Commit Must Be the Final Commit (Discovered Story 7.8 Code Review, 2026-02-27)
+
+If any post-implementation fix commits are required after the "mark story done" commit, the story File List and Change Log become stale — they no longer reflect the full set of changes on the branch.
+
+**Anti-pattern observed:**
+1. `a2d702b` — implementation
+2. `68bedfc` — code review fixes
+3. `090b92d` — **mark story done** (updates File List, Change Log)
+4. `09bb4a4` — another fix (CI workflow fix) ← File List stale, Change Log missing this entry
+
+**Rule:** The "mark done" commit (`chore(story): mark Story X.Y done`) must always be the **last commit** on the story branch. If a post-review fix is required, update the story's File List and Change Log as part of that fix commit, then do a separate "re-mark done" commit, OR combine the fix and the story-file update into a single commit.
+
+**CI workflow files in documentation stories:** When a documentation story also fixes a CI workflow file (e.g., enabling docs publishing), that workflow file is a story deliverable and must be added to the File List. It is easy to miss because CI config lives in `.github/workflows/` and feels separate from the story scope.
+
+**Applies to:** All stories, particularly documentation stories where post-review CI fixes are common.
+
+### Cross-References From Actionable Sections to Planned Features Must Be Marked (Discovered Story 7.8 Code Review, 2026-02-27)
+
+When a user guide contains a section documenting a **planned/future feature**, other parts of the guide must not reference that feature as if it were actionable today.
+
+**Anti-pattern:** Reliability diagram table says "Action: Apply temperature scaling (see Game Theory Sliders)" — but the same guide explicitly marks Game Theory Sliders as "not yet implemented."
+
+**Fix:** Action cells referencing planned features must say "will be available when [Feature] is implemented" or replace with a concrete, currently-available action.
+
+**Applies to:** Documentation stories for any project that documents planned features alongside implemented ones.
+
 *(Discovered: Story 7.7 Code Review — two-slider recommendation vs three-slider UX spec, 2026-02-24)*

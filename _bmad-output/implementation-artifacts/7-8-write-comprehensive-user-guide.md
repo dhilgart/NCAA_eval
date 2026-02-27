@@ -240,6 +240,8 @@ None — clean implementation with no debugging required.
 
 - 2026-02-25: Story 7.8 implementation complete — created comprehensive user guide and integrated into Sphinx docs
 - 2026-02-25: Code review fixes — corrected StatefulModel plugin hook docs (H1), fixed broken README relative link (M2), committed sphinx-apidoc generated docs/api/*.rst files (M1)
+- 2026-02-27: CI docs fix — updated `.github/workflows/main-updated.yaml` to enable Sphinx docs build and GitHub Pages publishing (replaced placeholder echo command)
+- 2026-02-27: Code review fixes (round 2) — added missing `_predict_one` to StatefulModel plugin docs (H1), fixed reliability diagram S-curve action to not reference unimplemented sliders (M2), added workflow file to File List (M1)
 
 ### File List
 
@@ -281,5 +283,6 @@ None — clean implementation with no debugging required.
 - `docs/api/ncaa_eval.transform.sequential.rst` (new) — sphinx-apidoc generated
 - `docs/api/ncaa_eval.transform.serving.rst` (new) — sphinx-apidoc generated
 - `docs/api/ncaa_eval.utils.logger.rst` (new) — sphinx-apidoc generated
+- `.github/workflows/main-updated.yaml` (modified) — enable Sphinx docs build and GitHub Pages publishing in CI
 - `_bmad-output/implementation-artifacts/7-8-write-comprehensive-user-guide.md` (modified) — story file updates
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified) — status: ready-for-dev → in-progress → review → done
