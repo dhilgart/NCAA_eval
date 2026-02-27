@@ -1,11 +1,22 @@
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg?style=flat-square)](https://conventionalcommits.org)
 [![Github Actions](https://github.com/dhilgart/NCAA_eval/actions/workflows/python-check.yaml/badge.svg)](https://github.com/dhilgart/NCAA_eval/actions/workflows/python-check.yaml)
+[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue?style=flat-square)](https://dhilgart.github.io/NCAA_eval/)
+[![Python](https://img.shields.io/badge/python-3.12+-blue?style=flat-square&logo=python&logoColor=white)](https://www.python.org/downloads/)
 
 
 # ncaa_eval
 
 Evaluator for self-evaluation of NCAA March Mania Kaggle Competition models
+
+## Features
+
+- **Data ingestion** — sync NCAA game data from Kaggle (1985–2025) and ESPN with smart caching
+- **Feature engineering** — sequential stats, graph-based centrality, batch ratings (SRS, Colley, Ridge), opponent adjustments, and Elo features
+- **Model framework** — plugin-based model registry supporting stateful (Elo) and stateless (XGBoost, Logistic Regression) models with a common ABC
+- **Evaluation engine** — walk-forward cross-validation with Log Loss, Brier Score, ROC-AUC, and ECE metrics
+- **Tournament simulation** — analytical (Phylourny algorithm) and Monte Carlo bracket simulation with expected points and score distributions
+- **Interactive dashboard** — Streamlit app with Backtest Leaderboard, Model Deep Dive, Bracket Visualizer, and Pool Scorer pages
 
 ## Getting Started
 
@@ -63,10 +74,36 @@ python sync.py --source all --dest data/ --force-refresh
 
 Subsequent runs skip already-cached Parquet files automatically.
 
+### Quick Start: Train a Model
+
+```bash
+# Train an Elo model on seasons 2015–2025
+python -m ncaa_eval.cli train --model elo
+
+# Train XGBoost with custom year range
+python -m ncaa_eval.cli train --model xgboost --start-year 2010 --end-year 2024
+```
+
+### Launch the Dashboard
+
+```bash
+streamlit run dashboard/app.py
+```
+
+The dashboard opens at `http://localhost:8501` with pages for model comparison, calibration analysis, bracket visualization, and pool scoring.
+
+## Documentation
+
+Full documentation is available at **[dhilgart.github.io/NCAA_eval](https://dhilgart.github.io/NCAA_eval/)**.
+
+- [User Guide](https://dhilgart.github.io/NCAA_eval/user-guide.html) — metrics, models, dashboard navigation, scoring rules
+- [Getting Started Tutorial](https://dhilgart.github.io/NCAA_eval/tutorials/getting-started.html) — end-to-end walkthrough
+- [Custom Model Tutorial](https://dhilgart.github.io/NCAA_eval/tutorials/custom-model.html) — build your own model plugin
+- [Custom Metric Tutorial](https://dhilgart.github.io/NCAA_eval/tutorials/custom-metric.html) — extend the evaluation engine
+- [API Reference](https://dhilgart.github.io/NCAA_eval/api/modules.html) — auto-generated from source
+
 ## Contributing
-See [Contributing](contributing.md)
+See [Contributing](CONTRIBUTING.md)
 
 ## Authors
 Dan Hilgart <dhilgart@gmail.com>
-
-Created from [Lee-W/cookiecutter-python-template](https://github.com/Lee-W/cookiecutter-python-template/tree/1.11.0) version 1.11.0

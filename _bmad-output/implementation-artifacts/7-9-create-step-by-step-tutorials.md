@@ -1,0 +1,364 @@
+# Story 7.9: Create Step-by-Step Tutorials
+
+Status: done
+
+## Story
+
+As a data scientist,
+I want step-by-step tutorials for common tasks,
+so that I can quickly learn how to use the platform's key workflows.
+
+## Acceptance Criteria
+
+1. **Getting Started Tutorial**: A "Getting Started" tutorial covers the full pipeline: sync data, train a model, evaluate, and view results in the dashboard. Includes runnable code examples and expected outputs.
+
+2. **Custom Model Tutorial**: A "How to Create a Custom Model" tutorial walks through subclassing the Model ABC, registering via the plugin registry, and running evaluation. Includes runnable code examples and expected outputs.
+
+3. **Custom Metric Tutorial**: A "How to Add a Custom Metric" tutorial demonstrates extending the evaluation engine via the plugin registry. Includes runnable code examples and expected outputs.
+
+4. **Sphinx Integration**: Tutorials are written in Sphinx-compatible Markdown (MyST) and integrated into the auto-generated documentation via `docs/index.rst`.
+
+5. **TOC Directive Fix**: The `{contents}` directive is removed from `docs/user-guide.md` (conflicts with Furo's built-in right-sidebar TOC). All other documentation files are searched for `{contents}` directives that may also need removal.
+
+6. **README Enhancement**: The project `README.md` is reviewed and enhanced:
+   - Must include a link to the GitHub Pages documentation site (`https://dhilgart.github.io/NCAA_eval/`)
+   - Add appropriate status badges (docs, version, Python version, license)
+   - Review what else should be added (quick feature overview, dashboard screenshot placeholder, model training quickstart) and what should be removed
+   - Ensure all existing links work correctly
+
+## Tasks / Subtasks
+
+- [x] Task 1: Create the Getting Started tutorial (AC: #1, #4)
+  - [x] 1.1: Write `docs/tutorials/getting-started.md` — full pipeline walkthrough: install → sync → train Elo → train XGBoost → evaluate → launch dashboard → interpret results
+  - [x] 1.2: Include CLI command examples with expected output snippets (trimmed for readability)
+  - [x] 1.3: Include code examples showing how to use the Python API directly (import model, fit, predict_proba)
+  - [x] 1.4: Document the dashboard launch command and how to navigate each page
+
+- [x] Task 2: Create the Custom Model tutorial (AC: #2, #4)
+  - [x] 2.1: Write `docs/tutorials/custom-model.md` — step-by-step guide to creating a custom model
+  - [x] 2.2: Show a complete working example: a simple custom stateless model (e.g., weighted average of features → probability) subclassing `Model` directly
+  - [x] 2.3: Show a complete working example: a simple custom stateful model subclassing `StatefulModel` — implement `update()`, `_predict_one()`, `start_season()`, `get_state()`, `set_state()`
+  - [x] 2.4: Show plugin registry usage: `@register_model("my_model")` decorator, then `python -m ncaa_eval.cli train --model my_model`
+  - [x] 2.5: Document how to save/load custom models (`save(path)`, `load(path)`)
+  - [x] 2.6: Document how to run evaluation/backtest with the custom model
+
+- [x] Task 3: Create the Custom Metric tutorial (AC: #3, #4)
+  - [x] 3.1: Write `docs/tutorials/custom-metric.md` — step-by-step guide to extending evaluation
+  - [x] 3.2: Show how to write a custom metric function that accepts `(y_true, y_prob)` numpy arrays
+  - [x] 3.3: Show how to integrate the custom metric into the backtest pipeline
+  - [x] 3.4: Show how to create a custom tournament scoring rule by subclassing `ScoringRule`
+
+- [x] Task 4: Integrate tutorials into Sphinx docs (AC: #4)
+  - [x] 4.1: Add a new "Tutorials" toctree section to `docs/index.rst` — place between "User Guide" and "Developer Guides"
+  - [x] 4.2: List all three tutorials in the toctree: `tutorials/getting-started`, `tutorials/custom-model`, `tutorials/custom-metric`
+  - [x] 4.3: Verify `nox -s docs` builds cleanly (no warnings/errors beyond suppressed ones)
+
+- [x] Task 5: Fix `{contents}` TOC directive (AC: #5)
+  - [x] 5.1: Remove the `{contents}` directive block (lines 3-6) from `docs/user-guide.md` — Furo theme provides built-in right-sidebar TOC
+  - [x] 5.2: Search ALL `.md` and `.rst` files under `docs/` for other `{contents}` directives; remove any found
+  - [x] 5.3: Verify user guide still renders correctly with `nox -s docs`
+
+- [x] Task 6: Enhance README.md (AC: #6)
+  - [x] 6.1: Add documentation badge linking to `https://dhilgart.github.io/NCAA_eval/`
+  - [x] 6.2: Add Python version badge (3.12+)
+  - [x] 6.3: Add a brief "Features" section summarizing the platform's capabilities (data ingestion, feature engineering, model training, evaluation, tournament simulation, interactive dashboard)
+  - [x] 6.4: Add a "Documentation" section linking to the full docs site, user guide, and tutorials
+  - [x] 6.5: Add a "Quick Start" model training section showing `python -m ncaa_eval.cli train --model elo` and dashboard launch (`streamlit run dashboard/app.py`)
+  - [x] 6.6: Review and fix any broken links (e.g., `contributing.md` relative path)
+  - [x] 6.7: Remove "Created from cookiecutter" line if it's not useful for end users
+
+- [x] Task 7: Quality gates (AC: all)
+  - [x] 7.1: Run `ruff check .` — pass
+  - [x] 7.2: Run `mypy --strict src/ncaa_eval tests dashboard` — pass (no Python code changes expected)
+  - [x] 7.3: Run `pytest` — pass (no test changes expected)
+  - [x] 7.4: Verify `nox -s docs` builds without errors
+  - [x] 7.5: Manually verify tutorial code examples are accurate against the actual codebase API
+
+## Dev Notes
+
+### Content Scope — What to Write vs What Exists
+
+**This story creates 3 new tutorial files and modifies 3 existing files:**
+- NEW: `docs/tutorials/getting-started.md`
+- NEW: `docs/tutorials/custom-model.md`
+- NEW: `docs/tutorials/custom-metric.md`
+- MODIFIED: `docs/index.rst` (add Tutorials toctree section)
+- MODIFIED: `docs/user-guide.md` (remove `{contents}` directive)
+- MODIFIED: `README.md` (enhance with badges, features, docs links)
+
+**What already exists (DO NOT duplicate):**
+- `docs/user-guide.md` — comprehensive end-user guide (metrics, models, dashboard, Game Theory sliders). Tutorials should REFERENCE the user guide, not repeat its content.
+- `README.md` — installation, Kaggle API setup, sync commands. Tutorials should reference the README for setup steps.
+- `CONTRIBUTING.md` — developer workflow for contributing code.
+- `docs/STYLE_GUIDE.md` — coding standards.
+- `docs/TESTING_STRATEGY.md` — testing approach.
+
+**The tutorials fill the "hands-on practice" gap.** The user guide explains concepts; tutorials provide step-by-step workflows with runnable code.
+
+### Target Audience
+
+Same as user guide: a **data scientist** who has installed the project and wants to learn by doing. Tutorials should be "follow along" documents — each step should be executable.
+
+### Document Format — MyST Markdown
+
+Same as user guide: use MyST Markdown (`.md`). MyST features available:
+- Standard Markdown headings, lists, tables, code blocks
+- Admonitions: `````{note}````` / `````{tip}````` / `````{warning}`````
+- Cross-references via `[text](relative-path.md)` links
+
+**Do NOT use `{contents}` directive** — Furo theme provides built-in right-sidebar TOC.
+
+**File paths:**
+- `docs/tutorials/getting-started.md`
+- `docs/tutorials/custom-model.md`
+- `docs/tutorials/custom-metric.md`
+
+### Model ABC — Key Interfaces for Tutorial
+
+The custom model tutorial must demonstrate these interfaces accurately:
+
+**Stateless model** (subclass `Model` directly):
+```python
+from ncaa_eval.model.base import Model, ModelConfig
+from ncaa_eval.model.registry import register_model
+
+class MyConfig(ModelConfig):
+    my_param: float = 1.0
+
+@register_model("my_model")
+class MyModel(Model):
+    def __init__(self, config: MyConfig | None = None) -> None: ...
+    def fit(self, X: pd.DataFrame, y: pd.Series) -> None: ...
+    def predict_proba(self, X: pd.DataFrame) -> pd.Series: ...
+    def save(self, path: Path) -> None: ...
+    @classmethod
+    def load(cls, path: Path) -> Self: ...
+    def get_config(self) -> ModelConfig: ...
+```
+
+**Stateful model** (subclass `StatefulModel`):
+```python
+from ncaa_eval.model.base import StatefulModel, ModelConfig
+from ncaa_eval.ingest.schema import Game
+
+@register_model("my_stateful")
+class MyStatefulModel(StatefulModel):
+    def update(self, game: Game) -> None: ...
+    def _predict_one(self, team_a_id: int, team_b_id: int) -> float: ...
+    def start_season(self, season: int) -> None: ...
+    def get_state(self) -> dict[str, Any]: ...
+    def set_state(self, state: dict[str, Any]) -> None: ...
+    def save(self, path: Path) -> None: ...
+    @classmethod
+    def load(cls, path: Path) -> Self: ...
+    def get_config(self) -> ModelConfig: ...
+```
+
+**CRITICAL**: Before writing the tutorial, READ the actual source files to verify signatures:
+- `src/ncaa_eval/model/base.py` — Model ABC, StatefulModel
+- `src/ncaa_eval/model/registry.py` — @register_model decorator
+- `src/ncaa_eval/model/elo.py` — reference StatefulModel implementation
+- `src/ncaa_eval/model/xgboost_model.py` — reference stateless Model implementation
+- `src/ncaa_eval/model/logistic_regression.py` — minimal stateless example (~30 lines)
+
+### Evaluation Extension — Key Interfaces for Tutorial
+
+The custom metric tutorial must demonstrate:
+
+**Custom metric function:**
+```python
+import numpy as np
+
+def my_metric(y_true: np.ndarray, y_prob: np.ndarray) -> float:
+    """Custom metric matching the (y_true, y_prob) -> float contract."""
+    ...
+```
+
+**Custom scoring rule** (subclass `ScoringRule`):
+```python
+from ncaa_eval.evaluation.simulation import ScoringRule
+
+class MyScoring(ScoringRule):
+    def score_correct_pick(self, round_num: int, seed_a: int, seed_b: int) -> float:
+        ...
+```
+
+**CRITICAL**: Before writing the tutorial, READ the actual source files:
+- `src/ncaa_eval/evaluation/metrics.py` — existing metric implementations
+- `src/ncaa_eval/evaluation/simulation.py` — ScoringRule ABC and implementations
+- `src/ncaa_eval/evaluation/backtest.py` — backtest pipeline entry point
+
+### `{contents}` Directive — Why Remove It
+
+The `{contents}` MyST directive generates an inline table of contents at the top of the page. However, the Furo Sphinx theme already provides a **built-in right-sidebar TOC** that auto-generates from headings. Having both is redundant and the inline `{contents}` block conflicts visually with Furo's sidebar navigation.
+
+**Current state in `docs/user-guide.md`** (lines 3-6):
+```markdown
+```{contents}
+:depth: 2
+:local:
+```
+```
+
+Remove these 4 lines entirely. No replacement needed — Furo's sidebar handles it.
+
+Search all other docs files for similar directives. As of the last analysis, `user-guide.md` is the only file using `{contents}`.
+
+### README Enhancement — What to Add
+
+**Current README state:**
+- 3 badges: PRs Welcome, Conventional Commits, GitHub Actions CI
+- Basic: description, prerequisites, Kaggle auth, `poetry install`, sync commands, contributing link
+
+**What to ADD:**
+- Badge: Documentation site link (`https://dhilgart.github.io/NCAA_eval/`)
+- Badge: Python 3.12+ version
+- Brief "Features" section (1-2 paragraphs or bullet list)
+- "Documentation" section linking to docs site, user guide, tutorials
+- "Quick Start" section for model training + dashboard (beyond just data sync)
+- Dashboard launch command: `poetry run streamlit run dashboard/app.py`
+
+**What to FIX:**
+- `[Contributing](contributing.md)` link — verify this resolves correctly (file is `CONTRIBUTING.md`, case-sensitive on Linux). Previous story 7.8 completion notes mention "fixed broken README relative link" — verify the fix is in place.
+
+**What to CONSIDER removing:**
+- "Created from cookiecutter-python-template" line at bottom — not useful for end users of this specific project
+
+### Project Structure Notes
+
+- All new files go under `docs/tutorials/` (create directory if needed)
+- No Python code changes — this is a documentation-only story (plus README)
+- No test changes expected — run quality gates to verify no regressions
+
+### Writing Style Guidelines
+
+- **Follow-along format.** Each tutorial should be structured as numbered steps the user can execute sequentially.
+- **Show expected output.** After each command or code block, show trimmed expected output so the user can verify success.
+- **Use MyST admonition blocks** for tips and warnings.
+- **Cross-reference the user guide** for conceptual explanations: "For a detailed explanation of Log Loss, see the [User Guide](../user-guide.md#evaluation-metrics)."
+- **Keep code examples minimal but complete.** The custom model example should be copy-pasteable and working.
+- **Test your code examples.** Verify imports, function signatures, and expected behavior against the actual codebase before writing them into the tutorial.
+
+### References
+
+- [Source: _bmad-output/planning-artifacts/epics.md#Story 7.9] — AC definitions
+- [Source: _bmad-output/implementation-artifacts/7-8-write-comprehensive-user-guide.md] — Previous story context
+- [Source: docs/user-guide.md] — Existing user guide (DO NOT duplicate content)
+- [Source: docs/index.rst] — Current toctree structure (add Tutorials section)
+- [Source: docs/conf.py] — Sphinx configuration (Furo theme, MyST parser)
+- [Source: README.md] — Current README to enhance
+- [Source: src/ncaa_eval/model/base.py] — Model ABC, StatefulModel definitions
+- [Source: src/ncaa_eval/model/registry.py] — Plugin registry (@register_model)
+- [Source: src/ncaa_eval/model/elo.py] — Elo reference implementation (StatefulModel)
+- [Source: src/ncaa_eval/model/xgboost_model.py] — XGBoost reference implementation (Model)
+- [Source: src/ncaa_eval/model/logistic_regression.py] — Minimal stateless example
+- [Source: src/ncaa_eval/evaluation/metrics.py] — Metric implementations
+- [Source: src/ncaa_eval/evaluation/simulation.py] — ScoringRule ABC and scoring implementations
+- [Source: src/ncaa_eval/evaluation/backtest.py] — Backtest pipeline
+- [Source: src/ncaa_eval/cli/train.py] — Training CLI commands
+- [Source: dashboard/app.py] — Dashboard entry point
+- [Source: .github/workflows/main-updated.yaml] — CI/CD pipeline (docs build + GH Pages publish)
+
+### Previous Story Intelligence (Story 7.8)
+
+- Story 7.8 created `docs/user-guide.md` — comprehensive 21KB guide covering metrics, models, dashboard, Game Theory sliders
+- User guide uses `{contents}` directive (line 3-6) that needs removal per THIS story's AC
+- Story 7.8 also committed sphinx-apidoc generated `docs/api/*.rst` files and fixed CI docs build
+- Story 7.8 code review fixes included: adding missing `_predict_one` to StatefulModel plugin docs, fixing broken README relative link, adding workflow file to File List
+- Fibonacci scoring values in the codebase are `2-3-5-8-13-21` (not `1-1-2-3-5-8` from original epic — story 7.8 corrected this)
+- Quality gates at Story 7.8: 865 tests passed, 1 skipped
+- Commit style used: `docs(guide): ...` — use conventional commits for this documentation story
+
+### Git Intelligence
+
+Recent Epic 7 commits:
+- `a81b307` — Write comprehensive user guide (Story 7.8) (#44)
+- `cf522ee` — Research game theory slider mechanism spike (Story 7.7)
+- `672cc83` — feat(dashboard): Pool Scorer page with MC outcome analysis and CSV export
+- `21b52d8` — feat(dashboard): Build Presentation Page — Bracket Visualizer (Story 7.5)
+
+Pattern: documentation-only stories use `docs(...)` scope. Dashboard stories use `feat(dashboard)`.
+
+### README Badge Reference
+
+Current badges in README:
+```markdown
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
+[![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg?style=flat-square)](https://conventionalcommits.org)
+[![Github Actions](https://github.com/dhilgart/NCAA_eval/actions/workflows/python-check.yaml/badge.svg)](https://github.com/dhilgart/NCAA_eval/actions/workflows/python-check.yaml)
+```
+
+Suggested additions:
+```markdown
+[![Documentation](https://img.shields.io/badge/docs-GitHub%20Pages-blue?style=flat-square)](https://dhilgart.github.io/NCAA_eval/)
+[![Python](https://img.shields.io/badge/python-3.12+-blue?style=flat-square&logo=python&logoColor=white)](https://www.python.org/downloads/)
+```
+
+## Dev Agent Record
+
+### Agent Model Used
+
+Claude Opus 4.6
+
+### Debug Log References
+
+None — documentation-only story with no code debugging required.
+
+### Completion Notes List
+
+- Created 3 tutorial files in `docs/tutorials/`: Getting Started (full pipeline walkthrough), Custom Model (stateless + stateful examples with verified API signatures), Custom Metric (metric functions + scoring rules with backtest integration)
+- All tutorials use MyST Markdown with admonitions, cross-reference the user guide, and include trimmed expected output
+- Verified all code examples against actual source: `Model`, `StatefulModel`, `ModelConfig`, `@register_model`, `ScoringRule` protocol, `DictScoring`, `run_backtest` metric_fns parameter, `DEFAULT_METRICS`
+- Tutorials integrated into Sphinx docs via new "Tutorials" toctree section in `docs/index.rst`
+- Removed `{contents}` directive from `docs/user-guide.md` (only file with this directive); confirmed no other docs files had it
+- Enhanced README: added Documentation + Python 3.12+ badges, Features section, Documentation section with docs site links, Quick Start section, fixed `contributing.md` → `CONTRIBUTING.md` (case-sensitive), removed cookiecutter attribution line
+- Quality gates: ruff clean on changed files, mypy 0 errors (94 files), pytest 865 passed / 1 skipped, nox docs build successful
+
+### File List
+
+- `docs/tutorials/getting-started.md` (NEW)
+- `docs/tutorials/custom-model.md` (NEW — code-review fixed StatefulFeatureServer API and mode parameter)
+- `docs/tutorials/custom-metric.md` (NEW — code-review fixed StatefulFeatureServer API and simulate_tournament example)
+- `docs/index.rst` (MODIFIED — added Tutorials toctree section)
+- `docs/user-guide.md` (MODIFIED — removed `{contents}` directive)
+- `README.md` (MODIFIED — badges, features, docs links, quick start, link fix)
+- `_bmad-output/planning-artifacts/template-requirements.md` (MODIFIED — added Furo {contents} pattern)
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` (MODIFIED — status update)
+- `_bmad-output/implementation-artifacts/7-9-create-step-by-step-tutorials.md` (MODIFIED — task checkboxes, dev record, code review notes)
+
+### Senior Developer Review (AI)
+
+**Reviewer:** Claude Sonnet 4.6 (code-review workflow) — 2026-02-27
+
+**Outcome (initial):** APPROVED WITH FIXES — 2 HIGH + 3 MEDIUM issues found and fixed.
+
+**Issues Fixed (initial review):**
+
+- 🔴 **[HIGH-1] `StatefulFeatureServer` wrong API in two tutorials** — `custom-model.md:334` and `custom-metric.md:129-131` both used `StatefulFeatureServer(data_dir=Path("data/"), config=config)`. The actual constructor is `StatefulFeatureServer(config, data_server)` where `data_server` is a `ChronologicalDataServer`. Fixed to use correct import chain: `ParquetRepository → ChronologicalDataServer → StatefulFeatureServer`. Task 7.5 ("manually verify tutorial code examples") was marked [x] but this error was missed.
+
+- 🔴 **[HIGH-2] `mode="batch"` passed for stateful context** — The programmatic backtest example in `custom-model.md` passed `mode="batch"` with a misleading comment. Fixed to `mode="stateful"` (matching Elo/StatefulModel context) with clarifying comment `# use "batch" for stateless Model subclasses`.
+
+- 🟡 **[MED-3] Undefined `seeds` variable and placeholder `<run_id>` in simulate_tournament example** — `custom-metric.md` Step 2 used an undefined `seeds` variable and `get_model("elo").load(...)` for an Elo model. Fixed to use `TourneySeedTable.from_csv(...).all_seeds(season=2024)` (verified against dashboard/lib/filters.py) and `RunStore.load_model(run_id)` (correct pattern). Added `run_id` placeholder explanation and `bracket.team_ids[i]` orientation comment.
+
+**Outcome (second review pass):** APPROVED WITH FIXES — 1 HIGH + 2 MEDIUM + 1 LOW found and fixed.
+
+**Issues Fixed (second review pass):**
+
+- 🔴 **[HIGH-1] `my_model` undefined variable in `custom-model.md` programmatic backtest** — `custom-model.md:344` used `model=my_model` in `run_backtest()` call but `my_model` was never assigned in that code block. Fixed: replaced with `model = SimpleRatingModel()` (the model defined in Part 2 of the same tutorial). Copy-paste would have caused `NameError`.
+
+- 🟡 **[MED-2] `load_model()` returns `Model | None` without None guard in `custom-metric.md`** — `custom-metric.md:271` passed `store.load_model(run_id)` directly to `EloProvider(model)` without checking for `None`. Fixed: added `assert model is not None, f"No model artifacts found for run_id={run_id!r}"`.
+
+- 🟡 **[MED-3] Broken MyST admonition with nested code block in `custom-metric.md`** — `custom-metric.md:157-164` used `` ```{tip} `` with a nested triple-backtick code block, which prematurely closes the admonition in MyST. Fixed: changed outer fence to 4-backtick `` ```` `` so inner triple-backtick fence renders correctly inside the tip box.
+
+- 🟢 **[LOW-4] `EloProvider` missing stateful-model requirement comment** — Fixed inline with MED-2: added `# NOTE: EloProvider requires a StatefulModel (one with _predict_one)` comment to prevent users from passing XGBoost run_ids.
+
+**Git vs Story Discrepancies:**
+- `_bmad-output/planning-artifacts/epics.md` modified in commit but not in story File List — excluded from findings per BMAD artifact exclusion policy.
+
+**Template Learnings:** Added Furo `{contents}` directive pattern to `template-requirements.md`.
+
+### Change Log
+
+- 2026-02-27: Implemented Story 7.9 — Created 3 step-by-step tutorials (Getting Started, Custom Model, Custom Metric), integrated into Sphinx docs, fixed `{contents}` TOC directive, enhanced README with badges/features/docs links
+- 2026-02-27: Code review pass 1 (AI) — Fixed StatefulFeatureServer API (HIGH×2), mode parameter (HIGH), seeds/run_id placeholders (MED) in custom-model.md and custom-metric.md
+- 2026-02-27: Code review pass 2 (AI) — Fixed undefined `my_model` variable (HIGH), None guard for `load_model()` (MED), broken MyST admonition nesting (MED), EloProvider stateful comment (LOW); story marked done

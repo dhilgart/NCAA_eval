@@ -9,6 +9,14 @@ NCAA Eval Documentation
 
 .. toctree::
    :maxdepth: 2
+   :caption: Tutorials:
+
+   tutorials/getting-started
+   tutorials/custom-model
+   tutorials/custom-metric
+
+.. toctree::
+   :maxdepth: 2
    :caption: Developer Guides:
 
    STYLE_GUIDE

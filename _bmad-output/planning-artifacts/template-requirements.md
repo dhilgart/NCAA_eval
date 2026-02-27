@@ -980,6 +980,53 @@ Markdown links to files outside the Sphinx source tree (e.g., `[specs/file.md](.
 
 **Template Action:** In Markdown files processed by Sphinx, use backtick-quoted text for any reference to files outside `docs/`. Reserve Markdown links for files within the Sphinx source tree.
 
+### Furo Theme: Do NOT Use `{contents}` Directive in MyST Markdown (Discovered Story 7.9)
+
+The Furo Sphinx theme provides a **built-in right-sidebar table of contents** auto-generated from page headings. Using the MyST `{contents}` directive in any Markdown file creates a redundant inline TOC that conflicts visually with the Furo sidebar navigation.
+
+```markdown
+# BAD — redundant inline TOC; conflicts with Furo sidebar
+```{contents}
+:depth: 2
+:local:
+```
+This renders as a duplicate TOC block on the left side of the page.
+
+# GOOD — omit entirely; Furo generates the TOC automatically
+```
+
+**Template Action:** When using Sphinx with the Furo theme, never add `{contents}` directives to MyST Markdown files. Add a check in code review: search all `docs/**/*.md` files for `` ```{contents} `` and flag any found.
+
+**Detection:** `grep -r "{contents}" docs/` — any matches should be removed.
+
+### MyST Admonition Nesting: Use 4-Backtick Outer Fence for Code Blocks Inside Admonitions (Discovered Story 7.9 Code Review)
+
+In MyST Markdown, admonition directives opened with `` ```{tip} `` (triple backtick) **cannot** contain nested code blocks that also use triple backticks — the inner `` ```python `` fence prematurely closes the admonition, leaving the code content rendered as raw text outside the tip box.
+
+```markdown
+# BAD — inner ```python closes the outer ```{tip}
+```{tip}
+Some advice with a code example:
+
+```python
+x = 1
+```
+```
+
+# GOOD — use 4-backtick outer fence so inner triple-backtick is valid
+````{tip}
+Some advice with a code example:
+
+```python
+x = 1
+```
+````
+```
+
+**Alternative:** Use `:::` fence syntax for admonitions (also valid in MyST), which allows any nested backtick fences inside.
+
+**Template Action:** Any admonition (`{tip}`, `{note}`, `{warning}`) that contains a code block must use 4-backtick outer fence (`` ```` ``) or `:::` syntax.
+
 ### sphinx-apidoc Generated RST Files Must Be Committed (Discovered Story 7.8 Code Review)
 
 When `nox -s docs` runs `sphinx-apidoc -f -e -o docs/api src/ncaa_eval`, it regenerates existing package-level `.rst` files and creates new module-level `.rst` files for every module in the source tree. These files are **not** in `.gitignore` — they are tracked source files and must be committed.
