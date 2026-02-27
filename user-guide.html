@@ -3,7 +3,7 @@
   <head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="NCAA Eval Style Guide" href="STYLE_GUIDE.html"><link rel="prev" title="NCAA Eval Documentation" href="index.html">
+<link rel="index" title="Index" href="genindex.html"><link rel="search" title="Search" href="search.html"><link rel="next" title="Getting Started Tutorial" href="tutorials/getting-started.html"><link rel="prev" title="NCAA Eval Documentation" href="index.html">
 
     <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
         <title>User Guide - ncaa_eval 0.9.0 documentation</title>
@@ -194,6 +194,12 @@
 <ul class="current">
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">User Guide</a></li>
 </ul>
+<p class="caption" role="heading"><span class="caption-text">Tutorials:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/getting-started.html">Getting Started Tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/custom-model.html">How to Create a Custom Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/custom-metric.html">How to Add a Custom Metric</a></li>
+</ul>
 <p class="caption" role="heading"><span class="caption-text">Developer Guides:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="STYLE_GUIDE.html">NCAA Eval Style Guide</a></li>
@@ -306,59 +312,8 @@
         <article role="main" id="furo-main-content">
           <section id="user-guide">
 <h1>User Guide<a class="headerlink" href="#user-guide" title="Link to this heading">¶</a></h1>
-<nav class="contents local" id="contents">
-<ul class="simple">
-<li><p><a class="reference internal" href="#getting-started" id="id1">Getting Started</a></p></li>
-<li><p><a class="reference internal" href="#evaluation-metrics" id="id2">Evaluation Metrics</a></p>
-<ul>
-<li><p><a class="reference internal" href="#log-loss" id="id3">Log Loss</a></p></li>
-<li><p><a class="reference internal" href="#brier-score" id="id4">Brier Score</a></p></li>
-<li><p><a class="reference internal" href="#roc-auc" id="id5">ROC-AUC</a></p></li>
-<li><p><a class="reference internal" href="#expected-calibration-error-ece" id="id6">Expected Calibration Error (ECE)</a></p></li>
-</ul>
-</li>
-<li><p><a class="reference internal" href="#model-types" id="id7">Model Types</a></p>
-<ul>
-<li><p><a class="reference internal" href="#stateful-models" id="id8">Stateful Models</a></p></li>
-<li><p><a class="reference internal" href="#stateless-models" id="id9">Stateless Models</a></p></li>
-<li><p><a class="reference internal" href="#plugin-registry" id="id10">Plugin Registry</a></p></li>
-</ul>
-</li>
-<li><p><a class="reference internal" href="#interpreting-results" id="id11">Interpreting Results</a></p>
-<ul>
-<li><p><a class="reference internal" href="#reliability-diagrams" id="id12">Reliability Diagrams</a></p></li>
-<li><p><a class="reference internal" href="#calibration-in-plain-language" id="id13">Calibration in Plain Language</a></p></li>
-<li><p><a class="reference internal" href="#over-confidence-vs-under-confidence" id="id14">Over-Confidence vs. Under-Confidence</a></p></li>
-</ul>
-</li>
-<li><p><a class="reference internal" href="#tournament-simulation" id="id15">Tournament Simulation</a></p>
-<ul>
-<li><p><a class="reference internal" href="#monte-carlo-methodology" id="id16">Monte Carlo Methodology</a></p></li>
-<li><p><a class="reference internal" href="#bracket-distribution" id="id17">Bracket Distribution</a></p></li>
-<li><p><a class="reference internal" href="#expected-points" id="id18">Expected Points</a></p></li>
-</ul>
-</li>
-<li><p><a class="reference internal" href="#tournament-scoring" id="id19">Tournament Scoring</a></p>
-<ul>
-<li><p><a class="reference internal" href="#standard-scoring-espn-style" id="id20">Standard Scoring (ESPN-style)</a></p></li>
-<li><p><a class="reference internal" href="#fibonacci-scoring" id="id21">Fibonacci Scoring</a></p></li>
-<li><p><a class="reference internal" href="#seed-difference-bonus" id="id22">Seed-Difference Bonus</a></p></li>
-<li><p><a class="reference internal" href="#custom-scoring" id="id23">Custom Scoring</a></p></li>
-</ul>
-</li>
-<li><p><a class="reference internal" href="#dashboard-guide" id="id24">Dashboard Guide</a></p>
-<ul>
-<li><p><a class="reference internal" href="#lab-backtest-leaderboard" id="id25">Lab: Backtest Leaderboard</a></p></li>
-<li><p><a class="reference internal" href="#lab-model-deep-dive" id="id26">Lab: Model Deep Dive</a></p></li>
-<li><p><a class="reference internal" href="#presentation-bracket-visualizer" id="id27">Presentation: Bracket Visualizer</a></p></li>
-<li><p><a class="reference internal" href="#presentation-pool-scorer" id="id28">Presentation: Pool Scorer</a></p></li>
-<li><p><a class="reference internal" href="#game-theory-sliders" id="id29">Game Theory Sliders</a></p></li>
-</ul>
-</li>
-</ul>
-</nav>
 <section id="getting-started">
-<h2><a class="toc-backref" href="#id1" role="doc-backlink">Getting Started</a><a class="headerlink" href="#getting-started" title="Link to this heading">¶</a></h2>
+<h2>Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading">¶</a></h2>
 <p>This guide picks up where the <code class="docutils literal notranslate"><span class="pre">README.md</span></code> (project root) left off.
 Once you have installed the project and synced data, the typical workflow is:</p>
 <ol class="arabic">
@@ -423,11 +378,11 @@ Pool Scorer to turn predictions into bracket picks.</p></li>
 </ol>
 </section>
 <section id="evaluation-metrics">
-<h2><a class="toc-backref" href="#id2" role="doc-backlink">Evaluation Metrics</a><a class="headerlink" href="#evaluation-metrics" title="Link to this heading">¶</a></h2>
+<h2>Evaluation Metrics<a class="headerlink" href="#evaluation-metrics" title="Link to this heading">¶</a></h2>
 <p>The platform evaluates models on four complementary metrics.
 Each captures a different aspect of prediction quality.</p>
 <section id="log-loss">
-<h3><a class="toc-backref" href="#id3" role="doc-backlink">Log Loss</a><a class="headerlink" href="#log-loss" title="Link to this heading">¶</a></h3>
+<h3>Log Loss<a class="headerlink" href="#log-loss" title="Link to this heading">¶</a></h3>
 <p><strong>What it measures:</strong> How well predicted probabilities match actual outcomes, with
 heavy penalties for confident wrong predictions.</p>
 <p><strong>Formula:</strong></p>
@@ -470,7 +425,7 @@ than 100 correct predictions at 60% confidence save.</p>
 </div>
 </section>
 <section id="brier-score">
-<h3><a class="toc-backref" href="#id4" role="doc-backlink">Brier Score</a><a class="headerlink" href="#brier-score" title="Link to this heading">¶</a></h3>
+<h3>Brier Score<a class="headerlink" href="#brier-score" title="Link to this heading">¶</a></h3>
 <p><strong>What it measures:</strong> Mean squared error of probability predictions — a gentler
 alternative to Log Loss.</p>
 <p><strong>Formula:</strong></p>
@@ -504,7 +459,7 @@ it uses squared error instead of logarithmic error.  A 99%-confident wrong
 prediction adds 0.98 to Brier (vs. 4.6 to Log Loss).</p>
 </section>
 <section id="roc-auc">
-<h3><a class="toc-backref" href="#id5" role="doc-backlink">ROC-AUC</a><a class="headerlink" href="#roc-auc" title="Link to this heading">¶</a></h3>
+<h3>ROC-AUC<a class="headerlink" href="#roc-auc" title="Link to this heading">¶</a></h3>
 <p><strong>What it measures:</strong> Discrimination — can the model distinguish winners from
 losers?  Equivalently: if you pick a random winning team and a random losing team,
 what is the probability the model assigns a higher win probability to the winner?</p>
@@ -542,7 +497,7 @@ reliability diagrams).</p>
 </div>
 </section>
 <section id="expected-calibration-error-ece">
-<h3><a class="toc-backref" href="#id6" role="doc-backlink">Expected Calibration Error (ECE)</a><a class="headerlink" href="#expected-calibration-error-ece" title="Link to this heading">¶</a></h3>
+<h3>Expected Calibration Error (ECE)<a class="headerlink" href="#expected-calibration-error-ece" title="Link to this heading">¶</a></h3>
 <p><strong>What it measures:</strong> How well predicted probabilities correspond to actual win
 rates.  If a model says “70% win probability” for 100 games, about 70 should
 actually be wins.</p>
@@ -584,10 +539,10 @@ for bet sizing, pool strategy, and expected-value calculations.</p>
 </section>
 </section>
 <section id="model-types">
-<h2><a class="toc-backref" href="#id7" role="doc-backlink">Model Types</a><a class="headerlink" href="#model-types" title="Link to this heading">¶</a></h2>
+<h2>Model Types<a class="headerlink" href="#model-types" title="Link to this heading">¶</a></h2>
 <p>NCAA_eval supports two model paradigms through a common abstract base class.</p>
 <section id="stateful-models">
-<h3><a class="toc-backref" href="#id8" role="doc-backlink">Stateful Models</a><a class="headerlink" href="#stateful-models" title="Link to this heading">¶</a></h3>
+<h3>Stateful Models<a class="headerlink" href="#stateful-models" title="Link to this heading">¶</a></h3>
 <p>Stateful models maintain internal ratings that update game-by-game through a season.
 They process games <strong>sequentially</strong> — the order matters.</p>
 <p><strong>Reference implementation: Elo</strong> (<code class="docutils literal notranslate"><span class="pre">elo</span></code>)</p>
@@ -641,7 +596,7 @@ interpretable, and requires no feature engineering.</p>
 </div>
 </section>
 <section id="stateless-models">
-<h3><a class="toc-backref" href="#id9" role="doc-backlink">Stateless Models</a><a class="headerlink" href="#stateless-models" title="Link to this heading">¶</a></h3>
+<h3>Stateless Models<a class="headerlink" href="#stateless-models" title="Link to this heading">¶</a></h3>
 <p>Stateless models are standard batch-trained classifiers.  They take a feature
 matrix as input and produce probability predictions — game order does not matter.</p>
 <p><strong>Reference implementation: XGBoost</strong> (<code class="docutils literal notranslate"><span class="pre">xgboost</span></code>)</p>
@@ -682,7 +637,7 @@ XGBoost typically outperforms Elo when strong features are available.</p>
 </div>
 </section>
 <section id="plugin-registry">
-<h3><a class="toc-backref" href="#id10" role="doc-backlink">Plugin Registry</a><a class="headerlink" href="#plugin-registry" title="Link to this heading">¶</a></h3>
+<h3>Plugin Registry<a class="headerlink" href="#plugin-registry" title="Link to this heading">¶</a></h3>
 <p>Models register themselves via the <code class="docutils literal notranslate"><span class="pre">&#64;register_model(&quot;name&quot;)</span></code> decorator.  To create
 a custom model:</p>
 <ol class="arabic simple">
@@ -707,9 +662,9 @@ python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;f
 </section>
 </section>
 <section id="interpreting-results">
-<h2><a class="toc-backref" href="#id11" role="doc-backlink">Interpreting Results</a><a class="headerlink" href="#interpreting-results" title="Link to this heading">¶</a></h2>
+<h2>Interpreting Results<a class="headerlink" href="#interpreting-results" title="Link to this heading">¶</a></h2>
 <section id="reliability-diagrams">
-<h3><a class="toc-backref" href="#id12" role="doc-backlink">Reliability Diagrams</a><a class="headerlink" href="#reliability-diagrams" title="Link to this heading">¶</a></h3>
+<h3>Reliability Diagrams<a class="headerlink" href="#reliability-diagrams" title="Link to this heading">¶</a></h3>
 <p>A reliability diagram is the visual counterpart to ECE.  It plots predicted
 probabilities against observed win rates:</p>
 <ul class="simple">
@@ -759,7 +714,7 @@ or drifts.</p>
 </div>
 </section>
 <section id="calibration-in-plain-language">
-<h3><a class="toc-backref" href="#id13" role="doc-backlink">Calibration in Plain Language</a><a class="headerlink" href="#calibration-in-plain-language" title="Link to this heading">¶</a></h3>
+<h3>Calibration in Plain Language<a class="headerlink" href="#calibration-in-plain-language" title="Link to this heading">¶</a></h3>
 <p>A <strong>well-calibrated</strong> model is one you can take at face value.  When it says
 “Duke has a 65% chance of beating UNC,” that means that in a large sample of
 similar matchups, Duke would win about 65% of the time.</p>
@@ -773,7 +728,7 @@ team is favored</em></p></li>
 </ul>
 </section>
 <section id="over-confidence-vs-under-confidence">
-<h3><a class="toc-backref" href="#id14" role="doc-backlink">Over-Confidence vs. Under-Confidence</a><a class="headerlink" href="#over-confidence-vs-under-confidence" title="Link to this heading">¶</a></h3>
+<h3>Over-Confidence vs. Under-Confidence<a class="headerlink" href="#over-confidence-vs-under-confidence" title="Link to this heading">¶</a></h3>
 <div class="table-wrapper colwidths-auto docutils container">
 <table class="docutils align-default">
 <thead>
@@ -805,9 +760,9 @@ team is favored</em></p></li>
 </section>
 </section>
 <section id="tournament-simulation">
-<h2><a class="toc-backref" href="#id15" role="doc-backlink">Tournament Simulation</a><a class="headerlink" href="#tournament-simulation" title="Link to this heading">¶</a></h2>
+<h2>Tournament Simulation<a class="headerlink" href="#tournament-simulation" title="Link to this heading">¶</a></h2>
 <section id="monte-carlo-methodology">
-<h3><a class="toc-backref" href="#id16" role="doc-backlink">Monte Carlo Methodology</a><a class="headerlink" href="#monte-carlo-methodology" title="Link to this heading">¶</a></h3>
+<h3>Monte Carlo Methodology<a class="headerlink" href="#monte-carlo-methodology" title="Link to this heading">¶</a></h3>
 <p>The platform simulates the full 64-team NCAA tournament bracket using two methods:</p>
 <p><strong>Analytical (Phylourny algorithm):</strong>
 Computes exact advancement probabilities via a post-order tree traversal.  Fast and
@@ -826,7 +781,7 @@ simulations</p></li>
 </ul>
 </section>
 <section id="bracket-distribution">
-<h3><a class="toc-backref" href="#id17" role="doc-backlink">Bracket Distribution</a><a class="headerlink" href="#bracket-distribution" title="Link to this heading">¶</a></h3>
+<h3>Bracket Distribution<a class="headerlink" href="#bracket-distribution" title="Link to this heading">¶</a></h3>
 <p>When you run a Monte Carlo simulation, the platform computes a full score
 distribution for the “chalk bracket” (picking the pre-game favorite in every
 matchup).  This answers: “If the model’s probabilities are correct, what range of
@@ -860,7 +815,7 @@ scores should I expect?”</p>
 </div>
 </section>
 <section id="expected-points">
-<h3><a class="toc-backref" href="#id18" role="doc-backlink">Expected Points</a><a class="headerlink" href="#expected-points" title="Link to this heading">¶</a></h3>
+<h3>Expected Points<a class="headerlink" href="#expected-points" title="Link to this heading">¶</a></h3>
 <p>Expected Points (EP) combines advancement probabilities with a scoring rule to
 answer: “How many bracket points is each team <em>worth</em>?”</p>
 <p>$$\text{EP}<em>i = \sum</em>{r=0}^{5} P(\text{team } i \text{ wins round } r) \times \text{points}(r)$$</p>
@@ -870,11 +825,11 @@ all 64 teams by EP under your chosen scoring rule.</p>
 </section>
 </section>
 <section id="tournament-scoring">
-<h2><a class="toc-backref" href="#id19" role="doc-backlink">Tournament Scoring</a><a class="headerlink" href="#tournament-scoring" title="Link to this heading">¶</a></h2>
+<h2>Tournament Scoring<a class="headerlink" href="#tournament-scoring" title="Link to this heading">¶</a></h2>
 <p>The platform supports three built-in scoring systems and lets you define custom
 rules.</p>
 <section id="standard-scoring-espn-style">
-<h3><a class="toc-backref" href="#id20" role="doc-backlink">Standard Scoring (ESPN-style)</a><a class="headerlink" href="#standard-scoring-espn-style" title="Link to this heading">¶</a></h3>
+<h3>Standard Scoring (ESPN-style)<a class="headerlink" href="#standard-scoring-espn-style" title="Link to this heading">¶</a></h3>
 <p>The most common pool format.  Points double each round:</p>
 <div class="table-wrapper colwidths-auto docutils container">
 <table class="docutils align-default">
@@ -937,7 +892,7 @@ rules.</p>
 <p><code class="docutils literal notranslate"><span class="pre">20×1</span> <span class="pre">+</span> <span class="pre">10×2</span> <span class="pre">+</span> <span class="pre">4×4</span> <span class="pre">+</span> <span class="pre">2×8</span> <span class="pre">+</span> <span class="pre">1×16</span> <span class="pre">+</span> <span class="pre">1×32</span> <span class="pre">=</span> <span class="pre">20</span> <span class="pre">+</span> <span class="pre">20</span> <span class="pre">+</span> <span class="pre">16</span> <span class="pre">+</span> <span class="pre">16</span> <span class="pre">+</span> <span class="pre">16</span> <span class="pre">+</span> <span class="pre">32</span> <span class="pre">=</span> <span class="pre">**120</span> <span class="pre">points**</span></code></p>
 </section>
 <section id="fibonacci-scoring">
-<h3><a class="toc-backref" href="#id21" role="doc-backlink">Fibonacci Scoring</a><a class="headerlink" href="#fibonacci-scoring" title="Link to this heading">¶</a></h3>
+<h3>Fibonacci Scoring<a class="headerlink" href="#fibonacci-scoring" title="Link to this heading">¶</a></h3>
 <p>Rewards later rounds more steeply than Standard:</p>
 <div class="table-wrapper colwidths-auto docutils container">
 <table class="docutils align-default">
@@ -976,7 +931,7 @@ champion is worth 21 points (vs. 32 in Standard), but the ratio of
 late-round-to-early-round points is higher.</p>
 </section>
 <section id="seed-difference-bonus">
-<h3><a class="toc-backref" href="#id22" role="doc-backlink">Seed-Difference Bonus</a><a class="headerlink" href="#seed-difference-bonus" title="Link to this heading">¶</a></h3>
+<h3>Seed-Difference Bonus<a class="headerlink" href="#seed-difference-bonus" title="Link to this heading">¶</a></h3>
 <p>Standard base points plus an upset bonus equal to the seed difference when the
 lower-seeded team wins:</p>
 <div class="table-wrapper colwidths-auto docutils container">
@@ -1026,17 +981,17 @@ well-chosen upsets.</p>
 </div>
 </section>
 <section id="custom-scoring">
-<h3><a class="toc-backref" href="#id23" role="doc-backlink">Custom Scoring</a><a class="headerlink" href="#custom-scoring" title="Link to this heading">¶</a></h3>
+<h3>Custom Scoring<a class="headerlink" href="#custom-scoring" title="Link to this heading">¶</a></h3>
 <p>The Pool Scorer page lets you define custom per-round point values.  Check
 “Use custom scoring” and enter your pool’s specific point schedule.  This is useful
 for pools with non-standard formats (e.g., 1-2-3-5-8-13 or 10-20-40-80-160-320).</p>
 </section>
 </section>
 <section id="dashboard-guide">
-<h2><a class="toc-backref" href="#id24" role="doc-backlink">Dashboard Guide</a><a class="headerlink" href="#dashboard-guide" title="Link to this heading">¶</a></h2>
+<h2>Dashboard Guide<a class="headerlink" href="#dashboard-guide" title="Link to this heading">¶</a></h2>
 <p>The dashboard has four main pages organized into two sections.</p>
 <section id="lab-backtest-leaderboard">
-<h3><a class="toc-backref" href="#id25" role="doc-backlink">Lab: Backtest Leaderboard</a><a class="headerlink" href="#lab-backtest-leaderboard" title="Link to this heading">¶</a></h3>
+<h3>Lab: Backtest Leaderboard<a class="headerlink" href="#lab-backtest-leaderboard" title="Link to this heading">¶</a></h3>
 <p><strong>Purpose:</strong> Compare all trained models side-by-side.</p>
 <p><strong>What you see:</strong></p>
 <ul class="simple">
@@ -1054,7 +1009,7 @@ metrics are averaged across all evaluated years</p></li>
 </ol>
 </section>
 <section id="lab-model-deep-dive">
-<h3><a class="toc-backref" href="#id26" role="doc-backlink">Lab: Model Deep Dive</a><a class="headerlink" href="#lab-model-deep-dive" title="Link to this heading">¶</a></h3>
+<h3>Lab: Model Deep Dive<a class="headerlink" href="#lab-model-deep-dive" title="Link to this heading">¶</a></h3>
 <p><strong>Purpose:</strong> Diagnose a single model’s calibration, accuracy, and feature behavior.</p>
 <p><strong>What you see:</strong></p>
 <ul class="simple">
@@ -1076,7 +1031,7 @@ features contribute most to predictions</p></li>
 </ol>
 </section>
 <section id="presentation-bracket-visualizer">
-<h3><a class="toc-backref" href="#id27" role="doc-backlink">Presentation: Bracket Visualizer</a><a class="headerlink" href="#presentation-bracket-visualizer" title="Link to this heading">¶</a></h3>
+<h3>Presentation: Bracket Visualizer<a class="headerlink" href="#presentation-bracket-visualizer" title="Link to this heading">¶</a></h3>
 <p><strong>Purpose:</strong> Turn model predictions into a visual bracket with advancement
 probabilities.</p>
 <p><strong>What you see:</strong></p>
@@ -1102,7 +1057,7 @@ slower)</p></li>
 </ol>
 </section>
 <section id="presentation-pool-scorer">
-<h3><a class="toc-backref" href="#id28" role="doc-backlink">Presentation: Pool Scorer</a><a class="headerlink" href="#presentation-pool-scorer" title="Link to this heading">¶</a></h3>
+<h3>Presentation: Pool Scorer<a class="headerlink" href="#presentation-pool-scorer" title="Link to this heading">¶</a></h3>
 <p><strong>Purpose:</strong> Score your bracket against thousands of simulated tournament outcomes
 to understand your expected point distribution.</p>
 <p><strong>What you see:</strong></p>
@@ -1126,7 +1081,7 @@ score across all simulated outcomes</p></li>
 </ol>
 </section>
 <section id="game-theory-sliders">
-<h3><a class="toc-backref" href="#id29" role="doc-backlink">Game Theory Sliders</a><a class="headerlink" href="#game-theory-sliders" title="Link to this heading">¶</a></h3>
+<h3>Game Theory Sliders<a class="headerlink" href="#game-theory-sliders" title="Link to this heading">¶</a></h3>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Game Theory Sliders are a planned feature based on research from Story 7.7.
@@ -1215,12 +1170,12 @@ differentiate your bracket from the crowd.</p>
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="STYLE_GUIDE.html">
+          <a class="next-page" href="tutorials/getting-started.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">NCAA Eval Style Guide</div>
+                <div class="title">Getting Started Tutorial</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>

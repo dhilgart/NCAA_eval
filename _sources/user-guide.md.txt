@@ -1,10 +1,5 @@
 # User Guide
 
-```{contents}
-:depth: 2
-:local:
-```
-
 ## Getting Started
 
 This guide picks up where the `README.md` (project root) left off.
