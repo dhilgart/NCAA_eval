@@ -1,6 +1,6 @@
 # Story 7.9: Create Step-by-Step Tutorials
 
-Status: review
+Status: done
 
 ## Story
 
@@ -317,14 +317,35 @@ None — documentation-only story with no code debugging required.
 ### File List
 
 - `docs/tutorials/getting-started.md` (NEW)
-- `docs/tutorials/custom-model.md` (NEW)
-- `docs/tutorials/custom-metric.md` (NEW)
+- `docs/tutorials/custom-model.md` (NEW — code-review fixed StatefulFeatureServer API and mode parameter)
+- `docs/tutorials/custom-metric.md` (NEW — code-review fixed StatefulFeatureServer API and simulate_tournament example)
 - `docs/index.rst` (MODIFIED — added Tutorials toctree section)
 - `docs/user-guide.md` (MODIFIED — removed `{contents}` directive)
 - `README.md` (MODIFIED — badges, features, docs links, quick start, link fix)
+- `_bmad-output/planning-artifacts/template-requirements.md` (MODIFIED — added Furo {contents} pattern)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (MODIFIED — status update)
-- `_bmad-output/implementation-artifacts/7-9-create-step-by-step-tutorials.md` (MODIFIED — task checkboxes, dev record)
+- `_bmad-output/implementation-artifacts/7-9-create-step-by-step-tutorials.md` (MODIFIED — task checkboxes, dev record, code review notes)
+
+### Senior Developer Review (AI)
+
+**Reviewer:** Claude Sonnet 4.6 (code-review workflow) — 2026-02-27
+
+**Outcome:** APPROVED WITH FIXES — 2 HIGH + 3 MEDIUM issues found and fixed.
+
+**Issues Fixed:**
+
+- 🔴 **[HIGH-1] `StatefulFeatureServer` wrong API in two tutorials** — `custom-model.md:334` and `custom-metric.md:129-131` both used `StatefulFeatureServer(data_dir=Path("data/"), config=config)`. The actual constructor is `StatefulFeatureServer(config, data_server)` where `data_server` is a `ChronologicalDataServer`. Fixed to use correct import chain: `ParquetRepository → ChronologicalDataServer → StatefulFeatureServer`. Task 7.5 ("manually verify tutorial code examples") was marked [x] but this error was missed.
+
+- 🔴 **[HIGH-2] `mode="batch"` passed for stateful context** — The programmatic backtest example in `custom-model.md` passed `mode="batch"` with a misleading comment. Fixed to `mode="stateful"` (matching Elo/StatefulModel context) with clarifying comment `# use "batch" for stateless Model subclasses`.
+
+- 🟡 **[MED-3] Undefined `seeds` variable and placeholder `<run_id>` in simulate_tournament example** — `custom-metric.md` Step 2 used an undefined `seeds` variable and `get_model("elo").load(...)` for an Elo model. Fixed to use `TourneySeedTable.from_csv(...).all_seeds(season=2024)` (verified against dashboard/lib/filters.py) and `RunStore.load_model(run_id)` (correct pattern). Added `run_id` placeholder explanation and `bracket.team_ids[i]` orientation comment.
+
+**Git vs Story Discrepancies:**
+- `_bmad-output/planning-artifacts/epics.md` modified in commit but not in story File List — excluded from findings per BMAD artifact exclusion policy.
+
+**Template Learnings:** Added Furo `{contents}` directive pattern to `template-requirements.md`.
 
 ### Change Log
 
 - 2026-02-27: Implemented Story 7.9 — Created 3 step-by-step tutorials (Getting Started, Custom Model, Custom Metric), integrated into Sphinx docs, fixed `{contents}` TOC directive, enhanced README with badges/features/docs links
+- 2026-02-27: Code review (AI) — Fixed StatefulFeatureServer API (HIGH×2), mode parameter (HIGH), seeds/run_id placeholders (MED) in custom-model.md and custom-metric.md; story marked done

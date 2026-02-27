@@ -89,8 +89,10 @@ import numpy.typing as npt
 
 from ncaa_eval.evaluation.backtest import run_backtest, DEFAULT_METRICS
 from ncaa_eval.evaluation.metrics import log_loss, brier_score
+from ncaa_eval.ingest import ParquetRepository
 from ncaa_eval.model import get_model
 from ncaa_eval.transform.feature_serving import FeatureConfig, StatefulFeatureServer
+from ncaa_eval.transform.serving import ChronologicalDataServer
 
 
 def mean_absolute_error(
@@ -126,10 +128,9 @@ my_metrics = {
 # Set up model and feature server
 model_cls = get_model("elo")
 model = model_cls()
-server = StatefulFeatureServer(
-    data_dir=Path("data/"),
-    config=FeatureConfig(),
-)
+repo = ParquetRepository(base_path=Path("data/"))
+data_server = ChronologicalDataServer(repo)
+server = StatefulFeatureServer(config=FeatureConfig(), data_server=data_server)
 
 # Run backtest with custom metrics
 result = run_backtest(
@@ -243,23 +244,33 @@ my_pool_scoring = DictScoring(
 Pass your scoring rule to the tournament simulator:
 
 ```python
+from pathlib import Path
+
 from ncaa_eval.evaluation.simulation import (
-    simulate_tournament,
-    build_bracket,
     EloProvider,
     MatchupContext,
     StandardScoring,
+    build_bracket,
+    simulate_tournament,
 )
-from ncaa_eval.model import get_model
+from ncaa_eval.model.tracking import RunStore
+from ncaa_eval.transform.normalization import TourneySeedTable
 
-# Load a trained Elo model
-model = get_model("elo").load(Path("data/runs/<run_id>/model"))
+# Replace with the run ID printed when you trained the model
+run_id = "<your-run-id>"
 
-# Build bracket from tournament seeds
-# (seeds are loaded from your data directory)
+# Load tournament seeds from the Kaggle CSV in your data directory
+seed_table = TourneySeedTable.from_csv(Path("data/kaggle/MNCAATourneySeeds.csv"))
+seeds = seed_table.all_seeds(season=2024)  # list[TourneySeed]
+
+# Build the 64-team bracket tree (play-in teams excluded automatically)
 bracket = build_bracket(seeds, season=2024)
 
-# Create probability provider
+# Load the trained model via RunStore
+store = RunStore(Path("data/"))
+model = store.load_model(run_id)
+
+# Create probability provider (wraps the model's _predict_one method)
 provider = EloProvider(model)
 context = MatchupContext(season=2024, day_num=136, is_neutral=True)
 
@@ -273,10 +284,10 @@ result = simulate_tournament(
     n_simulations=10_000,
 )
 
-# Expected points per team under each rule
+# result.expected_points maps rule name → per-team expected-points array.
+# bracket.team_ids[i] gives the team ID for bracket position i.
 for rule_name, ep_array in result.expected_points.items():
     print(f"\n{rule_name}:")
-    # ep_array[i] = expected points for team at bracket index i
     for i, ep in enumerate(ep_array):
         team_id = bracket.team_ids[i]
         print(f"  Team {team_id}: {ep:.1f} EP")

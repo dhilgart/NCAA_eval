@@ -326,19 +326,25 @@ Deep Dive pages.
 To run a backtest programmatically:
 
 ```python
-from ncaa_eval.evaluation.backtest import run_backtest, DEFAULT_METRICS
-from ncaa_eval.transform.feature_serving import StatefulFeatureServer, FeatureConfig
+from pathlib import Path
+
+from ncaa_eval.evaluation.backtest import run_backtest
+from ncaa_eval.ingest import ParquetRepository
+from ncaa_eval.transform.feature_serving import FeatureConfig, StatefulFeatureServer
+from ncaa_eval.transform.serving import ChronologicalDataServer
 
 # Create feature server
+repo = ParquetRepository(base_path=Path("data/"))
+data_server = ChronologicalDataServer(repo)
 config = FeatureConfig()
-server = StatefulFeatureServer(data_dir=Path("data/"), config=config)
+server = StatefulFeatureServer(config=config, data_server=data_server)
 
-# Run backtest
+# Run backtest — use "stateful" for StatefulModel, "batch" for stateless Model
 result = run_backtest(
     model=my_model,
     feature_server=server,
     seasons=list(range(2015, 2026)),
-    mode="batch",   # "stateful" for StatefulModel
+    mode="stateful",   # use "batch" for stateless Model subclasses
 )
 
 # Print per-year metrics
