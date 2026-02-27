@@ -966,6 +966,8 @@ So that I can quickly learn how to use the platform's key workflows.
 **And** a "How to Add a Custom Metric" tutorial demonstrates extending the evaluation engine via the plugin registry
 **And** each tutorial includes runnable code examples and expected outputs
 **And** tutorials are written in Sphinx-compatible RST or Markdown and integrated into the auto-generated documentation
+**And** the `{contents}` TOC directive is removed from `docs/user-guide.md` (conflicts with Furo's built-in right-sidebar TOC). Make sure to search other documentation and see if other TOCs need removal.
+**And** the project `README.md` is reviewed and enhanced. At the very least it should be updated to include a link to the GitHub Pages documentation site (`https://dhilgart.github.io/NCAA_eval/`), but there should also be though given to what else should be added and what should be removed. Also pay attention to what status bars at the top should be added.
 
 ## Post-MVP Backlog
 

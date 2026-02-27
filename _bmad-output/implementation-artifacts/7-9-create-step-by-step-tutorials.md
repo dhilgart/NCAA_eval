@@ -1,6 +1,6 @@
 # Story 7.9: Create Step-by-Step Tutorials
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -28,51 +28,51 @@ so that I can quickly learn how to use the platform's key workflows.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create the Getting Started tutorial (AC: #1, #4)
-  - [ ] 1.1: Write `docs/tutorials/getting-started.md` — full pipeline walkthrough: install → sync → train Elo → train XGBoost → evaluate → launch dashboard → interpret results
-  - [ ] 1.2: Include CLI command examples with expected output snippets (trimmed for readability)
-  - [ ] 1.3: Include code examples showing how to use the Python API directly (import model, fit, predict_proba)
-  - [ ] 1.4: Document the dashboard launch command and how to navigate each page
+- [x] Task 1: Create the Getting Started tutorial (AC: #1, #4)
+  - [x] 1.1: Write `docs/tutorials/getting-started.md` — full pipeline walkthrough: install → sync → train Elo → train XGBoost → evaluate → launch dashboard → interpret results
+  - [x] 1.2: Include CLI command examples with expected output snippets (trimmed for readability)
+  - [x] 1.3: Include code examples showing how to use the Python API directly (import model, fit, predict_proba)
+  - [x] 1.4: Document the dashboard launch command and how to navigate each page
 
-- [ ] Task 2: Create the Custom Model tutorial (AC: #2, #4)
-  - [ ] 2.1: Write `docs/tutorials/custom-model.md` — step-by-step guide to creating a custom model
-  - [ ] 2.2: Show a complete working example: a simple custom stateless model (e.g., weighted average of features → probability) subclassing `Model` directly
-  - [ ] 2.3: Show a complete working example: a simple custom stateful model subclassing `StatefulModel` — implement `update()`, `_predict_one()`, `start_season()`, `get_state()`, `set_state()`
-  - [ ] 2.4: Show plugin registry usage: `@register_model("my_model")` decorator, then `python -m ncaa_eval.cli train --model my_model`
-  - [ ] 2.5: Document how to save/load custom models (`save(path)`, `load(path)`)
-  - [ ] 2.6: Document how to run evaluation/backtest with the custom model
+- [x] Task 2: Create the Custom Model tutorial (AC: #2, #4)
+  - [x] 2.1: Write `docs/tutorials/custom-model.md` — step-by-step guide to creating a custom model
+  - [x] 2.2: Show a complete working example: a simple custom stateless model (e.g., weighted average of features → probability) subclassing `Model` directly
+  - [x] 2.3: Show a complete working example: a simple custom stateful model subclassing `StatefulModel` — implement `update()`, `_predict_one()`, `start_season()`, `get_state()`, `set_state()`
+  - [x] 2.4: Show plugin registry usage: `@register_model("my_model")` decorator, then `python -m ncaa_eval.cli train --model my_model`
+  - [x] 2.5: Document how to save/load custom models (`save(path)`, `load(path)`)
+  - [x] 2.6: Document how to run evaluation/backtest with the custom model
 
-- [ ] Task 3: Create the Custom Metric tutorial (AC: #3, #4)
-  - [ ] 3.1: Write `docs/tutorials/custom-metric.md` — step-by-step guide to extending evaluation
-  - [ ] 3.2: Show how to write a custom metric function that accepts `(y_true, y_prob)` numpy arrays
-  - [ ] 3.3: Show how to integrate the custom metric into the backtest pipeline
-  - [ ] 3.4: Show how to create a custom tournament scoring rule by subclassing `ScoringRule`
+- [x] Task 3: Create the Custom Metric tutorial (AC: #3, #4)
+  - [x] 3.1: Write `docs/tutorials/custom-metric.md` — step-by-step guide to extending evaluation
+  - [x] 3.2: Show how to write a custom metric function that accepts `(y_true, y_prob)` numpy arrays
+  - [x] 3.3: Show how to integrate the custom metric into the backtest pipeline
+  - [x] 3.4: Show how to create a custom tournament scoring rule by subclassing `ScoringRule`
 
-- [ ] Task 4: Integrate tutorials into Sphinx docs (AC: #4)
-  - [ ] 4.1: Add a new "Tutorials" toctree section to `docs/index.rst` — place between "User Guide" and "Developer Guides"
-  - [ ] 4.2: List all three tutorials in the toctree: `tutorials/getting-started`, `tutorials/custom-model`, `tutorials/custom-metric`
-  - [ ] 4.3: Verify `nox -s docs` builds cleanly (no warnings/errors beyond suppressed ones)
+- [x] Task 4: Integrate tutorials into Sphinx docs (AC: #4)
+  - [x] 4.1: Add a new "Tutorials" toctree section to `docs/index.rst` — place between "User Guide" and "Developer Guides"
+  - [x] 4.2: List all three tutorials in the toctree: `tutorials/getting-started`, `tutorials/custom-model`, `tutorials/custom-metric`
+  - [x] 4.3: Verify `nox -s docs` builds cleanly (no warnings/errors beyond suppressed ones)
 
-- [ ] Task 5: Fix `{contents}` TOC directive (AC: #5)
-  - [ ] 5.1: Remove the `{contents}` directive block (lines 3-6) from `docs/user-guide.md` — Furo theme provides built-in right-sidebar TOC
-  - [ ] 5.2: Search ALL `.md` and `.rst` files under `docs/` for other `{contents}` directives; remove any found
-  - [ ] 5.3: Verify user guide still renders correctly with `nox -s docs`
+- [x] Task 5: Fix `{contents}` TOC directive (AC: #5)
+  - [x] 5.1: Remove the `{contents}` directive block (lines 3-6) from `docs/user-guide.md` — Furo theme provides built-in right-sidebar TOC
+  - [x] 5.2: Search ALL `.md` and `.rst` files under `docs/` for other `{contents}` directives; remove any found
+  - [x] 5.3: Verify user guide still renders correctly with `nox -s docs`
 
-- [ ] Task 6: Enhance README.md (AC: #6)
-  - [ ] 6.1: Add documentation badge linking to `https://dhilgart.github.io/NCAA_eval/`
-  - [ ] 6.2: Add Python version badge (3.12+)
-  - [ ] 6.3: Add a brief "Features" section summarizing the platform's capabilities (data ingestion, feature engineering, model training, evaluation, tournament simulation, interactive dashboard)
-  - [ ] 6.4: Add a "Documentation" section linking to the full docs site, user guide, and tutorials
-  - [ ] 6.5: Add a "Quick Start" model training section showing `python -m ncaa_eval.cli train --model elo` and dashboard launch (`streamlit run dashboard/app.py`)
-  - [ ] 6.6: Review and fix any broken links (e.g., `contributing.md` relative path)
-  - [ ] 6.7: Remove "Created from cookiecutter" line if it's not useful for end users
+- [x] Task 6: Enhance README.md (AC: #6)
+  - [x] 6.1: Add documentation badge linking to `https://dhilgart.github.io/NCAA_eval/`
+  - [x] 6.2: Add Python version badge (3.12+)
+  - [x] 6.3: Add a brief "Features" section summarizing the platform's capabilities (data ingestion, feature engineering, model training, evaluation, tournament simulation, interactive dashboard)
+  - [x] 6.4: Add a "Documentation" section linking to the full docs site, user guide, and tutorials
+  - [x] 6.5: Add a "Quick Start" model training section showing `python -m ncaa_eval.cli train --model elo` and dashboard launch (`streamlit run dashboard/app.py`)
+  - [x] 6.6: Review and fix any broken links (e.g., `contributing.md` relative path)
+  - [x] 6.7: Remove "Created from cookiecutter" line if it's not useful for end users
 
-- [ ] Task 7: Quality gates (AC: all)
-  - [ ] 7.1: Run `ruff check .` — pass
-  - [ ] 7.2: Run `mypy --strict src/ncaa_eval tests dashboard` — pass (no Python code changes expected)
-  - [ ] 7.3: Run `pytest` — pass (no test changes expected)
-  - [ ] 7.4: Verify `nox -s docs` builds without errors
-  - [ ] 7.5: Manually verify tutorial code examples are accurate against the actual codebase API
+- [x] Task 7: Quality gates (AC: all)
+  - [x] 7.1: Run `ruff check .` — pass
+  - [x] 7.2: Run `mypy --strict src/ncaa_eval tests dashboard` — pass (no Python code changes expected)
+  - [x] 7.3: Run `pytest` — pass (no test changes expected)
+  - [x] 7.4: Verify `nox -s docs` builds without errors
+  - [x] 7.5: Manually verify tutorial code examples are accurate against the actual codebase API
 
 ## Dev Notes
 
@@ -298,10 +298,33 @@ Suggested additions:
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+None — documentation-only story with no code debugging required.
+
 ### Completion Notes List
 
+- Created 3 tutorial files in `docs/tutorials/`: Getting Started (full pipeline walkthrough), Custom Model (stateless + stateful examples with verified API signatures), Custom Metric (metric functions + scoring rules with backtest integration)
+- All tutorials use MyST Markdown with admonitions, cross-reference the user guide, and include trimmed expected output
+- Verified all code examples against actual source: `Model`, `StatefulModel`, `ModelConfig`, `@register_model`, `ScoringRule` protocol, `DictScoring`, `run_backtest` metric_fns parameter, `DEFAULT_METRICS`
+- Tutorials integrated into Sphinx docs via new "Tutorials" toctree section in `docs/index.rst`
+- Removed `{contents}` directive from `docs/user-guide.md` (only file with this directive); confirmed no other docs files had it
+- Enhanced README: added Documentation + Python 3.12+ badges, Features section, Documentation section with docs site links, Quick Start section, fixed `contributing.md` → `CONTRIBUTING.md` (case-sensitive), removed cookiecutter attribution line
+- Quality gates: ruff clean on changed files, mypy 0 errors (94 files), pytest 865 passed / 1 skipped, nox docs build successful
+
 ### File List
+
+- `docs/tutorials/getting-started.md` (NEW)
+- `docs/tutorials/custom-model.md` (NEW)
+- `docs/tutorials/custom-metric.md` (NEW)
+- `docs/index.rst` (MODIFIED — added Tutorials toctree section)
+- `docs/user-guide.md` (MODIFIED — removed `{contents}` directive)
+- `README.md` (MODIFIED — badges, features, docs links, quick start, link fix)
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` (MODIFIED — status update)
+- `_bmad-output/implementation-artifacts/7-9-create-step-by-step-tutorials.md` (MODIFIED — task checkboxes, dev record)
+
+### Change Log
+
+- 2026-02-27: Implemented Story 7.9 — Created 3 step-by-step tutorials (Getting Started, Custom Model, Custom Metric), integrated into Sphinx docs, fixed `{contents}` TOC directive, enhanced README with badges/features/docs links
