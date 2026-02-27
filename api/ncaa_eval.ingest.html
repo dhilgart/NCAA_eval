@@ -1,0 +1,1072 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="ncaa_eval.ingest.connectors package" href="ncaa_eval.ingest.connectors.html"><link rel="prev" title="ncaa_eval.evaluation.splitter module" href="ncaa_eval.evaluation.splitter.html">
+
+    <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
+        <title>ncaa_eval.ingest package - ncaa_eval 0.9.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">ncaa_eval 0.9.0 documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  <span class="sidebar-brand-text">ncaa_eval 0.9.0 documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">User Guide:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user-guide.html">User Guide</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Guides:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../STYLE_GUIDE.html">NCAA Eval Style Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../TESTING_STRATEGY.html">Testing Strategy</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Testing Guides:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../testing/conventions.html">Testing Conventions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../testing/domain-testing.html">Domain-Specific Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../testing/execution.html">Test Execution Tiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../testing/quality.html">Test Suite Quality Assurance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../testing/test-approach-guide.html">Test Approach Guide: Example-Based vs Property-Based vs Fuzz-Based Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../testing/test-purpose-guide.html">Test Purpose Guide: Functional, Performance, and Regression Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../testing/test-scope-guide.html">Test Scope Guide: Unit vs Integration Tests</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference:</span></p>
+<ul class="current">
+<li class="toctree-l1 current has-children"><a class="reference internal" href="modules.html">ncaa_eval</a><input aria-label="Toggle navigation of ncaa_eval" checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2 current has-children"><a class="reference internal" href="ncaa_eval.html">ncaa_eval package</a><input aria-label="Toggle navigation of ncaa_eval package" checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l3 has-children"><a class="reference internal" href="ncaa_eval.cli.html">ncaa_eval.cli package</a><input aria-label="Toggle navigation of ncaa_eval.cli package" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.cli.main.html">ncaa_eval.cli.main module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.cli.train.html">ncaa_eval.cli.train module</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="ncaa_eval.evaluation.html">ncaa_eval.evaluation package</a><input aria-label="Toggle navigation of ncaa_eval.evaluation package" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.backtest.html">ncaa_eval.evaluation.backtest module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html">ncaa_eval.evaluation.metrics module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.plotting.html">ncaa_eval.evaluation.plotting module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html">ncaa_eval.evaluation.simulation module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.splitter.html">ncaa_eval.evaluation.splitter module</a></li>
+</ul>
+</li>
+<li class="toctree-l3 current has-children current-page"><a class="current reference internal" href="#">ncaa_eval.ingest package</a><input aria-label="Toggle navigation of ncaa_eval.ingest package" checked="" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4 has-children"><a class="reference internal" href="ncaa_eval.ingest.connectors.html">ncaa_eval.ingest.connectors package</a><input aria-label="Toggle navigation of ncaa_eval.ingest.connectors package" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="ncaa_eval.ingest.connectors.base.html">ncaa_eval.ingest.connectors.base module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="ncaa_eval.ingest.connectors.espn.html">ncaa_eval.ingest.connectors.espn module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="ncaa_eval.ingest.connectors.kaggle.html">ncaa_eval.ingest.connectors.kaggle module</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.repository.html">ncaa_eval.ingest.repository module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.schema.html">ncaa_eval.ingest.schema module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.sync.html">ncaa_eval.ingest.sync module</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="ncaa_eval.model.html">ncaa_eval.model package</a><input aria-label="Toggle navigation of ncaa_eval.model package" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.base.html">ncaa_eval.model.base module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.elo.html">ncaa_eval.model.elo module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.logistic_regression.html">ncaa_eval.model.logistic_regression module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.registry.html">ncaa_eval.model.registry module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.tracking.html">ncaa_eval.model.tracking module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.xgboost_model.html">ncaa_eval.model.xgboost_model module</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="ncaa_eval.transform.html">ncaa_eval.transform package</a><input aria-label="Toggle navigation of ncaa_eval.transform package" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.calibration.html">ncaa_eval.transform.calibration module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.elo.html">ncaa_eval.transform.elo module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.feature_serving.html">ncaa_eval.transform.feature_serving module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.graph.html">ncaa_eval.transform.graph module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.normalization.html">ncaa_eval.transform.normalization module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.opponent.html">ncaa_eval.transform.opponent module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.sequential.html">ncaa_eval.transform.sequential module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.serving.html">ncaa_eval.transform.serving module</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="ncaa_eval.utils.html">ncaa_eval.utils package</a><input aria-label="Toggle navigation of ncaa_eval.utils package" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.utils.logger.html">ncaa_eval.utils.logger module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../_sources/api/ncaa_eval.ingest.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="ncaa-eval-ingest-package">
+<h1>ncaa_eval.ingest package<a class="headerlink" href="#ncaa-eval-ingest-package" title="Link to this heading">¶</a></h1>
+<section id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Link to this heading">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="ncaa_eval.ingest.connectors.html">ncaa_eval.ingest.connectors package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ncaa_eval.ingest.connectors.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.connectors.base.html">ncaa_eval.ingest.connectors.base module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.connectors.base.html#ncaa_eval.ingest.connectors.base.AuthenticationError"><code class="docutils literal notranslate"><span class="pre">AuthenticationError</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.connectors.base.html#ncaa_eval.ingest.connectors.base.Connector"><code class="docutils literal notranslate"><span class="pre">Connector</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.connectors.base.html#ncaa_eval.ingest.connectors.base.ConnectorError"><code class="docutils literal notranslate"><span class="pre">ConnectorError</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.connectors.base.html#ncaa_eval.ingest.connectors.base.DataFormatError"><code class="docutils literal notranslate"><span class="pre">DataFormatError</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.connectors.base.html#ncaa_eval.ingest.connectors.base.NetworkError"><code class="docutils literal notranslate"><span class="pre">NetworkError</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.connectors.espn.html">ncaa_eval.ingest.connectors.espn module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.connectors.espn.html#ncaa_eval.ingest.connectors.espn.EspnConnector"><code class="docutils literal notranslate"><span class="pre">EspnConnector</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.connectors.kaggle.html">ncaa_eval.ingest.connectors.kaggle module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.connectors.kaggle.html#ncaa_eval.ingest.connectors.kaggle.KaggleConnector"><code class="docutils literal notranslate"><span class="pre">KaggleConnector</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ncaa_eval.ingest.connectors.html#module-ncaa_eval.ingest.connectors">Module contents</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.connectors.html#ncaa_eval.ingest.connectors.AuthenticationError"><code class="docutils literal notranslate"><span class="pre">AuthenticationError</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.connectors.html#ncaa_eval.ingest.connectors.Connector"><code class="docutils literal notranslate"><span class="pre">Connector</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.connectors.html#ncaa_eval.ingest.connectors.Connector.fetch_games"><code class="docutils literal notranslate"><span class="pre">Connector.fetch_games()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.connectors.html#ncaa_eval.ingest.connectors.Connector.fetch_seasons"><code class="docutils literal notranslate"><span class="pre">Connector.fetch_seasons()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.connectors.html#ncaa_eval.ingest.connectors.Connector.fetch_teams"><code class="docutils literal notranslate"><span class="pre">Connector.fetch_teams()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.connectors.html#ncaa_eval.ingest.connectors.ConnectorError"><code class="docutils literal notranslate"><span class="pre">ConnectorError</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.connectors.html#ncaa_eval.ingest.connectors.DataFormatError"><code class="docutils literal notranslate"><span class="pre">DataFormatError</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.connectors.html#ncaa_eval.ingest.connectors.EspnConnector"><code class="docutils literal notranslate"><span class="pre">EspnConnector</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.connectors.html#ncaa_eval.ingest.connectors.EspnConnector.fetch_games"><code class="docutils literal notranslate"><span class="pre">EspnConnector.fetch_games()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.connectors.html#ncaa_eval.ingest.connectors.KaggleConnector"><code class="docutils literal notranslate"><span class="pre">KaggleConnector</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.connectors.html#ncaa_eval.ingest.connectors.KaggleConnector.download"><code class="docutils literal notranslate"><span class="pre">KaggleConnector.download()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.connectors.html#ncaa_eval.ingest.connectors.KaggleConnector.fetch_games"><code class="docutils literal notranslate"><span class="pre">KaggleConnector.fetch_games()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.connectors.html#ncaa_eval.ingest.connectors.KaggleConnector.fetch_seasons"><code class="docutils literal notranslate"><span class="pre">KaggleConnector.fetch_seasons()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.connectors.html#ncaa_eval.ingest.connectors.KaggleConnector.fetch_team_spellings"><code class="docutils literal notranslate"><span class="pre">KaggleConnector.fetch_team_spellings()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.connectors.html#ncaa_eval.ingest.connectors.KaggleConnector.fetch_teams"><code class="docutils literal notranslate"><span class="pre">KaggleConnector.fetch_teams()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.connectors.html#ncaa_eval.ingest.connectors.KaggleConnector.load_day_zeros"><code class="docutils literal notranslate"><span class="pre">KaggleConnector.load_day_zeros()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.connectors.html#ncaa_eval.ingest.connectors.NetworkError"><code class="docutils literal notranslate"><span class="pre">NetworkError</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="ncaa_eval.ingest.repository.html">ncaa_eval.ingest.repository module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ncaa_eval.ingest.repository.html#ncaa_eval.ingest.repository.ParquetRepository"><code class="docutils literal notranslate"><span class="pre">ParquetRepository</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.repository.html#ncaa_eval.ingest.repository.ParquetRepository.get_games"><code class="docutils literal notranslate"><span class="pre">ParquetRepository.get_games()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.repository.html#ncaa_eval.ingest.repository.ParquetRepository.get_seasons"><code class="docutils literal notranslate"><span class="pre">ParquetRepository.get_seasons()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.repository.html#ncaa_eval.ingest.repository.ParquetRepository.get_teams"><code class="docutils literal notranslate"><span class="pre">ParquetRepository.get_teams()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.repository.html#ncaa_eval.ingest.repository.ParquetRepository.save_games"><code class="docutils literal notranslate"><span class="pre">ParquetRepository.save_games()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.repository.html#ncaa_eval.ingest.repository.ParquetRepository.save_seasons"><code class="docutils literal notranslate"><span class="pre">ParquetRepository.save_seasons()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.repository.html#ncaa_eval.ingest.repository.ParquetRepository.save_teams"><code class="docutils literal notranslate"><span class="pre">ParquetRepository.save_teams()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ncaa_eval.ingest.repository.html#ncaa_eval.ingest.repository.Repository"><code class="docutils literal notranslate"><span class="pre">Repository</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.repository.html#ncaa_eval.ingest.repository.Repository.get_games"><code class="docutils literal notranslate"><span class="pre">Repository.get_games()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.repository.html#ncaa_eval.ingest.repository.Repository.get_seasons"><code class="docutils literal notranslate"><span class="pre">Repository.get_seasons()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.repository.html#ncaa_eval.ingest.repository.Repository.get_teams"><code class="docutils literal notranslate"><span class="pre">Repository.get_teams()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.repository.html#ncaa_eval.ingest.repository.Repository.save_games"><code class="docutils literal notranslate"><span class="pre">Repository.save_games()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.repository.html#ncaa_eval.ingest.repository.Repository.save_seasons"><code class="docutils literal notranslate"><span class="pre">Repository.save_seasons()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.repository.html#ncaa_eval.ingest.repository.Repository.save_teams"><code class="docutils literal notranslate"><span class="pre">Repository.save_teams()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ncaa_eval.ingest.schema.html">ncaa_eval.ingest.schema module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Game"><code class="docutils literal notranslate"><span class="pre">Game</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Game.date"><code class="docutils literal notranslate"><span class="pre">Game.date</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Game.day_num"><code class="docutils literal notranslate"><span class="pre">Game.day_num</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Game.game_id"><code class="docutils literal notranslate"><span class="pre">Game.game_id</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Game.is_tournament"><code class="docutils literal notranslate"><span class="pre">Game.is_tournament</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Game.l_score"><code class="docutils literal notranslate"><span class="pre">Game.l_score</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Game.l_team_id"><code class="docutils literal notranslate"><span class="pre">Game.l_team_id</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Game.loc"><code class="docutils literal notranslate"><span class="pre">Game.loc</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Game.model_config"><code class="docutils literal notranslate"><span class="pre">Game.model_config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Game.num_ot"><code class="docutils literal notranslate"><span class="pre">Game.num_ot</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Game.season"><code class="docutils literal notranslate"><span class="pre">Game.season</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Game.w_score"><code class="docutils literal notranslate"><span class="pre">Game.w_score</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Game.w_team_id"><code class="docutils literal notranslate"><span class="pre">Game.w_team_id</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Season"><code class="docutils literal notranslate"><span class="pre">Season</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Season.model_config"><code class="docutils literal notranslate"><span class="pre">Season.model_config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Season.year"><code class="docutils literal notranslate"><span class="pre">Season.year</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Team"><code class="docutils literal notranslate"><span class="pre">Team</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Team.canonical_name"><code class="docutils literal notranslate"><span class="pre">Team.canonical_name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Team.model_config"><code class="docutils literal notranslate"><span class="pre">Team.model_config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Team.team_id"><code class="docutils literal notranslate"><span class="pre">Team.team_id</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Team.team_name"><code class="docutils literal notranslate"><span class="pre">Team.team_name</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ncaa_eval.ingest.sync.html">ncaa_eval.ingest.sync module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ncaa_eval.ingest.sync.html#ncaa_eval.ingest.sync.SyncEngine"><code class="docutils literal notranslate"><span class="pre">SyncEngine</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.sync.html#ncaa_eval.ingest.sync.SyncEngine.sync_all"><code class="docutils literal notranslate"><span class="pre">SyncEngine.sync_all()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.sync.html#ncaa_eval.ingest.sync.SyncEngine.sync_espn"><code class="docutils literal notranslate"><span class="pre">SyncEngine.sync_espn()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.sync.html#ncaa_eval.ingest.sync.SyncEngine.sync_kaggle"><code class="docutils literal notranslate"><span class="pre">SyncEngine.sync_kaggle()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ncaa_eval.ingest.sync.html#ncaa_eval.ingest.sync.SyncResult"><code class="docutils literal notranslate"><span class="pre">SyncResult</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.sync.html#ncaa_eval.ingest.sync.SyncResult.games_written"><code class="docutils literal notranslate"><span class="pre">SyncResult.games_written</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.sync.html#ncaa_eval.ingest.sync.SyncResult.seasons_cached"><code class="docutils literal notranslate"><span class="pre">SyncResult.seasons_cached</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.sync.html#ncaa_eval.ingest.sync.SyncResult.seasons_written"><code class="docutils literal notranslate"><span class="pre">SyncResult.seasons_written</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.sync.html#ncaa_eval.ingest.sync.SyncResult.source"><code class="docutils literal notranslate"><span class="pre">SyncResult.source</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.sync.html#ncaa_eval.ingest.sync.SyncResult.teams_written"><code class="docutils literal notranslate"><span class="pre">SyncResult.teams_written</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="module-ncaa_eval.ingest">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-ncaa_eval.ingest" title="Link to this heading">¶</a></h2>
+<p>Data ingestion module.</p>
+<dl class="py exception">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.AuthenticationError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ncaa_eval.ingest.</span></span><span class="sig-name descname"><span class="pre">AuthenticationError</span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/connectors/base.html#AuthenticationError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.AuthenticationError" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="ncaa_eval.ingest.connectors.base.html#ncaa_eval.ingest.connectors.base.ConnectorError" title="ncaa_eval.ingest.connectors.base.ConnectorError"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConnectorError</span></code></a></p>
+<p>Credentials missing, invalid, or expired.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.Connector">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ncaa_eval.ingest.</span></span><span class="sig-name descname"><span class="pre">Connector</span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/connectors/base.html#Connector"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.Connector" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Abstract base class for NCAA data source connectors.</p>
+<p>All connectors must implement <a class="reference internal" href="#ncaa_eval.ingest.Connector.fetch_games" title="ncaa_eval.ingest.Connector.fetch_games"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fetch_games()</span></code></a>, which is the universal
+capability.  <a class="reference internal" href="#ncaa_eval.ingest.Connector.fetch_teams" title="ncaa_eval.ingest.Connector.fetch_teams"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fetch_teams()</span></code></a> and <a class="reference internal" href="#ncaa_eval.ingest.Connector.fetch_seasons" title="ncaa_eval.ingest.Connector.fetch_seasons"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fetch_seasons()</span></code></a> are optional
+capabilities — subclasses that do not support them inherit the default
+implementation, which raises <code class="docutils literal notranslate"><span class="pre">NotImplementedError</span></code>.  Callers should use
+<code class="xref py py-func docutils literal notranslate"><span class="pre">isinstance()</span></code> checks or <code class="docutils literal notranslate"><span class="pre">try</span></code>/<code class="docutils literal notranslate"><span class="pre">except</span> <span class="pre">NotImplementedError</span></code> to
+probe optional capabilities before calling them.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.Connector.fetch_games">
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">fetch_games</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">season</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Game" title="ncaa_eval.ingest.schema.Game"><span class="pre">Game</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/connectors/base.html#Connector.fetch_games"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.Connector.fetch_games" title="Link to this definition">¶</a></dt>
+<dd><p>Fetch game results for a given <em>season</em> year.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.Connector.fetch_seasons">
+<span class="sig-name descname"><span class="pre">fetch_seasons</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Season" title="ncaa_eval.ingest.schema.Season"><span class="pre">Season</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/connectors/base.html#Connector.fetch_seasons"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.Connector.fetch_seasons" title="Link to this definition">¶</a></dt>
+<dd><p>Fetch available seasons from the source.</p>
+<p>Optional capability — not all connectors provide season master data.
+:raises NotImplementedError: If this connector does not support fetching seasons.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.Connector.fetch_teams">
+<span class="sig-name descname"><span class="pre">fetch_teams</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Team" title="ncaa_eval.ingest.schema.Team"><span class="pre">Team</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/connectors/base.html#Connector.fetch_teams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.Connector.fetch_teams" title="Link to this definition">¶</a></dt>
+<dd><p>Fetch team data from the source.</p>
+<p>Optional capability — not all connectors provide team master data.
+:raises NotImplementedError: If this connector does not support fetching teams.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.ConnectorError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ncaa_eval.ingest.</span></span><span class="sig-name descname"><span class="pre">ConnectorError</span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/connectors/base.html#ConnectorError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.ConnectorError" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+<p>Base exception for all connector errors.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.DataFormatError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ncaa_eval.ingest.</span></span><span class="sig-name descname"><span class="pre">DataFormatError</span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/connectors/base.html#DataFormatError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.DataFormatError" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="ncaa_eval.ingest.connectors.base.html#ncaa_eval.ingest.connectors.base.ConnectorError" title="ncaa_eval.ingest.connectors.base.ConnectorError"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConnectorError</span></code></a></p>
+<p>Raw data (CSV / API response) does not match the expected schema.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.EspnConnector">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ncaa_eval.ingest.</span></span><span class="sig-name descname"><span class="pre">EspnConnector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">team_name_to_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">season_day_zeros</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">date</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ncaa_eval/ingest/connectors/espn.html#EspnConnector"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.EspnConnector" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="ncaa_eval.ingest.connectors.base.html#ncaa_eval.ingest.connectors.base.Connector" title="ncaa_eval.ingest.connectors.base.Connector"><code class="xref py py-class docutils literal notranslate"><span class="pre">Connector</span></code></a></p>
+<p>Connector for ESPN game data via the cbbpy scraper.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>team_name_to_id</strong> – Mapping from team name strings to Kaggle TeamIDs.</p></li>
+<li><p><strong>season_day_zeros</strong> – Mapping from season year to DayZero date.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.EspnConnector.fetch_games">
+<span class="sig-name descname"><span class="pre">fetch_games</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">season</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Game" title="ncaa_eval.ingest.schema.Game"><span class="pre">Game</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/connectors/espn.html#EspnConnector.fetch_games"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.EspnConnector.fetch_games" title="Link to this definition">¶</a></dt>
+<dd><p>Fetch game results for <em>season</em> from ESPN via cbbpy.</p>
+<p>Uses <cite>get_team_schedule()</cite> for each team in the mapping and
+deduplicates by ESPN game ID.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.Game">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ncaa_eval.ingest.</span></span><span class="sig-name descname"><span class="pre">Game</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">GameID</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">MinLen</span><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">min_length</span></span><span class="o"><span class="pre">=</span></span><span class="m"><span class="pre">1</span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Season</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Ge</span><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">ge</span></span><span class="o"><span class="pre">=</span></span><span class="m"><span class="pre">1985</span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">DayNum</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Ge</span><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">ge</span></span><span class="o"><span class="pre">=</span></span><span class="m"><span class="pre">0</span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Date</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">date</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">WTeamID</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Ge</span><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">ge</span></span><span class="o"><span class="pre">=</span></span><span class="m"><span class="pre">1</span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">LTeamID</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Ge</span><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">ge</span></span><span class="o"><span class="pre">=</span></span><span class="m"><span class="pre">1</span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">WScore</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Ge</span><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">ge</span></span><span class="o"><span class="pre">=</span></span><span class="m"><span class="pre">0</span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">LScore</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Ge</span><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">ge</span></span><span class="o"><span class="pre">=</span></span><span class="m"><span class="pre">0</span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Loc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'H'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'A'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'N'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NumOT</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Ge</span><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">ge</span></span><span class="o"><span class="pre">=</span></span><span class="m"><span class="pre">0</span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">IsTournament</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ncaa_eval/ingest/schema.html#Game"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.Game" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>A single NCAA basketball game result.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.Game.date">
+<span class="sig-name descname"><span class="pre">date</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">datetime.date</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#ncaa_eval.ingest.Game.date" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.Game.day_num">
+<span class="sig-name descname"><span class="pre">day_num</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#ncaa_eval.ingest.Game.day_num" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.Game.game_id">
+<span class="sig-name descname"><span class="pre">game_id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#ncaa_eval.ingest.Game.game_id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.Game.is_tournament">
+<span class="sig-name descname"><span class="pre">is_tournament</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#ncaa_eval.ingest.Game.is_tournament" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.Game.l_score">
+<span class="sig-name descname"><span class="pre">l_score</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#ncaa_eval.ingest.Game.l_score" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.Game.l_team_id">
+<span class="sig-name descname"><span class="pre">l_team_id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#ncaa_eval.ingest.Game.l_team_id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.Game.loc">
+<span class="sig-name descname"><span class="pre">loc</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'H'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'A'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'N'</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#ncaa_eval.ingest.Game.loc" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.Game.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'populate_by_name':</span> <span class="pre">True,</span> <span class="pre">'validate_by_alias':</span> <span class="pre">True,</span> <span class="pre">'validate_by_name':</span> <span class="pre">True}</span></span><a class="headerlink" href="#ncaa_eval.ingest.Game.model_config" title="Link to this definition">¶</a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.Game.num_ot">
+<span class="sig-name descname"><span class="pre">num_ot</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#ncaa_eval.ingest.Game.num_ot" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.Game.season">
+<span class="sig-name descname"><span class="pre">season</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#ncaa_eval.ingest.Game.season" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.Game.w_score">
+<span class="sig-name descname"><span class="pre">w_score</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#ncaa_eval.ingest.Game.w_score" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.Game.w_team_id">
+<span class="sig-name descname"><span class="pre">w_team_id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#ncaa_eval.ingest.Game.w_team_id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.KaggleConnector">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ncaa_eval.ingest.</span></span><span class="sig-name descname"><span class="pre">KaggleConnector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">extract_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">competition</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'march-machine-learning-mania-2025'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ncaa_eval/ingest/connectors/kaggle.html#KaggleConnector"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.KaggleConnector" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="ncaa_eval.ingest.connectors.base.html#ncaa_eval.ingest.connectors.base.Connector" title="ncaa_eval.ingest.connectors.base.Connector"><code class="xref py py-class docutils literal notranslate"><span class="pre">Connector</span></code></a></p>
+<p>Connector for Kaggle March Machine Learning Mania competition data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>extract_dir</strong> – Local directory where CSV files are downloaded/extracted.</p></li>
+<li><p><strong>competition</strong> – Kaggle competition slug.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.KaggleConnector.download">
+<span class="sig-name descname"><span class="pre">download</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/connectors/kaggle.html#KaggleConnector.download"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.KaggleConnector.download" title="Link to this definition">¶</a></dt>
+<dd><p>Download and extract competition CSV files via the Kaggle API.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>force</strong> – Re-download even if files already exist.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><a class="reference internal" href="#ncaa_eval.ingest.AuthenticationError" title="ncaa_eval.ingest.AuthenticationError"><strong>AuthenticationError</strong></a> – Credentials missing or invalid.</p></li>
+<li><p><a class="reference internal" href="#ncaa_eval.ingest.NetworkError" title="ncaa_eval.ingest.NetworkError"><strong>NetworkError</strong></a> – Download failed due to connection issues.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.KaggleConnector.fetch_games">
+<span class="sig-name descname"><span class="pre">fetch_games</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">season</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Game" title="ncaa_eval.ingest.schema.Game"><span class="pre">Game</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/connectors/kaggle.html#KaggleConnector.fetch_games"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.KaggleConnector.fetch_games" title="Link to this definition">¶</a></dt>
+<dd><p>Parse regular-season and tournament CSVs into Game models.</p>
+<p>Games from <code class="docutils literal notranslate"><span class="pre">MRegularSeasonCompactResults.csv</span></code> have
+<code class="docutils literal notranslate"><span class="pre">is_tournament=False</span></code>; games from <code class="docutils literal notranslate"><span class="pre">MNCAATourneyCompactResults.csv</span></code>
+have <code class="docutils literal notranslate"><span class="pre">is_tournament=True</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.KaggleConnector.fetch_seasons">
+<span class="sig-name descname"><span class="pre">fetch_seasons</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Season" title="ncaa_eval.ingest.schema.Season"><span class="pre">Season</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/connectors/kaggle.html#KaggleConnector.fetch_seasons"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.KaggleConnector.fetch_seasons" title="Link to this definition">¶</a></dt>
+<dd><p>Parse <code class="docutils literal notranslate"><span class="pre">MSeasons.csv</span></code> into Season models.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.KaggleConnector.fetch_team_spellings">
+<span class="sig-name descname"><span class="pre">fetch_team_spellings</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/connectors/kaggle.html#KaggleConnector.fetch_team_spellings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.KaggleConnector.fetch_team_spellings" title="Link to this definition">¶</a></dt>
+<dd><p>Parse <code class="docutils literal notranslate"><span class="pre">MTeamSpellings.csv</span></code> into a spelling → TeamID mapping.</p>
+<p>Returns every alternate spelling (lower-cased) for each team, which
+provides much wider coverage than the canonical names in MTeams.csv
+when resolving ESPN team name strings to Kaggle IDs.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.KaggleConnector.fetch_teams">
+<span class="sig-name descname"><span class="pre">fetch_teams</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Team" title="ncaa_eval.ingest.schema.Team"><span class="pre">Team</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/connectors/kaggle.html#KaggleConnector.fetch_teams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.KaggleConnector.fetch_teams" title="Link to this definition">¶</a></dt>
+<dd><p>Parse <code class="docutils literal notranslate"><span class="pre">MTeams.csv</span></code> into Team models.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.KaggleConnector.load_day_zeros">
+<span class="sig-name descname"><span class="pre">load_day_zeros</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">date</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/connectors/kaggle.html#KaggleConnector.load_day_zeros"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.KaggleConnector.load_day_zeros" title="Link to this definition">¶</a></dt>
+<dd><p>Load and cache the season → DayZero mapping.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Mapping of season year to the date of Day 0 for that season.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.NetworkError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ncaa_eval.ingest.</span></span><span class="sig-name descname"><span class="pre">NetworkError</span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/connectors/base.html#NetworkError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.NetworkError" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="ncaa_eval.ingest.connectors.base.html#ncaa_eval.ingest.connectors.base.ConnectorError" title="ncaa_eval.ingest.connectors.base.ConnectorError"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConnectorError</span></code></a></p>
+<p>Connection failure, timeout, or HTTP error.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.ParquetRepository">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ncaa_eval.ingest.</span></span><span class="sig-name descname"><span class="pre">ParquetRepository</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ncaa_eval/ingest/repository.html#ParquetRepository"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.ParquetRepository" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="ncaa_eval.ingest.repository.html#ncaa_eval.ingest.repository.Repository" title="ncaa_eval.ingest.repository.Repository"><code class="xref py py-class docutils literal notranslate"><span class="pre">Repository</span></code></a></p>
+<p>Repository implementation backed by Parquet files.</p>
+<p>Directory layout:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="n">base_path</span><span class="p">}</span><span class="o">/</span>
+    <span class="n">teams</span><span class="o">.</span><span class="n">parquet</span>
+    <span class="n">seasons</span><span class="o">.</span><span class="n">parquet</span>
+    <span class="n">games</span><span class="o">/</span>
+        <span class="n">season</span><span class="o">=</span><span class="p">{</span><span class="n">year</span><span class="p">}</span><span class="o">/</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">parquet</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.ParquetRepository.get_games">
+<span class="sig-name descname"><span class="pre">get_games</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">season</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Game" title="ncaa_eval.ingest.schema.Game"><span class="pre">Game</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/repository.html#ParquetRepository.get_games"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.ParquetRepository.get_games" title="Link to this definition">¶</a></dt>
+<dd><p>Return all games for a given <em>season</em> year.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.ParquetRepository.get_seasons">
+<span class="sig-name descname"><span class="pre">get_seasons</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Season" title="ncaa_eval.ingest.schema.Season"><span class="pre">Season</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/repository.html#ParquetRepository.get_seasons"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.ParquetRepository.get_seasons" title="Link to this definition">¶</a></dt>
+<dd><p>Return all stored seasons.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.ParquetRepository.get_teams">
+<span class="sig-name descname"><span class="pre">get_teams</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Team" title="ncaa_eval.ingest.schema.Team"><span class="pre">Team</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/repository.html#ParquetRepository.get_teams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.ParquetRepository.get_teams" title="Link to this definition">¶</a></dt>
+<dd><p>Return all stored teams.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.ParquetRepository.save_games">
+<span class="sig-name descname"><span class="pre">save_games</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">games</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Game" title="ncaa_eval.ingest.schema.Game"><span class="pre">Game</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/repository.html#ParquetRepository.save_games"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.ParquetRepository.save_games" title="Link to this definition">¶</a></dt>
+<dd><p>Persist a collection of games (overwrite per season partition).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.ParquetRepository.save_seasons">
+<span class="sig-name descname"><span class="pre">save_seasons</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seasons</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Season" title="ncaa_eval.ingest.schema.Season"><span class="pre">Season</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/repository.html#ParquetRepository.save_seasons"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.ParquetRepository.save_seasons" title="Link to this definition">¶</a></dt>
+<dd><p>Persist a collection of seasons (overwrite).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.ParquetRepository.save_teams">
+<span class="sig-name descname"><span class="pre">save_teams</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">teams</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Team" title="ncaa_eval.ingest.schema.Team"><span class="pre">Team</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/repository.html#ParquetRepository.save_teams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.ParquetRepository.save_teams" title="Link to this definition">¶</a></dt>
+<dd><p>Persist a collection of teams (overwrite).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.Repository">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ncaa_eval.ingest.</span></span><span class="sig-name descname"><span class="pre">Repository</span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/repository.html#Repository"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.Repository" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Abstract base class for NCAA data persistence.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.Repository.get_games">
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">get_games</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">season</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Game" title="ncaa_eval.ingest.schema.Game"><span class="pre">Game</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/repository.html#Repository.get_games"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.Repository.get_games" title="Link to this definition">¶</a></dt>
+<dd><p>Return all games for a given <em>season</em> year.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.Repository.get_seasons">
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">get_seasons</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Season" title="ncaa_eval.ingest.schema.Season"><span class="pre">Season</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/repository.html#Repository.get_seasons"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.Repository.get_seasons" title="Link to this definition">¶</a></dt>
+<dd><p>Return all stored seasons.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.Repository.get_teams">
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">get_teams</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Team" title="ncaa_eval.ingest.schema.Team"><span class="pre">Team</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/repository.html#Repository.get_teams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.Repository.get_teams" title="Link to this definition">¶</a></dt>
+<dd><p>Return all stored teams.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.Repository.save_games">
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">save_games</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">games</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Game" title="ncaa_eval.ingest.schema.Game"><span class="pre">Game</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/repository.html#Repository.save_games"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.Repository.save_games" title="Link to this definition">¶</a></dt>
+<dd><p>Persist a collection of games (overwrite per season partition).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.Repository.save_seasons">
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">save_seasons</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seasons</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Season" title="ncaa_eval.ingest.schema.Season"><span class="pre">Season</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/repository.html#Repository.save_seasons"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.Repository.save_seasons" title="Link to this definition">¶</a></dt>
+<dd><p>Persist a collection of seasons (overwrite).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.Repository.save_teams">
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">save_teams</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">teams</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Team" title="ncaa_eval.ingest.schema.Team"><span class="pre">Team</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/repository.html#Repository.save_teams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.Repository.save_teams" title="Link to this definition">¶</a></dt>
+<dd><p>Persist a collection of teams (overwrite).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.Season">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ncaa_eval.ingest.</span></span><span class="sig-name descname"><span class="pre">Season</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">Year</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Ge</span><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">ge</span></span><span class="o"><span class="pre">=</span></span><span class="m"><span class="pre">1985</span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ncaa_eval/ingest/schema.html#Season"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.Season" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>A single NCAA basketball season (identified by calendar year).</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.Season.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'populate_by_name':</span> <span class="pre">True,</span> <span class="pre">'validate_by_alias':</span> <span class="pre">True,</span> <span class="pre">'validate_by_name':</span> <span class="pre">True}</span></span><a class="headerlink" href="#ncaa_eval.ingest.Season.model_config" title="Link to this definition">¶</a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.Season.year">
+<span class="sig-name descname"><span class="pre">year</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#ncaa_eval.ingest.Season.year" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.SyncEngine">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ncaa_eval.ingest.</span></span><span class="sig-name descname"><span class="pre">SyncEngine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repository</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="ncaa_eval.ingest.repository.html#ncaa_eval.ingest.repository.Repository" title="ncaa_eval.ingest.repository.Repository"><span class="pre">Repository</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ncaa_eval/ingest/sync.html#SyncEngine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.SyncEngine" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Orchestrates data sync from external sources into the local repository.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>repository</strong> – Repository instance used for reading and writing data.</p></li>
+<li><p><strong>data_dir</strong> – Root directory for local Parquet files and cached CSVs.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.SyncEngine.sync_all">
+<span class="sig-name descname"><span class="pre">sync_all</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">force_refresh</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ncaa_eval.ingest.sync.html#ncaa_eval.ingest.sync.SyncResult" title="ncaa_eval.ingest.sync.SyncResult"><span class="pre">SyncResult</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/sync.html#SyncEngine.sync_all"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.SyncEngine.sync_all" title="Link to this definition">¶</a></dt>
+<dd><p>Sync all configured sources: Kaggle first, then ESPN.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>force_refresh</strong> – Bypass caches for all sources.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of SyncResult, one per source (kaggle, espn).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.SyncEngine.sync_espn">
+<span class="sig-name descname"><span class="pre">sync_espn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">force_refresh</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="ncaa_eval.ingest.sync.html#ncaa_eval.ingest.sync.SyncResult" title="ncaa_eval.ingest.sync.SyncResult"><span class="pre">SyncResult</span></a></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/sync.html#SyncEngine.sync_espn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.SyncEngine.sync_espn" title="Link to this definition">¶</a></dt>
+<dd><p>Sync the most recent season’s games from ESPN.</p>
+<p>Requires Kaggle data to be synced first (needs team and season
+mappings).  Uses a marker-file cache: if <code class="docutils literal notranslate"><span class="pre">.espn_synced_{year}</span></code>
+exists the season is considered up-to-date unless <em>force_refresh</em>.</p>
+<p>ESPN games are merged with existing Kaggle games for the same
+season partition before saving (because <code class="docutils literal notranslate"><span class="pre">save_games</span></code> overwrites).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>force_refresh</strong> – Bypass marker-file cache and re-fetch from ESPN.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>SyncResult summarising games written and seasons cached.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>RuntimeError</strong> – Kaggle data has not been synced yet.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.SyncEngine.sync_kaggle">
+<span class="sig-name descname"><span class="pre">sync_kaggle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">force_refresh</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="ncaa_eval.ingest.sync.html#ncaa_eval.ingest.sync.SyncResult" title="ncaa_eval.ingest.sync.SyncResult"><span class="pre">SyncResult</span></a></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/sync.html#SyncEngine.sync_kaggle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.SyncEngine.sync_kaggle" title="Link to this definition">¶</a></dt>
+<dd><p>Sync NCAA data from Kaggle with Parquet-level caching.</p>
+<p>Downloads CSVs (if not cached) and converts them to Parquet.
+Skips individual entities whose Parquet files already exist,
+unless <em>force_refresh</em> is <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>force_refresh</strong> – Bypass all caches and re-fetch everything.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>SyncResult summarising teams/seasons/games written and cached.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.SyncResult">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ncaa_eval.ingest.</span></span><span class="sig-name descname"><span class="pre">SyncResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">teams_written</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seasons_written</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">games_written</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seasons_cached</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ncaa_eval/ingest/sync.html#SyncResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.SyncResult" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Summary of a single source sync operation.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.SyncResult.games_written">
+<span class="sig-name descname"><span class="pre">games_written</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></span><a class="headerlink" href="#ncaa_eval.ingest.SyncResult.games_written" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.SyncResult.seasons_cached">
+<span class="sig-name descname"><span class="pre">seasons_cached</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></span><a class="headerlink" href="#ncaa_eval.ingest.SyncResult.seasons_cached" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.SyncResult.seasons_written">
+<span class="sig-name descname"><span class="pre">seasons_written</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></span><a class="headerlink" href="#ncaa_eval.ingest.SyncResult.seasons_written" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.SyncResult.source">
+<span class="sig-name descname"><span class="pre">source</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#ncaa_eval.ingest.SyncResult.source" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.SyncResult.teams_written">
+<span class="sig-name descname"><span class="pre">teams_written</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></span><a class="headerlink" href="#ncaa_eval.ingest.SyncResult.teams_written" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.Team">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ncaa_eval.ingest.</span></span><span class="sig-name descname"><span class="pre">Team</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">TeamID</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Ge</span><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">ge</span></span><span class="o"><span class="pre">=</span></span><span class="m"><span class="pre">1</span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TeamName</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Annotated</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">MinLen</span><span class="p"><span class="pre">(</span></span><span class="n"><span class="pre">min_length</span></span><span class="o"><span class="pre">=</span></span><span class="m"><span class="pre">1</span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">CanonicalName</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ncaa_eval/ingest/schema.html#Team"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.Team" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>A college basketball team.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.Team.canonical_name">
+<span class="sig-name descname"><span class="pre">canonical_name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#ncaa_eval.ingest.Team.canonical_name" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.Team.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'populate_by_name':</span> <span class="pre">True,</span> <span class="pre">'validate_by_alias':</span> <span class="pre">True,</span> <span class="pre">'validate_by_name':</span> <span class="pre">True}</span></span><a class="headerlink" href="#ncaa_eval.ingest.Team.model_config" title="Link to this definition">¶</a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.Team.team_id">
+<span class="sig-name descname"><span class="pre">team_id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#ncaa_eval.ingest.Team.team_id" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.Team.team_name">
+<span class="sig-name descname"><span class="pre">team_name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#ncaa_eval.ingest.Team.team_name" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="ncaa_eval.ingest.connectors.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">ncaa_eval.ingest.connectors package</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="ncaa_eval.evaluation.splitter.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">ncaa_eval.evaluation.splitter module</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2026, Dan Hilgart
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">ncaa_eval.ingest package</a><ul>
+<li><a class="reference internal" href="#subpackages">Subpackages</a></li>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-ncaa_eval.ingest">Module contents</a><ul>
+<li><a class="reference internal" href="#ncaa_eval.ingest.AuthenticationError"><code class="docutils literal notranslate"><span class="pre">AuthenticationError</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.Connector"><code class="docutils literal notranslate"><span class="pre">Connector</span></code></a><ul>
+<li><a class="reference internal" href="#ncaa_eval.ingest.Connector.fetch_games"><code class="docutils literal notranslate"><span class="pre">Connector.fetch_games()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.Connector.fetch_seasons"><code class="docutils literal notranslate"><span class="pre">Connector.fetch_seasons()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.Connector.fetch_teams"><code class="docutils literal notranslate"><span class="pre">Connector.fetch_teams()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.ConnectorError"><code class="docutils literal notranslate"><span class="pre">ConnectorError</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.DataFormatError"><code class="docutils literal notranslate"><span class="pre">DataFormatError</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.EspnConnector"><code class="docutils literal notranslate"><span class="pre">EspnConnector</span></code></a><ul>
+<li><a class="reference internal" href="#ncaa_eval.ingest.EspnConnector.fetch_games"><code class="docutils literal notranslate"><span class="pre">EspnConnector.fetch_games()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.Game"><code class="docutils literal notranslate"><span class="pre">Game</span></code></a><ul>
+<li><a class="reference internal" href="#ncaa_eval.ingest.Game.date"><code class="docutils literal notranslate"><span class="pre">Game.date</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.Game.day_num"><code class="docutils literal notranslate"><span class="pre">Game.day_num</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.Game.game_id"><code class="docutils literal notranslate"><span class="pre">Game.game_id</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.Game.is_tournament"><code class="docutils literal notranslate"><span class="pre">Game.is_tournament</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.Game.l_score"><code class="docutils literal notranslate"><span class="pre">Game.l_score</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.Game.l_team_id"><code class="docutils literal notranslate"><span class="pre">Game.l_team_id</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.Game.loc"><code class="docutils literal notranslate"><span class="pre">Game.loc</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.Game.model_config"><code class="docutils literal notranslate"><span class="pre">Game.model_config</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.Game.num_ot"><code class="docutils literal notranslate"><span class="pre">Game.num_ot</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.Game.season"><code class="docutils literal notranslate"><span class="pre">Game.season</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.Game.w_score"><code class="docutils literal notranslate"><span class="pre">Game.w_score</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.Game.w_team_id"><code class="docutils literal notranslate"><span class="pre">Game.w_team_id</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.KaggleConnector"><code class="docutils literal notranslate"><span class="pre">KaggleConnector</span></code></a><ul>
+<li><a class="reference internal" href="#ncaa_eval.ingest.KaggleConnector.download"><code class="docutils literal notranslate"><span class="pre">KaggleConnector.download()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.KaggleConnector.fetch_games"><code class="docutils literal notranslate"><span class="pre">KaggleConnector.fetch_games()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.KaggleConnector.fetch_seasons"><code class="docutils literal notranslate"><span class="pre">KaggleConnector.fetch_seasons()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.KaggleConnector.fetch_team_spellings"><code class="docutils literal notranslate"><span class="pre">KaggleConnector.fetch_team_spellings()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.KaggleConnector.fetch_teams"><code class="docutils literal notranslate"><span class="pre">KaggleConnector.fetch_teams()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.KaggleConnector.load_day_zeros"><code class="docutils literal notranslate"><span class="pre">KaggleConnector.load_day_zeros()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.NetworkError"><code class="docutils literal notranslate"><span class="pre">NetworkError</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.ParquetRepository"><code class="docutils literal notranslate"><span class="pre">ParquetRepository</span></code></a><ul>
+<li><a class="reference internal" href="#ncaa_eval.ingest.ParquetRepository.get_games"><code class="docutils literal notranslate"><span class="pre">ParquetRepository.get_games()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.ParquetRepository.get_seasons"><code class="docutils literal notranslate"><span class="pre">ParquetRepository.get_seasons()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.ParquetRepository.get_teams"><code class="docutils literal notranslate"><span class="pre">ParquetRepository.get_teams()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.ParquetRepository.save_games"><code class="docutils literal notranslate"><span class="pre">ParquetRepository.save_games()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.ParquetRepository.save_seasons"><code class="docutils literal notranslate"><span class="pre">ParquetRepository.save_seasons()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.ParquetRepository.save_teams"><code class="docutils literal notranslate"><span class="pre">ParquetRepository.save_teams()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.Repository"><code class="docutils literal notranslate"><span class="pre">Repository</span></code></a><ul>
+<li><a class="reference internal" href="#ncaa_eval.ingest.Repository.get_games"><code class="docutils literal notranslate"><span class="pre">Repository.get_games()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.Repository.get_seasons"><code class="docutils literal notranslate"><span class="pre">Repository.get_seasons()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.Repository.get_teams"><code class="docutils literal notranslate"><span class="pre">Repository.get_teams()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.Repository.save_games"><code class="docutils literal notranslate"><span class="pre">Repository.save_games()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.Repository.save_seasons"><code class="docutils literal notranslate"><span class="pre">Repository.save_seasons()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.Repository.save_teams"><code class="docutils literal notranslate"><span class="pre">Repository.save_teams()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.Season"><code class="docutils literal notranslate"><span class="pre">Season</span></code></a><ul>
+<li><a class="reference internal" href="#ncaa_eval.ingest.Season.model_config"><code class="docutils literal notranslate"><span class="pre">Season.model_config</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.Season.year"><code class="docutils literal notranslate"><span class="pre">Season.year</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.SyncEngine"><code class="docutils literal notranslate"><span class="pre">SyncEngine</span></code></a><ul>
+<li><a class="reference internal" href="#ncaa_eval.ingest.SyncEngine.sync_all"><code class="docutils literal notranslate"><span class="pre">SyncEngine.sync_all()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.SyncEngine.sync_espn"><code class="docutils literal notranslate"><span class="pre">SyncEngine.sync_espn()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.SyncEngine.sync_kaggle"><code class="docutils literal notranslate"><span class="pre">SyncEngine.sync_kaggle()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.SyncResult"><code class="docutils literal notranslate"><span class="pre">SyncResult</span></code></a><ul>
+<li><a class="reference internal" href="#ncaa_eval.ingest.SyncResult.games_written"><code class="docutils literal notranslate"><span class="pre">SyncResult.games_written</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.SyncResult.seasons_cached"><code class="docutils literal notranslate"><span class="pre">SyncResult.seasons_cached</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.SyncResult.seasons_written"><code class="docutils literal notranslate"><span class="pre">SyncResult.seasons_written</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.SyncResult.source"><code class="docutils literal notranslate"><span class="pre">SyncResult.source</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.SyncResult.teams_written"><code class="docutils literal notranslate"><span class="pre">SyncResult.teams_written</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.Team"><code class="docutils literal notranslate"><span class="pre">Team</span></code></a><ul>
+<li><a class="reference internal" href="#ncaa_eval.ingest.Team.canonical_name"><code class="docutils literal notranslate"><span class="pre">Team.canonical_name</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.Team.model_config"><code class="docutils literal notranslate"><span class="pre">Team.model_config</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.Team.team_id"><code class="docutils literal notranslate"><span class="pre">Team.team_id</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.Team.team_name"><code class="docutils literal notranslate"><span class="pre">Team.team_name</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=39bb1c6d"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
+    </body>
+</html>

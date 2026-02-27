@@ -1,0 +1,1134 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="ncaa_eval.cli package" href="ncaa_eval.cli.html"><link rel="prev" title="ncaa_eval" href="modules.html">
+
+    <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
+        <title>ncaa_eval package - ncaa_eval 0.9.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">ncaa_eval 0.9.0 documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  <span class="sidebar-brand-text">ncaa_eval 0.9.0 documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">User Guide:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user-guide.html">User Guide</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Guides:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../STYLE_GUIDE.html">NCAA Eval Style Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../TESTING_STRATEGY.html">Testing Strategy</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Testing Guides:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../testing/conventions.html">Testing Conventions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../testing/domain-testing.html">Domain-Specific Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../testing/execution.html">Test Execution Tiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../testing/quality.html">Test Suite Quality Assurance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../testing/test-approach-guide.html">Test Approach Guide: Example-Based vs Property-Based vs Fuzz-Based Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../testing/test-purpose-guide.html">Test Purpose Guide: Functional, Performance, and Regression Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../testing/test-scope-guide.html">Test Scope Guide: Unit vs Integration Tests</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference:</span></p>
+<ul class="current">
+<li class="toctree-l1 current has-children"><a class="reference internal" href="modules.html">ncaa_eval</a><input aria-label="Toggle navigation of ncaa_eval" checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2 current has-children current-page"><a class="current reference internal" href="#">ncaa_eval package</a><input aria-label="Toggle navigation of ncaa_eval package" checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="ncaa_eval.cli.html">ncaa_eval.cli package</a><input aria-label="Toggle navigation of ncaa_eval.cli package" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.cli.main.html">ncaa_eval.cli.main module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.cli.train.html">ncaa_eval.cli.train module</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="ncaa_eval.evaluation.html">ncaa_eval.evaluation package</a><input aria-label="Toggle navigation of ncaa_eval.evaluation package" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.backtest.html">ncaa_eval.evaluation.backtest module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html">ncaa_eval.evaluation.metrics module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.plotting.html">ncaa_eval.evaluation.plotting module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html">ncaa_eval.evaluation.simulation module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.splitter.html">ncaa_eval.evaluation.splitter module</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="ncaa_eval.ingest.html">ncaa_eval.ingest package</a><input aria-label="Toggle navigation of ncaa_eval.ingest package" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4 has-children"><a class="reference internal" href="ncaa_eval.ingest.connectors.html">ncaa_eval.ingest.connectors package</a><input aria-label="Toggle navigation of ncaa_eval.ingest.connectors package" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="ncaa_eval.ingest.connectors.base.html">ncaa_eval.ingest.connectors.base module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="ncaa_eval.ingest.connectors.espn.html">ncaa_eval.ingest.connectors.espn module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="ncaa_eval.ingest.connectors.kaggle.html">ncaa_eval.ingest.connectors.kaggle module</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.repository.html">ncaa_eval.ingest.repository module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.schema.html">ncaa_eval.ingest.schema module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.sync.html">ncaa_eval.ingest.sync module</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="ncaa_eval.model.html">ncaa_eval.model package</a><input aria-label="Toggle navigation of ncaa_eval.model package" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.base.html">ncaa_eval.model.base module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.elo.html">ncaa_eval.model.elo module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.logistic_regression.html">ncaa_eval.model.logistic_regression module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.registry.html">ncaa_eval.model.registry module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.tracking.html">ncaa_eval.model.tracking module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.xgboost_model.html">ncaa_eval.model.xgboost_model module</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="ncaa_eval.transform.html">ncaa_eval.transform package</a><input aria-label="Toggle navigation of ncaa_eval.transform package" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.calibration.html">ncaa_eval.transform.calibration module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.elo.html">ncaa_eval.transform.elo module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.feature_serving.html">ncaa_eval.transform.feature_serving module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.graph.html">ncaa_eval.transform.graph module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.normalization.html">ncaa_eval.transform.normalization module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.opponent.html">ncaa_eval.transform.opponent module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.sequential.html">ncaa_eval.transform.sequential module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.serving.html">ncaa_eval.transform.serving module</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="ncaa_eval.utils.html">ncaa_eval.utils package</a><input aria-label="Toggle navigation of ncaa_eval.utils package" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.utils.logger.html">ncaa_eval.utils.logger module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../_sources/api/ncaa_eval.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="ncaa-eval-package">
+<h1>ncaa_eval package<a class="headerlink" href="#ncaa-eval-package" title="Link to this heading">¶</a></h1>
+<section id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Link to this heading">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="ncaa_eval.cli.html">ncaa_eval.cli package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ncaa_eval.cli.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.cli.main.html">ncaa_eval.cli.main module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.cli.main.html#ncaa_eval.cli.main.train"><code class="docutils literal notranslate"><span class="pre">train()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.cli.train.html">ncaa_eval.cli.train module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.cli.train.html#ncaa_eval.cli.train.run_training"><code class="docutils literal notranslate"><span class="pre">run_training()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ncaa_eval.cli.html#module-ncaa_eval.cli">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ncaa_eval.evaluation.html">ncaa_eval.evaluation package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ncaa_eval.evaluation.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.backtest.html">ncaa_eval.evaluation.backtest module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.backtest.html#ncaa_eval.evaluation.backtest.BacktestResult"><code class="docutils literal notranslate"><span class="pre">BacktestResult</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.backtest.html#ncaa_eval.evaluation.backtest.FoldResult"><code class="docutils literal notranslate"><span class="pre">FoldResult</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.backtest.html#ncaa_eval.evaluation.backtest.feature_cols"><code class="docutils literal notranslate"><span class="pre">feature_cols()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.backtest.html#ncaa_eval.evaluation.backtest.run_backtest"><code class="docutils literal notranslate"><span class="pre">run_backtest()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html">ncaa_eval.evaluation.metrics module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.ReliabilityData"><code class="docutils literal notranslate"><span class="pre">ReliabilityData</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.brier_score"><code class="docutils literal notranslate"><span class="pre">brier_score()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.expected_calibration_error"><code class="docutils literal notranslate"><span class="pre">expected_calibration_error()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.log_loss"><code class="docutils literal notranslate"><span class="pre">log_loss()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.reliability_diagram_data"><code class="docutils literal notranslate"><span class="pre">reliability_diagram_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.roc_auc"><code class="docutils literal notranslate"><span class="pre">roc_auc()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.plotting.html">ncaa_eval.evaluation.plotting module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.plotting.html#ncaa_eval.evaluation.plotting.plot_advancement_heatmap"><code class="docutils literal notranslate"><span class="pre">plot_advancement_heatmap()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.plotting.html#ncaa_eval.evaluation.plotting.plot_backtest_summary"><code class="docutils literal notranslate"><span class="pre">plot_backtest_summary()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.plotting.html#ncaa_eval.evaluation.plotting.plot_metric_comparison"><code class="docutils literal notranslate"><span class="pre">plot_metric_comparison()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.plotting.html#ncaa_eval.evaluation.plotting.plot_reliability_diagram"><code class="docutils literal notranslate"><span class="pre">plot_reliability_diagram()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.plotting.html#ncaa_eval.evaluation.plotting.plot_score_distribution"><code class="docutils literal notranslate"><span class="pre">plot_score_distribution()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html">ncaa_eval.evaluation.simulation module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.BracketDistribution"><code class="docutils literal notranslate"><span class="pre">BracketDistribution</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.BracketNode"><code class="docutils literal notranslate"><span class="pre">BracketNode</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.BracketStructure"><code class="docutils literal notranslate"><span class="pre">BracketStructure</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.CustomScoring"><code class="docutils literal notranslate"><span class="pre">CustomScoring</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.DictScoring"><code class="docutils literal notranslate"><span class="pre">DictScoring</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.EloProvider"><code class="docutils literal notranslate"><span class="pre">EloProvider</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.FibonacciScoring"><code class="docutils literal notranslate"><span class="pre">FibonacciScoring</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.MatchupContext"><code class="docutils literal notranslate"><span class="pre">MatchupContext</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.MatrixProvider"><code class="docutils literal notranslate"><span class="pre">MatrixProvider</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.MostLikelyBracket"><code class="docutils literal notranslate"><span class="pre">MostLikelyBracket</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.N_GAMES"><code class="docutils literal notranslate"><span class="pre">N_GAMES</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.N_ROUNDS"><code class="docutils literal notranslate"><span class="pre">N_ROUNDS</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.ProbabilityProvider"><code class="docutils literal notranslate"><span class="pre">ProbabilityProvider</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.ScoringNotFoundError"><code class="docutils literal notranslate"><span class="pre">ScoringNotFoundError</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.ScoringRule"><code class="docutils literal notranslate"><span class="pre">ScoringRule</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.SeedDiffBonusScoring"><code class="docutils literal notranslate"><span class="pre">SeedDiffBonusScoring</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.SimulationResult"><code class="docutils literal notranslate"><span class="pre">SimulationResult</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.StandardScoring"><code class="docutils literal notranslate"><span class="pre">StandardScoring</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.build_bracket"><code class="docutils literal notranslate"><span class="pre">build_bracket()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.build_probability_matrix"><code class="docutils literal notranslate"><span class="pre">build_probability_matrix()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.compute_advancement_probs"><code class="docutils literal notranslate"><span class="pre">compute_advancement_probs()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.compute_bracket_distribution"><code class="docutils literal notranslate"><span class="pre">compute_bracket_distribution()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.compute_expected_points"><code class="docutils literal notranslate"><span class="pre">compute_expected_points()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.compute_expected_points_seed_diff"><code class="docutils literal notranslate"><span class="pre">compute_expected_points_seed_diff()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.compute_most_likely_bracket"><code class="docutils literal notranslate"><span class="pre">compute_most_likely_bracket()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.get_scoring"><code class="docutils literal notranslate"><span class="pre">get_scoring()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.list_scorings"><code class="docutils literal notranslate"><span class="pre">list_scorings()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.register_scoring"><code class="docutils literal notranslate"><span class="pre">register_scoring()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.score_bracket_against_sims"><code class="docutils literal notranslate"><span class="pre">score_bracket_against_sims()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.scoring_from_config"><code class="docutils literal notranslate"><span class="pre">scoring_from_config()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.simulate_tournament"><code class="docutils literal notranslate"><span class="pre">simulate_tournament()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.simulate_tournament_mc"><code class="docutils literal notranslate"><span class="pre">simulate_tournament_mc()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.splitter.html">ncaa_eval.evaluation.splitter module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.splitter.html#ncaa_eval.evaluation.splitter.CVFold"><code class="docutils literal notranslate"><span class="pre">CVFold</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.splitter.html#ncaa_eval.evaluation.splitter.walk_forward_splits"><code class="docutils literal notranslate"><span class="pre">walk_forward_splits()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ncaa_eval.evaluation.html#module-ncaa_eval.evaluation">Module contents</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.BacktestResult"><code class="docutils literal notranslate"><span class="pre">BacktestResult</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.BacktestResult.fold_results"><code class="docutils literal notranslate"><span class="pre">BacktestResult.fold_results</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.BacktestResult.summary"><code class="docutils literal notranslate"><span class="pre">BacktestResult.summary</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.BacktestResult.elapsed_seconds"><code class="docutils literal notranslate"><span class="pre">BacktestResult.elapsed_seconds</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id0"><code class="docutils literal notranslate"><span class="pre">BacktestResult.elapsed_seconds</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id1"><code class="docutils literal notranslate"><span class="pre">BacktestResult.fold_results</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id2"><code class="docutils literal notranslate"><span class="pre">BacktestResult.summary</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketDistribution"><code class="docutils literal notranslate"><span class="pre">BracketDistribution</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketDistribution.scores"><code class="docutils literal notranslate"><span class="pre">BracketDistribution.scores</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketDistribution.percentiles"><code class="docutils literal notranslate"><span class="pre">BracketDistribution.percentiles</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketDistribution.mean"><code class="docutils literal notranslate"><span class="pre">BracketDistribution.mean</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketDistribution.std"><code class="docutils literal notranslate"><span class="pre">BracketDistribution.std</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketDistribution.histogram_bins"><code class="docutils literal notranslate"><span class="pre">BracketDistribution.histogram_bins</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketDistribution.histogram_counts"><code class="docutils literal notranslate"><span class="pre">BracketDistribution.histogram_counts</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id3"><code class="docutils literal notranslate"><span class="pre">BracketDistribution.histogram_bins</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id4"><code class="docutils literal notranslate"><span class="pre">BracketDistribution.histogram_counts</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id5"><code class="docutils literal notranslate"><span class="pre">BracketDistribution.mean</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id6"><code class="docutils literal notranslate"><span class="pre">BracketDistribution.percentiles</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id7"><code class="docutils literal notranslate"><span class="pre">BracketDistribution.scores</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id8"><code class="docutils literal notranslate"><span class="pre">BracketDistribution.std</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketNode"><code class="docutils literal notranslate"><span class="pre">BracketNode</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketNode.round_index"><code class="docutils literal notranslate"><span class="pre">BracketNode.round_index</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketNode.team_index"><code class="docutils literal notranslate"><span class="pre">BracketNode.team_index</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketNode.left"><code class="docutils literal notranslate"><span class="pre">BracketNode.left</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketNode.right"><code class="docutils literal notranslate"><span class="pre">BracketNode.right</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketNode.is_leaf"><code class="docutils literal notranslate"><span class="pre">BracketNode.is_leaf</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id9"><code class="docutils literal notranslate"><span class="pre">BracketNode.left</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id10"><code class="docutils literal notranslate"><span class="pre">BracketNode.right</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id11"><code class="docutils literal notranslate"><span class="pre">BracketNode.round_index</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id12"><code class="docutils literal notranslate"><span class="pre">BracketNode.team_index</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketStructure"><code class="docutils literal notranslate"><span class="pre">BracketStructure</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketStructure.root"><code class="docutils literal notranslate"><span class="pre">BracketStructure.root</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketStructure.team_ids"><code class="docutils literal notranslate"><span class="pre">BracketStructure.team_ids</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketStructure.team_index_map"><code class="docutils literal notranslate"><span class="pre">BracketStructure.team_index_map</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketStructure.seed_map"><code class="docutils literal notranslate"><span class="pre">BracketStructure.seed_map</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id13"><code class="docutils literal notranslate"><span class="pre">BracketStructure.root</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id14"><code class="docutils literal notranslate"><span class="pre">BracketStructure.seed_map</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id15"><code class="docutils literal notranslate"><span class="pre">BracketStructure.team_ids</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id16"><code class="docutils literal notranslate"><span class="pre">BracketStructure.team_index_map</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.CVFold"><code class="docutils literal notranslate"><span class="pre">CVFold</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.CVFold.train"><code class="docutils literal notranslate"><span class="pre">CVFold.train</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.CVFold.test"><code class="docutils literal notranslate"><span class="pre">CVFold.test</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.CVFold.year"><code class="docutils literal notranslate"><span class="pre">CVFold.year</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id17"><code class="docutils literal notranslate"><span class="pre">CVFold.test</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id18"><code class="docutils literal notranslate"><span class="pre">CVFold.train</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id19"><code class="docutils literal notranslate"><span class="pre">CVFold.year</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.CustomScoring"><code class="docutils literal notranslate"><span class="pre">CustomScoring</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.CustomScoring.name"><code class="docutils literal notranslate"><span class="pre">CustomScoring.name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.CustomScoring.points_per_round"><code class="docutils literal notranslate"><span class="pre">CustomScoring.points_per_round()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.DictScoring"><code class="docutils literal notranslate"><span class="pre">DictScoring</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.DictScoring.name"><code class="docutils literal notranslate"><span class="pre">DictScoring.name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.DictScoring.points_per_round"><code class="docutils literal notranslate"><span class="pre">DictScoring.points_per_round()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.EloProvider"><code class="docutils literal notranslate"><span class="pre">EloProvider</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.EloProvider.batch_matchup_probabilities"><code class="docutils literal notranslate"><span class="pre">EloProvider.batch_matchup_probabilities()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.EloProvider.matchup_probability"><code class="docutils literal notranslate"><span class="pre">EloProvider.matchup_probability()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.FibonacciScoring"><code class="docutils literal notranslate"><span class="pre">FibonacciScoring</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.FibonacciScoring.name"><code class="docutils literal notranslate"><span class="pre">FibonacciScoring.name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.FibonacciScoring.points_per_round"><code class="docutils literal notranslate"><span class="pre">FibonacciScoring.points_per_round()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.FoldResult"><code class="docutils literal notranslate"><span class="pre">FoldResult</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.FoldResult.year"><code class="docutils literal notranslate"><span class="pre">FoldResult.year</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.FoldResult.predictions"><code class="docutils literal notranslate"><span class="pre">FoldResult.predictions</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.FoldResult.actuals"><code class="docutils literal notranslate"><span class="pre">FoldResult.actuals</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.FoldResult.metrics"><code class="docutils literal notranslate"><span class="pre">FoldResult.metrics</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.FoldResult.elapsed_seconds"><code class="docutils literal notranslate"><span class="pre">FoldResult.elapsed_seconds</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.FoldResult.test_game_ids"><code class="docutils literal notranslate"><span class="pre">FoldResult.test_game_ids</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.FoldResult.test_team_a_ids"><code class="docutils literal notranslate"><span class="pre">FoldResult.test_team_a_ids</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.FoldResult.test_team_b_ids"><code class="docutils literal notranslate"><span class="pre">FoldResult.test_team_b_ids</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id20"><code class="docutils literal notranslate"><span class="pre">FoldResult.actuals</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id21"><code class="docutils literal notranslate"><span class="pre">FoldResult.elapsed_seconds</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id22"><code class="docutils literal notranslate"><span class="pre">FoldResult.metrics</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id23"><code class="docutils literal notranslate"><span class="pre">FoldResult.predictions</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id24"><code class="docutils literal notranslate"><span class="pre">FoldResult.test_game_ids</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id25"><code class="docutils literal notranslate"><span class="pre">FoldResult.test_team_a_ids</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id26"><code class="docutils literal notranslate"><span class="pre">FoldResult.test_team_b_ids</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id27"><code class="docutils literal notranslate"><span class="pre">FoldResult.year</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.MatchupContext"><code class="docutils literal notranslate"><span class="pre">MatchupContext</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.MatchupContext.season"><code class="docutils literal notranslate"><span class="pre">MatchupContext.season</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.MatchupContext.day_num"><code class="docutils literal notranslate"><span class="pre">MatchupContext.day_num</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.MatchupContext.is_neutral"><code class="docutils literal notranslate"><span class="pre">MatchupContext.is_neutral</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id28"><code class="docutils literal notranslate"><span class="pre">MatchupContext.day_num</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id29"><code class="docutils literal notranslate"><span class="pre">MatchupContext.is_neutral</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id30"><code class="docutils literal notranslate"><span class="pre">MatchupContext.season</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.MatrixProvider"><code class="docutils literal notranslate"><span class="pre">MatrixProvider</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.MatrixProvider.batch_matchup_probabilities"><code class="docutils literal notranslate"><span class="pre">MatrixProvider.batch_matchup_probabilities()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.MatrixProvider.matchup_probability"><code class="docutils literal notranslate"><span class="pre">MatrixProvider.matchup_probability()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.MostLikelyBracket"><code class="docutils literal notranslate"><span class="pre">MostLikelyBracket</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.MostLikelyBracket.winners"><code class="docutils literal notranslate"><span class="pre">MostLikelyBracket.winners</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.MostLikelyBracket.champion_team_id"><code class="docutils literal notranslate"><span class="pre">MostLikelyBracket.champion_team_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.MostLikelyBracket.log_likelihood"><code class="docutils literal notranslate"><span class="pre">MostLikelyBracket.log_likelihood</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id31"><code class="docutils literal notranslate"><span class="pre">MostLikelyBracket.champion_team_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id32"><code class="docutils literal notranslate"><span class="pre">MostLikelyBracket.log_likelihood</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id33"><code class="docutils literal notranslate"><span class="pre">MostLikelyBracket.winners</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.ProbabilityProvider"><code class="docutils literal notranslate"><span class="pre">ProbabilityProvider</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.ProbabilityProvider.batch_matchup_probabilities"><code class="docutils literal notranslate"><span class="pre">ProbabilityProvider.batch_matchup_probabilities()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.ProbabilityProvider.matchup_probability"><code class="docutils literal notranslate"><span class="pre">ProbabilityProvider.matchup_probability()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.ReliabilityData"><code class="docutils literal notranslate"><span class="pre">ReliabilityData</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.ReliabilityData.fraction_of_positives"><code class="docutils literal notranslate"><span class="pre">ReliabilityData.fraction_of_positives</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.ReliabilityData.mean_predicted_value"><code class="docutils literal notranslate"><span class="pre">ReliabilityData.mean_predicted_value</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.ReliabilityData.bin_counts"><code class="docutils literal notranslate"><span class="pre">ReliabilityData.bin_counts</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.ReliabilityData.bin_edges"><code class="docutils literal notranslate"><span class="pre">ReliabilityData.bin_edges</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.ReliabilityData.n_bins"><code class="docutils literal notranslate"><span class="pre">ReliabilityData.n_bins</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id34"><code class="docutils literal notranslate"><span class="pre">ReliabilityData.bin_counts</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id35"><code class="docutils literal notranslate"><span class="pre">ReliabilityData.bin_edges</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id36"><code class="docutils literal notranslate"><span class="pre">ReliabilityData.fraction_of_positives</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id37"><code class="docutils literal notranslate"><span class="pre">ReliabilityData.mean_predicted_value</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id38"><code class="docutils literal notranslate"><span class="pre">ReliabilityData.n_bins</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.ScoringNotFoundError"><code class="docutils literal notranslate"><span class="pre">ScoringNotFoundError</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.ScoringRule"><code class="docutils literal notranslate"><span class="pre">ScoringRule</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.ScoringRule.name"><code class="docutils literal notranslate"><span class="pre">ScoringRule.name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.ScoringRule.points_per_round"><code class="docutils literal notranslate"><span class="pre">ScoringRule.points_per_round()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.SeedDiffBonusScoring"><code class="docutils literal notranslate"><span class="pre">SeedDiffBonusScoring</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.SeedDiffBonusScoring.name"><code class="docutils literal notranslate"><span class="pre">SeedDiffBonusScoring.name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.SeedDiffBonusScoring.points_per_round"><code class="docutils literal notranslate"><span class="pre">SeedDiffBonusScoring.points_per_round()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.SeedDiffBonusScoring.seed_diff_bonus"><code class="docutils literal notranslate"><span class="pre">SeedDiffBonusScoring.seed_diff_bonus()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.SeedDiffBonusScoring.seed_map"><code class="docutils literal notranslate"><span class="pre">SeedDiffBonusScoring.seed_map</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.SimulationResult"><code class="docutils literal notranslate"><span class="pre">SimulationResult</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.SimulationResult.season"><code class="docutils literal notranslate"><span class="pre">SimulationResult.season</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.SimulationResult.advancement_probs"><code class="docutils literal notranslate"><span class="pre">SimulationResult.advancement_probs</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.SimulationResult.expected_points"><code class="docutils literal notranslate"><span class="pre">SimulationResult.expected_points</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.SimulationResult.method"><code class="docutils literal notranslate"><span class="pre">SimulationResult.method</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.SimulationResult.n_simulations"><code class="docutils literal notranslate"><span class="pre">SimulationResult.n_simulations</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.SimulationResult.confidence_intervals"><code class="docutils literal notranslate"><span class="pre">SimulationResult.confidence_intervals</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.SimulationResult.score_distribution"><code class="docutils literal notranslate"><span class="pre">SimulationResult.score_distribution</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.SimulationResult.bracket_distributions"><code class="docutils literal notranslate"><span class="pre">SimulationResult.bracket_distributions</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.SimulationResult.sim_winners"><code class="docutils literal notranslate"><span class="pre">SimulationResult.sim_winners</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id39"><code class="docutils literal notranslate"><span class="pre">SimulationResult.advancement_probs</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id40"><code class="docutils literal notranslate"><span class="pre">SimulationResult.bracket_distributions</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id41"><code class="docutils literal notranslate"><span class="pre">SimulationResult.confidence_intervals</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id42"><code class="docutils literal notranslate"><span class="pre">SimulationResult.expected_points</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id43"><code class="docutils literal notranslate"><span class="pre">SimulationResult.method</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id44"><code class="docutils literal notranslate"><span class="pre">SimulationResult.n_simulations</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id45"><code class="docutils literal notranslate"><span class="pre">SimulationResult.score_distribution</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id46"><code class="docutils literal notranslate"><span class="pre">SimulationResult.season</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#id47"><code class="docutils literal notranslate"><span class="pre">SimulationResult.sim_winners</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.StandardScoring"><code class="docutils literal notranslate"><span class="pre">StandardScoring</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.StandardScoring.name"><code class="docutils literal notranslate"><span class="pre">StandardScoring.name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.StandardScoring.points_per_round"><code class="docutils literal notranslate"><span class="pre">StandardScoring.points_per_round()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.brier_score"><code class="docutils literal notranslate"><span class="pre">brier_score()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.build_bracket"><code class="docutils literal notranslate"><span class="pre">build_bracket()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.build_probability_matrix"><code class="docutils literal notranslate"><span class="pre">build_probability_matrix()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.compute_advancement_probs"><code class="docutils literal notranslate"><span class="pre">compute_advancement_probs()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.compute_bracket_distribution"><code class="docutils literal notranslate"><span class="pre">compute_bracket_distribution()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.compute_expected_points"><code class="docutils literal notranslate"><span class="pre">compute_expected_points()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.compute_expected_points_seed_diff"><code class="docutils literal notranslate"><span class="pre">compute_expected_points_seed_diff()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.compute_most_likely_bracket"><code class="docutils literal notranslate"><span class="pre">compute_most_likely_bracket()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.expected_calibration_error"><code class="docutils literal notranslate"><span class="pre">expected_calibration_error()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.feature_cols"><code class="docutils literal notranslate"><span class="pre">feature_cols()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.get_scoring"><code class="docutils literal notranslate"><span class="pre">get_scoring()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.list_scorings"><code class="docutils literal notranslate"><span class="pre">list_scorings()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.log_loss"><code class="docutils literal notranslate"><span class="pre">log_loss()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.plot_advancement_heatmap"><code class="docutils literal notranslate"><span class="pre">plot_advancement_heatmap()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.plot_backtest_summary"><code class="docutils literal notranslate"><span class="pre">plot_backtest_summary()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.plot_metric_comparison"><code class="docutils literal notranslate"><span class="pre">plot_metric_comparison()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.plot_reliability_diagram"><code class="docutils literal notranslate"><span class="pre">plot_reliability_diagram()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.plot_score_distribution"><code class="docutils literal notranslate"><span class="pre">plot_score_distribution()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.register_scoring"><code class="docutils literal notranslate"><span class="pre">register_scoring()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.reliability_diagram_data"><code class="docutils literal notranslate"><span class="pre">reliability_diagram_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.roc_auc"><code class="docutils literal notranslate"><span class="pre">roc_auc()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.run_backtest"><code class="docutils literal notranslate"><span class="pre">run_backtest()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.score_bracket_against_sims"><code class="docutils literal notranslate"><span class="pre">score_bracket_against_sims()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.scoring_from_config"><code class="docutils literal notranslate"><span class="pre">scoring_from_config()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.simulate_tournament"><code class="docutils literal notranslate"><span class="pre">simulate_tournament()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.simulate_tournament_mc"><code class="docutils literal notranslate"><span class="pre">simulate_tournament_mc()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.walk_forward_splits"><code class="docutils literal notranslate"><span class="pre">walk_forward_splits()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ncaa_eval.ingest.html">ncaa_eval.ingest package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ncaa_eval.ingest.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.connectors.html">ncaa_eval.ingest.connectors package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.connectors.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.connectors.html#module-ncaa_eval.ingest.connectors">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ncaa_eval.ingest.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.repository.html">ncaa_eval.ingest.repository module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.repository.html#ncaa_eval.ingest.repository.ParquetRepository"><code class="docutils literal notranslate"><span class="pre">ParquetRepository</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.repository.html#ncaa_eval.ingest.repository.Repository"><code class="docutils literal notranslate"><span class="pre">Repository</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.schema.html">ncaa_eval.ingest.schema module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Game"><code class="docutils literal notranslate"><span class="pre">Game</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Season"><code class="docutils literal notranslate"><span class="pre">Season</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Team"><code class="docutils literal notranslate"><span class="pre">Team</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.sync.html">ncaa_eval.ingest.sync module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.sync.html#ncaa_eval.ingest.sync.SyncEngine"><code class="docutils literal notranslate"><span class="pre">SyncEngine</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.sync.html#ncaa_eval.ingest.sync.SyncResult"><code class="docutils literal notranslate"><span class="pre">SyncResult</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ncaa_eval.ingest.html#module-ncaa_eval.ingest">Module contents</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.AuthenticationError"><code class="docutils literal notranslate"><span class="pre">AuthenticationError</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.Connector"><code class="docutils literal notranslate"><span class="pre">Connector</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.Connector.fetch_games"><code class="docutils literal notranslate"><span class="pre">Connector.fetch_games()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.Connector.fetch_seasons"><code class="docutils literal notranslate"><span class="pre">Connector.fetch_seasons()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.Connector.fetch_teams"><code class="docutils literal notranslate"><span class="pre">Connector.fetch_teams()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.ConnectorError"><code class="docutils literal notranslate"><span class="pre">ConnectorError</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.DataFormatError"><code class="docutils literal notranslate"><span class="pre">DataFormatError</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.EspnConnector"><code class="docutils literal notranslate"><span class="pre">EspnConnector</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.EspnConnector.fetch_games"><code class="docutils literal notranslate"><span class="pre">EspnConnector.fetch_games()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.Game"><code class="docutils literal notranslate"><span class="pre">Game</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.Game.date"><code class="docutils literal notranslate"><span class="pre">Game.date</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.Game.day_num"><code class="docutils literal notranslate"><span class="pre">Game.day_num</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.Game.game_id"><code class="docutils literal notranslate"><span class="pre">Game.game_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.Game.is_tournament"><code class="docutils literal notranslate"><span class="pre">Game.is_tournament</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.Game.l_score"><code class="docutils literal notranslate"><span class="pre">Game.l_score</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.Game.l_team_id"><code class="docutils literal notranslate"><span class="pre">Game.l_team_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.Game.loc"><code class="docutils literal notranslate"><span class="pre">Game.loc</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.Game.model_config"><code class="docutils literal notranslate"><span class="pre">Game.model_config</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.Game.num_ot"><code class="docutils literal notranslate"><span class="pre">Game.num_ot</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.Game.season"><code class="docutils literal notranslate"><span class="pre">Game.season</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.Game.w_score"><code class="docutils literal notranslate"><span class="pre">Game.w_score</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.Game.w_team_id"><code class="docutils literal notranslate"><span class="pre">Game.w_team_id</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.KaggleConnector"><code class="docutils literal notranslate"><span class="pre">KaggleConnector</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.KaggleConnector.download"><code class="docutils literal notranslate"><span class="pre">KaggleConnector.download()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.KaggleConnector.fetch_games"><code class="docutils literal notranslate"><span class="pre">KaggleConnector.fetch_games()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.KaggleConnector.fetch_seasons"><code class="docutils literal notranslate"><span class="pre">KaggleConnector.fetch_seasons()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.KaggleConnector.fetch_team_spellings"><code class="docutils literal notranslate"><span class="pre">KaggleConnector.fetch_team_spellings()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.KaggleConnector.fetch_teams"><code class="docutils literal notranslate"><span class="pre">KaggleConnector.fetch_teams()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.KaggleConnector.load_day_zeros"><code class="docutils literal notranslate"><span class="pre">KaggleConnector.load_day_zeros()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.NetworkError"><code class="docutils literal notranslate"><span class="pre">NetworkError</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.ParquetRepository"><code class="docutils literal notranslate"><span class="pre">ParquetRepository</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.ParquetRepository.get_games"><code class="docutils literal notranslate"><span class="pre">ParquetRepository.get_games()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.ParquetRepository.get_seasons"><code class="docutils literal notranslate"><span class="pre">ParquetRepository.get_seasons()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.ParquetRepository.get_teams"><code class="docutils literal notranslate"><span class="pre">ParquetRepository.get_teams()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.ParquetRepository.save_games"><code class="docutils literal notranslate"><span class="pre">ParquetRepository.save_games()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.ParquetRepository.save_seasons"><code class="docutils literal notranslate"><span class="pre">ParquetRepository.save_seasons()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.ParquetRepository.save_teams"><code class="docutils literal notranslate"><span class="pre">ParquetRepository.save_teams()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.Repository"><code class="docutils literal notranslate"><span class="pre">Repository</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.Repository.get_games"><code class="docutils literal notranslate"><span class="pre">Repository.get_games()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.Repository.get_seasons"><code class="docutils literal notranslate"><span class="pre">Repository.get_seasons()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.Repository.get_teams"><code class="docutils literal notranslate"><span class="pre">Repository.get_teams()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.Repository.save_games"><code class="docutils literal notranslate"><span class="pre">Repository.save_games()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.Repository.save_seasons"><code class="docutils literal notranslate"><span class="pre">Repository.save_seasons()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.Repository.save_teams"><code class="docutils literal notranslate"><span class="pre">Repository.save_teams()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.Season"><code class="docutils literal notranslate"><span class="pre">Season</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.Season.model_config"><code class="docutils literal notranslate"><span class="pre">Season.model_config</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.Season.year"><code class="docutils literal notranslate"><span class="pre">Season.year</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.SyncEngine"><code class="docutils literal notranslate"><span class="pre">SyncEngine</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.SyncEngine.sync_all"><code class="docutils literal notranslate"><span class="pre">SyncEngine.sync_all()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.SyncEngine.sync_espn"><code class="docutils literal notranslate"><span class="pre">SyncEngine.sync_espn()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.SyncEngine.sync_kaggle"><code class="docutils literal notranslate"><span class="pre">SyncEngine.sync_kaggle()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.SyncResult"><code class="docutils literal notranslate"><span class="pre">SyncResult</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.SyncResult.games_written"><code class="docutils literal notranslate"><span class="pre">SyncResult.games_written</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.SyncResult.seasons_cached"><code class="docutils literal notranslate"><span class="pre">SyncResult.seasons_cached</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.SyncResult.seasons_written"><code class="docutils literal notranslate"><span class="pre">SyncResult.seasons_written</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.SyncResult.source"><code class="docutils literal notranslate"><span class="pre">SyncResult.source</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.SyncResult.teams_written"><code class="docutils literal notranslate"><span class="pre">SyncResult.teams_written</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.Team"><code class="docutils literal notranslate"><span class="pre">Team</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.Team.canonical_name"><code class="docutils literal notranslate"><span class="pre">Team.canonical_name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.Team.model_config"><code class="docutils literal notranslate"><span class="pre">Team.model_config</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.Team.team_id"><code class="docutils literal notranslate"><span class="pre">Team.team_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.Team.team_name"><code class="docutils literal notranslate"><span class="pre">Team.team_name</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ncaa_eval.model.html">ncaa_eval.model package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ncaa_eval.model.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.model.base.html">ncaa_eval.model.base module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.base.html#ncaa_eval.model.base.Model"><code class="docutils literal notranslate"><span class="pre">Model</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.base.html#ncaa_eval.model.base.ModelConfig"><code class="docutils literal notranslate"><span class="pre">ModelConfig</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.base.html#ncaa_eval.model.base.StatefulModel"><code class="docutils literal notranslate"><span class="pre">StatefulModel</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.model.elo.html">ncaa_eval.model.elo module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.elo.html#ncaa_eval.model.elo.EloModel"><code class="docutils literal notranslate"><span class="pre">EloModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.elo.html#ncaa_eval.model.elo.EloModelConfig"><code class="docutils literal notranslate"><span class="pre">EloModelConfig</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.model.logistic_regression.html">ncaa_eval.model.logistic_regression module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.logistic_regression.html#ncaa_eval.model.logistic_regression.LogisticRegressionConfig"><code class="docutils literal notranslate"><span class="pre">LogisticRegressionConfig</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.logistic_regression.html#ncaa_eval.model.logistic_regression.LogisticRegressionModel"><code class="docutils literal notranslate"><span class="pre">LogisticRegressionModel</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.model.registry.html">ncaa_eval.model.registry module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.registry.html#ncaa_eval.model.registry.ModelNotFoundError"><code class="docutils literal notranslate"><span class="pre">ModelNotFoundError</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.registry.html#ncaa_eval.model.registry.get_model"><code class="docutils literal notranslate"><span class="pre">get_model()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.registry.html#ncaa_eval.model.registry.list_models"><code class="docutils literal notranslate"><span class="pre">list_models()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.registry.html#ncaa_eval.model.registry.register_model"><code class="docutils literal notranslate"><span class="pre">register_model()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.model.tracking.html">ncaa_eval.model.tracking module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.tracking.html#ncaa_eval.model.tracking.ModelRun"><code class="docutils literal notranslate"><span class="pre">ModelRun</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.tracking.html#ncaa_eval.model.tracking.Prediction"><code class="docutils literal notranslate"><span class="pre">Prediction</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.tracking.html#ncaa_eval.model.tracking.RunStore"><code class="docutils literal notranslate"><span class="pre">RunStore</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.model.xgboost_model.html">ncaa_eval.model.xgboost_model module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.xgboost_model.html#ncaa_eval.model.xgboost_model.XGBoostModel"><code class="docutils literal notranslate"><span class="pre">XGBoostModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.xgboost_model.html#ncaa_eval.model.xgboost_model.XGBoostModelConfig"><code class="docutils literal notranslate"><span class="pre">XGBoostModelConfig</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ncaa_eval.model.html#module-ncaa_eval.model">Module contents</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.model.html#ncaa_eval.model.Model"><code class="docutils literal notranslate"><span class="pre">Model</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.html#ncaa_eval.model.Model.fit"><code class="docutils literal notranslate"><span class="pre">Model.fit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.html#ncaa_eval.model.Model.get_config"><code class="docutils literal notranslate"><span class="pre">Model.get_config()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.html#ncaa_eval.model.Model.load"><code class="docutils literal notranslate"><span class="pre">Model.load()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.html#ncaa_eval.model.Model.predict_proba"><code class="docutils literal notranslate"><span class="pre">Model.predict_proba()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.html#ncaa_eval.model.Model.save"><code class="docutils literal notranslate"><span class="pre">Model.save()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.model.html#ncaa_eval.model.ModelConfig"><code class="docutils literal notranslate"><span class="pre">ModelConfig</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.html#ncaa_eval.model.ModelConfig.model_config"><code class="docutils literal notranslate"><span class="pre">ModelConfig.model_config</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.html#ncaa_eval.model.ModelConfig.model_name"><code class="docutils literal notranslate"><span class="pre">ModelConfig.model_name</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.model.html#ncaa_eval.model.ModelNotFoundError"><code class="docutils literal notranslate"><span class="pre">ModelNotFoundError</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.model.html#ncaa_eval.model.StatefulModel"><code class="docutils literal notranslate"><span class="pre">StatefulModel</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.html#ncaa_eval.model.StatefulModel.fit"><code class="docutils literal notranslate"><span class="pre">StatefulModel.fit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.html#ncaa_eval.model.StatefulModel.get_state"><code class="docutils literal notranslate"><span class="pre">StatefulModel.get_state()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.html#ncaa_eval.model.StatefulModel.predict_proba"><code class="docutils literal notranslate"><span class="pre">StatefulModel.predict_proba()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.html#ncaa_eval.model.StatefulModel.set_state"><code class="docutils literal notranslate"><span class="pre">StatefulModel.set_state()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.html#ncaa_eval.model.StatefulModel.start_season"><code class="docutils literal notranslate"><span class="pre">StatefulModel.start_season()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.html#ncaa_eval.model.StatefulModel.update"><code class="docutils literal notranslate"><span class="pre">StatefulModel.update()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.model.html#ncaa_eval.model.get_model"><code class="docutils literal notranslate"><span class="pre">get_model()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.model.html#ncaa_eval.model.list_models"><code class="docutils literal notranslate"><span class="pre">list_models()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.model.html#ncaa_eval.model.register_model"><code class="docutils literal notranslate"><span class="pre">register_model()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ncaa_eval.transform.html">ncaa_eval.transform package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ncaa_eval.transform.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.calibration.html">ncaa_eval.transform.calibration module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.calibration.html#ncaa_eval.transform.calibration.IsotonicCalibrator"><code class="docutils literal notranslate"><span class="pre">IsotonicCalibrator</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.calibration.html#ncaa_eval.transform.calibration.SigmoidCalibrator"><code class="docutils literal notranslate"><span class="pre">SigmoidCalibrator</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.elo.html">ncaa_eval.transform.elo module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.elo.html#ncaa_eval.transform.elo.EloConfig"><code class="docutils literal notranslate"><span class="pre">EloConfig</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.elo.html#ncaa_eval.transform.elo.EloFeatureEngine"><code class="docutils literal notranslate"><span class="pre">EloFeatureEngine</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.feature_serving.html">ncaa_eval.transform.feature_serving module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.feature_serving.html#ncaa_eval.transform.feature_serving.FeatureBlock"><code class="docutils literal notranslate"><span class="pre">FeatureBlock</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.feature_serving.html#ncaa_eval.transform.feature_serving.FeatureConfig"><code class="docutils literal notranslate"><span class="pre">FeatureConfig</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.feature_serving.html#ncaa_eval.transform.feature_serving.StatefulFeatureServer"><code class="docutils literal notranslate"><span class="pre">StatefulFeatureServer</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.graph.html">ncaa_eval.transform.graph module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.graph.html#ncaa_eval.transform.graph.GraphTransformer"><code class="docutils literal notranslate"><span class="pre">GraphTransformer</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.graph.html#ncaa_eval.transform.graph.build_season_graph"><code class="docutils literal notranslate"><span class="pre">build_season_graph()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.graph.html#ncaa_eval.transform.graph.compute_betweenness_centrality"><code class="docutils literal notranslate"><span class="pre">compute_betweenness_centrality()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.graph.html#ncaa_eval.transform.graph.compute_clustering_coefficient"><code class="docutils literal notranslate"><span class="pre">compute_clustering_coefficient()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.graph.html#ncaa_eval.transform.graph.compute_hits"><code class="docutils literal notranslate"><span class="pre">compute_hits()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.graph.html#ncaa_eval.transform.graph.compute_pagerank"><code class="docutils literal notranslate"><span class="pre">compute_pagerank()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.normalization.html">ncaa_eval.transform.normalization module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.normalization.html#ncaa_eval.transform.normalization.ConferenceLookup"><code class="docutils literal notranslate"><span class="pre">ConferenceLookup</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.normalization.html#ncaa_eval.transform.normalization.CoverageGateResult"><code class="docutils literal notranslate"><span class="pre">CoverageGateResult</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.normalization.html#ncaa_eval.transform.normalization.MasseyOrdinalsStore"><code class="docutils literal notranslate"><span class="pre">MasseyOrdinalsStore</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.normalization.html#ncaa_eval.transform.normalization.TeamNameNormalizer"><code class="docutils literal notranslate"><span class="pre">TeamNameNormalizer</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.normalization.html#ncaa_eval.transform.normalization.TourneySeed"><code class="docutils literal notranslate"><span class="pre">TourneySeed</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.normalization.html#ncaa_eval.transform.normalization.TourneySeedTable"><code class="docutils literal notranslate"><span class="pre">TourneySeedTable</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.normalization.html#ncaa_eval.transform.normalization.parse_seed"><code class="docutils literal notranslate"><span class="pre">parse_seed()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.opponent.html">ncaa_eval.transform.opponent module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.opponent.html#ncaa_eval.transform.opponent.BatchRatingSolver"><code class="docutils literal notranslate"><span class="pre">BatchRatingSolver</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.opponent.html#ncaa_eval.transform.opponent.compute_colley_ratings"><code class="docutils literal notranslate"><span class="pre">compute_colley_ratings()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.opponent.html#ncaa_eval.transform.opponent.compute_ridge_ratings"><code class="docutils literal notranslate"><span class="pre">compute_ridge_ratings()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.opponent.html#ncaa_eval.transform.opponent.compute_srs_ratings"><code class="docutils literal notranslate"><span class="pre">compute_srs_ratings()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.sequential.html">ncaa_eval.transform.sequential module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.sequential.html#ncaa_eval.transform.sequential.DetailedResultsLoader"><code class="docutils literal notranslate"><span class="pre">DetailedResultsLoader</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.sequential.html#ncaa_eval.transform.sequential.SequentialTransformer"><code class="docutils literal notranslate"><span class="pre">SequentialTransformer</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.sequential.html#ncaa_eval.transform.sequential.apply_ot_rescaling"><code class="docutils literal notranslate"><span class="pre">apply_ot_rescaling()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.sequential.html#ncaa_eval.transform.sequential.compute_ewma_stats"><code class="docutils literal notranslate"><span class="pre">compute_ewma_stats()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.sequential.html#ncaa_eval.transform.sequential.compute_four_factors"><code class="docutils literal notranslate"><span class="pre">compute_four_factors()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.sequential.html#ncaa_eval.transform.sequential.compute_game_weights"><code class="docutils literal notranslate"><span class="pre">compute_game_weights()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.sequential.html#ncaa_eval.transform.sequential.compute_momentum"><code class="docutils literal notranslate"><span class="pre">compute_momentum()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.sequential.html#ncaa_eval.transform.sequential.compute_per_possession_stats"><code class="docutils literal notranslate"><span class="pre">compute_per_possession_stats()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.sequential.html#ncaa_eval.transform.sequential.compute_possessions"><code class="docutils literal notranslate"><span class="pre">compute_possessions()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.sequential.html#ncaa_eval.transform.sequential.compute_rolling_stats"><code class="docutils literal notranslate"><span class="pre">compute_rolling_stats()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.sequential.html#ncaa_eval.transform.sequential.compute_streak"><code class="docutils literal notranslate"><span class="pre">compute_streak()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.serving.html">ncaa_eval.transform.serving module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.serving.html#ncaa_eval.transform.serving.ChronologicalDataServer"><code class="docutils literal notranslate"><span class="pre">ChronologicalDataServer</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.serving.html#ncaa_eval.transform.serving.SeasonGames"><code class="docutils literal notranslate"><span class="pre">SeasonGames</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.serving.html#ncaa_eval.transform.serving.rescale_overtime"><code class="docutils literal notranslate"><span class="pre">rescale_overtime()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ncaa_eval.transform.html#module-ncaa_eval.transform">Module contents</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.BatchRatingSolver"><code class="docutils literal notranslate"><span class="pre">BatchRatingSolver</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.BatchRatingSolver.compute_colley"><code class="docutils literal notranslate"><span class="pre">BatchRatingSolver.compute_colley()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.BatchRatingSolver.compute_ridge"><code class="docutils literal notranslate"><span class="pre">BatchRatingSolver.compute_ridge()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.BatchRatingSolver.compute_srs"><code class="docutils literal notranslate"><span class="pre">BatchRatingSolver.compute_srs()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.ChronologicalDataServer"><code class="docutils literal notranslate"><span class="pre">ChronologicalDataServer</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.ChronologicalDataServer.get_chronological_season"><code class="docutils literal notranslate"><span class="pre">ChronologicalDataServer.get_chronological_season()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.ChronologicalDataServer.iter_games_by_date"><code class="docutils literal notranslate"><span class="pre">ChronologicalDataServer.iter_games_by_date()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.ConferenceLookup"><code class="docutils literal notranslate"><span class="pre">ConferenceLookup</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.ConferenceLookup.from_csv"><code class="docutils literal notranslate"><span class="pre">ConferenceLookup.from_csv()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.ConferenceLookup.get"><code class="docutils literal notranslate"><span class="pre">ConferenceLookup.get()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.CoverageGateResult"><code class="docutils literal notranslate"><span class="pre">CoverageGateResult</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.CoverageGateResult.primary_systems"><code class="docutils literal notranslate"><span class="pre">CoverageGateResult.primary_systems</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.CoverageGateResult.fallback_used"><code class="docutils literal notranslate"><span class="pre">CoverageGateResult.fallback_used</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.CoverageGateResult.fallback_reason"><code class="docutils literal notranslate"><span class="pre">CoverageGateResult.fallback_reason</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.CoverageGateResult.recommended_systems"><code class="docutils literal notranslate"><span class="pre">CoverageGateResult.recommended_systems</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#id0"><code class="docutils literal notranslate"><span class="pre">CoverageGateResult.fallback_reason</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#id1"><code class="docutils literal notranslate"><span class="pre">CoverageGateResult.fallback_used</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#id2"><code class="docutils literal notranslate"><span class="pre">CoverageGateResult.primary_systems</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#id3"><code class="docutils literal notranslate"><span class="pre">CoverageGateResult.recommended_systems</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.DetailedResultsLoader"><code class="docutils literal notranslate"><span class="pre">DetailedResultsLoader</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.DetailedResultsLoader.from_csvs"><code class="docutils literal notranslate"><span class="pre">DetailedResultsLoader.from_csvs()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.DetailedResultsLoader.get_season_long_format"><code class="docutils literal notranslate"><span class="pre">DetailedResultsLoader.get_season_long_format()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.DetailedResultsLoader.get_team_season"><code class="docutils literal notranslate"><span class="pre">DetailedResultsLoader.get_team_season()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.EloConfig"><code class="docutils literal notranslate"><span class="pre">EloConfig</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.EloConfig.early_game_threshold"><code class="docutils literal notranslate"><span class="pre">EloConfig.early_game_threshold</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.EloConfig.home_advantage_elo"><code class="docutils literal notranslate"><span class="pre">EloConfig.home_advantage_elo</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.EloConfig.initial_rating"><code class="docutils literal notranslate"><span class="pre">EloConfig.initial_rating</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.EloConfig.k_early"><code class="docutils literal notranslate"><span class="pre">EloConfig.k_early</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.EloConfig.k_regular"><code class="docutils literal notranslate"><span class="pre">EloConfig.k_regular</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.EloConfig.k_tournament"><code class="docutils literal notranslate"><span class="pre">EloConfig.k_tournament</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.EloConfig.margin_exponent"><code class="docutils literal notranslate"><span class="pre">EloConfig.margin_exponent</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.EloConfig.max_margin"><code class="docutils literal notranslate"><span class="pre">EloConfig.max_margin</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.EloConfig.mean_reversion_fraction"><code class="docutils literal notranslate"><span class="pre">EloConfig.mean_reversion_fraction</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.EloFeatureEngine"><code class="docutils literal notranslate"><span class="pre">EloFeatureEngine</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.EloFeatureEngine.apply_season_mean_reversion"><code class="docutils literal notranslate"><span class="pre">EloFeatureEngine.apply_season_mean_reversion()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.EloFeatureEngine.expected_score"><code class="docutils literal notranslate"><span class="pre">EloFeatureEngine.expected_score()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.EloFeatureEngine.get_all_ratings"><code class="docutils literal notranslate"><span class="pre">EloFeatureEngine.get_all_ratings()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.EloFeatureEngine.get_rating"><code class="docutils literal notranslate"><span class="pre">EloFeatureEngine.get_rating()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.EloFeatureEngine.process_season"><code class="docutils literal notranslate"><span class="pre">EloFeatureEngine.process_season()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.EloFeatureEngine.reset_game_counts"><code class="docutils literal notranslate"><span class="pre">EloFeatureEngine.reset_game_counts()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.EloFeatureEngine.start_new_season"><code class="docutils literal notranslate"><span class="pre">EloFeatureEngine.start_new_season()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.EloFeatureEngine.update_game"><code class="docutils literal notranslate"><span class="pre">EloFeatureEngine.update_game()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.FeatureBlock"><code class="docutils literal notranslate"><span class="pre">FeatureBlock</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.FeatureBlock.BATCH_RATING"><code class="docutils literal notranslate"><span class="pre">FeatureBlock.BATCH_RATING</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.FeatureBlock.ELO"><code class="docutils literal notranslate"><span class="pre">FeatureBlock.ELO</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.FeatureBlock.GRAPH"><code class="docutils literal notranslate"><span class="pre">FeatureBlock.GRAPH</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.FeatureBlock.ORDINAL"><code class="docutils literal notranslate"><span class="pre">FeatureBlock.ORDINAL</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.FeatureBlock.SEED"><code class="docutils literal notranslate"><span class="pre">FeatureBlock.SEED</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.FeatureBlock.SEQUENTIAL"><code class="docutils literal notranslate"><span class="pre">FeatureBlock.SEQUENTIAL</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.FeatureConfig"><code class="docutils literal notranslate"><span class="pre">FeatureConfig</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.FeatureConfig.active_blocks"><code class="docutils literal notranslate"><span class="pre">FeatureConfig.active_blocks()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.FeatureConfig.batch_rating_types"><code class="docutils literal notranslate"><span class="pre">FeatureConfig.batch_rating_types</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.FeatureConfig.calibration_method"><code class="docutils literal notranslate"><span class="pre">FeatureConfig.calibration_method</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.FeatureConfig.dataset_scope"><code class="docutils literal notranslate"><span class="pre">FeatureConfig.dataset_scope</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.FeatureConfig.elo_config"><code class="docutils literal notranslate"><span class="pre">FeatureConfig.elo_config</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.FeatureConfig.elo_enabled"><code class="docutils literal notranslate"><span class="pre">FeatureConfig.elo_enabled</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.FeatureConfig.ewma_alphas"><code class="docutils literal notranslate"><span class="pre">FeatureConfig.ewma_alphas</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.FeatureConfig.gender_scope"><code class="docutils literal notranslate"><span class="pre">FeatureConfig.gender_scope</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.FeatureConfig.graph_features_enabled"><code class="docutils literal notranslate"><span class="pre">FeatureConfig.graph_features_enabled</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.FeatureConfig.matchup_deltas"><code class="docutils literal notranslate"><span class="pre">FeatureConfig.matchup_deltas</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.FeatureConfig.ordinal_composite"><code class="docutils literal notranslate"><span class="pre">FeatureConfig.ordinal_composite</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.FeatureConfig.ordinal_systems"><code class="docutils literal notranslate"><span class="pre">FeatureConfig.ordinal_systems</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.FeatureConfig.sequential_windows"><code class="docutils literal notranslate"><span class="pre">FeatureConfig.sequential_windows</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.GraphTransformer"><code class="docutils literal notranslate"><span class="pre">GraphTransformer</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.GraphTransformer.add_game_to_graph"><code class="docutils literal notranslate"><span class="pre">GraphTransformer.add_game_to_graph()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.GraphTransformer.build_graph"><code class="docutils literal notranslate"><span class="pre">GraphTransformer.build_graph()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.GraphTransformer.compute_features"><code class="docutils literal notranslate"><span class="pre">GraphTransformer.compute_features()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.GraphTransformer.transform"><code class="docutils literal notranslate"><span class="pre">GraphTransformer.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.IsotonicCalibrator"><code class="docutils literal notranslate"><span class="pre">IsotonicCalibrator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.IsotonicCalibrator.fit"><code class="docutils literal notranslate"><span class="pre">IsotonicCalibrator.fit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.IsotonicCalibrator.transform"><code class="docutils literal notranslate"><span class="pre">IsotonicCalibrator.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.MasseyOrdinalsStore"><code class="docutils literal notranslate"><span class="pre">MasseyOrdinalsStore</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.MasseyOrdinalsStore.composite_pca"><code class="docutils literal notranslate"><span class="pre">MasseyOrdinalsStore.composite_pca()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.MasseyOrdinalsStore.composite_simple_average"><code class="docutils literal notranslate"><span class="pre">MasseyOrdinalsStore.composite_simple_average()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.MasseyOrdinalsStore.composite_weighted"><code class="docutils literal notranslate"><span class="pre">MasseyOrdinalsStore.composite_weighted()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.MasseyOrdinalsStore.from_csv"><code class="docutils literal notranslate"><span class="pre">MasseyOrdinalsStore.from_csv()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.MasseyOrdinalsStore.get_snapshot"><code class="docutils literal notranslate"><span class="pre">MasseyOrdinalsStore.get_snapshot()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.MasseyOrdinalsStore.normalize_percentile"><code class="docutils literal notranslate"><span class="pre">MasseyOrdinalsStore.normalize_percentile()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.MasseyOrdinalsStore.normalize_rank_delta"><code class="docutils literal notranslate"><span class="pre">MasseyOrdinalsStore.normalize_rank_delta()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.MasseyOrdinalsStore.normalize_zscore"><code class="docutils literal notranslate"><span class="pre">MasseyOrdinalsStore.normalize_zscore()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.MasseyOrdinalsStore.pre_tournament_snapshot"><code class="docutils literal notranslate"><span class="pre">MasseyOrdinalsStore.pre_tournament_snapshot()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.MasseyOrdinalsStore.run_coverage_gate"><code class="docutils literal notranslate"><span class="pre">MasseyOrdinalsStore.run_coverage_gate()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.SeasonGames"><code class="docutils literal notranslate"><span class="pre">SeasonGames</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.SeasonGames.year"><code class="docutils literal notranslate"><span class="pre">SeasonGames.year</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.SeasonGames.games"><code class="docutils literal notranslate"><span class="pre">SeasonGames.games</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.SeasonGames.has_tournament"><code class="docutils literal notranslate"><span class="pre">SeasonGames.has_tournament</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#id4"><code class="docutils literal notranslate"><span class="pre">SeasonGames.games</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#id5"><code class="docutils literal notranslate"><span class="pre">SeasonGames.has_tournament</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#id6"><code class="docutils literal notranslate"><span class="pre">SeasonGames.year</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.SequentialTransformer"><code class="docutils literal notranslate"><span class="pre">SequentialTransformer</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.SequentialTransformer.transform"><code class="docutils literal notranslate"><span class="pre">SequentialTransformer.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.SigmoidCalibrator"><code class="docutils literal notranslate"><span class="pre">SigmoidCalibrator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.SigmoidCalibrator.fit"><code class="docutils literal notranslate"><span class="pre">SigmoidCalibrator.fit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.SigmoidCalibrator.transform"><code class="docutils literal notranslate"><span class="pre">SigmoidCalibrator.transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.StatefulFeatureServer"><code class="docutils literal notranslate"><span class="pre">StatefulFeatureServer</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.StatefulFeatureServer.serve_season_features"><code class="docutils literal notranslate"><span class="pre">StatefulFeatureServer.serve_season_features()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.TeamNameNormalizer"><code class="docutils literal notranslate"><span class="pre">TeamNameNormalizer</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.TeamNameNormalizer.from_csv"><code class="docutils literal notranslate"><span class="pre">TeamNameNormalizer.from_csv()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.TeamNameNormalizer.normalize"><code class="docutils literal notranslate"><span class="pre">TeamNameNormalizer.normalize()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.TourneySeed"><code class="docutils literal notranslate"><span class="pre">TourneySeed</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.TourneySeed.season"><code class="docutils literal notranslate"><span class="pre">TourneySeed.season</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.TourneySeed.team_id"><code class="docutils literal notranslate"><span class="pre">TourneySeed.team_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.TourneySeed.seed_str"><code class="docutils literal notranslate"><span class="pre">TourneySeed.seed_str</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.TourneySeed.region"><code class="docutils literal notranslate"><span class="pre">TourneySeed.region</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.TourneySeed.seed_num"><code class="docutils literal notranslate"><span class="pre">TourneySeed.seed_num</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.TourneySeed.is_play_in"><code class="docutils literal notranslate"><span class="pre">TourneySeed.is_play_in</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#id7"><code class="docutils literal notranslate"><span class="pre">TourneySeed.is_play_in</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#id8"><code class="docutils literal notranslate"><span class="pre">TourneySeed.region</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#id9"><code class="docutils literal notranslate"><span class="pre">TourneySeed.season</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#id10"><code class="docutils literal notranslate"><span class="pre">TourneySeed.seed_num</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#id11"><code class="docutils literal notranslate"><span class="pre">TourneySeed.seed_str</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#id12"><code class="docutils literal notranslate"><span class="pre">TourneySeed.team_id</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.TourneySeedTable"><code class="docutils literal notranslate"><span class="pre">TourneySeedTable</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.TourneySeedTable.all_seeds"><code class="docutils literal notranslate"><span class="pre">TourneySeedTable.all_seeds()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.TourneySeedTable.from_csv"><code class="docutils literal notranslate"><span class="pre">TourneySeedTable.from_csv()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.TourneySeedTable.get"><code class="docutils literal notranslate"><span class="pre">TourneySeedTable.get()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.apply_ot_rescaling"><code class="docutils literal notranslate"><span class="pre">apply_ot_rescaling()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.build_season_graph"><code class="docutils literal notranslate"><span class="pre">build_season_graph()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.compute_betweenness_centrality"><code class="docutils literal notranslate"><span class="pre">compute_betweenness_centrality()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.compute_clustering_coefficient"><code class="docutils literal notranslate"><span class="pre">compute_clustering_coefficient()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.compute_colley_ratings"><code class="docutils literal notranslate"><span class="pre">compute_colley_ratings()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.compute_ewma_stats"><code class="docutils literal notranslate"><span class="pre">compute_ewma_stats()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.compute_four_factors"><code class="docutils literal notranslate"><span class="pre">compute_four_factors()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.compute_game_weights"><code class="docutils literal notranslate"><span class="pre">compute_game_weights()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.compute_hits"><code class="docutils literal notranslate"><span class="pre">compute_hits()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.compute_momentum"><code class="docutils literal notranslate"><span class="pre">compute_momentum()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.compute_pagerank"><code class="docutils literal notranslate"><span class="pre">compute_pagerank()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.compute_per_possession_stats"><code class="docutils literal notranslate"><span class="pre">compute_per_possession_stats()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.compute_possessions"><code class="docutils literal notranslate"><span class="pre">compute_possessions()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.compute_ridge_ratings"><code class="docutils literal notranslate"><span class="pre">compute_ridge_ratings()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.compute_rolling_stats"><code class="docutils literal notranslate"><span class="pre">compute_rolling_stats()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.compute_srs_ratings"><code class="docutils literal notranslate"><span class="pre">compute_srs_ratings()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.compute_streak"><code class="docutils literal notranslate"><span class="pre">compute_streak()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.parse_seed"><code class="docutils literal notranslate"><span class="pre">parse_seed()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.rescale_overtime"><code class="docutils literal notranslate"><span class="pre">rescale_overtime()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ncaa_eval.utils.html">ncaa_eval.utils package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ncaa_eval.utils.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.utils.logger.html">ncaa_eval.utils.logger module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.utils.logger.html#ncaa_eval.utils.logger.DEBUG"><code class="docutils literal notranslate"><span class="pre">DEBUG</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.utils.logger.html#ncaa_eval.utils.logger.NORMAL"><code class="docutils literal notranslate"><span class="pre">NORMAL</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.utils.logger.html#ncaa_eval.utils.logger.QUIET"><code class="docutils literal notranslate"><span class="pre">QUIET</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.utils.logger.html#ncaa_eval.utils.logger.VERBOSE"><code class="docutils literal notranslate"><span class="pre">VERBOSE</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.utils.logger.html#ncaa_eval.utils.logger.configure_logging"><code class="docutils literal notranslate"><span class="pre">configure_logging()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.utils.logger.html#ncaa_eval.utils.logger.get_logger"><code class="docutils literal notranslate"><span class="pre">get_logger()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ncaa_eval.utils.html#module-ncaa_eval.utils">Module contents</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.utils.html#ncaa_eval.utils.configure_logging"><code class="docutils literal notranslate"><span class="pre">configure_logging()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.utils.html#ncaa_eval.utils.get_logger"><code class="docutils literal notranslate"><span class="pre">get_logger()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="module-ncaa_eval">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-ncaa_eval" title="Link to this heading">¶</a></h2>
+<p>NCAA Eval - NCAA March Madness model evaluation platform.</p>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="ncaa_eval.cli.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">ncaa_eval.cli package</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="modules.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">ncaa_eval</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2026, Dan Hilgart
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">ncaa_eval package</a><ul>
+<li><a class="reference internal" href="#subpackages">Subpackages</a></li>
+<li><a class="reference internal" href="#module-ncaa_eval">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=39bb1c6d"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
+    </body>
+</html>

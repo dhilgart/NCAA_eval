@@ -1,0 +1,1038 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="ncaa_eval.transform.opponent module" href="ncaa_eval.transform.opponent.html"><link rel="prev" title="ncaa_eval.transform.graph module" href="ncaa_eval.transform.graph.html">
+
+    <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
+        <title>ncaa_eval.transform.normalization module - ncaa_eval 0.9.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">ncaa_eval 0.9.0 documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  <span class="sidebar-brand-text">ncaa_eval 0.9.0 documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">User Guide:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user-guide.html">User Guide</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Guides:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../STYLE_GUIDE.html">NCAA Eval Style Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../TESTING_STRATEGY.html">Testing Strategy</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Testing Guides:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../testing/conventions.html">Testing Conventions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../testing/domain-testing.html">Domain-Specific Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../testing/execution.html">Test Execution Tiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../testing/quality.html">Test Suite Quality Assurance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../testing/test-approach-guide.html">Test Approach Guide: Example-Based vs Property-Based vs Fuzz-Based Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../testing/test-purpose-guide.html">Test Purpose Guide: Functional, Performance, and Regression Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../testing/test-scope-guide.html">Test Scope Guide: Unit vs Integration Tests</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference:</span></p>
+<ul class="current">
+<li class="toctree-l1 current has-children"><a class="reference internal" href="modules.html">ncaa_eval</a><input aria-label="Toggle navigation of ncaa_eval" checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l2 current has-children"><a class="reference internal" href="ncaa_eval.html">ncaa_eval package</a><input aria-label="Toggle navigation of ncaa_eval package" checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l3 has-children"><a class="reference internal" href="ncaa_eval.cli.html">ncaa_eval.cli package</a><input aria-label="Toggle navigation of ncaa_eval.cli package" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.cli.main.html">ncaa_eval.cli.main module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.cli.train.html">ncaa_eval.cli.train module</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="ncaa_eval.evaluation.html">ncaa_eval.evaluation package</a><input aria-label="Toggle navigation of ncaa_eval.evaluation package" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.backtest.html">ncaa_eval.evaluation.backtest module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html">ncaa_eval.evaluation.metrics module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.plotting.html">ncaa_eval.evaluation.plotting module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html">ncaa_eval.evaluation.simulation module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.splitter.html">ncaa_eval.evaluation.splitter module</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="ncaa_eval.ingest.html">ncaa_eval.ingest package</a><input aria-label="Toggle navigation of ncaa_eval.ingest package" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4 has-children"><a class="reference internal" href="ncaa_eval.ingest.connectors.html">ncaa_eval.ingest.connectors package</a><input aria-label="Toggle navigation of ncaa_eval.ingest.connectors package" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="ncaa_eval.ingest.connectors.base.html">ncaa_eval.ingest.connectors.base module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="ncaa_eval.ingest.connectors.espn.html">ncaa_eval.ingest.connectors.espn module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="ncaa_eval.ingest.connectors.kaggle.html">ncaa_eval.ingest.connectors.kaggle module</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.repository.html">ncaa_eval.ingest.repository module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.schema.html">ncaa_eval.ingest.schema module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.sync.html">ncaa_eval.ingest.sync module</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="ncaa_eval.model.html">ncaa_eval.model package</a><input aria-label="Toggle navigation of ncaa_eval.model package" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.base.html">ncaa_eval.model.base module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.elo.html">ncaa_eval.model.elo module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.logistic_regression.html">ncaa_eval.model.logistic_regression module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.registry.html">ncaa_eval.model.registry module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.tracking.html">ncaa_eval.model.tracking module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.xgboost_model.html">ncaa_eval.model.xgboost_model module</a></li>
+</ul>
+</li>
+<li class="toctree-l3 current has-children"><a class="reference internal" href="ncaa_eval.transform.html">ncaa_eval.transform package</a><input aria-label="Toggle navigation of ncaa_eval.transform package" checked="" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.calibration.html">ncaa_eval.transform.calibration module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.elo.html">ncaa_eval.transform.elo module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.feature_serving.html">ncaa_eval.transform.feature_serving module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.graph.html">ncaa_eval.transform.graph module</a></li>
+<li class="toctree-l4 current current-page"><a class="current reference internal" href="#">ncaa_eval.transform.normalization module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.opponent.html">ncaa_eval.transform.opponent module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.sequential.html">ncaa_eval.transform.sequential module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.transform.serving.html">ncaa_eval.transform.serving module</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="ncaa_eval.utils.html">ncaa_eval.utils package</a><input aria-label="Toggle navigation of ncaa_eval.utils package" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.utils.logger.html">ncaa_eval.utils.logger module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../_sources/api/ncaa_eval.transform.normalization.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="module-ncaa_eval.transform.normalization">
+<span id="ncaa-eval-transform-normalization-module"></span><h1>ncaa_eval.transform.normalization module<a class="headerlink" href="#module-ncaa_eval.transform.normalization" title="Link to this heading">¶</a></h1>
+<p>Canonical team ID mapping, lookup tables, and Massey Ordinals ingestion.</p>
+<p>Provides normalization and lookup infrastructure for the feature pipeline:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#ncaa_eval.transform.normalization.TeamNameNormalizer" title="ncaa_eval.transform.normalization.TeamNameNormalizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TeamNameNormalizer</span></code></a> — maps diverse team name spellings to canonical
+<code class="docutils literal notranslate"><span class="pre">TeamID</span></code> integers using <code class="docutils literal notranslate"><span class="pre">MTeamSpellings.csv</span></code>.</p></li>
+<li><p><a class="reference internal" href="#ncaa_eval.transform.normalization.TourneySeedTable" title="ncaa_eval.transform.normalization.TourneySeedTable"><code class="xref py py-class docutils literal notranslate"><span class="pre">TourneySeedTable</span></code></a> — wraps <code class="docutils literal notranslate"><span class="pre">MNCAATourneySeeds.csv</span></code> into a structured
+<code class="docutils literal notranslate"><span class="pre">(season,</span> <span class="pre">team_id)</span> <span class="pre">→</span> <span class="pre">TourneySeed</span></code> lookup.</p></li>
+<li><p><a class="reference internal" href="#ncaa_eval.transform.normalization.ConferenceLookup" title="ncaa_eval.transform.normalization.ConferenceLookup"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConferenceLookup</span></code></a> — wraps <code class="docutils literal notranslate"><span class="pre">MTeamConferences.csv</span></code> into a
+<code class="docutils literal notranslate"><span class="pre">(season,</span> <span class="pre">team_id)</span> <span class="pre">→</span> <span class="pre">conf_abbrev</span></code> lookup.</p></li>
+<li><p><a class="reference internal" href="#ncaa_eval.transform.normalization.MasseyOrdinalsStore" title="ncaa_eval.transform.normalization.MasseyOrdinalsStore"><code class="xref py py-class docutils literal notranslate"><span class="pre">MasseyOrdinalsStore</span></code></a> — DataFrame-backed store for <code class="docutils literal notranslate"><span class="pre">MMasseyOrdinals.csv</span></code>
+with temporal filtering, coverage gate, and composite computation methods.</p></li>
+</ul>
+<p>Design invariants:
+- No imports from <code class="docutils literal notranslate"><span class="pre">ncaa_eval.ingest</span></code> — this module is a pure CSV-loading layer.
+- No <code class="docutils literal notranslate"><span class="pre">df.iterrows()</span></code> — vectorized pandas operations throughout; <code class="docutils literal notranslate"><span class="pre">itertuples</span></code></p>
+<blockquote>
+<div><p>is acceptable only for non-vectorizable dict construction with string parsing.</p>
+</div></blockquote>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">mypy</span> <span class="pre">--strict</span></code> compliant: all types fully annotated, no bare <code class="docutils literal notranslate"><span class="pre">Any</span></code>.</p></li>
+</ul>
+<dl class="py class">
+<dt class="sig sig-object py" id="ncaa_eval.transform.normalization.ConferenceLookup">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ncaa_eval.transform.normalization.</span></span><span class="sig-name descname"><span class="pre">ConferenceLookup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lookup</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ncaa_eval/transform/normalization.html#ConferenceLookup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.transform.normalization.ConferenceLookup" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Lookup table for team conference membership by <code class="docutils literal notranslate"><span class="pre">(season,</span> <span class="pre">team_id)</span></code>.</p>
+<p>Wraps <code class="docutils literal notranslate"><span class="pre">MTeamConferences.csv</span></code> into a dict-backed structure.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>lookup</strong> – Mapping of <code class="docutils literal notranslate"><span class="pre">(season,</span> <span class="pre">team_id)</span> <span class="pre">→</span> <span class="pre">conf_abbrev</span></code>.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.transform.normalization.ConferenceLookup.from_csv">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_csv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ncaa_eval.transform.normalization.ConferenceLookup" title="ncaa_eval.transform.normalization.ConferenceLookup"><span class="pre">ConferenceLookup</span></a></span></span><a class="reference internal" href="../_modules/ncaa_eval/transform/normalization.html#ConferenceLookup.from_csv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.transform.normalization.ConferenceLookup.from_csv" title="Link to this definition">¶</a></dt>
+<dd><p>Construct from <code class="docutils literal notranslate"><span class="pre">MTeamConferences.csv</span></code>.</p>
+<p>Columns required: <code class="docutils literal notranslate"><span class="pre">Season</span></code>, <code class="docutils literal notranslate"><span class="pre">TeamID</span></code>, <code class="docutils literal notranslate"><span class="pre">ConfAbbrev</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> – Path to <code class="docutils literal notranslate"><span class="pre">MTeamConferences.csv</span></code>.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Initialised <a class="reference internal" href="#ncaa_eval.transform.normalization.ConferenceLookup" title="ncaa_eval.transform.normalization.ConferenceLookup"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConferenceLookup</span></code></a>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.transform.normalization.ConferenceLookup.get">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">season</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">team_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/transform/normalization.html#ConferenceLookup.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.transform.normalization.ConferenceLookup.get" title="Link to this definition">¶</a></dt>
+<dd><p>Return the conference abbreviation for <code class="docutils literal notranslate"><span class="pre">(season,</span> <span class="pre">team_id)</span></code>, or <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>season</strong> – Season year.</p></li>
+<li><p><strong>team_id</strong> – Canonical Kaggle TeamID.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Conference abbreviation string, or <code class="docutils literal notranslate"><span class="pre">None</span></code> if not found.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ncaa_eval.transform.normalization.CoverageGateResult">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ncaa_eval.transform.normalization.</span></span><span class="sig-name descname"><span class="pre">CoverageGateResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">primary_systems</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fallback_used</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fallback_reason</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recommended_systems</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ncaa_eval/transform/normalization.html#CoverageGateResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.transform.normalization.CoverageGateResult" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Result of the Massey Ordinals coverage gate check.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.transform.normalization.CoverageGateResult.primary_systems">
+<span class="sig-name descname"><span class="pre">primary_systems</span></span><a class="headerlink" href="#ncaa_eval.transform.normalization.CoverageGateResult.primary_systems" title="Link to this definition">¶</a></dt>
+<dd><p>The four primary composite systems
+(SAG, POM, MOR, WLK).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[str, …]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.transform.normalization.CoverageGateResult.fallback_used">
+<span class="sig-name descname"><span class="pre">fallback_used</span></span><a class="headerlink" href="#ncaa_eval.transform.normalization.CoverageGateResult.fallback_used" title="Link to this definition">¶</a></dt>
+<dd><p>True when SAG or WLK are missing for one or more
+seasons 2003–2025 and the fallback composite is recommended.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.transform.normalization.CoverageGateResult.fallback_reason">
+<span class="sig-name descname"><span class="pre">fallback_reason</span></span><a class="headerlink" href="#ncaa_eval.transform.normalization.CoverageGateResult.fallback_reason" title="Link to this definition">¶</a></dt>
+<dd><p>Human-readable description of why the fallback was
+triggered (empty string when <code class="docutils literal notranslate"><span class="pre">fallback_used=False</span></code>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.transform.normalization.CoverageGateResult.recommended_systems">
+<span class="sig-name descname"><span class="pre">recommended_systems</span></span><a class="headerlink" href="#ncaa_eval.transform.normalization.CoverageGateResult.recommended_systems" title="Link to this definition">¶</a></dt>
+<dd><p>The system names the caller should use for
+composite computation — either the primary composite or the
+confirmed-full-coverage fallback (MOR, POM, DOL).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[str, …]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">fallback_reason</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#id0" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">fallback_used</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#id1" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id2">
+<span class="sig-name descname"><span class="pre">primary_systems</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#id2" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id3">
+<span class="sig-name descname"><span class="pre">recommended_systems</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#id3" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ncaa_eval.transform.normalization.MasseyOrdinalsStore">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ncaa_eval.transform.normalization.</span></span><span class="sig-name descname"><span class="pre">MasseyOrdinalsStore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ncaa_eval/transform/normalization.html#MasseyOrdinalsStore"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.transform.normalization.MasseyOrdinalsStore" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>DataFrame-backed store for Massey Ordinal ranking systems.</p>
+<p>Ingests <code class="docutils literal notranslate"><span class="pre">MMasseyOrdinals.csv</span></code> and provides temporal filtering,
+coverage gate validation, composite computation (Options A–D), and
+per-system normalization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>df</strong> – Raw DataFrame with columns
+<code class="docutils literal notranslate"><span class="pre">[Season,</span> <span class="pre">RankingDayNum,</span> <span class="pre">SystemName,</span> <span class="pre">TeamID,</span> <span class="pre">OrdinalRank]</span></code>.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.transform.normalization.MasseyOrdinalsStore.composite_pca">
+<span class="sig-name descname"><span class="pre">composite_pca</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">season</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">day_num</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_components</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_variance</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.9</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/transform/normalization.html#MasseyOrdinalsStore.composite_pca"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.transform.normalization.MasseyOrdinalsStore.composite_pca" title="Link to this definition">¶</a></dt>
+<dd><p>Option C: PCA reduction of all available systems.</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">n_components=None</span></code>, automatically selects the minimum number
+of components needed to capture <code class="docutils literal notranslate"><span class="pre">min_variance</span></code> of total variance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>season</strong> – Season year.</p></li>
+<li><p><strong>day_num</strong> – Temporal cutoff (inclusive).</p></li>
+<li><p><strong>n_components</strong> – Number of principal components to retain. <code class="docutils literal notranslate"><span class="pre">None</span></code>
+triggers automatic selection based on <code class="docutils literal notranslate"><span class="pre">min_variance</span></code>.</p></li>
+<li><p><strong>min_variance</strong> – Minimum cumulative explained variance required when
+<code class="docutils literal notranslate"><span class="pre">n_components=None</span></code> (default 0.90 = 90%).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>DataFrame with columns <code class="docutils literal notranslate"><span class="pre">PC1,</span> <span class="pre">PC2,</span> <span class="pre">...</span></code> indexed by TeamID.
+Rows with any NaN system value are dropped before PCA.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.transform.normalization.MasseyOrdinalsStore.composite_simple_average">
+<span class="sig-name descname"><span class="pre">composite_simple_average</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">season</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">day_num</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">systems</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Series</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/transform/normalization.html#MasseyOrdinalsStore.composite_simple_average"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.transform.normalization.MasseyOrdinalsStore.composite_simple_average" title="Link to this definition">¶</a></dt>
+<dd><p>Option A: simple average of ordinal ranks across <em>systems</em> per team.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>season</strong> – Season year.</p></li>
+<li><p><strong>day_num</strong> – Temporal cutoff (inclusive).</p></li>
+<li><p><strong>systems</strong> – List of system names to average.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Series indexed by TeamID with mean ordinal rank per team.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.transform.normalization.MasseyOrdinalsStore.composite_weighted">
+<span class="sig-name descname"><span class="pre">composite_weighted</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">season</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">day_num</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Series</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/transform/normalization.html#MasseyOrdinalsStore.composite_weighted"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.transform.normalization.MasseyOrdinalsStore.composite_weighted" title="Link to this definition">¶</a></dt>
+<dd><p>Option B: weighted average of ordinal ranks using caller-supplied weights.</p>
+<p>Weights are normalized to sum to 1 before computation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>season</strong> – Season year.</p></li>
+<li><p><strong>day_num</strong> – Temporal cutoff (inclusive).</p></li>
+<li><p><strong>weights</strong> – Mapping of system name → weight (any positive floats).
+Must not be empty.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Series indexed by TeamID with weighted ordinal rank per team.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If <code class="docutils literal notranslate"><span class="pre">weights</span></code> is empty.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.transform.normalization.MasseyOrdinalsStore.from_csv">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_csv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ncaa_eval.transform.normalization.MasseyOrdinalsStore" title="ncaa_eval.transform.normalization.MasseyOrdinalsStore"><span class="pre">MasseyOrdinalsStore</span></a></span></span><a class="reference internal" href="../_modules/ncaa_eval/transform/normalization.html#MasseyOrdinalsStore.from_csv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.transform.normalization.MasseyOrdinalsStore.from_csv" title="Link to this definition">¶</a></dt>
+<dd><p>Construct from <code class="docutils literal notranslate"><span class="pre">MMasseyOrdinals.csv</span></code>.</p>
+<p>Columns required: <code class="docutils literal notranslate"><span class="pre">Season</span></code>, <code class="docutils literal notranslate"><span class="pre">RankingDayNum</span></code>, <code class="docutils literal notranslate"><span class="pre">SystemName</span></code>,
+<code class="docutils literal notranslate"><span class="pre">TeamID</span></code>, <code class="docutils literal notranslate"><span class="pre">OrdinalRank</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> – Path to <code class="docutils literal notranslate"><span class="pre">MMasseyOrdinals.csv</span></code>.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Initialised <a class="reference internal" href="#ncaa_eval.transform.normalization.MasseyOrdinalsStore" title="ncaa_eval.transform.normalization.MasseyOrdinalsStore"><code class="xref py py-class docutils literal notranslate"><span class="pre">MasseyOrdinalsStore</span></code></a>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.transform.normalization.MasseyOrdinalsStore.get_snapshot">
+<span class="sig-name descname"><span class="pre">get_snapshot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">season</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">day_num</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">systems</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/transform/normalization.html#MasseyOrdinalsStore.get_snapshot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.transform.normalization.MasseyOrdinalsStore.get_snapshot" title="Link to this definition">¶</a></dt>
+<dd><p>Return wide-format ordinal ranks as of <em>day_num</em> for <em>season</em>.</p>
+<p>For each <code class="docutils literal notranslate"><span class="pre">(SystemName,</span> <span class="pre">TeamID)</span></code> pair, uses the latest
+<code class="docutils literal notranslate"><span class="pre">RankingDayNum</span></code> that is <code class="docutils literal notranslate"><span class="pre">≤</span> <span class="pre">day_num</span></code>.  Returns a DataFrame with
+<code class="docutils literal notranslate"><span class="pre">TeamID</span></code> as index and one column per ranking system.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>season</strong> – Season year.</p></li>
+<li><p><strong>day_num</strong> – Inclusive upper bound on <code class="docutils literal notranslate"><span class="pre">RankingDayNum</span></code>.</p></li>
+<li><p><strong>systems</strong> – If provided, only include these system names. <code class="docutils literal notranslate"><span class="pre">None</span></code>
+returns all available systems.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Wide-format DataFrame (index=TeamID, columns=SystemName). Empty
+DataFrame if no records satisfy the filters.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.transform.normalization.MasseyOrdinalsStore.normalize_percentile">
+<span class="sig-name descname"><span class="pre">normalize_percentile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">season</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">day_num</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">system</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Series</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/transform/normalization.html#MasseyOrdinalsStore.normalize_percentile"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.transform.normalization.MasseyOrdinalsStore.normalize_percentile" title="Link to this definition">¶</a></dt>
+<dd><p>Return per-season percentile rank for <em>system</em> bounded to <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>.</p>
+<p>Computed as <code class="docutils literal notranslate"><span class="pre">OrdinalRank</span> <span class="pre">/</span> <span class="pre">n_teams</span></code> where <code class="docutils literal notranslate"><span class="pre">n_teams</span></code> is the number
+of teams with a rank in this season/system snapshot.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>season</strong> – Season year.</p></li>
+<li><p><strong>day_num</strong> – Temporal cutoff (inclusive).</p></li>
+<li><p><strong>system</strong> – System name.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Series indexed by TeamID with percentile values in <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.transform.normalization.MasseyOrdinalsStore.normalize_rank_delta">
+<span class="sig-name descname"><span class="pre">normalize_rank_delta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">snapshot</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">team_a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">team_b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">system</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/transform/normalization.html#MasseyOrdinalsStore.normalize_rank_delta"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.transform.normalization.MasseyOrdinalsStore.normalize_rank_delta" title="Link to this definition">¶</a></dt>
+<dd><p>Return ordinal rank delta for a matchup between <em>team_a</em> and <em>team_b</em>.</p>
+<p>A positive result means <em>team_a</em> is ranked worse (higher rank number =
+worse) than <em>team_b</em> in this system.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>snapshot</strong> – Wide-format snapshot DataFrame (index=TeamID,
+columns=SystemName) from <a class="reference internal" href="#ncaa_eval.transform.normalization.MasseyOrdinalsStore.get_snapshot" title="ncaa_eval.transform.normalization.MasseyOrdinalsStore.get_snapshot"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_snapshot()</span></code></a>.</p></li>
+<li><p><strong>team_a</strong> – First team’s canonical TeamID.</p></li>
+<li><p><strong>team_b</strong> – Second team’s canonical TeamID.</p></li>
+<li><p><strong>system</strong> – System name column to use.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">snapshot.loc[team_a,</span> <span class="pre">system]</span> <span class="pre">-</span> <span class="pre">snapshot.loc[team_b,</span> <span class="pre">system]</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.transform.normalization.MasseyOrdinalsStore.normalize_zscore">
+<span class="sig-name descname"><span class="pre">normalize_zscore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">season</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">day_num</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">system</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Series</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/transform/normalization.html#MasseyOrdinalsStore.normalize_zscore"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.transform.normalization.MasseyOrdinalsStore.normalize_zscore" title="Link to this definition">¶</a></dt>
+<dd><p>Return per-season z-score for <em>system</em>.</p>
+<p>Computed as <code class="docutils literal notranslate"><span class="pre">(rank</span> <span class="pre">-</span> <span class="pre">mean_rank)</span> <span class="pre">/</span> <span class="pre">std_rank</span></code> across all teams in the
+snapshot.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>season</strong> – Season year.</p></li>
+<li><p><strong>day_num</strong> – Temporal cutoff (inclusive).</p></li>
+<li><p><strong>system</strong> – System name.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Series indexed by TeamID with z-score values (mean ≈ 0, std ≈ 1).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.transform.normalization.MasseyOrdinalsStore.pre_tournament_snapshot">
+<span class="sig-name descname"><span class="pre">pre_tournament_snapshot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">season</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">systems</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/transform/normalization.html#MasseyOrdinalsStore.pre_tournament_snapshot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.transform.normalization.MasseyOrdinalsStore.pre_tournament_snapshot" title="Link to this definition">¶</a></dt>
+<dd><p>Option D: pre-tournament snapshot using ordinals from <code class="docutils literal notranslate"><span class="pre">RankingDayNum</span> <span class="pre">≤</span> <span class="pre">128</span></code>.</p>
+<p>DayNum 128 corresponds approximately to Selection Sunday in the Kaggle
+calendar. Only ordinals available before the tournament begins are used.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>season</strong> – Season year.</p></li>
+<li><p><strong>systems</strong> – If provided, only include these system names.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Wide-format DataFrame in the same structure as <a class="reference internal" href="#ncaa_eval.transform.normalization.MasseyOrdinalsStore.get_snapshot" title="ncaa_eval.transform.normalization.MasseyOrdinalsStore.get_snapshot"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_snapshot()</span></code></a>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.transform.normalization.MasseyOrdinalsStore.run_coverage_gate">
+<span class="sig-name descname"><span class="pre">run_coverage_gate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ncaa_eval.transform.normalization.CoverageGateResult" title="ncaa_eval.transform.normalization.CoverageGateResult"><span class="pre">CoverageGateResult</span></a></span></span><a class="reference internal" href="../_modules/ncaa_eval/transform/normalization.html#MasseyOrdinalsStore.run_coverage_gate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.transform.normalization.MasseyOrdinalsStore.run_coverage_gate" title="Link to this definition">¶</a></dt>
+<dd><p>Check whether SAG and WLK cover all seasons 2003–2025.</p>
+<p>If either system has gaps the fallback composite (MOR, POM, DOL) is
+recommended instead of the primary composite (SAG, POM, MOR, WLK).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#ncaa_eval.transform.normalization.CoverageGateResult" title="ncaa_eval.transform.normalization.CoverageGateResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">CoverageGateResult</span></code></a> with coverage findings and the
+recommended system list.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ncaa_eval.transform.normalization.TeamNameNormalizer">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ncaa_eval.transform.normalization.</span></span><span class="sig-name descname"><span class="pre">TeamNameNormalizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spellings</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ncaa_eval/transform/normalization.html#TeamNameNormalizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.transform.normalization.TeamNameNormalizer" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Maps diverse team name spellings to canonical <code class="docutils literal notranslate"><span class="pre">TeamID</span></code> integers.</p>
+<p>Wraps the <code class="docutils literal notranslate"><span class="pre">MTeamSpellings.csv</span></code> lookup table. Matching is
+case-insensitive. On a miss, a WARNING is logged with any close prefix
+matches and <code class="docutils literal notranslate"><span class="pre">None</span></code> is returned (no exception raised). The lookup is
+idempotent: calling <a class="reference internal" href="#ncaa_eval.transform.normalization.TeamNameNormalizer.normalize" title="ncaa_eval.transform.normalization.TeamNameNormalizer.normalize"><code class="xref py py-meth docutils literal notranslate"><span class="pre">normalize()</span></code></a> twice with the same input returns
+the same result.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>spellings</strong> – Pre-lowercased mapping of <code class="docutils literal notranslate"><span class="pre">team_name_spelling</span> <span class="pre">→</span> <span class="pre">team_id</span></code>.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.transform.normalization.TeamNameNormalizer.from_csv">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_csv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ncaa_eval.transform.normalization.TeamNameNormalizer" title="ncaa_eval.transform.normalization.TeamNameNormalizer"><span class="pre">TeamNameNormalizer</span></a></span></span><a class="reference internal" href="../_modules/ncaa_eval/transform/normalization.html#TeamNameNormalizer.from_csv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.transform.normalization.TeamNameNormalizer.from_csv" title="Link to this definition">¶</a></dt>
+<dd><p>Construct from <code class="docutils literal notranslate"><span class="pre">MTeamSpellings.csv</span></code>.</p>
+<p>Columns required: <code class="docutils literal notranslate"><span class="pre">TeamNameSpelling</span></code>, <code class="docutils literal notranslate"><span class="pre">TeamID</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> – Path to <code class="docutils literal notranslate"><span class="pre">MTeamSpellings.csv</span></code>.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Initialised <a class="reference internal" href="#ncaa_eval.transform.normalization.TeamNameNormalizer" title="ncaa_eval.transform.normalization.TeamNameNormalizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TeamNameNormalizer</span></code></a>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.transform.normalization.TeamNameNormalizer.normalize">
+<span class="sig-name descname"><span class="pre">normalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/transform/normalization.html#TeamNameNormalizer.normalize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.transform.normalization.TeamNameNormalizer.normalize" title="Link to this definition">¶</a></dt>
+<dd><p>Look up <em>name</em> and return its canonical <code class="docutils literal notranslate"><span class="pre">TeamID</span></code>, or <code class="docutils literal notranslate"><span class="pre">None</span></code> on miss.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> – Team name string (any case).</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Canonical <code class="docutils literal notranslate"><span class="pre">TeamID</span></code> integer, or <code class="docutils literal notranslate"><span class="pre">None</span></code> if not found.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ncaa_eval.transform.normalization.TourneySeed">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ncaa_eval.transform.normalization.</span></span><span class="sig-name descname"><span class="pre">TourneySeed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">season</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">team_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed_str</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">region</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed_num</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_play_in</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ncaa_eval/transform/normalization.html#TourneySeed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.transform.normalization.TourneySeed" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Structured representation of a single NCAA Tournament seed entry.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.transform.normalization.TourneySeed.season">
+<span class="sig-name descname"><span class="pre">season</span></span><a class="headerlink" href="#ncaa_eval.transform.normalization.TourneySeed.season" title="Link to this definition">¶</a></dt>
+<dd><p>Season year (e.g., 2023).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.transform.normalization.TourneySeed.team_id">
+<span class="sig-name descname"><span class="pre">team_id</span></span><a class="headerlink" href="#ncaa_eval.transform.normalization.TourneySeed.team_id" title="Link to this definition">¶</a></dt>
+<dd><p>Canonical Kaggle TeamID integer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.transform.normalization.TourneySeed.seed_str">
+<span class="sig-name descname"><span class="pre">seed_str</span></span><a class="headerlink" href="#ncaa_eval.transform.normalization.TourneySeed.seed_str" title="Link to this definition">¶</a></dt>
+<dd><p>Raw seed string as it appears in <code class="docutils literal notranslate"><span class="pre">MNCAATourneySeeds.csv</span></code>
+(e.g., <code class="docutils literal notranslate"><span class="pre">&quot;W01&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;X11a&quot;</span></code>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.transform.normalization.TourneySeed.region">
+<span class="sig-name descname"><span class="pre">region</span></span><a class="headerlink" href="#ncaa_eval.transform.normalization.TourneySeed.region" title="Link to this definition">¶</a></dt>
+<dd><p>Single-character region code: W, X, Y, or Z.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.transform.normalization.TourneySeed.seed_num">
+<span class="sig-name descname"><span class="pre">seed_num</span></span><a class="headerlink" href="#ncaa_eval.transform.normalization.TourneySeed.seed_num" title="Link to this definition">¶</a></dt>
+<dd><p>Seed number 1–16.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.transform.normalization.TourneySeed.is_play_in">
+<span class="sig-name descname"><span class="pre">is_play_in</span></span><a class="headerlink" href="#ncaa_eval.transform.normalization.TourneySeed.is_play_in" title="Link to this definition">¶</a></dt>
+<dd><p>True when the seed has an <code class="docutils literal notranslate"><span class="pre">'a'</span></code> or <code class="docutils literal notranslate"><span class="pre">'b'</span></code> suffix,
+indicating a First Four play-in game.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id4">
+<span class="sig-name descname"><span class="pre">is_play_in</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#id4" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id5">
+<span class="sig-name descname"><span class="pre">region</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#id5" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id6">
+<span class="sig-name descname"><span class="pre">season</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#id6" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id7">
+<span class="sig-name descname"><span class="pre">seed_num</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#id7" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id8">
+<span class="sig-name descname"><span class="pre">seed_str</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#id8" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id9">
+<span class="sig-name descname"><span class="pre">team_id</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><a class="headerlink" href="#id9" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ncaa_eval.transform.normalization.TourneySeedTable">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ncaa_eval.transform.normalization.</span></span><span class="sig-name descname"><span class="pre">TourneySeedTable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seeds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#ncaa_eval.transform.normalization.TourneySeed" title="ncaa_eval.transform.normalization.TourneySeed"><span class="pre">TourneySeed</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ncaa_eval/transform/normalization.html#TourneySeedTable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.transform.normalization.TourneySeedTable" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Lookup table for NCAA Tournament seeds by <code class="docutils literal notranslate"><span class="pre">(season,</span> <span class="pre">team_id)</span></code>.</p>
+<p>Wraps <code class="docutils literal notranslate"><span class="pre">MNCAATourneySeeds.csv</span></code> into a dict-backed structure. Each seed
+is stored as a <a class="reference internal" href="#ncaa_eval.transform.normalization.TourneySeed" title="ncaa_eval.transform.normalization.TourneySeed"><code class="xref py py-class docutils literal notranslate"><span class="pre">TourneySeed</span></code></a> frozen dataclass.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>seeds</strong> – Mapping of <code class="docutils literal notranslate"><span class="pre">(season,</span> <span class="pre">team_id)</span> <span class="pre">→</span> <span class="pre">TourneySeed</span></code>.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.transform.normalization.TourneySeedTable.all_seeds">
+<span class="sig-name descname"><span class="pre">all_seeds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">season</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#ncaa_eval.transform.normalization.TourneySeed" title="ncaa_eval.transform.normalization.TourneySeed"><span class="pre">TourneySeed</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/transform/normalization.html#TourneySeedTable.all_seeds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.transform.normalization.TourneySeedTable.all_seeds" title="Link to this definition">¶</a></dt>
+<dd><p>Return all stored seeds, optionally filtered to a single season.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>season</strong> – If provided, only seeds for this season are returned.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of <a class="reference internal" href="#ncaa_eval.transform.normalization.TourneySeed" title="ncaa_eval.transform.normalization.TourneySeed"><code class="xref py py-class docutils literal notranslate"><span class="pre">TourneySeed</span></code></a> objects.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.transform.normalization.TourneySeedTable.from_csv">
+<span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">from_csv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ncaa_eval.transform.normalization.TourneySeedTable" title="ncaa_eval.transform.normalization.TourneySeedTable"><span class="pre">TourneySeedTable</span></a></span></span><a class="reference internal" href="../_modules/ncaa_eval/transform/normalization.html#TourneySeedTable.from_csv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.transform.normalization.TourneySeedTable.from_csv" title="Link to this definition">¶</a></dt>
+<dd><p>Construct from <code class="docutils literal notranslate"><span class="pre">MNCAATourneySeeds.csv</span></code>.</p>
+<p>Columns required: <code class="docutils literal notranslate"><span class="pre">Season</span></code>, <code class="docutils literal notranslate"><span class="pre">Seed</span></code>, <code class="docutils literal notranslate"><span class="pre">TeamID</span></code>.</p>
+<p>Uses <code class="docutils literal notranslate"><span class="pre">itertuples</span></code> (not <code class="docutils literal notranslate"><span class="pre">iterrows</span></code>) for per-row string parsing —
+acceptable because the per-row operation (<code class="docutils literal notranslate"><span class="pre">parse_seed</span></code>) contains
+branching logic that cannot be vectorized.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>path</strong> – Path to <code class="docutils literal notranslate"><span class="pre">MNCAATourneySeeds.csv</span></code>.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Initialised <a class="reference internal" href="#ncaa_eval.transform.normalization.TourneySeedTable" title="ncaa_eval.transform.normalization.TourneySeedTable"><code class="xref py py-class docutils literal notranslate"><span class="pre">TourneySeedTable</span></code></a>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.transform.normalization.TourneySeedTable.get">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">season</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">team_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ncaa_eval.transform.normalization.TourneySeed" title="ncaa_eval.transform.normalization.TourneySeed"><span class="pre">TourneySeed</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/transform/normalization.html#TourneySeedTable.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.transform.normalization.TourneySeedTable.get" title="Link to this definition">¶</a></dt>
+<dd><p>Return the <a class="reference internal" href="#ncaa_eval.transform.normalization.TourneySeed" title="ncaa_eval.transform.normalization.TourneySeed"><code class="xref py py-class docutils literal notranslate"><span class="pre">TourneySeed</span></code></a> for <code class="docutils literal notranslate"><span class="pre">(season,</span> <span class="pre">team_id)</span></code>, or <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>season</strong> – Season year.</p></li>
+<li><p><strong>team_id</strong> – Canonical Kaggle TeamID.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Matching <a class="reference internal" href="#ncaa_eval.transform.normalization.TourneySeed" title="ncaa_eval.transform.normalization.TourneySeed"><code class="xref py py-class docutils literal notranslate"><span class="pre">TourneySeed</span></code></a>, or <code class="docutils literal notranslate"><span class="pre">None</span></code> if not found.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ncaa_eval.transform.normalization.parse_seed">
+<span class="sig-prename descclassname"><span class="pre">ncaa_eval.transform.normalization.</span></span><span class="sig-name descname"><span class="pre">parse_seed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">season</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">team_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed_str</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ncaa_eval.transform.normalization.TourneySeed" title="ncaa_eval.transform.normalization.TourneySeed"><span class="pre">TourneySeed</span></a></span></span><a class="reference internal" href="../_modules/ncaa_eval/transform/normalization.html#parse_seed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.transform.normalization.parse_seed" title="Link to this definition">¶</a></dt>
+<dd><p>Parse a raw tournament seed string into a structured <a class="reference internal" href="#ncaa_eval.transform.normalization.TourneySeed" title="ncaa_eval.transform.normalization.TourneySeed"><code class="xref py py-class docutils literal notranslate"><span class="pre">TourneySeed</span></code></a>.</p>
+<p>Seed strings from <code class="docutils literal notranslate"><span class="pre">MNCAATourneySeeds.csv</span></code> follow the pattern
+<code class="docutils literal notranslate"><span class="pre">[WXYZ][0-9]{2}[ab]?</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;W01&quot;</span></code>  → region=”W”, seed_num=1,  is_play_in=False</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;X16a&quot;</span></code> → region=”X”, seed_num=16, is_play_in=True</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;Y11b&quot;</span></code> → region=”Y”, seed_num=11, is_play_in=True</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>season</strong> – Season year.</p></li>
+<li><p><strong>team_id</strong> – Canonical Kaggle TeamID.</p></li>
+<li><p><strong>seed_str</strong> – Raw seed string (e.g., <code class="docutils literal notranslate"><span class="pre">&quot;W01&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;X11a&quot;</span></code>).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Fully parsed <a class="reference internal" href="#ncaa_eval.transform.normalization.TourneySeed" title="ncaa_eval.transform.normalization.TourneySeed"><code class="xref py py-class docutils literal notranslate"><span class="pre">TourneySeed</span></code></a>.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If <code class="docutils literal notranslate"><span class="pre">seed_str</span></code> is shorter than 3 characters.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="ncaa_eval.transform.opponent.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">ncaa_eval.transform.opponent module</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="ncaa_eval.transform.graph.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">ncaa_eval.transform.graph module</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2026, Dan Hilgart
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">ncaa_eval.transform.normalization module</a><ul>
+<li><a class="reference internal" href="#ncaa_eval.transform.normalization.ConferenceLookup"><code class="docutils literal notranslate"><span class="pre">ConferenceLookup</span></code></a><ul>
+<li><a class="reference internal" href="#ncaa_eval.transform.normalization.ConferenceLookup.from_csv"><code class="docutils literal notranslate"><span class="pre">ConferenceLookup.from_csv()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.transform.normalization.ConferenceLookup.get"><code class="docutils literal notranslate"><span class="pre">ConferenceLookup.get()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ncaa_eval.transform.normalization.CoverageGateResult"><code class="docutils literal notranslate"><span class="pre">CoverageGateResult</span></code></a><ul>
+<li><a class="reference internal" href="#ncaa_eval.transform.normalization.CoverageGateResult.primary_systems"><code class="docutils literal notranslate"><span class="pre">CoverageGateResult.primary_systems</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.transform.normalization.CoverageGateResult.fallback_used"><code class="docutils literal notranslate"><span class="pre">CoverageGateResult.fallback_used</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.transform.normalization.CoverageGateResult.fallback_reason"><code class="docutils literal notranslate"><span class="pre">CoverageGateResult.fallback_reason</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.transform.normalization.CoverageGateResult.recommended_systems"><code class="docutils literal notranslate"><span class="pre">CoverageGateResult.recommended_systems</span></code></a></li>
+<li><a class="reference internal" href="#id0"><code class="docutils literal notranslate"><span class="pre">CoverageGateResult.fallback_reason</span></code></a></li>
+<li><a class="reference internal" href="#id1"><code class="docutils literal notranslate"><span class="pre">CoverageGateResult.fallback_used</span></code></a></li>
+<li><a class="reference internal" href="#id2"><code class="docutils literal notranslate"><span class="pre">CoverageGateResult.primary_systems</span></code></a></li>
+<li><a class="reference internal" href="#id3"><code class="docutils literal notranslate"><span class="pre">CoverageGateResult.recommended_systems</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ncaa_eval.transform.normalization.MasseyOrdinalsStore"><code class="docutils literal notranslate"><span class="pre">MasseyOrdinalsStore</span></code></a><ul>
+<li><a class="reference internal" href="#ncaa_eval.transform.normalization.MasseyOrdinalsStore.composite_pca"><code class="docutils literal notranslate"><span class="pre">MasseyOrdinalsStore.composite_pca()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.transform.normalization.MasseyOrdinalsStore.composite_simple_average"><code class="docutils literal notranslate"><span class="pre">MasseyOrdinalsStore.composite_simple_average()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.transform.normalization.MasseyOrdinalsStore.composite_weighted"><code class="docutils literal notranslate"><span class="pre">MasseyOrdinalsStore.composite_weighted()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.transform.normalization.MasseyOrdinalsStore.from_csv"><code class="docutils literal notranslate"><span class="pre">MasseyOrdinalsStore.from_csv()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.transform.normalization.MasseyOrdinalsStore.get_snapshot"><code class="docutils literal notranslate"><span class="pre">MasseyOrdinalsStore.get_snapshot()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.transform.normalization.MasseyOrdinalsStore.normalize_percentile"><code class="docutils literal notranslate"><span class="pre">MasseyOrdinalsStore.normalize_percentile()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.transform.normalization.MasseyOrdinalsStore.normalize_rank_delta"><code class="docutils literal notranslate"><span class="pre">MasseyOrdinalsStore.normalize_rank_delta()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.transform.normalization.MasseyOrdinalsStore.normalize_zscore"><code class="docutils literal notranslate"><span class="pre">MasseyOrdinalsStore.normalize_zscore()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.transform.normalization.MasseyOrdinalsStore.pre_tournament_snapshot"><code class="docutils literal notranslate"><span class="pre">MasseyOrdinalsStore.pre_tournament_snapshot()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.transform.normalization.MasseyOrdinalsStore.run_coverage_gate"><code class="docutils literal notranslate"><span class="pre">MasseyOrdinalsStore.run_coverage_gate()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ncaa_eval.transform.normalization.TeamNameNormalizer"><code class="docutils literal notranslate"><span class="pre">TeamNameNormalizer</span></code></a><ul>
+<li><a class="reference internal" href="#ncaa_eval.transform.normalization.TeamNameNormalizer.from_csv"><code class="docutils literal notranslate"><span class="pre">TeamNameNormalizer.from_csv()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.transform.normalization.TeamNameNormalizer.normalize"><code class="docutils literal notranslate"><span class="pre">TeamNameNormalizer.normalize()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ncaa_eval.transform.normalization.TourneySeed"><code class="docutils literal notranslate"><span class="pre">TourneySeed</span></code></a><ul>
+<li><a class="reference internal" href="#ncaa_eval.transform.normalization.TourneySeed.season"><code class="docutils literal notranslate"><span class="pre">TourneySeed.season</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.transform.normalization.TourneySeed.team_id"><code class="docutils literal notranslate"><span class="pre">TourneySeed.team_id</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.transform.normalization.TourneySeed.seed_str"><code class="docutils literal notranslate"><span class="pre">TourneySeed.seed_str</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.transform.normalization.TourneySeed.region"><code class="docutils literal notranslate"><span class="pre">TourneySeed.region</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.transform.normalization.TourneySeed.seed_num"><code class="docutils literal notranslate"><span class="pre">TourneySeed.seed_num</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.transform.normalization.TourneySeed.is_play_in"><code class="docutils literal notranslate"><span class="pre">TourneySeed.is_play_in</span></code></a></li>
+<li><a class="reference internal" href="#id4"><code class="docutils literal notranslate"><span class="pre">TourneySeed.is_play_in</span></code></a></li>
+<li><a class="reference internal" href="#id5"><code class="docutils literal notranslate"><span class="pre">TourneySeed.region</span></code></a></li>
+<li><a class="reference internal" href="#id6"><code class="docutils literal notranslate"><span class="pre">TourneySeed.season</span></code></a></li>
+<li><a class="reference internal" href="#id7"><code class="docutils literal notranslate"><span class="pre">TourneySeed.seed_num</span></code></a></li>
+<li><a class="reference internal" href="#id8"><code class="docutils literal notranslate"><span class="pre">TourneySeed.seed_str</span></code></a></li>
+<li><a class="reference internal" href="#id9"><code class="docutils literal notranslate"><span class="pre">TourneySeed.team_id</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ncaa_eval.transform.normalization.TourneySeedTable"><code class="docutils literal notranslate"><span class="pre">TourneySeedTable</span></code></a><ul>
+<li><a class="reference internal" href="#ncaa_eval.transform.normalization.TourneySeedTable.all_seeds"><code class="docutils literal notranslate"><span class="pre">TourneySeedTable.all_seeds()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.transform.normalization.TourneySeedTable.from_csv"><code class="docutils literal notranslate"><span class="pre">TourneySeedTable.from_csv()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.transform.normalization.TourneySeedTable.get"><code class="docutils literal notranslate"><span class="pre">TourneySeedTable.get()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ncaa_eval.transform.normalization.parse_seed"><code class="docutils literal notranslate"><span class="pre">parse_seed()</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=39bb1c6d"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
+    </body>
+</html>

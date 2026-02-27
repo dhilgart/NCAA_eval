@@ -1,0 +1,702 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="Test Execution Tiers" href="execution.html"><link rel="prev" title="Testing Conventions" href="conventions.html">
+
+    <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
+        <title>Domain-Specific Testing - ncaa_eval 0.9.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">ncaa_eval 0.9.0 documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  <span class="sidebar-brand-text">ncaa_eval 0.9.0 documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">User Guide:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user-guide.html">User Guide</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Guides:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../STYLE_GUIDE.html">NCAA Eval Style Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../TESTING_STRATEGY.html">Testing Strategy</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Testing Guides:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="conventions.html">Testing Conventions</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Domain-Specific Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="execution.html">Test Execution Tiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quality.html">Test Suite Quality Assurance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="test-approach-guide.html">Test Approach Guide: Example-Based vs Property-Based vs Fuzz-Based Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="test-purpose-guide.html">Test Purpose Guide: Functional, Performance, and Regression Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="test-scope-guide.html">Test Scope Guide: Unit vs Integration Tests</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference:</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/modules.html">ncaa_eval</a><input aria-label="Toggle navigation of ncaa_eval" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../api/ncaa_eval.html">ncaa_eval package</a><input aria-label="Toggle navigation of ncaa_eval package" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../api/ncaa_eval.cli.html">ncaa_eval.cli package</a><input aria-label="Toggle navigation of ncaa_eval.cli package" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/ncaa_eval.cli.main.html">ncaa_eval.cli.main module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/ncaa_eval.cli.train.html">ncaa_eval.cli.train module</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../api/ncaa_eval.evaluation.html">ncaa_eval.evaluation package</a><input aria-label="Toggle navigation of ncaa_eval.evaluation package" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/ncaa_eval.evaluation.backtest.html">ncaa_eval.evaluation.backtest module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/ncaa_eval.evaluation.metrics.html">ncaa_eval.evaluation.metrics module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/ncaa_eval.evaluation.plotting.html">ncaa_eval.evaluation.plotting module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/ncaa_eval.evaluation.simulation.html">ncaa_eval.evaluation.simulation module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/ncaa_eval.evaluation.splitter.html">ncaa_eval.evaluation.splitter module</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../api/ncaa_eval.ingest.html">ncaa_eval.ingest package</a><input aria-label="Toggle navigation of ncaa_eval.ingest package" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../api/ncaa_eval.ingest.connectors.html">ncaa_eval.ingest.connectors package</a><input aria-label="Toggle navigation of ncaa_eval.ingest.connectors package" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../api/ncaa_eval.ingest.connectors.base.html">ncaa_eval.ingest.connectors.base module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/ncaa_eval.ingest.connectors.espn.html">ncaa_eval.ingest.connectors.espn module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../api/ncaa_eval.ingest.connectors.kaggle.html">ncaa_eval.ingest.connectors.kaggle module</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../api/ncaa_eval.ingest.repository.html">ncaa_eval.ingest.repository module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/ncaa_eval.ingest.schema.html">ncaa_eval.ingest.schema module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/ncaa_eval.ingest.sync.html">ncaa_eval.ingest.sync module</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../api/ncaa_eval.model.html">ncaa_eval.model package</a><input aria-label="Toggle navigation of ncaa_eval.model package" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/ncaa_eval.model.base.html">ncaa_eval.model.base module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/ncaa_eval.model.elo.html">ncaa_eval.model.elo module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/ncaa_eval.model.logistic_regression.html">ncaa_eval.model.logistic_regression module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/ncaa_eval.model.registry.html">ncaa_eval.model.registry module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/ncaa_eval.model.tracking.html">ncaa_eval.model.tracking module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/ncaa_eval.model.xgboost_model.html">ncaa_eval.model.xgboost_model module</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../api/ncaa_eval.transform.html">ncaa_eval.transform package</a><input aria-label="Toggle navigation of ncaa_eval.transform package" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/ncaa_eval.transform.calibration.html">ncaa_eval.transform.calibration module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/ncaa_eval.transform.elo.html">ncaa_eval.transform.elo module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/ncaa_eval.transform.feature_serving.html">ncaa_eval.transform.feature_serving module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/ncaa_eval.transform.graph.html">ncaa_eval.transform.graph module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/ncaa_eval.transform.normalization.html">ncaa_eval.transform.normalization module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/ncaa_eval.transform.opponent.html">ncaa_eval.transform.opponent module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/ncaa_eval.transform.sequential.html">ncaa_eval.transform.sequential module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../api/ncaa_eval.transform.serving.html">ncaa_eval.transform.serving module</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../api/ncaa_eval.utils.html">ncaa_eval.utils package</a><input aria-label="Toggle navigation of ncaa_eval.utils package" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../api/ncaa_eval.utils.logger.html">ncaa_eval.utils.logger module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../_sources/testing/domain-testing.md.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section id="domain-specific-testing">
+<h1>Domain-Specific Testing<a class="headerlink" href="#domain-specific-testing" title="Link to this heading">¶</a></h1>
+<p>This guide covers testing approaches specific to the <code class="docutils literal notranslate"><span class="pre">ncaa_eval</span></code> project’s domain requirements: <strong>performance testing</strong> (vectorization compliance) and <strong>data leakage prevention</strong>.</p>
+<hr class="docutils" />
+<section id="performance-testing-guidelines">
+<h2>Performance Testing Guidelines<a class="headerlink" href="#performance-testing-guidelines" title="Link to this heading">¶</a></h2>
+<section id="context-vectorization-first-rule">
+<h3>Context: Vectorization First Rule<a class="headerlink" href="#context-vectorization-first-rule" title="Link to this heading">¶</a></h3>
+<p>The Architecture mandates <strong>“Vectorization First”</strong> (Section 12):</p>
+<blockquote>
+<div><p><strong>Reject PRs that use <code class="docutils literal notranslate"><span class="pre">for</span></code> loops over Pandas DataFrames for metric calculations.</strong></p>
+</div></blockquote>
+<p>This project has a <strong>60-second backtest target</strong> (10-year Elo training + inference). NFR1 mandates vectorization; NFR2 mandates parallelism. Performance testing ensures these requirements are met.</p>
+</section>
+<hr class="docutils" />
+<section id="how-to-test-vectorization">
+<h3>How to Test Vectorization<a class="headerlink" href="#how-to-test-vectorization" title="Link to this heading">¶</a></h3>
+<section id="assertion-based-unit-tests-quick-smoke-check">
+<h4>1. Assertion-Based Unit Tests (Quick Smoke Check)<a class="headerlink" href="#assertion-based-unit-tests-quick-smoke-check" title="Link to this heading">¶</a></h4>
+<p><strong>Purpose:</strong> Catch obvious violations quickly during pre-commit</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">smoke</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_calculate_brier_score_is_vectorized</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify Brier score uses vectorized operations (no Python loops).&quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">inspect</span>
+
+    <span class="n">source</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getsource</span><span class="p">(</span><span class="n">calculate_brier_score</span><span class="p">)</span>
+
+    <span class="c1"># Check that implementation doesn&#39;t contain for loops over data</span>
+    <span class="c1"># (Allow for loops in fixture setup, just not in calculation logic)</span>
+    <span class="k">assert</span> <span class="s2">&quot;for &quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">source</span> <span class="ow">or</span> <span class="s2">&quot;# vectorized&quot;</span> <span class="ow">in</span> <span class="n">source</span><span class="p">,</span> \
+        <span class="s2">&quot;Brier score must use vectorized numpy/pandas operations&quot;</span>
+</pre></div>
+</div>
+<p><strong>Pros:</strong> Fast, catches obvious violations
+<strong>Cons:</strong> Brittle (may trigger false positives on legitimate loops in comments)</p>
+<p><strong>Pre-commit:</strong> ✅ <strong>YES</strong> - Mark as <code class="docutils literal notranslate"><span class="pre">&#64;pytest.mark.smoke</span></code></p>
+</section>
+<hr class="docutils" />
+<section id="performance-benchmark-integration-tests">
+<h4>2. Performance Benchmark Integration Tests<a class="headerlink" href="#performance-benchmark-integration-tests" title="Link to this heading">¶</a></h4>
+<p><strong>Purpose:</strong> Verify actual performance meets targets</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">timeit</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pytest</span>
+
+<span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">slow</span>
+<span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">integration</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_calculate_brier_score_performance</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify Brier score meets performance target.&quot;&quot;&quot;</span>
+    <span class="n">predictions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">10_000</span><span class="p">)</span>
+    <span class="n">actuals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">10_000</span><span class="p">)</span>
+
+    <span class="n">time_taken</span> <span class="o">=</span> <span class="n">timeit</span><span class="o">.</span><span class="n">timeit</span><span class="p">(</span>
+        <span class="k">lambda</span><span class="p">:</span> <span class="n">calculate_brier_score</span><span class="p">(</span><span class="n">predictions</span><span class="p">,</span> <span class="n">actuals</span><span class="p">),</span>
+        <span class="n">number</span><span class="o">=</span><span class="mi">100</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Should complete 100 iterations in &lt; 100ms (1ms per call for 10k predictions)</span>
+    <span class="k">assert</span> <span class="n">time_taken</span> <span class="o">&lt;</span> <span class="mf">0.1</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Brier score too slow: </span><span class="si">{</span><span class="n">time_taken</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">s for 100 iterations&quot;</span>
+</pre></div>
+</div>
+<p><strong>Pros:</strong> Verifies actual performance, catches regressions
+<strong>Cons:</strong> Slow, results vary by machine (need generous thresholds)</p>
+<p><strong>Pre-commit:</strong> ❌ <strong>NO</strong> (too slow)
+<strong>PR-time:</strong> ✅ <strong>YES</strong> - Mark as <code class="docutils literal notranslate"><span class="pre">&#64;pytest.mark.slow</span></code> and <code class="docutils literal notranslate"><span class="pre">&#64;pytest.mark.performance</span></code></p>
+</section>
+<hr class="docutils" />
+<section id="pytest-benchmark-optional-for-critical-paths">
+<h4>3. pytest-benchmark (Optional, for Critical Paths)<a class="headerlink" href="#pytest-benchmark-optional-for-critical-paths" title="Link to this heading">¶</a></h4>
+<blockquote>
+<div><p>⚠️ <strong>NOT YET INSTALLED:</strong> <code class="docutils literal notranslate"><span class="pre">pytest-benchmark</span></code> is optional and NOT currently in <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code>.
+Use timeit-based benchmarks (Option 2) for now. Story 1.5 will evaluate pytest-benchmark for installation.</p>
+</div></blockquote>
+<p><strong>Purpose:</strong> Track performance over time with detailed statistics</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">test_calculate_brier_score_benchmark</span><span class="p">(</span><span class="n">benchmark</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Benchmark Brier score calculation.&quot;&quot;&quot;</span>
+    <span class="n">predictions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">10_000</span><span class="p">)</span>
+    <span class="n">actuals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">10_000</span><span class="p">)</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">benchmark</span><span class="p">(</span><span class="n">calculate_brier_score</span><span class="p">,</span> <span class="n">predictions</span><span class="p">,</span> <span class="n">actuals</span><span class="p">)</span>
+
+    <span class="c1"># Benchmark provides detailed statistics (mean, stddev, percentiles)</span>
+    <span class="k">assert</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+</pre></div>
+</div>
+<p><strong>Pros:</strong> Detailed statistics, integrated with pytest, tracks performance over time
+<strong>Cons:</strong> Requires <code class="docutils literal notranslate"><span class="pre">pytest-benchmark</span></code> plugin (evaluate in Story 1.5)</p>
+<p><strong>Pre-commit:</strong> ❌ <strong>NO</strong>
+<strong>PR-time:</strong> ✅ <strong>YES</strong> (if plugin is installed)</p>
+</section>
+</section>
+<hr class="docutils" />
+<section id="comprehensive-performance-test-example">
+<h3>Comprehensive Performance Test Example<a class="headerlink" href="#comprehensive-performance-test-example" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">slow</span>
+<span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">performance</span>
+<span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">integration</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_full_backtest_meets_60_second_target</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify 10-year Elo backtest completes within 60 seconds (NFR1).&quot;&quot;&quot;</span>
+    <span class="n">games</span> <span class="o">=</span> <span class="n">load_games_for_years</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">2013</span><span class="p">,</span> <span class="mi">2023</span><span class="p">))</span>
+
+    <span class="n">start_time</span> <span class="o">=</span> <span class="n">timeit</span><span class="o">.</span><span class="n">default_timer</span><span class="p">()</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">EloModel</span><span class="p">()</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">games</span><span class="p">)</span>
+    <span class="n">predictions</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">games</span><span class="p">)</span>
+    <span class="n">elapsed</span> <span class="o">=</span> <span class="n">timeit</span><span class="o">.</span><span class="n">default_timer</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span>
+
+    <span class="k">assert</span> <span class="n">elapsed</span> <span class="o">&lt;</span> <span class="mf">60.0</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Backtest too slow: </span><span class="si">{</span><span class="n">elapsed</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">s (target: &lt; 60s)&quot;</span>
+</pre></div>
+</div>
+</section>
+<hr class="docutils" />
+<section id="vectorization-smoke-test-pattern">
+<h3>Vectorization Smoke Test Pattern<a class="headerlink" href="#vectorization-smoke-test-pattern" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">inspect</span>
+
+<span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">smoke</span>
+<span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">performance</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_metric_calculations_are_vectorized</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify critical metric calculations don&#39;t use Python loops (NFR1).&quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.evaluation</span><span class="w"> </span><span class="kn">import</span> <span class="n">metrics</span>
+
+    <span class="c1"># Check that metric module doesn&#39;t contain for loops over DataFrames</span>
+    <span class="n">source</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getsource</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span>
+
+    <span class="c1"># This is a heuristic - manual review is still needed</span>
+    <span class="n">forbidden_patterns</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;for _ in df.iterrows()&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;.iterrows()&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;.itertuples()&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;for row in df&quot;</span><span class="p">,</span>
+    <span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="n">forbidden_patterns</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">pattern</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">source</span><span class="p">,</span> \
+            <span class="sa">f</span><span class="s2">&quot;Metrics module contains non-vectorized pattern: </span><span class="si">{</span><span class="n">pattern</span><span class="si">}</span><span class="s2">&quot;</span>
+</pre></div>
+</div>
+</section>
+<hr class="docutils" />
+<section id="recommendation">
+<h3>Recommendation<a class="headerlink" href="#recommendation" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Use <strong>assertion-based tests</strong> for quick smoke checks (mark as <code class="docutils literal notranslate"><span class="pre">&#64;pytest.mark.smoke</span></code>)</p></li>
+<li><p>Use <strong>performance benchmarks</strong> for critical modules (<code class="docutils literal notranslate"><span class="pre">evaluation/metrics.py</span></code>, <code class="docutils literal notranslate"><span class="pre">evaluation/simulation.py</span></code>) as <code class="docutils literal notranslate"><span class="pre">&#64;pytest.mark.slow</span></code> tests (PR-time only)</p></li>
+<li><p>Consider <strong>pytest-benchmark</strong> for performance regression tracking (optional, evaluate during Story 1.5)</p></li>
+</ul>
+</section>
+</section>
+<hr class="docutils" />
+<section id="data-leakage-prevention-testing">
+<h2>Data Leakage Prevention Testing<a class="headerlink" href="#data-leakage-prevention-testing" title="Link to this heading">¶</a></h2>
+<section id="context-temporal-boundary-enforcement">
+<h3>Context: Temporal Boundary Enforcement<a class="headerlink" href="#context-temporal-boundary-enforcement" title="Link to this heading">¶</a></h3>
+<p>The Architecture mandates <strong>“Data Safety: Temporal boundaries enforced strictly in the API to prevent data leakage”</strong> (Section 11.2).</p>
+<p>NFR4 requires strict temporal boundaries: <strong>training data must never include information from future games</strong>. This is critical for model validity.</p>
+</section>
+<hr class="docutils" />
+<section id="how-to-test-temporal-integrity">
+<h3>How to Test Temporal Integrity<a class="headerlink" href="#how-to-test-temporal-integrity" title="Link to this heading">¶</a></h3>
+<section id="unit-tests-api-contract">
+<h4>1. Unit Tests (API Contract)<a class="headerlink" href="#unit-tests-api-contract" title="Link to this heading">¶</a></h4>
+<p><strong>Purpose:</strong> Verify API rejects requests for future data</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">test_get_chronological_season_enforces_cutoff</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify chronological API rejects requests for future data.&quot;&quot;&quot;</span>
+    <span class="n">api</span> <span class="o">=</span> <span class="n">ChronologicalDataAPI</span><span class="p">()</span>
+
+    <span class="k">with</span> <span class="n">pytest</span><span class="o">.</span><span class="n">raises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">match</span><span class="o">=</span><span class="s2">&quot;Cannot access future data&quot;</span><span class="p">):</span>
+        <span class="n">api</span><span class="o">.</span><span class="n">get_games_before</span><span class="p">(</span><span class="n">date</span><span class="o">=</span><span class="s2">&quot;2025-12-31&quot;</span><span class="p">,</span> <span class="n">cutoff_date</span><span class="o">=</span><span class="s2">&quot;2025-01-01&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Tests:</strong> API raises error when requesting data beyond cutoff</p>
+<p><strong>Pre-commit:</strong> ✅ <strong>YES</strong> (fast, no I/O) - Mark as <code class="docutils literal notranslate"><span class="pre">&#64;pytest.mark.smoke</span></code></p>
+</section>
+<hr class="docutils" />
+<section id="integration-tests-end-to-end-workflow">
+<h4>2. Integration Tests (End-to-End Workflow)<a class="headerlink" href="#integration-tests-end-to-end-workflow" title="Link to this heading">¶</a></h4>
+<p><strong>Purpose:</strong> Verify end-to-end workflows prevent leakage</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">integration</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_walk_forward_validation_prevents_leakage</span><span class="p">(</span><span class="n">sample_games_fixture</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify walk-forward CV never trains on future data.&quot;&quot;&quot;</span>
+    <span class="n">splitter</span> <span class="o">=</span> <span class="n">WalkForwardSplitter</span><span class="p">(</span><span class="n">years</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">2015</span><span class="p">,</span> <span class="mi">2025</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">train_data</span><span class="p">,</span> <span class="n">test_data</span><span class="p">,</span> <span class="n">year</span> <span class="ow">in</span> <span class="n">splitter</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">sample_games_fixture</span><span class="p">):</span>
+        <span class="c1"># Verify all training games occur before test games</span>
+        <span class="n">train_max_date</span> <span class="o">=</span> <span class="n">train_data</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="n">test_min_date</span> <span class="o">=</span> <span class="n">test_data</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+
+        <span class="k">assert</span> <span class="n">train_max_date</span> <span class="o">&lt;</span> <span class="n">test_min_date</span><span class="p">,</span> \
+            <span class="sa">f</span><span class="s2">&quot;Data leakage detected in </span><span class="si">{</span><span class="n">year</span><span class="si">}</span><span class="s2"> fold: train_max=</span><span class="si">{</span><span class="n">train_max_date</span><span class="si">}</span><span class="s2">, test_min=</span><span class="si">{</span><span class="n">test_min_date</span><span class="si">}</span><span class="s2">&quot;</span>
+</pre></div>
+</div>
+<p><strong>Tests:</strong> Cross-validation splitter never leaks future data into training</p>
+<p><strong>Pre-commit:</strong> ❌ <strong>NO</strong> (too slow)
+<strong>PR-time:</strong> ✅ <strong>YES</strong> - Mark as <code class="docutils literal notranslate"><span class="pre">&#64;pytest.mark.integration</span></code></p>
+</section>
+<hr class="docutils" />
+<section id="property-based-tests-invariants">
+<h4>3. Property-Based Tests (Invariants)<a class="headerlink" href="#property-based-tests-invariants" title="Link to this heading">¶</a></h4>
+<p><strong>Purpose:</strong> Verify temporal boundary holds across all possible inputs</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">hypothesis</span><span class="w"> </span><span class="kn">import</span> <span class="n">given</span><span class="p">,</span> <span class="n">strategies</span> <span class="k">as</span> <span class="n">st</span>
+
+<span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">property</span>
+<span class="nd">@given</span><span class="p">(</span><span class="n">cutoff_year</span><span class="o">=</span><span class="n">st</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="mi">2015</span><span class="p">,</span> <span class="mi">2025</span><span class="p">))</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_temporal_boundary_invariant</span><span class="p">(</span><span class="n">cutoff_year</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify no API call can access data beyond cutoff year.&quot;&quot;&quot;</span>
+    <span class="n">api</span> <span class="o">=</span> <span class="n">ChronologicalDataAPI</span><span class="p">()</span>
+    <span class="n">games</span> <span class="o">=</span> <span class="n">api</span><span class="o">.</span><span class="n">get_games_before</span><span class="p">(</span><span class="n">cutoff_year</span><span class="o">=</span><span class="n">cutoff_year</span><span class="p">)</span>
+
+    <span class="c1"># Invariant: ALL games must be from or before cutoff year</span>
+    <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="n">game</span><span class="o">.</span><span class="n">season</span> <span class="o">&lt;=</span> <span class="n">cutoff_year</span> <span class="k">for</span> <span class="n">game</span> <span class="ow">in</span> <span class="n">games</span><span class="p">),</span> \
+        <span class="sa">f</span><span class="s2">&quot;API returned games beyond cutoff year </span><span class="si">{</span><span class="n">cutoff_year</span><span class="si">}</span><span class="s2">&quot;</span>
+</pre></div>
+</div>
+<p><strong>Tests:</strong> Temporal boundary holds across all possible cutoff years</p>
+<p><strong>Pre-commit:</strong> ❌ <strong>NO</strong> (Hypothesis is slow)
+<strong>PR-time:</strong> ✅ <strong>YES</strong> - Mark as <code class="docutils literal notranslate"><span class="pre">&#64;pytest.mark.property</span></code></p>
+</section>
+</section>
+<hr class="docutils" />
+<section id="comprehensive-data-leakage-test-example">
+<h3>Comprehensive Data Leakage Test Example<a class="headerlink" href="#comprehensive-data-leakage-test-example" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">regression</span>
+<span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">integration</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_chronological_api_rejects_exact_cutoff_date</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Regression test: API allowed games ON cutoff date (data leakage).</span>
+
+<span class="sd">    Bug: Issue #87 - get_games_before() used &lt;= instead of &lt; for date comparison.</span>
+<span class="sd">    Fixed: 2026-02-10 - Changed to strict less-than comparison.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">api</span> <span class="o">=</span> <span class="n">ChronologicalDataAPI</span><span class="p">()</span>
+    <span class="n">cutoff</span> <span class="o">=</span> <span class="s2">&quot;2023-03-15&quot;</span>
+
+    <span class="c1"># Load games before cutoff</span>
+    <span class="n">games</span> <span class="o">=</span> <span class="n">api</span><span class="o">.</span><span class="n">get_games_before</span><span class="p">(</span><span class="n">cutoff_date</span><span class="o">=</span><span class="n">cutoff</span><span class="p">)</span>
+
+    <span class="c1"># NO game should have date &gt;= cutoff (strict less-than)</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+    <span class="n">cutoff_dt</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">cutoff</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">game</span> <span class="ow">in</span> <span class="n">games</span><span class="p">:</span>
+        <span class="n">game_date</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromisoformat</span><span class="p">(</span><span class="n">game</span><span class="o">.</span><span class="n">date</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">game_date</span> <span class="o">&lt;</span> <span class="n">cutoff_dt</span><span class="p">,</span> \
+            <span class="sa">f</span><span class="s2">&quot;Game on/after cutoff leaked through: </span><span class="si">{</span><span class="n">game</span><span class="o">.</span><span class="n">date</span><span class="si">}</span><span class="s2"> (cutoff: </span><span class="si">{</span><span class="n">cutoff</span><span class="si">}</span><span class="s2">)&quot;</span>
+</pre></div>
+</div>
+</section>
+<hr class="docutils" />
+<section id="id1">
+<h3>Recommendation<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Add <strong>unit tests</strong> for API contract violations (fast, pre-commit safe)</p></li>
+<li><p>Add <strong>integration tests</strong> for end-to-end workflows like walk-forward CV (PR-time only)</p></li>
+<li><p>Add <strong>property-based tests</strong> for temporal boundary invariants (PR-time only)</p></li>
+</ul>
+</section>
+</section>
+<hr class="docutils" />
+<section id="summary">
+<h2>Summary<a class="headerlink" href="#summary" title="Link to this heading">¶</a></h2>
+<section id="performance-testing-checklist">
+<h3>Performance Testing Checklist<a class="headerlink" href="#performance-testing-checklist" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>✅ Assertion-based smoke tests for vectorization compliance (<code class="docutils literal notranslate"><span class="pre">&#64;pytest.mark.smoke</span></code>)</p></li>
+<li><p>✅ Performance benchmarks for critical paths (<code class="docutils literal notranslate"><span class="pre">&#64;pytest.mark.slow</span></code>, <code class="docutils literal notranslate"><span class="pre">&#64;pytest.mark.performance</span></code>)</p></li>
+<li><p>✅ Full backtest timing test (60-second target)</p></li>
+<li><p>✅ Forbidden pattern detection (<code class="docutils literal notranslate"><span class="pre">.iterrows()</span></code>, etc.)</p></li>
+</ul>
+</section>
+<section id="data-leakage-prevention-checklist">
+<h3>Data Leakage Prevention Checklist<a class="headerlink" href="#data-leakage-prevention-checklist" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>✅ Unit tests for API contract enforcement (<code class="docutils literal notranslate"><span class="pre">&#64;pytest.mark.smoke</span></code>)</p></li>
+<li><p>✅ Integration tests for end-to-end workflows (<code class="docutils literal notranslate"><span class="pre">&#64;pytest.mark.integration</span></code>)</p></li>
+<li><p>✅ Property-based tests for temporal boundary invariants (<code class="docutils literal notranslate"><span class="pre">&#64;pytest.mark.property</span></code>)</p></li>
+<li><p>✅ Regression tests for previously discovered leakage bugs (<code class="docutils literal notranslate"><span class="pre">&#64;pytest.mark.regression</span></code>)</p></li>
+</ul>
+</section>
+</section>
+<hr class="docutils" />
+<section id="see-also">
+<h2>See Also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="test-purpose-guide.html"><span class="std std-doc">Test Purpose Guide</span></a> - Performance and Regression testing</p></li>
+<li><p><a class="reference internal" href="test-scope-guide.html"><span class="std std-doc">Test Scope Guide</span></a> - Unit vs Integration tests</p></li>
+<li><p><a class="reference internal" href="test-approach-guide.html"><span class="std std-doc">Test Approach Guide</span></a> - Example-based vs Property-based</p></li>
+<li><p><a class="reference internal" href="execution.html"><span class="std std-doc">Execution Guide</span></a> - When tests/checks run (4-tier model)</p></li>
+<li><p><a class="reference internal" href="quality.html"><span class="std std-doc">Quality Assurance Guide</span></a> - Mutation testing, coverage analysis</p></li>
+<li><p><a class="reference internal" href="../STYLE_GUIDE.html"><span class="std std-doc">STYLE_GUIDE.md</span></a> Section 5 - Vectorization First rule</p></li>
+</ul>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="execution.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Test Execution Tiers</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="conventions.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Testing Conventions</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2026, Dan Hilgart
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Domain-Specific Testing</a><ul>
+<li><a class="reference internal" href="#performance-testing-guidelines">Performance Testing Guidelines</a><ul>
+<li><a class="reference internal" href="#context-vectorization-first-rule">Context: Vectorization First Rule</a></li>
+<li><a class="reference internal" href="#how-to-test-vectorization">How to Test Vectorization</a><ul>
+<li><a class="reference internal" href="#assertion-based-unit-tests-quick-smoke-check">1. Assertion-Based Unit Tests (Quick Smoke Check)</a></li>
+<li><a class="reference internal" href="#performance-benchmark-integration-tests">2. Performance Benchmark Integration Tests</a></li>
+<li><a class="reference internal" href="#pytest-benchmark-optional-for-critical-paths">3. pytest-benchmark (Optional, for Critical Paths)</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#comprehensive-performance-test-example">Comprehensive Performance Test Example</a></li>
+<li><a class="reference internal" href="#vectorization-smoke-test-pattern">Vectorization Smoke Test Pattern</a></li>
+<li><a class="reference internal" href="#recommendation">Recommendation</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#data-leakage-prevention-testing">Data Leakage Prevention Testing</a><ul>
+<li><a class="reference internal" href="#context-temporal-boundary-enforcement">Context: Temporal Boundary Enforcement</a></li>
+<li><a class="reference internal" href="#how-to-test-temporal-integrity">How to Test Temporal Integrity</a><ul>
+<li><a class="reference internal" href="#unit-tests-api-contract">1. Unit Tests (API Contract)</a></li>
+<li><a class="reference internal" href="#integration-tests-end-to-end-workflow">2. Integration Tests (End-to-End Workflow)</a></li>
+<li><a class="reference internal" href="#property-based-tests-invariants">3. Property-Based Tests (Invariants)</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#comprehensive-data-leakage-test-example">Comprehensive Data Leakage Test Example</a></li>
+<li><a class="reference internal" href="#id1">Recommendation</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#summary">Summary</a><ul>
+<li><a class="reference internal" href="#performance-testing-checklist">Performance Testing Checklist</a></li>
+<li><a class="reference internal" href="#data-leakage-prevention-checklist">Data Leakage Prevention Checklist</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#see-also">See Also</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../_static/documentation_options.js?v=39bb1c6d"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/scripts/furo.js?v=46bd48cc"></script>
+    </body>
+</html>

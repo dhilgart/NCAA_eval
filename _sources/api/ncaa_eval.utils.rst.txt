@@ -1,0 +1,18 @@
+ncaa\_eval.utils package
+========================
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   ncaa_eval.utils.logger
+
+Module contents
+---------------
+
+.. automodule:: ncaa_eval.utils
+   :members:
+   :show-inheritance:
+   :undoc-members:

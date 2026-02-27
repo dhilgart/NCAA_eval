@@ -1,0 +1,2926 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="./">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="#"><link rel="search" title="Search" href="search.html">
+
+    <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 --><title>Index - ncaa_eval 0.9.0 documentation</title>
+<link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d111a655" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=8dab3a3b" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #f2f2f2;
+  --color-code-foreground: #1e1e1e;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="index.html"><div class="brand">ncaa_eval 0.9.0 documentation</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
+  
+  <span class="sidebar-brand-text">ncaa_eval 0.9.0 documentation</span>
+  
+</a><form class="sidebar-search-container" method="get" action="search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <p class="caption" role="heading"><span class="caption-text">User Guide:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="user-guide.html">User Guide</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Guides:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="STYLE_GUIDE.html">NCAA Eval Style Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="TESTING_STRATEGY.html">Testing Strategy</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Testing Guides:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="testing/conventions.html">Testing Conventions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="testing/domain-testing.html">Domain-Specific Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="testing/execution.html">Test Execution Tiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="testing/quality.html">Test Suite Quality Assurance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="testing/test-approach-guide.html">Test Approach Guide: Example-Based vs Property-Based vs Fuzz-Based Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="testing/test-purpose-guide.html">Test Purpose Guide: Functional, Performance, and Regression Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="testing/test-scope-guide.html">Test Scope Guide: Unit vs Integration Tests</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">API Reference:</span></p>
+<ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="api/modules.html">ncaa_eval</a><input aria-label="Toggle navigation of ncaa_eval" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="api/ncaa_eval.html">ncaa_eval package</a><input aria-label="Toggle navigation of ncaa_eval package" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="api/ncaa_eval.cli.html">ncaa_eval.cli package</a><input aria-label="Toggle navigation of ncaa_eval.cli package" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.cli.main.html">ncaa_eval.cli.main module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.cli.train.html">ncaa_eval.cli.train module</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="api/ncaa_eval.evaluation.html">ncaa_eval.evaluation package</a><input aria-label="Toggle navigation of ncaa_eval.evaluation package" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.evaluation.backtest.html">ncaa_eval.evaluation.backtest module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.evaluation.metrics.html">ncaa_eval.evaluation.metrics module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.evaluation.plotting.html">ncaa_eval.evaluation.plotting module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.evaluation.simulation.html">ncaa_eval.evaluation.simulation module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.evaluation.splitter.html">ncaa_eval.evaluation.splitter module</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="api/ncaa_eval.ingest.html">ncaa_eval.ingest package</a><input aria-label="Toggle navigation of ncaa_eval.ingest package" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4 has-children"><a class="reference internal" href="api/ncaa_eval.ingest.connectors.html">ncaa_eval.ingest.connectors package</a><input aria-label="Toggle navigation of ncaa_eval.ingest.connectors package" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="api/ncaa_eval.ingest.connectors.base.html">ncaa_eval.ingest.connectors.base module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="api/ncaa_eval.ingest.connectors.espn.html">ncaa_eval.ingest.connectors.espn module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="api/ncaa_eval.ingest.connectors.kaggle.html">ncaa_eval.ingest.connectors.kaggle module</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.ingest.repository.html">ncaa_eval.ingest.repository module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.ingest.schema.html">ncaa_eval.ingest.schema module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.ingest.sync.html">ncaa_eval.ingest.sync module</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="api/ncaa_eval.model.html">ncaa_eval.model package</a><input aria-label="Toggle navigation of ncaa_eval.model package" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.model.base.html">ncaa_eval.model.base module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.model.elo.html">ncaa_eval.model.elo module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.model.logistic_regression.html">ncaa_eval.model.logistic_regression module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.model.registry.html">ncaa_eval.model.registry module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.model.tracking.html">ncaa_eval.model.tracking module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.model.xgboost_model.html">ncaa_eval.model.xgboost_model module</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="api/ncaa_eval.transform.html">ncaa_eval.transform package</a><input aria-label="Toggle navigation of ncaa_eval.transform package" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.transform.calibration.html">ncaa_eval.transform.calibration module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.transform.elo.html">ncaa_eval.transform.elo module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.transform.feature_serving.html">ncaa_eval.transform.feature_serving module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.transform.graph.html">ncaa_eval.transform.graph module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.transform.normalization.html">ncaa_eval.transform.normalization module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.transform.opponent.html">ncaa_eval.transform.opponent module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.transform.sequential.html">ncaa_eval.transform.sequential module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.transform.serving.html">ncaa_eval.transform.serving module</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="api/ncaa_eval.utils.html">ncaa_eval.utils package</a><input aria-label="Toggle navigation of ncaa_eval.utils package" class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.utils.logger.html">ncaa_eval.utils.logger module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          
+<section class="genindex-section">
+  <h1 id="index">Index</h1>
+  <div class="genindex-jumpbox"><a href="#A"><strong>A</strong></a> | <a href="#B"><strong>B</strong></a> | <a href="#C"><strong>C</strong></a> | <a href="#D"><strong>D</strong></a> | <a href="#E"><strong>E</strong></a> | <a href="#F"><strong>F</strong></a> | <a href="#G"><strong>G</strong></a> | <a href="#H"><strong>H</strong></a> | <a href="#I"><strong>I</strong></a> | <a href="#K"><strong>K</strong></a> | <a href="#L"><strong>L</strong></a> | <a href="#M"><strong>M</strong></a> | <a href="#N"><strong>N</strong></a> | <a href="#O"><strong>O</strong></a> | <a href="#P"><strong>P</strong></a> | <a href="#Q"><strong>Q</strong></a> | <a href="#R"><strong>R</strong></a> | <a href="#S"><strong>S</strong></a> | <a href="#T"><strong>T</strong></a> | <a href="#U"><strong>U</strong></a> | <a href="#V"><strong>V</strong></a> | <a href="#W"><strong>W</strong></a> | <a href="#X"><strong>X</strong></a> | <a href="#Y"><strong>Y</strong></a></div>
+</section>
+<section id="A" class="genindex-section">
+  <h2>A</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.transform.feature_serving.html#ncaa_eval.transform.feature_serving.FeatureConfig.active_blocks">active_blocks() (ncaa_eval.transform.feature_serving.FeatureConfig method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.FeatureConfig.active_blocks">(ncaa_eval.transform.FeatureConfig method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.backtest.html#id3">actuals (ncaa_eval.evaluation.backtest.FoldResult attribute)</a>, <a href="api/ncaa_eval.evaluation.backtest.html#ncaa_eval.evaluation.backtest.FoldResult.actuals">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.html#id20">(ncaa_eval.evaluation.FoldResult attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.FoldResult.actuals">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.graph.html#ncaa_eval.transform.graph.GraphTransformer.add_game_to_graph">add_game_to_graph() (ncaa_eval.transform.graph.GraphTransformer method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.GraphTransformer.add_game_to_graph">(ncaa_eval.transform.GraphTransformer method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.simulation.html#id20">advancement_probs (ncaa_eval.evaluation.simulation.SimulationResult attribute)</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.SimulationResult.advancement_probs">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.html#id39">(ncaa_eval.evaluation.SimulationResult attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.SimulationResult.advancement_probs">[1]</a>
+</li>
+        </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.transform.normalization.html#ncaa_eval.transform.normalization.TourneySeedTable.all_seeds">all_seeds() (ncaa_eval.transform.normalization.TourneySeedTable method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.TourneySeedTable.all_seeds">(ncaa_eval.transform.TourneySeedTable method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.apply_ot_rescaling">apply_ot_rescaling() (in module ncaa_eval.transform)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.sequential.html#ncaa_eval.transform.sequential.apply_ot_rescaling">(in module ncaa_eval.transform.sequential)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.elo.html#ncaa_eval.transform.elo.EloFeatureEngine.apply_season_mean_reversion">apply_season_mean_reversion() (ncaa_eval.transform.elo.EloFeatureEngine method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.EloFeatureEngine.apply_season_mean_reversion">(ncaa_eval.transform.EloFeatureEngine method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.ingest.connectors.base.html#ncaa_eval.ingest.connectors.base.AuthenticationError">AuthenticationError</a>, <a href="api/ncaa_eval.ingest.connectors.html#ncaa_eval.ingest.connectors.AuthenticationError">[1]</a>, <a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.AuthenticationError">[2]</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="B" class="genindex-section">
+  <h2>B</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.BacktestResult">BacktestResult (class in ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.backtest.html#ncaa_eval.evaluation.backtest.BacktestResult">(class in ncaa_eval.evaluation.backtest)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.EloProvider.batch_matchup_probabilities">batch_matchup_probabilities() (ncaa_eval.evaluation.EloProvider method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.MatrixProvider.batch_matchup_probabilities">(ncaa_eval.evaluation.MatrixProvider method)</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.ProbabilityProvider.batch_matchup_probabilities">(ncaa_eval.evaluation.ProbabilityProvider method)</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.EloProvider.batch_matchup_probabilities">(ncaa_eval.evaluation.simulation.EloProvider method)</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.MatrixProvider.batch_matchup_probabilities">(ncaa_eval.evaluation.simulation.MatrixProvider method)</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.ProbabilityProvider.batch_matchup_probabilities">(ncaa_eval.evaluation.simulation.ProbabilityProvider method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.feature_serving.html#ncaa_eval.transform.feature_serving.FeatureBlock.BATCH_RATING">BATCH_RATING (ncaa_eval.transform.feature_serving.FeatureBlock attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.FeatureBlock.BATCH_RATING">(ncaa_eval.transform.FeatureBlock attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.feature_serving.html#ncaa_eval.transform.feature_serving.FeatureConfig.batch_rating_types">batch_rating_types (ncaa_eval.transform.feature_serving.FeatureConfig attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.FeatureConfig.batch_rating_types">(ncaa_eval.transform.FeatureConfig attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.BatchRatingSolver">BatchRatingSolver (class in ncaa_eval.transform)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.opponent.html#ncaa_eval.transform.opponent.BatchRatingSolver">(class in ncaa_eval.transform.opponent)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.metrics.html#id0">bin_counts (ncaa_eval.evaluation.metrics.ReliabilityData attribute)</a>, <a href="api/ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.ReliabilityData.bin_counts">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.html#id34">(ncaa_eval.evaluation.ReliabilityData attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.ReliabilityData.bin_counts">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.metrics.html#id1">bin_edges (ncaa_eval.evaluation.metrics.ReliabilityData attribute)</a>, <a href="api/ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.ReliabilityData.bin_edges">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.html#id35">(ncaa_eval.evaluation.ReliabilityData attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.ReliabilityData.bin_edges">[1]</a>
+</li>
+        </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.evaluation.simulation.html#id21">bracket_distributions (ncaa_eval.evaluation.simulation.SimulationResult attribute)</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.SimulationResult.bracket_distributions">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.html#id40">(ncaa_eval.evaluation.SimulationResult attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.SimulationResult.bracket_distributions">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketDistribution">BracketDistribution (class in ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.BracketDistribution">(class in ncaa_eval.evaluation.simulation)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketNode">BracketNode (class in ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.BracketNode">(class in ncaa_eval.evaluation.simulation)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketStructure">BracketStructure (class in ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.BracketStructure">(class in ncaa_eval.evaluation.simulation)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.brier_score">brier_score() (in module ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.brier_score">(in module ncaa_eval.evaluation.metrics)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.build_bracket">build_bracket() (in module ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.build_bracket">(in module ncaa_eval.evaluation.simulation)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.graph.html#ncaa_eval.transform.graph.GraphTransformer.build_graph">build_graph() (ncaa_eval.transform.graph.GraphTransformer method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.GraphTransformer.build_graph">(ncaa_eval.transform.GraphTransformer method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.build_probability_matrix">build_probability_matrix() (in module ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.build_probability_matrix">(in module ncaa_eval.evaluation.simulation)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.build_season_graph">build_season_graph() (in module ncaa_eval.transform)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.graph.html#ncaa_eval.transform.graph.build_season_graph">(in module ncaa_eval.transform.graph)</a>
+</li>
+        </ul></li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="C" class="genindex-section">
+  <h2>C</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.model.logistic_regression.html#ncaa_eval.model.logistic_regression.LogisticRegressionConfig.C">C (ncaa_eval.model.logistic_regression.LogisticRegressionConfig attribute)</a>
+</li>
+        <li><a href="api/ncaa_eval.transform.feature_serving.html#ncaa_eval.transform.feature_serving.FeatureConfig.calibration_method">calibration_method (ncaa_eval.transform.feature_serving.FeatureConfig attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.FeatureConfig.calibration_method">(ncaa_eval.transform.FeatureConfig attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Team.canonical_name">canonical_name (ncaa_eval.ingest.schema.Team attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.Team.canonical_name">(ncaa_eval.ingest.Team attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#id31">champion_team_id (ncaa_eval.evaluation.MostLikelyBracket attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.MostLikelyBracket.champion_team_id">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#id17">(ncaa_eval.evaluation.simulation.MostLikelyBracket attribute)</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.MostLikelyBracket.champion_team_id">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.ChronologicalDataServer">ChronologicalDataServer (class in ncaa_eval.transform)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.serving.html#ncaa_eval.transform.serving.ChronologicalDataServer">(class in ncaa_eval.transform.serving)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.model.xgboost_model.html#ncaa_eval.model.xgboost_model.XGBoostModelConfig.colsample_bytree">colsample_bytree (ncaa_eval.model.xgboost_model.XGBoostModelConfig attribute)</a>
+</li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.MasseyOrdinalsStore.composite_pca">composite_pca() (ncaa_eval.transform.MasseyOrdinalsStore method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.normalization.html#ncaa_eval.transform.normalization.MasseyOrdinalsStore.composite_pca">(ncaa_eval.transform.normalization.MasseyOrdinalsStore method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.MasseyOrdinalsStore.composite_simple_average">composite_simple_average() (ncaa_eval.transform.MasseyOrdinalsStore method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.normalization.html#ncaa_eval.transform.normalization.MasseyOrdinalsStore.composite_simple_average">(ncaa_eval.transform.normalization.MasseyOrdinalsStore method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.MasseyOrdinalsStore.composite_weighted">composite_weighted() (ncaa_eval.transform.MasseyOrdinalsStore method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.normalization.html#ncaa_eval.transform.normalization.MasseyOrdinalsStore.composite_weighted">(ncaa_eval.transform.normalization.MasseyOrdinalsStore method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.compute_advancement_probs">compute_advancement_probs() (in module ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.compute_advancement_probs">(in module ncaa_eval.evaluation.simulation)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.compute_betweenness_centrality">compute_betweenness_centrality() (in module ncaa_eval.transform)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.graph.html#ncaa_eval.transform.graph.compute_betweenness_centrality">(in module ncaa_eval.transform.graph)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.compute_bracket_distribution">compute_bracket_distribution() (in module ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.compute_bracket_distribution">(in module ncaa_eval.evaluation.simulation)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.compute_clustering_coefficient">compute_clustering_coefficient() (in module ncaa_eval.transform)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.graph.html#ncaa_eval.transform.graph.compute_clustering_coefficient">(in module ncaa_eval.transform.graph)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.BatchRatingSolver.compute_colley">compute_colley() (ncaa_eval.transform.BatchRatingSolver method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.opponent.html#ncaa_eval.transform.opponent.BatchRatingSolver.compute_colley">(ncaa_eval.transform.opponent.BatchRatingSolver method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.compute_colley_ratings">compute_colley_ratings() (in module ncaa_eval.transform)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.opponent.html#ncaa_eval.transform.opponent.compute_colley_ratings">(in module ncaa_eval.transform.opponent)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.compute_ewma_stats">compute_ewma_stats() (in module ncaa_eval.transform)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.sequential.html#ncaa_eval.transform.sequential.compute_ewma_stats">(in module ncaa_eval.transform.sequential)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.compute_expected_points">compute_expected_points() (in module ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.compute_expected_points">(in module ncaa_eval.evaluation.simulation)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.compute_expected_points_seed_diff">compute_expected_points_seed_diff() (in module ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.compute_expected_points_seed_diff">(in module ncaa_eval.evaluation.simulation)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.graph.html#ncaa_eval.transform.graph.GraphTransformer.compute_features">compute_features() (ncaa_eval.transform.graph.GraphTransformer method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.GraphTransformer.compute_features">(ncaa_eval.transform.GraphTransformer method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.compute_four_factors">compute_four_factors() (in module ncaa_eval.transform)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.sequential.html#ncaa_eval.transform.sequential.compute_four_factors">(in module ncaa_eval.transform.sequential)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.compute_game_weights">compute_game_weights() (in module ncaa_eval.transform)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.sequential.html#ncaa_eval.transform.sequential.compute_game_weights">(in module ncaa_eval.transform.sequential)</a>
+</li>
+        </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.compute_hits">compute_hits() (in module ncaa_eval.transform)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.graph.html#ncaa_eval.transform.graph.compute_hits">(in module ncaa_eval.transform.graph)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.compute_momentum">compute_momentum() (in module ncaa_eval.transform)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.sequential.html#ncaa_eval.transform.sequential.compute_momentum">(in module ncaa_eval.transform.sequential)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.compute_most_likely_bracket">compute_most_likely_bracket() (in module ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.compute_most_likely_bracket">(in module ncaa_eval.evaluation.simulation)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.compute_pagerank">compute_pagerank() (in module ncaa_eval.transform)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.graph.html#ncaa_eval.transform.graph.compute_pagerank">(in module ncaa_eval.transform.graph)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.compute_per_possession_stats">compute_per_possession_stats() (in module ncaa_eval.transform)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.sequential.html#ncaa_eval.transform.sequential.compute_per_possession_stats">(in module ncaa_eval.transform.sequential)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.compute_possessions">compute_possessions() (in module ncaa_eval.transform)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.sequential.html#ncaa_eval.transform.sequential.compute_possessions">(in module ncaa_eval.transform.sequential)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.BatchRatingSolver.compute_ridge">compute_ridge() (ncaa_eval.transform.BatchRatingSolver method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.opponent.html#ncaa_eval.transform.opponent.BatchRatingSolver.compute_ridge">(ncaa_eval.transform.opponent.BatchRatingSolver method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.compute_ridge_ratings">compute_ridge_ratings() (in module ncaa_eval.transform)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.opponent.html#ncaa_eval.transform.opponent.compute_ridge_ratings">(in module ncaa_eval.transform.opponent)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.compute_rolling_stats">compute_rolling_stats() (in module ncaa_eval.transform)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.sequential.html#ncaa_eval.transform.sequential.compute_rolling_stats">(in module ncaa_eval.transform.sequential)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.BatchRatingSolver.compute_srs">compute_srs() (ncaa_eval.transform.BatchRatingSolver method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.opponent.html#ncaa_eval.transform.opponent.BatchRatingSolver.compute_srs">(ncaa_eval.transform.opponent.BatchRatingSolver method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.compute_srs_ratings">compute_srs_ratings() (in module ncaa_eval.transform)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.opponent.html#ncaa_eval.transform.opponent.compute_srs_ratings">(in module ncaa_eval.transform.opponent)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.compute_streak">compute_streak() (in module ncaa_eval.transform)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.sequential.html#ncaa_eval.transform.sequential.compute_streak">(in module ncaa_eval.transform.sequential)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.ConferenceLookup">ConferenceLookup (class in ncaa_eval.transform)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.normalization.html#ncaa_eval.transform.normalization.ConferenceLookup">(class in ncaa_eval.transform.normalization)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.simulation.html#id22">confidence_intervals (ncaa_eval.evaluation.simulation.SimulationResult attribute)</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.SimulationResult.confidence_intervals">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.html#id41">(ncaa_eval.evaluation.SimulationResult attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.SimulationResult.confidence_intervals">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.utils.html#ncaa_eval.utils.configure_logging">configure_logging() (in module ncaa_eval.utils)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.utils.logger.html#ncaa_eval.utils.logger.configure_logging">(in module ncaa_eval.utils.logger)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.Connector">Connector (class in ncaa_eval.ingest)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.connectors.html#ncaa_eval.ingest.connectors.Connector">(class in ncaa_eval.ingest.connectors)</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.connectors.base.html#ncaa_eval.ingest.connectors.base.Connector">(class in ncaa_eval.ingest.connectors.base)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.ingest.connectors.base.html#ncaa_eval.ingest.connectors.base.ConnectorError">ConnectorError</a>, <a href="api/ncaa_eval.ingest.connectors.html#ncaa_eval.ingest.connectors.ConnectorError">[1]</a>, <a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.ConnectorError">[2]</a>
+</li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.CoverageGateResult">CoverageGateResult (class in ncaa_eval.transform)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.normalization.html#ncaa_eval.transform.normalization.CoverageGateResult">(class in ncaa_eval.transform.normalization)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.CustomScoring">CustomScoring (class in ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.CustomScoring">(class in ncaa_eval.evaluation.simulation)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.CVFold">CVFold (class in ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.splitter.html#ncaa_eval.evaluation.splitter.CVFold">(class in ncaa_eval.evaluation.splitter)</a>
+</li>
+        </ul></li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="D" class="genindex-section">
+  <h2>D</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.ingest.connectors.base.html#ncaa_eval.ingest.connectors.base.DataFormatError">DataFormatError</a>, <a href="api/ncaa_eval.ingest.connectors.html#ncaa_eval.ingest.connectors.DataFormatError">[1]</a>, <a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.DataFormatError">[2]</a>
+</li>
+        <li><a href="api/ncaa_eval.transform.feature_serving.html#ncaa_eval.transform.feature_serving.FeatureConfig.dataset_scope">dataset_scope (ncaa_eval.transform.feature_serving.FeatureConfig attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.FeatureConfig.dataset_scope">(ncaa_eval.transform.FeatureConfig attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.Game.date">date (ncaa_eval.ingest.Game attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Game.date">(ncaa_eval.ingest.schema.Game attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#id28">day_num (ncaa_eval.evaluation.MatchupContext attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.MatchupContext.day_num">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#id14">(ncaa_eval.evaluation.simulation.MatchupContext attribute)</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.MatchupContext.day_num">[1]</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.Game.day_num">(ncaa_eval.ingest.Game attribute)</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Game.day_num">(ncaa_eval.ingest.schema.Game attribute)</a>
+</li>
+        </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.utils.logger.html#ncaa_eval.utils.logger.DEBUG">DEBUG (in module ncaa_eval.utils.logger)</a>
+</li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.DetailedResultsLoader">DetailedResultsLoader (class in ncaa_eval.transform)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.sequential.html#ncaa_eval.transform.sequential.DetailedResultsLoader">(class in ncaa_eval.transform.sequential)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.DictScoring">DictScoring (class in ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.DictScoring">(class in ncaa_eval.evaluation.simulation)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.ingest.connectors.kaggle.html#ncaa_eval.ingest.connectors.kaggle.KaggleConnector.download">download() (ncaa_eval.ingest.connectors.kaggle.KaggleConnector method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.connectors.html#ncaa_eval.ingest.connectors.KaggleConnector.download">(ncaa_eval.ingest.connectors.KaggleConnector method)</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.KaggleConnector.download">(ncaa_eval.ingest.KaggleConnector method)</a>
+</li>
+        </ul></li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="E" class="genindex-section">
+  <h2>E</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.model.elo.html#ncaa_eval.model.elo.EloModelConfig.early_game_threshold">early_game_threshold (ncaa_eval.model.elo.EloModelConfig attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.elo.html#ncaa_eval.transform.elo.EloConfig.early_game_threshold">(ncaa_eval.transform.elo.EloConfig attribute)</a>
+</li>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.EloConfig.early_game_threshold">(ncaa_eval.transform.EloConfig attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.model.xgboost_model.html#ncaa_eval.model.xgboost_model.XGBoostModelConfig.early_stopping_rounds">early_stopping_rounds (ncaa_eval.model.xgboost_model.XGBoostModelConfig attribute)</a>
+</li>
+        <li><a href="api/ncaa_eval.evaluation.backtest.html#id0">elapsed_seconds (ncaa_eval.evaluation.backtest.BacktestResult attribute)</a>, <a href="api/ncaa_eval.evaluation.backtest.html#ncaa_eval.evaluation.backtest.BacktestResult.elapsed_seconds">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.backtest.html#id4">(ncaa_eval.evaluation.backtest.FoldResult attribute)</a>, <a href="api/ncaa_eval.evaluation.backtest.html#ncaa_eval.evaluation.backtest.FoldResult.elapsed_seconds">[1]</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.html#id0">(ncaa_eval.evaluation.BacktestResult attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.BacktestResult.elapsed_seconds">[1]</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.html#id21">(ncaa_eval.evaluation.FoldResult attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.FoldResult.elapsed_seconds">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.feature_serving.html#ncaa_eval.transform.feature_serving.FeatureBlock.ELO">ELO (ncaa_eval.transform.feature_serving.FeatureBlock attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.FeatureBlock.ELO">(ncaa_eval.transform.FeatureBlock attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.feature_serving.html#ncaa_eval.transform.feature_serving.FeatureConfig.elo_config">elo_config (ncaa_eval.transform.feature_serving.FeatureConfig attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.FeatureConfig.elo_config">(ncaa_eval.transform.FeatureConfig attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.feature_serving.html#ncaa_eval.transform.feature_serving.FeatureConfig.elo_enabled">elo_enabled (ncaa_eval.transform.feature_serving.FeatureConfig attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.FeatureConfig.elo_enabled">(ncaa_eval.transform.FeatureConfig attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.EloConfig">EloConfig (class in ncaa_eval.transform)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.elo.html#ncaa_eval.transform.elo.EloConfig">(class in ncaa_eval.transform.elo)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.EloFeatureEngine">EloFeatureEngine (class in ncaa_eval.transform)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.elo.html#ncaa_eval.transform.elo.EloFeatureEngine">(class in ncaa_eval.transform.elo)</a>
+</li>
+        </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.model.elo.html#ncaa_eval.model.elo.EloModel">EloModel (class in ncaa_eval.model.elo)</a>
+</li>
+        <li><a href="api/ncaa_eval.model.elo.html#ncaa_eval.model.elo.EloModelConfig">EloModelConfig (class in ncaa_eval.model.elo)</a>
+</li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.EloProvider">EloProvider (class in ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.EloProvider">(class in ncaa_eval.evaluation.simulation)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.model.tracking.html#ncaa_eval.model.tracking.ModelRun.end_year">end_year (ncaa_eval.model.tracking.ModelRun attribute)</a>
+</li>
+        <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.EspnConnector">EspnConnector (class in ncaa_eval.ingest)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.connectors.html#ncaa_eval.ingest.connectors.EspnConnector">(class in ncaa_eval.ingest.connectors)</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.connectors.espn.html#ncaa_eval.ingest.connectors.espn.EspnConnector">(class in ncaa_eval.ingest.connectors.espn)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.feature_serving.html#ncaa_eval.transform.feature_serving.FeatureConfig.ewma_alphas">ewma_alphas (ncaa_eval.transform.feature_serving.FeatureConfig attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.FeatureConfig.ewma_alphas">(ncaa_eval.transform.FeatureConfig attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.expected_calibration_error">expected_calibration_error() (in module ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.expected_calibration_error">(in module ncaa_eval.evaluation.metrics)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.simulation.html#id23">expected_points (ncaa_eval.evaluation.simulation.SimulationResult attribute)</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.SimulationResult.expected_points">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.html#id42">(ncaa_eval.evaluation.SimulationResult attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.SimulationResult.expected_points">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.elo.html#ncaa_eval.transform.elo.EloFeatureEngine.expected_score">expected_score() (ncaa_eval.transform.elo.EloFeatureEngine static method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.EloFeatureEngine.expected_score">(ncaa_eval.transform.EloFeatureEngine static method)</a>
+</li>
+        </ul></li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="F" class="genindex-section">
+  <h2>F</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.transform.html#id0">fallback_reason (ncaa_eval.transform.CoverageGateResult attribute)</a>, <a href="api/ncaa_eval.transform.html#ncaa_eval.transform.CoverageGateResult.fallback_reason">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.normalization.html#id0">(ncaa_eval.transform.normalization.CoverageGateResult attribute)</a>, <a href="api/ncaa_eval.transform.normalization.html#ncaa_eval.transform.normalization.CoverageGateResult.fallback_reason">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#id1">fallback_used (ncaa_eval.transform.CoverageGateResult attribute)</a>, <a href="api/ncaa_eval.transform.html#ncaa_eval.transform.CoverageGateResult.fallback_used">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.normalization.html#id1">(ncaa_eval.transform.normalization.CoverageGateResult attribute)</a>, <a href="api/ncaa_eval.transform.normalization.html#ncaa_eval.transform.normalization.CoverageGateResult.fallback_used">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.feature_cols">feature_cols() (in module ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.backtest.html#ncaa_eval.evaluation.backtest.feature_cols">(in module ncaa_eval.evaluation.backtest)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.FeatureBlock">FeatureBlock (class in ncaa_eval.transform)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.feature_serving.html#ncaa_eval.transform.feature_serving.FeatureBlock">(class in ncaa_eval.transform.feature_serving)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.FeatureConfig">FeatureConfig (class in ncaa_eval.transform)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.feature_serving.html#ncaa_eval.transform.feature_serving.FeatureConfig">(class in ncaa_eval.transform.feature_serving)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.Connector.fetch_games">fetch_games() (ncaa_eval.ingest.Connector method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.connectors.base.html#ncaa_eval.ingest.connectors.base.Connector.fetch_games">(ncaa_eval.ingest.connectors.base.Connector method)</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.connectors.html#ncaa_eval.ingest.connectors.Connector.fetch_games">(ncaa_eval.ingest.connectors.Connector method)</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.connectors.espn.html#ncaa_eval.ingest.connectors.espn.EspnConnector.fetch_games">(ncaa_eval.ingest.connectors.espn.EspnConnector method)</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.connectors.html#ncaa_eval.ingest.connectors.EspnConnector.fetch_games">(ncaa_eval.ingest.connectors.EspnConnector method)</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.connectors.kaggle.html#ncaa_eval.ingest.connectors.kaggle.KaggleConnector.fetch_games">(ncaa_eval.ingest.connectors.kaggle.KaggleConnector method)</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.connectors.html#ncaa_eval.ingest.connectors.KaggleConnector.fetch_games">(ncaa_eval.ingest.connectors.KaggleConnector method)</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.EspnConnector.fetch_games">(ncaa_eval.ingest.EspnConnector method)</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.KaggleConnector.fetch_games">(ncaa_eval.ingest.KaggleConnector method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.Connector.fetch_seasons">fetch_seasons() (ncaa_eval.ingest.Connector method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.connectors.base.html#ncaa_eval.ingest.connectors.base.Connector.fetch_seasons">(ncaa_eval.ingest.connectors.base.Connector method)</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.connectors.html#ncaa_eval.ingest.connectors.Connector.fetch_seasons">(ncaa_eval.ingest.connectors.Connector method)</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.connectors.kaggle.html#ncaa_eval.ingest.connectors.kaggle.KaggleConnector.fetch_seasons">(ncaa_eval.ingest.connectors.kaggle.KaggleConnector method)</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.connectors.html#ncaa_eval.ingest.connectors.KaggleConnector.fetch_seasons">(ncaa_eval.ingest.connectors.KaggleConnector method)</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.KaggleConnector.fetch_seasons">(ncaa_eval.ingest.KaggleConnector method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.ingest.connectors.kaggle.html#ncaa_eval.ingest.connectors.kaggle.KaggleConnector.fetch_team_spellings">fetch_team_spellings() (ncaa_eval.ingest.connectors.kaggle.KaggleConnector method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.connectors.html#ncaa_eval.ingest.connectors.KaggleConnector.fetch_team_spellings">(ncaa_eval.ingest.connectors.KaggleConnector method)</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.KaggleConnector.fetch_team_spellings">(ncaa_eval.ingest.KaggleConnector method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.Connector.fetch_teams">fetch_teams() (ncaa_eval.ingest.Connector method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.connectors.base.html#ncaa_eval.ingest.connectors.base.Connector.fetch_teams">(ncaa_eval.ingest.connectors.base.Connector method)</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.connectors.html#ncaa_eval.ingest.connectors.Connector.fetch_teams">(ncaa_eval.ingest.connectors.Connector method)</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.connectors.kaggle.html#ncaa_eval.ingest.connectors.kaggle.KaggleConnector.fetch_teams">(ncaa_eval.ingest.connectors.kaggle.KaggleConnector method)</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.connectors.html#ncaa_eval.ingest.connectors.KaggleConnector.fetch_teams">(ncaa_eval.ingest.connectors.KaggleConnector method)</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.KaggleConnector.fetch_teams">(ncaa_eval.ingest.KaggleConnector method)</a>
+</li>
+        </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.FibonacciScoring">FibonacciScoring (class in ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.FibonacciScoring">(class in ncaa_eval.evaluation.simulation)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.model.base.html#ncaa_eval.model.base.Model.fit">fit() (ncaa_eval.model.base.Model method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.model.base.html#ncaa_eval.model.base.StatefulModel.fit">(ncaa_eval.model.base.StatefulModel method)</a>
+</li>
+          <li><a href="api/ncaa_eval.model.logistic_regression.html#ncaa_eval.model.logistic_regression.LogisticRegressionModel.fit">(ncaa_eval.model.logistic_regression.LogisticRegressionModel method)</a>
+</li>
+          <li><a href="api/ncaa_eval.model.html#ncaa_eval.model.Model.fit">(ncaa_eval.model.Model method)</a>
+</li>
+          <li><a href="api/ncaa_eval.model.html#ncaa_eval.model.StatefulModel.fit">(ncaa_eval.model.StatefulModel method)</a>
+</li>
+          <li><a href="api/ncaa_eval.model.xgboost_model.html#ncaa_eval.model.xgboost_model.XGBoostModel.fit">(ncaa_eval.model.xgboost_model.XGBoostModel method)</a>
+</li>
+          <li><a href="api/ncaa_eval.transform.calibration.html#ncaa_eval.transform.calibration.IsotonicCalibrator.fit">(ncaa_eval.transform.calibration.IsotonicCalibrator method)</a>
+</li>
+          <li><a href="api/ncaa_eval.transform.calibration.html#ncaa_eval.transform.calibration.SigmoidCalibrator.fit">(ncaa_eval.transform.calibration.SigmoidCalibrator method)</a>
+</li>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.IsotonicCalibrator.fit">(ncaa_eval.transform.IsotonicCalibrator method)</a>
+</li>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.SigmoidCalibrator.fit">(ncaa_eval.transform.SigmoidCalibrator method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.backtest.html#id1">fold_results (ncaa_eval.evaluation.backtest.BacktestResult attribute)</a>, <a href="api/ncaa_eval.evaluation.backtest.html#ncaa_eval.evaluation.backtest.BacktestResult.fold_results">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.html#id1">(ncaa_eval.evaluation.BacktestResult attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.BacktestResult.fold_results">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.FoldResult">FoldResult (class in ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.backtest.html#ncaa_eval.evaluation.backtest.FoldResult">(class in ncaa_eval.evaluation.backtest)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.metrics.html#id2">fraction_of_positives (ncaa_eval.evaluation.metrics.ReliabilityData attribute)</a>, <a href="api/ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.ReliabilityData.fraction_of_positives">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.html#id36">(ncaa_eval.evaluation.ReliabilityData attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.ReliabilityData.fraction_of_positives">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.ConferenceLookup.from_csv">from_csv() (ncaa_eval.transform.ConferenceLookup class method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.MasseyOrdinalsStore.from_csv">(ncaa_eval.transform.MasseyOrdinalsStore class method)</a>
+</li>
+          <li><a href="api/ncaa_eval.transform.normalization.html#ncaa_eval.transform.normalization.ConferenceLookup.from_csv">(ncaa_eval.transform.normalization.ConferenceLookup class method)</a>
+</li>
+          <li><a href="api/ncaa_eval.transform.normalization.html#ncaa_eval.transform.normalization.MasseyOrdinalsStore.from_csv">(ncaa_eval.transform.normalization.MasseyOrdinalsStore class method)</a>
+</li>
+          <li><a href="api/ncaa_eval.transform.normalization.html#ncaa_eval.transform.normalization.TeamNameNormalizer.from_csv">(ncaa_eval.transform.normalization.TeamNameNormalizer class method)</a>
+</li>
+          <li><a href="api/ncaa_eval.transform.normalization.html#ncaa_eval.transform.normalization.TourneySeedTable.from_csv">(ncaa_eval.transform.normalization.TourneySeedTable class method)</a>
+</li>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.TeamNameNormalizer.from_csv">(ncaa_eval.transform.TeamNameNormalizer class method)</a>
+</li>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.TourneySeedTable.from_csv">(ncaa_eval.transform.TourneySeedTable class method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.DetailedResultsLoader.from_csvs">from_csvs() (ncaa_eval.transform.DetailedResultsLoader class method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.sequential.html#ncaa_eval.transform.sequential.DetailedResultsLoader.from_csvs">(ncaa_eval.transform.sequential.DetailedResultsLoader class method)</a>
+</li>
+        </ul></li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="G" class="genindex-section">
+  <h2>G</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.Game">Game (class in ncaa_eval.ingest)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Game">(class in ncaa_eval.ingest.schema)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.Game.game_id">game_id (ncaa_eval.ingest.Game attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Game.game_id">(ncaa_eval.ingest.schema.Game attribute)</a>
+</li>
+          <li><a href="api/ncaa_eval.model.tracking.html#ncaa_eval.model.tracking.Prediction.game_id">(ncaa_eval.model.tracking.Prediction attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#id4">games (ncaa_eval.transform.SeasonGames attribute)</a>, <a href="api/ncaa_eval.transform.html#ncaa_eval.transform.SeasonGames.games">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.serving.html#id0">(ncaa_eval.transform.serving.SeasonGames attribute)</a>, <a href="api/ncaa_eval.transform.serving.html#ncaa_eval.transform.serving.SeasonGames.games">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.ingest.sync.html#ncaa_eval.ingest.sync.SyncResult.games_written">games_written (ncaa_eval.ingest.sync.SyncResult attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.SyncResult.games_written">(ncaa_eval.ingest.SyncResult attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.feature_serving.html#ncaa_eval.transform.feature_serving.FeatureConfig.gender_scope">gender_scope (ncaa_eval.transform.feature_serving.FeatureConfig attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.FeatureConfig.gender_scope">(ncaa_eval.transform.FeatureConfig attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.ConferenceLookup.get">get() (ncaa_eval.transform.ConferenceLookup method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.normalization.html#ncaa_eval.transform.normalization.ConferenceLookup.get">(ncaa_eval.transform.normalization.ConferenceLookup method)</a>
+</li>
+          <li><a href="api/ncaa_eval.transform.normalization.html#ncaa_eval.transform.normalization.TourneySeedTable.get">(ncaa_eval.transform.normalization.TourneySeedTable method)</a>
+</li>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.TourneySeedTable.get">(ncaa_eval.transform.TourneySeedTable method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.elo.html#ncaa_eval.transform.elo.EloFeatureEngine.get_all_ratings">get_all_ratings() (ncaa_eval.transform.elo.EloFeatureEngine method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.EloFeatureEngine.get_all_ratings">(ncaa_eval.transform.EloFeatureEngine method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.ChronologicalDataServer.get_chronological_season">get_chronological_season() (ncaa_eval.transform.ChronologicalDataServer method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.serving.html#ncaa_eval.transform.serving.ChronologicalDataServer.get_chronological_season">(ncaa_eval.transform.serving.ChronologicalDataServer method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.model.base.html#ncaa_eval.model.base.Model.get_config">get_config() (ncaa_eval.model.base.Model method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.model.elo.html#ncaa_eval.model.elo.EloModel.get_config">(ncaa_eval.model.elo.EloModel method)</a>
+</li>
+          <li><a href="api/ncaa_eval.model.logistic_regression.html#ncaa_eval.model.logistic_regression.LogisticRegressionModel.get_config">(ncaa_eval.model.logistic_regression.LogisticRegressionModel method)</a>
+</li>
+          <li><a href="api/ncaa_eval.model.html#ncaa_eval.model.Model.get_config">(ncaa_eval.model.Model method)</a>
+</li>
+          <li><a href="api/ncaa_eval.model.xgboost_model.html#ncaa_eval.model.xgboost_model.XGBoostModel.get_config">(ncaa_eval.model.xgboost_model.XGBoostModel method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.ParquetRepository.get_games">get_games() (ncaa_eval.ingest.ParquetRepository method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.Repository.get_games">(ncaa_eval.ingest.Repository method)</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.repository.html#ncaa_eval.ingest.repository.ParquetRepository.get_games">(ncaa_eval.ingest.repository.ParquetRepository method)</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.repository.html#ncaa_eval.ingest.repository.Repository.get_games">(ncaa_eval.ingest.repository.Repository method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.utils.html#ncaa_eval.utils.get_logger">get_logger() (in module ncaa_eval.utils)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.utils.logger.html#ncaa_eval.utils.logger.get_logger">(in module ncaa_eval.utils.logger)</a>
+</li>
+        </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.model.html#ncaa_eval.model.get_model">get_model() (in module ncaa_eval.model)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.model.registry.html#ncaa_eval.model.registry.get_model">(in module ncaa_eval.model.registry)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.elo.html#ncaa_eval.transform.elo.EloFeatureEngine.get_rating">get_rating() (ncaa_eval.transform.elo.EloFeatureEngine method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.EloFeatureEngine.get_rating">(ncaa_eval.transform.EloFeatureEngine method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.get_scoring">get_scoring() (in module ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.get_scoring">(in module ncaa_eval.evaluation.simulation)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.DetailedResultsLoader.get_season_long_format">get_season_long_format() (ncaa_eval.transform.DetailedResultsLoader method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.sequential.html#ncaa_eval.transform.sequential.DetailedResultsLoader.get_season_long_format">(ncaa_eval.transform.sequential.DetailedResultsLoader method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.ParquetRepository.get_seasons">get_seasons() (ncaa_eval.ingest.ParquetRepository method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.Repository.get_seasons">(ncaa_eval.ingest.Repository method)</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.repository.html#ncaa_eval.ingest.repository.ParquetRepository.get_seasons">(ncaa_eval.ingest.repository.ParquetRepository method)</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.repository.html#ncaa_eval.ingest.repository.Repository.get_seasons">(ncaa_eval.ingest.repository.Repository method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.MasseyOrdinalsStore.get_snapshot">get_snapshot() (ncaa_eval.transform.MasseyOrdinalsStore method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.normalization.html#ncaa_eval.transform.normalization.MasseyOrdinalsStore.get_snapshot">(ncaa_eval.transform.normalization.MasseyOrdinalsStore method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.model.base.html#ncaa_eval.model.base.StatefulModel.get_state">get_state() (ncaa_eval.model.base.StatefulModel method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.model.elo.html#ncaa_eval.model.elo.EloModel.get_state">(ncaa_eval.model.elo.EloModel method)</a>
+</li>
+          <li><a href="api/ncaa_eval.model.html#ncaa_eval.model.StatefulModel.get_state">(ncaa_eval.model.StatefulModel method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.DetailedResultsLoader.get_team_season">get_team_season() (ncaa_eval.transform.DetailedResultsLoader method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.sequential.html#ncaa_eval.transform.sequential.DetailedResultsLoader.get_team_season">(ncaa_eval.transform.sequential.DetailedResultsLoader method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.ParquetRepository.get_teams">get_teams() (ncaa_eval.ingest.ParquetRepository method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.Repository.get_teams">(ncaa_eval.ingest.Repository method)</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.repository.html#ncaa_eval.ingest.repository.ParquetRepository.get_teams">(ncaa_eval.ingest.repository.ParquetRepository method)</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.repository.html#ncaa_eval.ingest.repository.Repository.get_teams">(ncaa_eval.ingest.repository.Repository method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.model.tracking.html#ncaa_eval.model.tracking.ModelRun.git_hash">git_hash (ncaa_eval.model.tracking.ModelRun attribute)</a>
+</li>
+        <li><a href="api/ncaa_eval.transform.feature_serving.html#ncaa_eval.transform.feature_serving.FeatureBlock.GRAPH">GRAPH (ncaa_eval.transform.feature_serving.FeatureBlock attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.FeatureBlock.GRAPH">(ncaa_eval.transform.FeatureBlock attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.feature_serving.html#ncaa_eval.transform.feature_serving.FeatureConfig.graph_features_enabled">graph_features_enabled (ncaa_eval.transform.feature_serving.FeatureConfig attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.FeatureConfig.graph_features_enabled">(ncaa_eval.transform.FeatureConfig attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.GraphTransformer">GraphTransformer (class in ncaa_eval.transform)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.graph.html#ncaa_eval.transform.graph.GraphTransformer">(class in ncaa_eval.transform.graph)</a>
+</li>
+        </ul></li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="H" class="genindex-section">
+  <h2>H</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.transform.html#id5">has_tournament (ncaa_eval.transform.SeasonGames attribute)</a>, <a href="api/ncaa_eval.transform.html#ncaa_eval.transform.SeasonGames.has_tournament">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.serving.html#id1">(ncaa_eval.transform.serving.SeasonGames attribute)</a>, <a href="api/ncaa_eval.transform.serving.html#ncaa_eval.transform.serving.SeasonGames.has_tournament">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#id3">histogram_bins (ncaa_eval.evaluation.BracketDistribution attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketDistribution.histogram_bins">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#id0">(ncaa_eval.evaluation.simulation.BracketDistribution attribute)</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.BracketDistribution.histogram_bins">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#id4">histogram_counts (ncaa_eval.evaluation.BracketDistribution attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketDistribution.histogram_counts">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#id1">(ncaa_eval.evaluation.simulation.BracketDistribution attribute)</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.BracketDistribution.histogram_counts">[1]</a>
+</li>
+        </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.model.elo.html#ncaa_eval.model.elo.EloModelConfig.home_advantage_elo">home_advantage_elo (ncaa_eval.model.elo.EloModelConfig attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.elo.html#ncaa_eval.transform.elo.EloConfig.home_advantage_elo">(ncaa_eval.transform.elo.EloConfig attribute)</a>
+</li>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.EloConfig.home_advantage_elo">(ncaa_eval.transform.EloConfig attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.model.tracking.html#ncaa_eval.model.tracking.ModelRun.hyperparameters">hyperparameters (ncaa_eval.model.tracking.ModelRun attribute)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="I" class="genindex-section">
+  <h2>I</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.model.elo.html#ncaa_eval.model.elo.EloModelConfig.initial_rating">initial_rating (ncaa_eval.model.elo.EloModelConfig attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.elo.html#ncaa_eval.transform.elo.EloConfig.initial_rating">(ncaa_eval.transform.elo.EloConfig attribute)</a>
+</li>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.EloConfig.initial_rating">(ncaa_eval.transform.EloConfig attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketNode.is_leaf">is_leaf (ncaa_eval.evaluation.BracketNode property)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.BracketNode.is_leaf">(ncaa_eval.evaluation.simulation.BracketNode property)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#id29">is_neutral (ncaa_eval.evaluation.MatchupContext attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.MatchupContext.is_neutral">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#id15">(ncaa_eval.evaluation.simulation.MatchupContext attribute)</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.MatchupContext.is_neutral">[1]</a>
+</li>
+        </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.transform.normalization.html#id4">is_play_in (ncaa_eval.transform.normalization.TourneySeed attribute)</a>, <a href="api/ncaa_eval.transform.normalization.html#ncaa_eval.transform.normalization.TourneySeed.is_play_in">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.html#id7">(ncaa_eval.transform.TourneySeed attribute)</a>, <a href="api/ncaa_eval.transform.html#ncaa_eval.transform.TourneySeed.is_play_in">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.Game.is_tournament">is_tournament (ncaa_eval.ingest.Game attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Game.is_tournament">(ncaa_eval.ingest.schema.Game attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.IsotonicCalibrator">IsotonicCalibrator (class in ncaa_eval.transform)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.calibration.html#ncaa_eval.transform.calibration.IsotonicCalibrator">(class in ncaa_eval.transform.calibration)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.ChronologicalDataServer.iter_games_by_date">iter_games_by_date() (ncaa_eval.transform.ChronologicalDataServer method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.serving.html#ncaa_eval.transform.serving.ChronologicalDataServer.iter_games_by_date">(ncaa_eval.transform.serving.ChronologicalDataServer method)</a>
+</li>
+        </ul></li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="K" class="genindex-section">
+  <h2>K</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.model.elo.html#ncaa_eval.model.elo.EloModelConfig.k_early">k_early (ncaa_eval.model.elo.EloModelConfig attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.elo.html#ncaa_eval.transform.elo.EloConfig.k_early">(ncaa_eval.transform.elo.EloConfig attribute)</a>
+</li>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.EloConfig.k_early">(ncaa_eval.transform.EloConfig attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.model.elo.html#ncaa_eval.model.elo.EloModelConfig.k_regular">k_regular (ncaa_eval.model.elo.EloModelConfig attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.elo.html#ncaa_eval.transform.elo.EloConfig.k_regular">(ncaa_eval.transform.elo.EloConfig attribute)</a>
+</li>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.EloConfig.k_regular">(ncaa_eval.transform.EloConfig attribute)</a>
+</li>
+        </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.model.elo.html#ncaa_eval.model.elo.EloModelConfig.k_tournament">k_tournament (ncaa_eval.model.elo.EloModelConfig attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.elo.html#ncaa_eval.transform.elo.EloConfig.k_tournament">(ncaa_eval.transform.elo.EloConfig attribute)</a>
+</li>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.EloConfig.k_tournament">(ncaa_eval.transform.EloConfig attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.KaggleConnector">KaggleConnector (class in ncaa_eval.ingest)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.connectors.html#ncaa_eval.ingest.connectors.KaggleConnector">(class in ncaa_eval.ingest.connectors)</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.connectors.kaggle.html#ncaa_eval.ingest.connectors.kaggle.KaggleConnector">(class in ncaa_eval.ingest.connectors.kaggle)</a>
+</li>
+        </ul></li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="L" class="genindex-section">
+  <h2>L</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.Game.l_score">l_score (ncaa_eval.ingest.Game attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Game.l_score">(ncaa_eval.ingest.schema.Game attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.Game.l_team_id">l_team_id (ncaa_eval.ingest.Game attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Game.l_team_id">(ncaa_eval.ingest.schema.Game attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.model.xgboost_model.html#ncaa_eval.model.xgboost_model.XGBoostModelConfig.learning_rate">learning_rate (ncaa_eval.model.xgboost_model.XGBoostModelConfig attribute)</a>
+</li>
+        <li><a href="api/ncaa_eval.evaluation.html#id9">left (ncaa_eval.evaluation.BracketNode attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketNode.left">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#id6">(ncaa_eval.evaluation.simulation.BracketNode attribute)</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.BracketNode.left">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.model.html#ncaa_eval.model.list_models">list_models() (in module ncaa_eval.model)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.model.registry.html#ncaa_eval.model.registry.list_models">(in module ncaa_eval.model.registry)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.model.tracking.html#ncaa_eval.model.tracking.RunStore.list_runs">list_runs() (ncaa_eval.model.tracking.RunStore method)</a>
+</li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.list_scorings">list_scorings() (in module ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.list_scorings">(in module ncaa_eval.evaluation.simulation)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.model.base.html#ncaa_eval.model.base.Model.load">load() (ncaa_eval.model.base.Model class method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.model.elo.html#ncaa_eval.model.elo.EloModel.load">(ncaa_eval.model.elo.EloModel class method)</a>
+</li>
+          <li><a href="api/ncaa_eval.model.logistic_regression.html#ncaa_eval.model.logistic_regression.LogisticRegressionModel.load">(ncaa_eval.model.logistic_regression.LogisticRegressionModel class method)</a>
+</li>
+          <li><a href="api/ncaa_eval.model.html#ncaa_eval.model.Model.load">(ncaa_eval.model.Model class method)</a>
+</li>
+          <li><a href="api/ncaa_eval.model.xgboost_model.html#ncaa_eval.model.xgboost_model.XGBoostModel.load">(ncaa_eval.model.xgboost_model.XGBoostModel class method)</a>
+</li>
+        </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.model.tracking.html#ncaa_eval.model.tracking.RunStore.load_all_summaries">load_all_summaries() (ncaa_eval.model.tracking.RunStore method)</a>
+</li>
+        <li><a href="api/ncaa_eval.ingest.connectors.kaggle.html#ncaa_eval.ingest.connectors.kaggle.KaggleConnector.load_day_zeros">load_day_zeros() (ncaa_eval.ingest.connectors.kaggle.KaggleConnector method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.connectors.html#ncaa_eval.ingest.connectors.KaggleConnector.load_day_zeros">(ncaa_eval.ingest.connectors.KaggleConnector method)</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.KaggleConnector.load_day_zeros">(ncaa_eval.ingest.KaggleConnector method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.model.tracking.html#ncaa_eval.model.tracking.RunStore.load_feature_names">load_feature_names() (ncaa_eval.model.tracking.RunStore method)</a>
+</li>
+        <li><a href="api/ncaa_eval.model.tracking.html#ncaa_eval.model.tracking.RunStore.load_fold_predictions">load_fold_predictions() (ncaa_eval.model.tracking.RunStore method)</a>
+</li>
+        <li><a href="api/ncaa_eval.model.tracking.html#ncaa_eval.model.tracking.RunStore.load_metrics">load_metrics() (ncaa_eval.model.tracking.RunStore method)</a>
+</li>
+        <li><a href="api/ncaa_eval.model.tracking.html#ncaa_eval.model.tracking.RunStore.load_model">load_model() (ncaa_eval.model.tracking.RunStore method)</a>
+</li>
+        <li><a href="api/ncaa_eval.model.tracking.html#ncaa_eval.model.tracking.RunStore.load_predictions">load_predictions() (ncaa_eval.model.tracking.RunStore method)</a>
+</li>
+        <li><a href="api/ncaa_eval.model.tracking.html#ncaa_eval.model.tracking.RunStore.load_run">load_run() (ncaa_eval.model.tracking.RunStore method)</a>
+</li>
+        <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.Game.loc">loc (ncaa_eval.ingest.Game attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Game.loc">(ncaa_eval.ingest.schema.Game attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#id32">log_likelihood (ncaa_eval.evaluation.MostLikelyBracket attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.MostLikelyBracket.log_likelihood">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#id18">(ncaa_eval.evaluation.simulation.MostLikelyBracket attribute)</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.MostLikelyBracket.log_likelihood">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.log_loss">log_loss() (in module ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.log_loss">(in module ncaa_eval.evaluation.metrics)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.model.logistic_regression.html#ncaa_eval.model.logistic_regression.LogisticRegressionConfig">LogisticRegressionConfig (class in ncaa_eval.model.logistic_regression)</a>
+</li>
+        <li><a href="api/ncaa_eval.model.logistic_regression.html#ncaa_eval.model.logistic_regression.LogisticRegressionModel">LogisticRegressionModel (class in ncaa_eval.model.logistic_regression)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="M" class="genindex-section">
+  <h2>M</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.model.elo.html#ncaa_eval.model.elo.EloModelConfig.margin_exponent">margin_exponent (ncaa_eval.model.elo.EloModelConfig attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.elo.html#ncaa_eval.transform.elo.EloConfig.margin_exponent">(ncaa_eval.transform.elo.EloConfig attribute)</a>
+</li>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.EloConfig.margin_exponent">(ncaa_eval.transform.EloConfig attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.MasseyOrdinalsStore">MasseyOrdinalsStore (class in ncaa_eval.transform)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.normalization.html#ncaa_eval.transform.normalization.MasseyOrdinalsStore">(class in ncaa_eval.transform.normalization)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.feature_serving.html#ncaa_eval.transform.feature_serving.FeatureConfig.matchup_deltas">matchup_deltas (ncaa_eval.transform.feature_serving.FeatureConfig attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.FeatureConfig.matchup_deltas">(ncaa_eval.transform.FeatureConfig attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.EloProvider.matchup_probability">matchup_probability() (ncaa_eval.evaluation.EloProvider method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.MatrixProvider.matchup_probability">(ncaa_eval.evaluation.MatrixProvider method)</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.ProbabilityProvider.matchup_probability">(ncaa_eval.evaluation.ProbabilityProvider method)</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.EloProvider.matchup_probability">(ncaa_eval.evaluation.simulation.EloProvider method)</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.MatrixProvider.matchup_probability">(ncaa_eval.evaluation.simulation.MatrixProvider method)</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.ProbabilityProvider.matchup_probability">(ncaa_eval.evaluation.simulation.ProbabilityProvider method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.MatchupContext">MatchupContext (class in ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.MatchupContext">(class in ncaa_eval.evaluation.simulation)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.MatrixProvider">MatrixProvider (class in ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.MatrixProvider">(class in ncaa_eval.evaluation.simulation)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.model.xgboost_model.html#ncaa_eval.model.xgboost_model.XGBoostModelConfig.max_depth">max_depth (ncaa_eval.model.xgboost_model.XGBoostModelConfig attribute)</a>
+</li>
+        <li><a href="api/ncaa_eval.model.logistic_regression.html#ncaa_eval.model.logistic_regression.LogisticRegressionConfig.max_iter">max_iter (ncaa_eval.model.logistic_regression.LogisticRegressionConfig attribute)</a>
+</li>
+        <li><a href="api/ncaa_eval.model.elo.html#ncaa_eval.model.elo.EloModelConfig.max_margin">max_margin (ncaa_eval.model.elo.EloModelConfig attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.elo.html#ncaa_eval.transform.elo.EloConfig.max_margin">(ncaa_eval.transform.elo.EloConfig attribute)</a>
+</li>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.EloConfig.max_margin">(ncaa_eval.transform.EloConfig attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#id5">mean (ncaa_eval.evaluation.BracketDistribution attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketDistribution.mean">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#id2">(ncaa_eval.evaluation.simulation.BracketDistribution attribute)</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.BracketDistribution.mean">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.metrics.html#id3">mean_predicted_value (ncaa_eval.evaluation.metrics.ReliabilityData attribute)</a>, <a href="api/ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.ReliabilityData.mean_predicted_value">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.html#id37">(ncaa_eval.evaluation.ReliabilityData attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.ReliabilityData.mean_predicted_value">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.model.elo.html#ncaa_eval.model.elo.EloModelConfig.mean_reversion_fraction">mean_reversion_fraction (ncaa_eval.model.elo.EloModelConfig attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.elo.html#ncaa_eval.transform.elo.EloConfig.mean_reversion_fraction">(ncaa_eval.transform.elo.EloConfig attribute)</a>
+</li>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.EloConfig.mean_reversion_fraction">(ncaa_eval.transform.EloConfig attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.simulation.html#id24">method (ncaa_eval.evaluation.simulation.SimulationResult attribute)</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.SimulationResult.method">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.html#id43">(ncaa_eval.evaluation.SimulationResult attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.SimulationResult.method">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.backtest.html#id5">metrics (ncaa_eval.evaluation.backtest.FoldResult attribute)</a>, <a href="api/ncaa_eval.evaluation.backtest.html#ncaa_eval.evaluation.backtest.FoldResult.metrics">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.html#id22">(ncaa_eval.evaluation.FoldResult attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.FoldResult.metrics">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.model.xgboost_model.html#ncaa_eval.model.xgboost_model.XGBoostModelConfig.min_child_weight">min_child_weight (ncaa_eval.model.xgboost_model.XGBoostModelConfig attribute)</a>
+</li>
+        <li><a href="api/ncaa_eval.model.html#ncaa_eval.model.Model">Model (class in ncaa_eval.model)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.model.base.html#ncaa_eval.model.base.Model">(class in ncaa_eval.model.base)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.Game.model_config">model_config (ncaa_eval.ingest.Game attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Game.model_config">(ncaa_eval.ingest.schema.Game attribute)</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Season.model_config">(ncaa_eval.ingest.schema.Season attribute)</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Team.model_config">(ncaa_eval.ingest.schema.Team attribute)</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.Season.model_config">(ncaa_eval.ingest.Season attribute)</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.Team.model_config">(ncaa_eval.ingest.Team attribute)</a>
+</li>
+          <li><a href="api/ncaa_eval.model.base.html#ncaa_eval.model.base.ModelConfig.model_config">(ncaa_eval.model.base.ModelConfig attribute)</a>
+</li>
+          <li><a href="api/ncaa_eval.model.elo.html#ncaa_eval.model.elo.EloModelConfig.model_config">(ncaa_eval.model.elo.EloModelConfig attribute)</a>
+</li>
+          <li><a href="api/ncaa_eval.model.logistic_regression.html#ncaa_eval.model.logistic_regression.LogisticRegressionConfig.model_config">(ncaa_eval.model.logistic_regression.LogisticRegressionConfig attribute)</a>
+</li>
+          <li><a href="api/ncaa_eval.model.html#ncaa_eval.model.ModelConfig.model_config">(ncaa_eval.model.ModelConfig attribute)</a>
+</li>
+          <li><a href="api/ncaa_eval.model.tracking.html#ncaa_eval.model.tracking.ModelRun.model_config">(ncaa_eval.model.tracking.ModelRun attribute)</a>
+</li>
+          <li><a href="api/ncaa_eval.model.tracking.html#ncaa_eval.model.tracking.Prediction.model_config">(ncaa_eval.model.tracking.Prediction attribute)</a>
+</li>
+          <li><a href="api/ncaa_eval.model.xgboost_model.html#ncaa_eval.model.xgboost_model.XGBoostModelConfig.model_config">(ncaa_eval.model.xgboost_model.XGBoostModelConfig attribute)</a>
+</li>
+        </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.model.base.html#ncaa_eval.model.base.ModelConfig.model_name">model_name (ncaa_eval.model.base.ModelConfig attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.model.elo.html#ncaa_eval.model.elo.EloModelConfig.model_name">(ncaa_eval.model.elo.EloModelConfig attribute)</a>
+</li>
+          <li><a href="api/ncaa_eval.model.logistic_regression.html#ncaa_eval.model.logistic_regression.LogisticRegressionConfig.model_name">(ncaa_eval.model.logistic_regression.LogisticRegressionConfig attribute)</a>
+</li>
+          <li><a href="api/ncaa_eval.model.html#ncaa_eval.model.ModelConfig.model_name">(ncaa_eval.model.ModelConfig attribute)</a>
+</li>
+          <li><a href="api/ncaa_eval.model.xgboost_model.html#ncaa_eval.model.xgboost_model.XGBoostModelConfig.model_name">(ncaa_eval.model.xgboost_model.XGBoostModelConfig attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.model.tracking.html#ncaa_eval.model.tracking.ModelRun.model_type">model_type (ncaa_eval.model.tracking.ModelRun attribute)</a>
+</li>
+        <li><a href="api/ncaa_eval.model.html#ncaa_eval.model.ModelConfig">ModelConfig (class in ncaa_eval.model)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.model.base.html#ncaa_eval.model.base.ModelConfig">(class in ncaa_eval.model.base)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.model.html#ncaa_eval.model.ModelNotFoundError">ModelNotFoundError</a>, <a href="api/ncaa_eval.model.registry.html#ncaa_eval.model.registry.ModelNotFoundError">[1]</a>
+</li>
+        <li><a href="api/ncaa_eval.model.tracking.html#ncaa_eval.model.tracking.ModelRun">ModelRun (class in ncaa_eval.model.tracking)</a>
+</li>
+        <li>
+    module
+
+        <ul>
+          <li><a href="api/ncaa_eval.html#module-ncaa_eval">ncaa_eval</a>
+</li>
+          <li><a href="api/ncaa_eval.cli.html#module-ncaa_eval.cli">ncaa_eval.cli</a>
+</li>
+          <li><a href="api/ncaa_eval.cli.main.html#module-ncaa_eval.cli.main">ncaa_eval.cli.main</a>
+</li>
+          <li><a href="api/ncaa_eval.cli.train.html#module-ncaa_eval.cli.train">ncaa_eval.cli.train</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.html#module-ncaa_eval.evaluation">ncaa_eval.evaluation</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.backtest.html#module-ncaa_eval.evaluation.backtest">ncaa_eval.evaluation.backtest</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.metrics.html#module-ncaa_eval.evaluation.metrics">ncaa_eval.evaluation.metrics</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.plotting.html#module-ncaa_eval.evaluation.plotting">ncaa_eval.evaluation.plotting</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#module-ncaa_eval.evaluation.simulation">ncaa_eval.evaluation.simulation</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.splitter.html#module-ncaa_eval.evaluation.splitter">ncaa_eval.evaluation.splitter</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.html#module-ncaa_eval.ingest">ncaa_eval.ingest</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.connectors.html#module-ncaa_eval.ingest.connectors">ncaa_eval.ingest.connectors</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.connectors.base.html#module-ncaa_eval.ingest.connectors.base">ncaa_eval.ingest.connectors.base</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.connectors.espn.html#module-ncaa_eval.ingest.connectors.espn">ncaa_eval.ingest.connectors.espn</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.connectors.kaggle.html#module-ncaa_eval.ingest.connectors.kaggle">ncaa_eval.ingest.connectors.kaggle</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.repository.html#module-ncaa_eval.ingest.repository">ncaa_eval.ingest.repository</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.schema.html#module-ncaa_eval.ingest.schema">ncaa_eval.ingest.schema</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.sync.html#module-ncaa_eval.ingest.sync">ncaa_eval.ingest.sync</a>
+</li>
+          <li><a href="api/ncaa_eval.model.html#module-ncaa_eval.model">ncaa_eval.model</a>
+</li>
+          <li><a href="api/ncaa_eval.model.base.html#module-ncaa_eval.model.base">ncaa_eval.model.base</a>
+</li>
+          <li><a href="api/ncaa_eval.model.elo.html#module-ncaa_eval.model.elo">ncaa_eval.model.elo</a>
+</li>
+          <li><a href="api/ncaa_eval.model.logistic_regression.html#module-ncaa_eval.model.logistic_regression">ncaa_eval.model.logistic_regression</a>
+</li>
+          <li><a href="api/ncaa_eval.model.registry.html#module-ncaa_eval.model.registry">ncaa_eval.model.registry</a>
+</li>
+          <li><a href="api/ncaa_eval.model.tracking.html#module-ncaa_eval.model.tracking">ncaa_eval.model.tracking</a>
+</li>
+          <li><a href="api/ncaa_eval.model.xgboost_model.html#module-ncaa_eval.model.xgboost_model">ncaa_eval.model.xgboost_model</a>
+</li>
+          <li><a href="api/ncaa_eval.transform.html#module-ncaa_eval.transform">ncaa_eval.transform</a>
+</li>
+          <li><a href="api/ncaa_eval.transform.calibration.html#module-ncaa_eval.transform.calibration">ncaa_eval.transform.calibration</a>
+</li>
+          <li><a href="api/ncaa_eval.transform.elo.html#module-ncaa_eval.transform.elo">ncaa_eval.transform.elo</a>
+</li>
+          <li><a href="api/ncaa_eval.transform.feature_serving.html#module-ncaa_eval.transform.feature_serving">ncaa_eval.transform.feature_serving</a>
+</li>
+          <li><a href="api/ncaa_eval.transform.graph.html#module-ncaa_eval.transform.graph">ncaa_eval.transform.graph</a>
+</li>
+          <li><a href="api/ncaa_eval.transform.normalization.html#module-ncaa_eval.transform.normalization">ncaa_eval.transform.normalization</a>
+</li>
+          <li><a href="api/ncaa_eval.transform.opponent.html#module-ncaa_eval.transform.opponent">ncaa_eval.transform.opponent</a>
+</li>
+          <li><a href="api/ncaa_eval.transform.sequential.html#module-ncaa_eval.transform.sequential">ncaa_eval.transform.sequential</a>
+</li>
+          <li><a href="api/ncaa_eval.transform.serving.html#module-ncaa_eval.transform.serving">ncaa_eval.transform.serving</a>
+</li>
+          <li><a href="api/ncaa_eval.utils.html#module-ncaa_eval.utils">ncaa_eval.utils</a>
+</li>
+          <li><a href="api/ncaa_eval.utils.logger.html#module-ncaa_eval.utils.logger">ncaa_eval.utils.logger</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.MostLikelyBracket">MostLikelyBracket (class in ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.MostLikelyBracket">(class in ncaa_eval.evaluation.simulation)</a>
+</li>
+        </ul></li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="N" class="genindex-section">
+  <h2>N</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.evaluation.metrics.html#id4">n_bins (ncaa_eval.evaluation.metrics.ReliabilityData attribute)</a>, <a href="api/ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.ReliabilityData.n_bins">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.html#id38">(ncaa_eval.evaluation.ReliabilityData attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.ReliabilityData.n_bins">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.model.xgboost_model.html#ncaa_eval.model.xgboost_model.XGBoostModelConfig.n_estimators">n_estimators (ncaa_eval.model.xgboost_model.XGBoostModelConfig attribute)</a>
+</li>
+        <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.N_GAMES">N_GAMES (in module ncaa_eval.evaluation.simulation)</a>
+</li>
+        <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.N_ROUNDS">N_ROUNDS (in module ncaa_eval.evaluation.simulation)</a>
+</li>
+        <li><a href="api/ncaa_eval.evaluation.simulation.html#id25">n_simulations (ncaa_eval.evaluation.simulation.SimulationResult attribute)</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.SimulationResult.n_simulations">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.html#id44">(ncaa_eval.evaluation.SimulationResult attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.SimulationResult.n_simulations">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.CustomScoring.name">name (ncaa_eval.evaluation.CustomScoring property)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.DictScoring.name">(ncaa_eval.evaluation.DictScoring property)</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.FibonacciScoring.name">(ncaa_eval.evaluation.FibonacciScoring property)</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.ScoringRule.name">(ncaa_eval.evaluation.ScoringRule property)</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.SeedDiffBonusScoring.name">(ncaa_eval.evaluation.SeedDiffBonusScoring property)</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.CustomScoring.name">(ncaa_eval.evaluation.simulation.CustomScoring property)</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.DictScoring.name">(ncaa_eval.evaluation.simulation.DictScoring property)</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.FibonacciScoring.name">(ncaa_eval.evaluation.simulation.FibonacciScoring property)</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.ScoringRule.name">(ncaa_eval.evaluation.simulation.ScoringRule property)</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.SeedDiffBonusScoring.name">(ncaa_eval.evaluation.simulation.SeedDiffBonusScoring property)</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.StandardScoring.name">(ncaa_eval.evaluation.simulation.StandardScoring property)</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.StandardScoring.name">(ncaa_eval.evaluation.StandardScoring property)</a>
+</li>
+        </ul></li>
+        <li>
+    ncaa_eval
+
+        <ul>
+          <li><a href="api/ncaa_eval.html#module-ncaa_eval">module</a>
+</li>
+        </ul></li>
+        <li>
+    ncaa_eval.cli
+
+        <ul>
+          <li><a href="api/ncaa_eval.cli.html#module-ncaa_eval.cli">module</a>
+</li>
+        </ul></li>
+        <li>
+    ncaa_eval.cli.main
+
+        <ul>
+          <li><a href="api/ncaa_eval.cli.main.html#module-ncaa_eval.cli.main">module</a>
+</li>
+        </ul></li>
+        <li>
+    ncaa_eval.cli.train
+
+        <ul>
+          <li><a href="api/ncaa_eval.cli.train.html#module-ncaa_eval.cli.train">module</a>
+</li>
+        </ul></li>
+        <li>
+    ncaa_eval.evaluation
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.html#module-ncaa_eval.evaluation">module</a>
+</li>
+        </ul></li>
+        <li>
+    ncaa_eval.evaluation.backtest
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.backtest.html#module-ncaa_eval.evaluation.backtest">module</a>
+</li>
+        </ul></li>
+        <li>
+    ncaa_eval.evaluation.metrics
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.metrics.html#module-ncaa_eval.evaluation.metrics">module</a>
+</li>
+        </ul></li>
+        <li>
+    ncaa_eval.evaluation.plotting
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.plotting.html#module-ncaa_eval.evaluation.plotting">module</a>
+</li>
+        </ul></li>
+        <li>
+    ncaa_eval.evaluation.simulation
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#module-ncaa_eval.evaluation.simulation">module</a>
+</li>
+        </ul></li>
+        <li>
+    ncaa_eval.evaluation.splitter
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.splitter.html#module-ncaa_eval.evaluation.splitter">module</a>
+</li>
+        </ul></li>
+        <li>
+    ncaa_eval.ingest
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.html#module-ncaa_eval.ingest">module</a>
+</li>
+        </ul></li>
+        <li>
+    ncaa_eval.ingest.connectors
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.connectors.html#module-ncaa_eval.ingest.connectors">module</a>
+</li>
+        </ul></li>
+        <li>
+    ncaa_eval.ingest.connectors.base
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.connectors.base.html#module-ncaa_eval.ingest.connectors.base">module</a>
+</li>
+        </ul></li>
+        <li>
+    ncaa_eval.ingest.connectors.espn
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.connectors.espn.html#module-ncaa_eval.ingest.connectors.espn">module</a>
+</li>
+        </ul></li>
+        <li>
+    ncaa_eval.ingest.connectors.kaggle
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.connectors.kaggle.html#module-ncaa_eval.ingest.connectors.kaggle">module</a>
+</li>
+        </ul></li>
+        <li>
+    ncaa_eval.ingest.repository
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.repository.html#module-ncaa_eval.ingest.repository">module</a>
+</li>
+        </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li>
+    ncaa_eval.ingest.schema
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.schema.html#module-ncaa_eval.ingest.schema">module</a>
+</li>
+        </ul></li>
+        <li>
+    ncaa_eval.ingest.sync
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.sync.html#module-ncaa_eval.ingest.sync">module</a>
+</li>
+        </ul></li>
+        <li>
+    ncaa_eval.model
+
+        <ul>
+          <li><a href="api/ncaa_eval.model.html#module-ncaa_eval.model">module</a>
+</li>
+        </ul></li>
+        <li>
+    ncaa_eval.model.base
+
+        <ul>
+          <li><a href="api/ncaa_eval.model.base.html#module-ncaa_eval.model.base">module</a>
+</li>
+        </ul></li>
+        <li>
+    ncaa_eval.model.elo
+
+        <ul>
+          <li><a href="api/ncaa_eval.model.elo.html#module-ncaa_eval.model.elo">module</a>
+</li>
+        </ul></li>
+        <li>
+    ncaa_eval.model.logistic_regression
+
+        <ul>
+          <li><a href="api/ncaa_eval.model.logistic_regression.html#module-ncaa_eval.model.logistic_regression">module</a>
+</li>
+        </ul></li>
+        <li>
+    ncaa_eval.model.registry
+
+        <ul>
+          <li><a href="api/ncaa_eval.model.registry.html#module-ncaa_eval.model.registry">module</a>
+</li>
+        </ul></li>
+        <li>
+    ncaa_eval.model.tracking
+
+        <ul>
+          <li><a href="api/ncaa_eval.model.tracking.html#module-ncaa_eval.model.tracking">module</a>
+</li>
+        </ul></li>
+        <li>
+    ncaa_eval.model.xgboost_model
+
+        <ul>
+          <li><a href="api/ncaa_eval.model.xgboost_model.html#module-ncaa_eval.model.xgboost_model">module</a>
+</li>
+        </ul></li>
+        <li>
+    ncaa_eval.transform
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.html#module-ncaa_eval.transform">module</a>
+</li>
+        </ul></li>
+        <li>
+    ncaa_eval.transform.calibration
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.calibration.html#module-ncaa_eval.transform.calibration">module</a>
+</li>
+        </ul></li>
+        <li>
+    ncaa_eval.transform.elo
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.elo.html#module-ncaa_eval.transform.elo">module</a>
+</li>
+        </ul></li>
+        <li>
+    ncaa_eval.transform.feature_serving
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.feature_serving.html#module-ncaa_eval.transform.feature_serving">module</a>
+</li>
+        </ul></li>
+        <li>
+    ncaa_eval.transform.graph
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.graph.html#module-ncaa_eval.transform.graph">module</a>
+</li>
+        </ul></li>
+        <li>
+    ncaa_eval.transform.normalization
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.normalization.html#module-ncaa_eval.transform.normalization">module</a>
+</li>
+        </ul></li>
+        <li>
+    ncaa_eval.transform.opponent
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.opponent.html#module-ncaa_eval.transform.opponent">module</a>
+</li>
+        </ul></li>
+        <li>
+    ncaa_eval.transform.sequential
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.sequential.html#module-ncaa_eval.transform.sequential">module</a>
+</li>
+        </ul></li>
+        <li>
+    ncaa_eval.transform.serving
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.serving.html#module-ncaa_eval.transform.serving">module</a>
+</li>
+        </ul></li>
+        <li>
+    ncaa_eval.utils
+
+        <ul>
+          <li><a href="api/ncaa_eval.utils.html#module-ncaa_eval.utils">module</a>
+</li>
+        </ul></li>
+        <li>
+    ncaa_eval.utils.logger
+
+        <ul>
+          <li><a href="api/ncaa_eval.utils.logger.html#module-ncaa_eval.utils.logger">module</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.ingest.connectors.base.html#ncaa_eval.ingest.connectors.base.NetworkError">NetworkError</a>, <a href="api/ncaa_eval.ingest.connectors.html#ncaa_eval.ingest.connectors.NetworkError">[1]</a>, <a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.NetworkError">[2]</a>
+</li>
+        <li><a href="api/ncaa_eval.utils.logger.html#ncaa_eval.utils.logger.NORMAL">NORMAL (in module ncaa_eval.utils.logger)</a>
+</li>
+        <li><a href="api/ncaa_eval.transform.normalization.html#ncaa_eval.transform.normalization.TeamNameNormalizer.normalize">normalize() (ncaa_eval.transform.normalization.TeamNameNormalizer method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.TeamNameNormalizer.normalize">(ncaa_eval.transform.TeamNameNormalizer method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.MasseyOrdinalsStore.normalize_percentile">normalize_percentile() (ncaa_eval.transform.MasseyOrdinalsStore method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.normalization.html#ncaa_eval.transform.normalization.MasseyOrdinalsStore.normalize_percentile">(ncaa_eval.transform.normalization.MasseyOrdinalsStore method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.MasseyOrdinalsStore.normalize_rank_delta">normalize_rank_delta() (ncaa_eval.transform.MasseyOrdinalsStore method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.normalization.html#ncaa_eval.transform.normalization.MasseyOrdinalsStore.normalize_rank_delta">(ncaa_eval.transform.normalization.MasseyOrdinalsStore method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.MasseyOrdinalsStore.normalize_zscore">normalize_zscore() (ncaa_eval.transform.MasseyOrdinalsStore method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.normalization.html#ncaa_eval.transform.normalization.MasseyOrdinalsStore.normalize_zscore">(ncaa_eval.transform.normalization.MasseyOrdinalsStore method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.Game.num_ot">num_ot (ncaa_eval.ingest.Game attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Game.num_ot">(ncaa_eval.ingest.schema.Game attribute)</a>
+</li>
+        </ul></li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="O" class="genindex-section">
+  <h2>O</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.transform.feature_serving.html#ncaa_eval.transform.feature_serving.FeatureBlock.ORDINAL">ORDINAL (ncaa_eval.transform.feature_serving.FeatureBlock attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.FeatureBlock.ORDINAL">(ncaa_eval.transform.FeatureBlock attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.feature_serving.html#ncaa_eval.transform.feature_serving.FeatureConfig.ordinal_composite">ordinal_composite (ncaa_eval.transform.feature_serving.FeatureConfig attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.FeatureConfig.ordinal_composite">(ncaa_eval.transform.FeatureConfig attribute)</a>
+</li>
+        </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.transform.feature_serving.html#ncaa_eval.transform.feature_serving.FeatureConfig.ordinal_systems">ordinal_systems (ncaa_eval.transform.feature_serving.FeatureConfig attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.FeatureConfig.ordinal_systems">(ncaa_eval.transform.FeatureConfig attribute)</a>
+</li>
+        </ul></li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="P" class="genindex-section">
+  <h2>P</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.ParquetRepository">ParquetRepository (class in ncaa_eval.ingest)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.repository.html#ncaa_eval.ingest.repository.ParquetRepository">(class in ncaa_eval.ingest.repository)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.parse_seed">parse_seed() (in module ncaa_eval.transform)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.normalization.html#ncaa_eval.transform.normalization.parse_seed">(in module ncaa_eval.transform.normalization)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#id6">percentiles (ncaa_eval.evaluation.BracketDistribution attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketDistribution.percentiles">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#id3">(ncaa_eval.evaluation.simulation.BracketDistribution attribute)</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.BracketDistribution.percentiles">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.plot_advancement_heatmap">plot_advancement_heatmap() (in module ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.plotting.html#ncaa_eval.evaluation.plotting.plot_advancement_heatmap">(in module ncaa_eval.evaluation.plotting)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.plot_backtest_summary">plot_backtest_summary() (in module ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.plotting.html#ncaa_eval.evaluation.plotting.plot_backtest_summary">(in module ncaa_eval.evaluation.plotting)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.plot_metric_comparison">plot_metric_comparison() (in module ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.plotting.html#ncaa_eval.evaluation.plotting.plot_metric_comparison">(in module ncaa_eval.evaluation.plotting)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.plot_reliability_diagram">plot_reliability_diagram() (in module ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.plotting.html#ncaa_eval.evaluation.plotting.plot_reliability_diagram">(in module ncaa_eval.evaluation.plotting)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.plot_score_distribution">plot_score_distribution() (in module ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.plotting.html#ncaa_eval.evaluation.plotting.plot_score_distribution">(in module ncaa_eval.evaluation.plotting)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.CustomScoring.points_per_round">points_per_round() (ncaa_eval.evaluation.CustomScoring method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.DictScoring.points_per_round">(ncaa_eval.evaluation.DictScoring method)</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.FibonacciScoring.points_per_round">(ncaa_eval.evaluation.FibonacciScoring method)</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.ScoringRule.points_per_round">(ncaa_eval.evaluation.ScoringRule method)</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.SeedDiffBonusScoring.points_per_round">(ncaa_eval.evaluation.SeedDiffBonusScoring method)</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.CustomScoring.points_per_round">(ncaa_eval.evaluation.simulation.CustomScoring method)</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.DictScoring.points_per_round">(ncaa_eval.evaluation.simulation.DictScoring method)</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.FibonacciScoring.points_per_round">(ncaa_eval.evaluation.simulation.FibonacciScoring method)</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.ScoringRule.points_per_round">(ncaa_eval.evaluation.simulation.ScoringRule method)</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.SeedDiffBonusScoring.points_per_round">(ncaa_eval.evaluation.simulation.SeedDiffBonusScoring method)</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.StandardScoring.points_per_round">(ncaa_eval.evaluation.simulation.StandardScoring method)</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.StandardScoring.points_per_round">(ncaa_eval.evaluation.StandardScoring method)</a>
+</li>
+        </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.MasseyOrdinalsStore.pre_tournament_snapshot">pre_tournament_snapshot() (ncaa_eval.transform.MasseyOrdinalsStore method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.normalization.html#ncaa_eval.transform.normalization.MasseyOrdinalsStore.pre_tournament_snapshot">(ncaa_eval.transform.normalization.MasseyOrdinalsStore method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.model.tracking.html#ncaa_eval.model.tracking.Prediction.pred_win_prob">pred_win_prob (ncaa_eval.model.tracking.Prediction attribute)</a>
+</li>
+        <li><a href="api/ncaa_eval.model.base.html#ncaa_eval.model.base.Model.predict_proba">predict_proba() (ncaa_eval.model.base.Model method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.model.base.html#ncaa_eval.model.base.StatefulModel.predict_proba">(ncaa_eval.model.base.StatefulModel method)</a>
+</li>
+          <li><a href="api/ncaa_eval.model.logistic_regression.html#ncaa_eval.model.logistic_regression.LogisticRegressionModel.predict_proba">(ncaa_eval.model.logistic_regression.LogisticRegressionModel method)</a>
+</li>
+          <li><a href="api/ncaa_eval.model.html#ncaa_eval.model.Model.predict_proba">(ncaa_eval.model.Model method)</a>
+</li>
+          <li><a href="api/ncaa_eval.model.html#ncaa_eval.model.StatefulModel.predict_proba">(ncaa_eval.model.StatefulModel method)</a>
+</li>
+          <li><a href="api/ncaa_eval.model.xgboost_model.html#ncaa_eval.model.xgboost_model.XGBoostModel.predict_proba">(ncaa_eval.model.xgboost_model.XGBoostModel method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.model.tracking.html#ncaa_eval.model.tracking.Prediction">Prediction (class in ncaa_eval.model.tracking)</a>
+</li>
+        <li><a href="api/ncaa_eval.model.tracking.html#ncaa_eval.model.tracking.ModelRun.prediction_count">prediction_count (ncaa_eval.model.tracking.ModelRun attribute)</a>
+</li>
+        <li><a href="api/ncaa_eval.evaluation.backtest.html#id6">predictions (ncaa_eval.evaluation.backtest.FoldResult attribute)</a>, <a href="api/ncaa_eval.evaluation.backtest.html#ncaa_eval.evaluation.backtest.FoldResult.predictions">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.html#id23">(ncaa_eval.evaluation.FoldResult attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.FoldResult.predictions">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#id2">primary_systems (ncaa_eval.transform.CoverageGateResult attribute)</a>, <a href="api/ncaa_eval.transform.html#ncaa_eval.transform.CoverageGateResult.primary_systems">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.normalization.html#id2">(ncaa_eval.transform.normalization.CoverageGateResult attribute)</a>, <a href="api/ncaa_eval.transform.normalization.html#ncaa_eval.transform.normalization.CoverageGateResult.primary_systems">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.ProbabilityProvider">ProbabilityProvider (class in ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.ProbabilityProvider">(class in ncaa_eval.evaluation.simulation)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.elo.html#ncaa_eval.transform.elo.EloFeatureEngine.process_season">process_season() (ncaa_eval.transform.elo.EloFeatureEngine method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.EloFeatureEngine.process_season">(ncaa_eval.transform.EloFeatureEngine method)</a>
+</li>
+        </ul></li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="Q" class="genindex-section">
+  <h2>Q</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.utils.logger.html#ncaa_eval.utils.logger.QUIET">QUIET (in module ncaa_eval.utils.logger)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="R" class="genindex-section">
+  <h2>R</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.transform.html#id3">recommended_systems (ncaa_eval.transform.CoverageGateResult attribute)</a>, <a href="api/ncaa_eval.transform.html#ncaa_eval.transform.CoverageGateResult.recommended_systems">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.normalization.html#id3">(ncaa_eval.transform.normalization.CoverageGateResult attribute)</a>, <a href="api/ncaa_eval.transform.normalization.html#ncaa_eval.transform.normalization.CoverageGateResult.recommended_systems">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.model.xgboost_model.html#ncaa_eval.model.xgboost_model.XGBoostModelConfig.reg_alpha">reg_alpha (ncaa_eval.model.xgboost_model.XGBoostModelConfig attribute)</a>
+</li>
+        <li><a href="api/ncaa_eval.model.xgboost_model.html#ncaa_eval.model.xgboost_model.XGBoostModelConfig.reg_lambda">reg_lambda (ncaa_eval.model.xgboost_model.XGBoostModelConfig attribute)</a>
+</li>
+        <li><a href="api/ncaa_eval.transform.normalization.html#id5">region (ncaa_eval.transform.normalization.TourneySeed attribute)</a>, <a href="api/ncaa_eval.transform.normalization.html#ncaa_eval.transform.normalization.TourneySeed.region">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.html#id8">(ncaa_eval.transform.TourneySeed attribute)</a>, <a href="api/ncaa_eval.transform.html#ncaa_eval.transform.TourneySeed.region">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.model.html#ncaa_eval.model.register_model">register_model() (in module ncaa_eval.model)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.model.registry.html#ncaa_eval.model.registry.register_model">(in module ncaa_eval.model.registry)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.register_scoring">register_scoring() (in module ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.register_scoring">(in module ncaa_eval.evaluation.simulation)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.reliability_diagram_data">reliability_diagram_data() (in module ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.reliability_diagram_data">(in module ncaa_eval.evaluation.metrics)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.ReliabilityData">ReliabilityData (class in ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.ReliabilityData">(class in ncaa_eval.evaluation.metrics)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.Repository">Repository (class in ncaa_eval.ingest)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.repository.html#ncaa_eval.ingest.repository.Repository">(class in ncaa_eval.ingest.repository)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.rescale_overtime">rescale_overtime() (in module ncaa_eval.transform)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.serving.html#ncaa_eval.transform.serving.rescale_overtime">(in module ncaa_eval.transform.serving)</a>
+</li>
+        </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.transform.elo.html#ncaa_eval.transform.elo.EloFeatureEngine.reset_game_counts">reset_game_counts() (ncaa_eval.transform.elo.EloFeatureEngine method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.EloFeatureEngine.reset_game_counts">(ncaa_eval.transform.EloFeatureEngine method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#id10">right (ncaa_eval.evaluation.BracketNode attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketNode.right">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#id7">(ncaa_eval.evaluation.simulation.BracketNode attribute)</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.BracketNode.right">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.roc_auc">roc_auc() (in module ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.roc_auc">(in module ncaa_eval.evaluation.metrics)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#id13">root (ncaa_eval.evaluation.BracketStructure attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketStructure.root">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#id10">(ncaa_eval.evaluation.simulation.BracketStructure attribute)</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.BracketStructure.root">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#id11">round_index (ncaa_eval.evaluation.BracketNode attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketNode.round_index">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#id8">(ncaa_eval.evaluation.simulation.BracketNode attribute)</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.BracketNode.round_index">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.run_backtest">run_backtest() (in module ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.backtest.html#ncaa_eval.evaluation.backtest.run_backtest">(in module ncaa_eval.evaluation.backtest)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.MasseyOrdinalsStore.run_coverage_gate">run_coverage_gate() (ncaa_eval.transform.MasseyOrdinalsStore method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.normalization.html#ncaa_eval.transform.normalization.MasseyOrdinalsStore.run_coverage_gate">(ncaa_eval.transform.normalization.MasseyOrdinalsStore method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.model.tracking.html#ncaa_eval.model.tracking.ModelRun.run_id">run_id (ncaa_eval.model.tracking.ModelRun attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.model.tracking.html#ncaa_eval.model.tracking.Prediction.run_id">(ncaa_eval.model.tracking.Prediction attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.cli.train.html#ncaa_eval.cli.train.run_training">run_training() (in module ncaa_eval.cli.train)</a>
+</li>
+        <li><a href="api/ncaa_eval.model.tracking.html#ncaa_eval.model.tracking.RunStore">RunStore (class in ncaa_eval.model.tracking)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="S" class="genindex-section">
+  <h2>S</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.model.base.html#ncaa_eval.model.base.Model.save">save() (ncaa_eval.model.base.Model method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.model.elo.html#ncaa_eval.model.elo.EloModel.save">(ncaa_eval.model.elo.EloModel method)</a>
+</li>
+          <li><a href="api/ncaa_eval.model.logistic_regression.html#ncaa_eval.model.logistic_regression.LogisticRegressionModel.save">(ncaa_eval.model.logistic_regression.LogisticRegressionModel method)</a>
+</li>
+          <li><a href="api/ncaa_eval.model.html#ncaa_eval.model.Model.save">(ncaa_eval.model.Model method)</a>
+</li>
+          <li><a href="api/ncaa_eval.model.xgboost_model.html#ncaa_eval.model.xgboost_model.XGBoostModel.save">(ncaa_eval.model.xgboost_model.XGBoostModel method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.model.tracking.html#ncaa_eval.model.tracking.RunStore.save_fold_predictions">save_fold_predictions() (ncaa_eval.model.tracking.RunStore method)</a>
+</li>
+        <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.ParquetRepository.save_games">save_games() (ncaa_eval.ingest.ParquetRepository method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.Repository.save_games">(ncaa_eval.ingest.Repository method)</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.repository.html#ncaa_eval.ingest.repository.ParquetRepository.save_games">(ncaa_eval.ingest.repository.ParquetRepository method)</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.repository.html#ncaa_eval.ingest.repository.Repository.save_games">(ncaa_eval.ingest.repository.Repository method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.model.tracking.html#ncaa_eval.model.tracking.RunStore.save_metrics">save_metrics() (ncaa_eval.model.tracking.RunStore method)</a>
+</li>
+        <li><a href="api/ncaa_eval.model.tracking.html#ncaa_eval.model.tracking.RunStore.save_model">save_model() (ncaa_eval.model.tracking.RunStore method)</a>
+</li>
+        <li><a href="api/ncaa_eval.model.tracking.html#ncaa_eval.model.tracking.RunStore.save_run">save_run() (ncaa_eval.model.tracking.RunStore method)</a>
+</li>
+        <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.ParquetRepository.save_seasons">save_seasons() (ncaa_eval.ingest.ParquetRepository method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.Repository.save_seasons">(ncaa_eval.ingest.Repository method)</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.repository.html#ncaa_eval.ingest.repository.ParquetRepository.save_seasons">(ncaa_eval.ingest.repository.ParquetRepository method)</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.repository.html#ncaa_eval.ingest.repository.Repository.save_seasons">(ncaa_eval.ingest.repository.Repository method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.ParquetRepository.save_teams">save_teams() (ncaa_eval.ingest.ParquetRepository method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.Repository.save_teams">(ncaa_eval.ingest.Repository method)</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.repository.html#ncaa_eval.ingest.repository.ParquetRepository.save_teams">(ncaa_eval.ingest.repository.ParquetRepository method)</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.repository.html#ncaa_eval.ingest.repository.Repository.save_teams">(ncaa_eval.ingest.repository.Repository method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.model.xgboost_model.html#ncaa_eval.model.xgboost_model.XGBoostModelConfig.scale_pos_weight">scale_pos_weight (ncaa_eval.model.xgboost_model.XGBoostModelConfig attribute)</a>
+</li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.score_bracket_against_sims">score_bracket_against_sims() (in module ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.score_bracket_against_sims">(in module ncaa_eval.evaluation.simulation)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.simulation.html#id26">score_distribution (ncaa_eval.evaluation.simulation.SimulationResult attribute)</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.SimulationResult.score_distribution">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.html#id45">(ncaa_eval.evaluation.SimulationResult attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.SimulationResult.score_distribution">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#id7">scores (ncaa_eval.evaluation.BracketDistribution attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketDistribution.scores">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#id4">(ncaa_eval.evaluation.simulation.BracketDistribution attribute)</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.BracketDistribution.scores">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.scoring_from_config">scoring_from_config() (in module ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.scoring_from_config">(in module ncaa_eval.evaluation.simulation)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.ScoringNotFoundError">ScoringNotFoundError</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.ScoringNotFoundError">[1]</a>
+</li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.ScoringRule">ScoringRule (class in ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.ScoringRule">(class in ncaa_eval.evaluation.simulation)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.Season">Season (class in ncaa_eval.ingest)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Season">(class in ncaa_eval.ingest.schema)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#id30">season (ncaa_eval.evaluation.MatchupContext attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.MatchupContext.season">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#id16">(ncaa_eval.evaluation.simulation.MatchupContext attribute)</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.MatchupContext.season">[1]</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#id27">(ncaa_eval.evaluation.simulation.SimulationResult attribute)</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.SimulationResult.season">[1]</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.html#id46">(ncaa_eval.evaluation.SimulationResult attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.SimulationResult.season">[1]</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.Game.season">(ncaa_eval.ingest.Game attribute)</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Game.season">(ncaa_eval.ingest.schema.Game attribute)</a>
+</li>
+          <li><a href="api/ncaa_eval.model.tracking.html#ncaa_eval.model.tracking.Prediction.season">(ncaa_eval.model.tracking.Prediction attribute)</a>
+</li>
+          <li><a href="api/ncaa_eval.transform.normalization.html#id6">(ncaa_eval.transform.normalization.TourneySeed attribute)</a>, <a href="api/ncaa_eval.transform.normalization.html#ncaa_eval.transform.normalization.TourneySeed.season">[1]</a>
+</li>
+          <li><a href="api/ncaa_eval.transform.html#id9">(ncaa_eval.transform.TourneySeed attribute)</a>, <a href="api/ncaa_eval.transform.html#ncaa_eval.transform.TourneySeed.season">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.SeasonGames">SeasonGames (class in ncaa_eval.transform)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.serving.html#ncaa_eval.transform.serving.SeasonGames">(class in ncaa_eval.transform.serving)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.ingest.sync.html#ncaa_eval.ingest.sync.SyncResult.seasons_cached">seasons_cached (ncaa_eval.ingest.sync.SyncResult attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.SyncResult.seasons_cached">(ncaa_eval.ingest.SyncResult attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.ingest.sync.html#ncaa_eval.ingest.sync.SyncResult.seasons_written">seasons_written (ncaa_eval.ingest.sync.SyncResult attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.SyncResult.seasons_written">(ncaa_eval.ingest.SyncResult attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.feature_serving.html#ncaa_eval.transform.feature_serving.FeatureBlock.SEED">SEED (ncaa_eval.transform.feature_serving.FeatureBlock attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.FeatureBlock.SEED">(ncaa_eval.transform.FeatureBlock attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.SeedDiffBonusScoring.seed_diff_bonus">seed_diff_bonus() (ncaa_eval.evaluation.SeedDiffBonusScoring method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.SeedDiffBonusScoring.seed_diff_bonus">(ncaa_eval.evaluation.simulation.SeedDiffBonusScoring method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#id14">seed_map (ncaa_eval.evaluation.BracketStructure attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketStructure.seed_map">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.SeedDiffBonusScoring.seed_map">(ncaa_eval.evaluation.SeedDiffBonusScoring property)</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#id11">(ncaa_eval.evaluation.simulation.BracketStructure attribute)</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.BracketStructure.seed_map">[1]</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.SeedDiffBonusScoring.seed_map">(ncaa_eval.evaluation.simulation.SeedDiffBonusScoring property)</a>
+</li>
+        </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.transform.normalization.html#id7">seed_num (ncaa_eval.transform.normalization.TourneySeed attribute)</a>, <a href="api/ncaa_eval.transform.normalization.html#ncaa_eval.transform.normalization.TourneySeed.seed_num">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.html#id10">(ncaa_eval.transform.TourneySeed attribute)</a>, <a href="api/ncaa_eval.transform.html#ncaa_eval.transform.TourneySeed.seed_num">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.normalization.html#id8">seed_str (ncaa_eval.transform.normalization.TourneySeed attribute)</a>, <a href="api/ncaa_eval.transform.normalization.html#ncaa_eval.transform.normalization.TourneySeed.seed_str">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.html#id11">(ncaa_eval.transform.TourneySeed attribute)</a>, <a href="api/ncaa_eval.transform.html#ncaa_eval.transform.TourneySeed.seed_str">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.SeedDiffBonusScoring">SeedDiffBonusScoring (class in ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.SeedDiffBonusScoring">(class in ncaa_eval.evaluation.simulation)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.feature_serving.html#ncaa_eval.transform.feature_serving.FeatureBlock.SEQUENTIAL">SEQUENTIAL (ncaa_eval.transform.feature_serving.FeatureBlock attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.FeatureBlock.SEQUENTIAL">(ncaa_eval.transform.FeatureBlock attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.feature_serving.html#ncaa_eval.transform.feature_serving.FeatureConfig.sequential_windows">sequential_windows (ncaa_eval.transform.feature_serving.FeatureConfig attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.FeatureConfig.sequential_windows">(ncaa_eval.transform.FeatureConfig attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.SequentialTransformer">SequentialTransformer (class in ncaa_eval.transform)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.sequential.html#ncaa_eval.transform.sequential.SequentialTransformer">(class in ncaa_eval.transform.sequential)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.feature_serving.html#ncaa_eval.transform.feature_serving.StatefulFeatureServer.serve_season_features">serve_season_features() (ncaa_eval.transform.feature_serving.StatefulFeatureServer method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.StatefulFeatureServer.serve_season_features">(ncaa_eval.transform.StatefulFeatureServer method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.model.base.html#ncaa_eval.model.base.StatefulModel.set_state">set_state() (ncaa_eval.model.base.StatefulModel method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.model.elo.html#ncaa_eval.model.elo.EloModel.set_state">(ncaa_eval.model.elo.EloModel method)</a>
+</li>
+          <li><a href="api/ncaa_eval.model.html#ncaa_eval.model.StatefulModel.set_state">(ncaa_eval.model.StatefulModel method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.SigmoidCalibrator">SigmoidCalibrator (class in ncaa_eval.transform)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.calibration.html#ncaa_eval.transform.calibration.SigmoidCalibrator">(class in ncaa_eval.transform.calibration)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.simulation.html#id28">sim_winners (ncaa_eval.evaluation.simulation.SimulationResult attribute)</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.SimulationResult.sim_winners">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.html#id47">(ncaa_eval.evaluation.SimulationResult attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.SimulationResult.sim_winners">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.simulate_tournament">simulate_tournament() (in module ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.simulate_tournament">(in module ncaa_eval.evaluation.simulation)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.simulate_tournament_mc">simulate_tournament_mc() (in module ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.simulate_tournament_mc">(in module ncaa_eval.evaluation.simulation)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.SimulationResult">SimulationResult (class in ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.SimulationResult">(class in ncaa_eval.evaluation.simulation)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.ingest.sync.html#ncaa_eval.ingest.sync.SyncResult.source">source (ncaa_eval.ingest.sync.SyncResult attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.SyncResult.source">(ncaa_eval.ingest.SyncResult attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.StandardScoring">StandardScoring (class in ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.StandardScoring">(class in ncaa_eval.evaluation.simulation)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.elo.html#ncaa_eval.transform.elo.EloFeatureEngine.start_new_season">start_new_season() (ncaa_eval.transform.elo.EloFeatureEngine method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.EloFeatureEngine.start_new_season">(ncaa_eval.transform.EloFeatureEngine method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.model.base.html#ncaa_eval.model.base.StatefulModel.start_season">start_season() (ncaa_eval.model.base.StatefulModel method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.model.elo.html#ncaa_eval.model.elo.EloModel.start_season">(ncaa_eval.model.elo.EloModel method)</a>
+</li>
+          <li><a href="api/ncaa_eval.model.html#ncaa_eval.model.StatefulModel.start_season">(ncaa_eval.model.StatefulModel method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.model.tracking.html#ncaa_eval.model.tracking.ModelRun.start_year">start_year (ncaa_eval.model.tracking.ModelRun attribute)</a>
+</li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.StatefulFeatureServer">StatefulFeatureServer (class in ncaa_eval.transform)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.feature_serving.html#ncaa_eval.transform.feature_serving.StatefulFeatureServer">(class in ncaa_eval.transform.feature_serving)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.model.html#ncaa_eval.model.StatefulModel">StatefulModel (class in ncaa_eval.model)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.model.base.html#ncaa_eval.model.base.StatefulModel">(class in ncaa_eval.model.base)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#id8">std (ncaa_eval.evaluation.BracketDistribution attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketDistribution.std">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#id5">(ncaa_eval.evaluation.simulation.BracketDistribution attribute)</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.BracketDistribution.std">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.model.xgboost_model.html#ncaa_eval.model.xgboost_model.XGBoostModelConfig.subsample">subsample (ncaa_eval.model.xgboost_model.XGBoostModelConfig attribute)</a>
+</li>
+        <li><a href="api/ncaa_eval.evaluation.backtest.html#id2">summary (ncaa_eval.evaluation.backtest.BacktestResult attribute)</a>, <a href="api/ncaa_eval.evaluation.backtest.html#ncaa_eval.evaluation.backtest.BacktestResult.summary">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.html#id2">(ncaa_eval.evaluation.BacktestResult attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.BacktestResult.summary">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.ingest.sync.html#ncaa_eval.ingest.sync.SyncEngine.sync_all">sync_all() (ncaa_eval.ingest.sync.SyncEngine method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.SyncEngine.sync_all">(ncaa_eval.ingest.SyncEngine method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.ingest.sync.html#ncaa_eval.ingest.sync.SyncEngine.sync_espn">sync_espn() (ncaa_eval.ingest.sync.SyncEngine method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.SyncEngine.sync_espn">(ncaa_eval.ingest.SyncEngine method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.ingest.sync.html#ncaa_eval.ingest.sync.SyncEngine.sync_kaggle">sync_kaggle() (ncaa_eval.ingest.sync.SyncEngine method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.SyncEngine.sync_kaggle">(ncaa_eval.ingest.SyncEngine method)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.SyncEngine">SyncEngine (class in ncaa_eval.ingest)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.sync.html#ncaa_eval.ingest.sync.SyncEngine">(class in ncaa_eval.ingest.sync)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.SyncResult">SyncResult (class in ncaa_eval.ingest)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.sync.html#ncaa_eval.ingest.sync.SyncResult">(class in ncaa_eval.ingest.sync)</a>
+</li>
+        </ul></li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="T" class="genindex-section">
+  <h2>T</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.Team">Team (class in ncaa_eval.ingest)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Team">(class in ncaa_eval.ingest.schema)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.model.tracking.html#ncaa_eval.model.tracking.Prediction.team_a_id">team_a_id (ncaa_eval.model.tracking.Prediction attribute)</a>
+</li>
+        <li><a href="api/ncaa_eval.model.tracking.html#ncaa_eval.model.tracking.Prediction.team_b_id">team_b_id (ncaa_eval.model.tracking.Prediction attribute)</a>
+</li>
+        <li><a href="api/ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Team.team_id">team_id (ncaa_eval.ingest.schema.Team attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.Team.team_id">(ncaa_eval.ingest.Team attribute)</a>
+</li>
+          <li><a href="api/ncaa_eval.transform.normalization.html#id9">(ncaa_eval.transform.normalization.TourneySeed attribute)</a>, <a href="api/ncaa_eval.transform.normalization.html#ncaa_eval.transform.normalization.TourneySeed.team_id">[1]</a>
+</li>
+          <li><a href="api/ncaa_eval.transform.html#id12">(ncaa_eval.transform.TourneySeed attribute)</a>, <a href="api/ncaa_eval.transform.html#ncaa_eval.transform.TourneySeed.team_id">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#id15">team_ids (ncaa_eval.evaluation.BracketStructure attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketStructure.team_ids">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#id12">(ncaa_eval.evaluation.simulation.BracketStructure attribute)</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.BracketStructure.team_ids">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#id12">team_index (ncaa_eval.evaluation.BracketNode attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketNode.team_index">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#id9">(ncaa_eval.evaluation.simulation.BracketNode attribute)</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.BracketNode.team_index">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#id16">team_index_map (ncaa_eval.evaluation.BracketStructure attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketStructure.team_index_map">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#id13">(ncaa_eval.evaluation.simulation.BracketStructure attribute)</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.BracketStructure.team_index_map">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Team.team_name">team_name (ncaa_eval.ingest.schema.Team attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.Team.team_name">(ncaa_eval.ingest.Team attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.TeamNameNormalizer">TeamNameNormalizer (class in ncaa_eval.transform)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.normalization.html#ncaa_eval.transform.normalization.TeamNameNormalizer">(class in ncaa_eval.transform.normalization)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.ingest.sync.html#ncaa_eval.ingest.sync.SyncResult.teams_written">teams_written (ncaa_eval.ingest.sync.SyncResult attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.SyncResult.teams_written">(ncaa_eval.ingest.SyncResult attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#id17">test (ncaa_eval.evaluation.CVFold attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.CVFold.test">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.splitter.html#id0">(ncaa_eval.evaluation.splitter.CVFold attribute)</a>, <a href="api/ncaa_eval.evaluation.splitter.html#ncaa_eval.evaluation.splitter.CVFold.test">[1]</a>
+</li>
+        </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.evaluation.backtest.html#id7">test_game_ids (ncaa_eval.evaluation.backtest.FoldResult attribute)</a>, <a href="api/ncaa_eval.evaluation.backtest.html#ncaa_eval.evaluation.backtest.FoldResult.test_game_ids">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.html#id24">(ncaa_eval.evaluation.FoldResult attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.FoldResult.test_game_ids">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.backtest.html#id8">test_team_a_ids (ncaa_eval.evaluation.backtest.FoldResult attribute)</a>, <a href="api/ncaa_eval.evaluation.backtest.html#ncaa_eval.evaluation.backtest.FoldResult.test_team_a_ids">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.html#id25">(ncaa_eval.evaluation.FoldResult attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.FoldResult.test_team_a_ids">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.backtest.html#id9">test_team_b_ids (ncaa_eval.evaluation.backtest.FoldResult attribute)</a>, <a href="api/ncaa_eval.evaluation.backtest.html#ncaa_eval.evaluation.backtest.FoldResult.test_team_b_ids">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.html#id26">(ncaa_eval.evaluation.FoldResult attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.FoldResult.test_team_b_ids">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.model.tracking.html#ncaa_eval.model.tracking.ModelRun.timestamp">timestamp (ncaa_eval.model.tracking.ModelRun attribute)</a>
+</li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.TourneySeed">TourneySeed (class in ncaa_eval.transform)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.normalization.html#ncaa_eval.transform.normalization.TourneySeed">(class in ncaa_eval.transform.normalization)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.TourneySeedTable">TourneySeedTable (class in ncaa_eval.transform)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.normalization.html#ncaa_eval.transform.normalization.TourneySeedTable">(class in ncaa_eval.transform.normalization)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#id18">train (ncaa_eval.evaluation.CVFold attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.CVFold.train">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.splitter.html#id1">(ncaa_eval.evaluation.splitter.CVFold attribute)</a>, <a href="api/ncaa_eval.evaluation.splitter.html#ncaa_eval.evaluation.splitter.CVFold.train">[1]</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.cli.main.html#ncaa_eval.cli.main.train">train() (in module ncaa_eval.cli.main)</a>
+</li>
+        <li><a href="api/ncaa_eval.transform.calibration.html#ncaa_eval.transform.calibration.IsotonicCalibrator.transform">transform() (ncaa_eval.transform.calibration.IsotonicCalibrator method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.calibration.html#ncaa_eval.transform.calibration.SigmoidCalibrator.transform">(ncaa_eval.transform.calibration.SigmoidCalibrator method)</a>
+</li>
+          <li><a href="api/ncaa_eval.transform.graph.html#ncaa_eval.transform.graph.GraphTransformer.transform">(ncaa_eval.transform.graph.GraphTransformer method)</a>
+</li>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.GraphTransformer.transform">(ncaa_eval.transform.GraphTransformer method)</a>
+</li>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.IsotonicCalibrator.transform">(ncaa_eval.transform.IsotonicCalibrator method)</a>
+</li>
+          <li><a href="api/ncaa_eval.transform.sequential.html#ncaa_eval.transform.sequential.SequentialTransformer.transform">(ncaa_eval.transform.sequential.SequentialTransformer method)</a>
+</li>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.SequentialTransformer.transform">(ncaa_eval.transform.SequentialTransformer method)</a>
+</li>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.SigmoidCalibrator.transform">(ncaa_eval.transform.SigmoidCalibrator method)</a>
+</li>
+        </ul></li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="U" class="genindex-section">
+  <h2>U</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.model.base.html#ncaa_eval.model.base.StatefulModel.update">update() (ncaa_eval.model.base.StatefulModel method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.model.elo.html#ncaa_eval.model.elo.EloModel.update">(ncaa_eval.model.elo.EloModel method)</a>
+</li>
+          <li><a href="api/ncaa_eval.model.html#ncaa_eval.model.StatefulModel.update">(ncaa_eval.model.StatefulModel method)</a>
+</li>
+        </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.transform.elo.html#ncaa_eval.transform.elo.EloFeatureEngine.update_game">update_game() (ncaa_eval.transform.elo.EloFeatureEngine method)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.EloFeatureEngine.update_game">(ncaa_eval.transform.EloFeatureEngine method)</a>
+</li>
+        </ul></li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="V" class="genindex-section">
+  <h2>V</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.model.xgboost_model.html#ncaa_eval.model.xgboost_model.XGBoostModelConfig.validation_fraction">validation_fraction (ncaa_eval.model.xgboost_model.XGBoostModelConfig attribute)</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.utils.logger.html#ncaa_eval.utils.logger.VERBOSE">VERBOSE (in module ncaa_eval.utils.logger)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="W" class="genindex-section">
+  <h2>W</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.Game.w_score">w_score (ncaa_eval.ingest.Game attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Game.w_score">(ncaa_eval.ingest.schema.Game attribute)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.Game.w_team_id">w_team_id (ncaa_eval.ingest.Game attribute)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Game.w_team_id">(ncaa_eval.ingest.schema.Game attribute)</a>
+</li>
+        </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.walk_forward_splits">walk_forward_splits() (in module ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.splitter.html#ncaa_eval.evaluation.splitter.walk_forward_splits">(in module ncaa_eval.evaluation.splitter)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#id33">winners (ncaa_eval.evaluation.MostLikelyBracket attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.MostLikelyBracket.winners">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.simulation.html#id19">(ncaa_eval.evaluation.simulation.MostLikelyBracket attribute)</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.MostLikelyBracket.winners">[1]</a>
+</li>
+        </ul></li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="X" class="genindex-section">
+  <h2>X</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.model.xgboost_model.html#ncaa_eval.model.xgboost_model.XGBoostModel">XGBoostModel (class in ncaa_eval.model.xgboost_model)</a>
+</li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.model.xgboost_model.html#ncaa_eval.model.xgboost_model.XGBoostModelConfig">XGBoostModelConfig (class in ncaa_eval.model.xgboost_model)</a>
+</li>
+    </ul></td>
+  </tr></table>
+</section>
+
+<section id="Y" class="genindex-section">
+  <h2>Y</h2>
+  <table style="width: 100%" class="indextable genindextable"><tr>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.evaluation.backtest.html#id10">year (ncaa_eval.evaluation.backtest.FoldResult attribute)</a>, <a href="api/ncaa_eval.evaluation.backtest.html#ncaa_eval.evaluation.backtest.FoldResult.year">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.html#id19">(ncaa_eval.evaluation.CVFold attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.CVFold.year">[1]</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.html#id27">(ncaa_eval.evaluation.FoldResult attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.FoldResult.year">[1]</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.splitter.html#id2">(ncaa_eval.evaluation.splitter.CVFold attribute)</a>, <a href="api/ncaa_eval.evaluation.splitter.html#ncaa_eval.evaluation.splitter.CVFold.year">[1]</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Season.year">(ncaa_eval.ingest.schema.Season attribute)</a>
+</li>
+          <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.Season.year">(ncaa_eval.ingest.Season attribute)</a>
+</li>
+          <li><a href="api/ncaa_eval.transform.html#id6">(ncaa_eval.transform.SeasonGames attribute)</a>, <a href="api/ncaa_eval.transform.html#ncaa_eval.transform.SeasonGames.year">[1]</a>
+</li>
+          <li><a href="api/ncaa_eval.transform.serving.html#id2">(ncaa_eval.transform.serving.SeasonGames attribute)</a>, <a href="api/ncaa_eval.transform.serving.html#ncaa_eval.transform.serving.SeasonGames.year">[1]</a>
+</li>
+        </ul></li>
+    </ul></td>
+  </tr></table>
+</section>
+
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          
+          
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2026, Dan Hilgart
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
+  </div>
+</div><script src="_static/documentation_options.js?v=39bb1c6d"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="_static/scripts/furo.js?v=46bd48cc"></script>
+    </body>
+</html>
