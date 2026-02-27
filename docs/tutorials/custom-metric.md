@@ -154,7 +154,7 @@ Expected output:
 ...
 ```
 
-```{tip}
+````{tip}
 To use the default metrics *plus* your custom ones, merge with `DEFAULT_METRICS`:
 
 ```python
@@ -162,6 +162,7 @@ from ncaa_eval.evaluation.backtest import DEFAULT_METRICS
 
 my_metrics = {**DEFAULT_METRICS, "mae": mean_absolute_error}
 ```
+````
 
 ### Step 3: Verify Your Metric
 
@@ -269,8 +270,11 @@ bracket = build_bracket(seeds, season=2024)
 # Load the trained model via RunStore
 store = RunStore(Path("data/"))
 model = store.load_model(run_id)
+assert model is not None, f"No model artifacts found for run_id={run_id!r}"
 
 # Create probability provider (wraps the model's _predict_one method)
+# NOTE: EloProvider requires a StatefulModel (one with _predict_one).
+# Use the run_id of an Elo or other stateful model training run.
 provider = EloProvider(model)
 context = MatchupContext(season=2024, day_num=136, is_neutral=True)
 

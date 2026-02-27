@@ -330,15 +330,27 @@ None — documentation-only story with no code debugging required.
 
 **Reviewer:** Claude Sonnet 4.6 (code-review workflow) — 2026-02-27
 
-**Outcome:** APPROVED WITH FIXES — 2 HIGH + 3 MEDIUM issues found and fixed.
+**Outcome (initial):** APPROVED WITH FIXES — 2 HIGH + 3 MEDIUM issues found and fixed.
 
-**Issues Fixed:**
+**Issues Fixed (initial review):**
 
 - 🔴 **[HIGH-1] `StatefulFeatureServer` wrong API in two tutorials** — `custom-model.md:334` and `custom-metric.md:129-131` both used `StatefulFeatureServer(data_dir=Path("data/"), config=config)`. The actual constructor is `StatefulFeatureServer(config, data_server)` where `data_server` is a `ChronologicalDataServer`. Fixed to use correct import chain: `ParquetRepository → ChronologicalDataServer → StatefulFeatureServer`. Task 7.5 ("manually verify tutorial code examples") was marked [x] but this error was missed.
 
 - 🔴 **[HIGH-2] `mode="batch"` passed for stateful context** — The programmatic backtest example in `custom-model.md` passed `mode="batch"` with a misleading comment. Fixed to `mode="stateful"` (matching Elo/StatefulModel context) with clarifying comment `# use "batch" for stateless Model subclasses`.
 
 - 🟡 **[MED-3] Undefined `seeds` variable and placeholder `<run_id>` in simulate_tournament example** — `custom-metric.md` Step 2 used an undefined `seeds` variable and `get_model("elo").load(...)` for an Elo model. Fixed to use `TourneySeedTable.from_csv(...).all_seeds(season=2024)` (verified against dashboard/lib/filters.py) and `RunStore.load_model(run_id)` (correct pattern). Added `run_id` placeholder explanation and `bracket.team_ids[i]` orientation comment.
+
+**Outcome (second review pass):** APPROVED WITH FIXES — 1 HIGH + 2 MEDIUM + 1 LOW found and fixed.
+
+**Issues Fixed (second review pass):**
+
+- 🔴 **[HIGH-1] `my_model` undefined variable in `custom-model.md` programmatic backtest** — `custom-model.md:344` used `model=my_model` in `run_backtest()` call but `my_model` was never assigned in that code block. Fixed: replaced with `model = SimpleRatingModel()` (the model defined in Part 2 of the same tutorial). Copy-paste would have caused `NameError`.
+
+- 🟡 **[MED-2] `load_model()` returns `Model | None` without None guard in `custom-metric.md`** — `custom-metric.md:271` passed `store.load_model(run_id)` directly to `EloProvider(model)` without checking for `None`. Fixed: added `assert model is not None, f"No model artifacts found for run_id={run_id!r}"`.
+
+- 🟡 **[MED-3] Broken MyST admonition with nested code block in `custom-metric.md`** — `custom-metric.md:157-164` used `` ```{tip} `` with a nested triple-backtick code block, which prematurely closes the admonition in MyST. Fixed: changed outer fence to 4-backtick `` ```` `` so inner triple-backtick fence renders correctly inside the tip box.
+
+- 🟢 **[LOW-4] `EloProvider` missing stateful-model requirement comment** — Fixed inline with MED-2: added `# NOTE: EloProvider requires a StatefulModel (one with _predict_one)` comment to prevent users from passing XGBoost run_ids.
 
 **Git vs Story Discrepancies:**
 - `_bmad-output/planning-artifacts/epics.md` modified in commit but not in story File List — excluded from findings per BMAD artifact exclusion policy.
@@ -348,4 +360,5 @@ None — documentation-only story with no code debugging required.
 ### Change Log
 
 - 2026-02-27: Implemented Story 7.9 — Created 3 step-by-step tutorials (Getting Started, Custom Model, Custom Metric), integrated into Sphinx docs, fixed `{contents}` TOC directive, enhanced README with badges/features/docs links
-- 2026-02-27: Code review (AI) — Fixed StatefulFeatureServer API (HIGH×2), mode parameter (HIGH), seeds/run_id placeholders (MED) in custom-model.md and custom-metric.md; story marked done
+- 2026-02-27: Code review pass 1 (AI) — Fixed StatefulFeatureServer API (HIGH×2), mode parameter (HIGH), seeds/run_id placeholders (MED) in custom-model.md and custom-metric.md
+- 2026-02-27: Code review pass 2 (AI) — Fixed undefined `my_model` variable (HIGH), None guard for `load_model()` (MED), broken MyST admonition nesting (MED), EloProvider stateful comment (LOW); story marked done
