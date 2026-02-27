@@ -46,15 +46,11 @@ jobs:
         run: poetry install --with dev
 
       - name: Build docs
-        # TODO (Story 1.7): Replace with `poetry run nox -s docs` once Sphinx is configured.
-        # Sphinx documentation generation is scoped to Story 1.7 (Configure Versioning, Packaging & Documentation).
-        run: echo "Documentation build not yet configured — pending Story 1.7"
+        run: poetry run sphinx-build -b html docs docs/_build/html
 
       - name: Push documentation to Github Page
-        # TODO (Story 1.7): Re-enable once Sphinx generates ./site output.
-        if: false
         uses: peaceiris/actions-gh-pages@v3.8.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
-          publish_dir: ./site
+          publish_dir: ./docs/_build/html

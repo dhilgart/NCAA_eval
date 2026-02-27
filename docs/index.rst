@@ -3,6 +3,12 @@ NCAA Eval Documentation
 
 .. toctree::
    :maxdepth: 2
+   :caption: User Guide:
+
+   user-guide
+
+.. toctree::
+   :maxdepth: 2
    :caption: Developer Guides:
 
    STYLE_GUIDE

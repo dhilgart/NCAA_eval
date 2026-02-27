@@ -7,6 +7,7 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
+   ncaa_eval.cli
    ncaa_eval.evaluation
    ncaa_eval.ingest
    ncaa_eval.model
