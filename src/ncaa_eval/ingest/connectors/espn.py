@@ -148,6 +148,9 @@ class EspnConnector(Connector):
                 df = _fetch_single_team_schedule(team_name, season)
                 if df is not None:
                     frames.append(df)
+                else:
+                    # Empty schedule returned (no exception, but no data).
+                    failed_teams.append(team_name)
             except Exception:  # noqa: BLE001
                 logger.warning(
                     "espn: get_team_schedule('%s', %d) failed after retries",
@@ -159,7 +162,7 @@ class EspnConnector(Connector):
                 continue
 
         success = len(frames)
-        failed = total - success
+        failed = len(failed_teams)
 
         # AC #5-6: Summary reporting
         if failed > 0:
@@ -194,23 +197,23 @@ class EspnConnector(Connector):
         games: list[Game] = []
         seen_ids: set[str] = set()
 
-        for _, row in df.iterrows():
-            espn_game_id = str(row["game_id"])
+        for row in df.itertuples(index=False):
+            espn_game_id = str(row.game_id)
             game_id = f"espn_{espn_game_id}"
             if game_id in seen_ids:
                 continue
             seen_ids.add(game_id)
 
             # Parse scores from game_result.
-            parsed = _parse_game_result(str(row.get("game_result", "")))
+            parsed = _parse_game_result(str(getattr(row, "game_result", "")))
             if parsed is None:
                 logger.debug("espn: skipping game %s — unparseable result", espn_game_id)
                 continue
             team_score, opp_score = parsed
 
             # Resolve team IDs.
-            team_name = str(row["team"])
-            opp_name = str(row["opponent"])
+            team_name = str(row.team)
+            opp_name = str(row.opponent)
             team_tid = _resolve_team_id(team_name, self._lower_team_map, self._team_name_to_id)
             opp_tid = _resolve_team_id(opp_name, self._lower_team_map, self._team_name_to_id)
             if team_tid is None or opp_tid is None:
@@ -233,7 +236,7 @@ class EspnConnector(Connector):
                 continue
 
             # Parse date and compute day_num.
-            game_date = self._parse_date(row.get("game_day"))
+            game_date = self._parse_date(getattr(row, "game_day", None))
             day_num = 0
             if game_date is not None and day_zero is not None:
                 day_num = (game_date - day_zero).days
@@ -272,22 +275,24 @@ class EspnConnector(Connector):
 
     @staticmethod
     def _infer_loc(
-        row: pd.Series,
+        row: object,
         team_tid: int,
         w_team_id: int,
     ) -> Literal["H", "A", "N"]:
         """Infer game location from available ESPN context.
 
-        Falls back to ``"N"`` (neutral) when location cannot be determined.
+        Accepts any row-like object (named tuple from ``itertuples`` or
+        ``pd.Series``).  Falls back to ``"N"`` (neutral) when location
+        cannot be determined.
         """
         # Some DataFrames include a 'home_away' or 'is_neutral' column.
-        if "is_neutral" in row.index:
-            val = row["is_neutral"]
+        if hasattr(row, "is_neutral"):
+            val = getattr(row, "is_neutral")
             if val is True or str(val).lower() in ("true", "1", "yes"):
                 return "N"
 
-        if "home_away" in row.index:
-            ha = str(row["home_away"]).lower()
+        if hasattr(row, "home_away"):
+            ha = str(getattr(row, "home_away")).lower()
             if ha == "home":
                 # The row's team was home.
                 return "H" if team_tid == w_team_id else "A"

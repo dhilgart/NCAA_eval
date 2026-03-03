@@ -396,26 +396,30 @@ class TestRetryBehavior:
                 raise ConnectionError("transient error")
             return _make_schedule_df()
 
-        with patch("ncaa_eval.ingest.connectors.espn.ms") as mock_ms:
-            mock_ms.get_team_schedule.side_effect = _side_effect
-            result = _fetch_single_team_schedule("Duke", 2025)
+        # Patch time.sleep to skip real backoff delays during unit tests.
+        with patch("time.sleep"):
+            with patch("ncaa_eval.ingest.connectors.espn.ms") as mock_ms:
+                mock_ms.get_team_schedule.side_effect = _side_effect
+                result = _fetch_single_team_schedule("Duke", 2025)
 
         assert isinstance(result, pd.DataFrame)
         assert call_count == 2
 
     def test_retry_exhausted_raises(self) -> None:
         """After 3 failures, _fetch_single_team_schedule re-raises."""
-        with patch("ncaa_eval.ingest.connectors.espn.ms") as mock_ms:
-            mock_ms.get_team_schedule.side_effect = ConnectionError("persistent error")
-            with pytest.raises(ConnectionError, match="persistent error"):
-                _fetch_single_team_schedule("Duke", 2025)
+        # Patch time.sleep to skip real backoff delays during unit tests.
+        with patch("time.sleep"):
+            with patch("ncaa_eval.ingest.connectors.espn.ms") as mock_ms:
+                mock_ms.get_team_schedule.side_effect = ConnectionError("persistent error")
+                with pytest.raises(ConnectionError, match="persistent error"):
+                    _fetch_single_team_schedule("Duke", 2025)
         assert mock_ms.get_team_schedule.call_count == 3
 
     def test_connector_continues_after_team_failure(self, connector: EspnConnector) -> None:
         """_fetch_per_team continues to next team when one fails all retries."""
 
         # Duke fails, North Carolina succeeds
-        def _side_effect(team: str, season: int) -> pd.DataFrame:
+        def _side_effect(team: str, season: int) -> pd.DataFrame | None:
             if team == "Duke":
                 raise ConnectionError("Duke down")
             return _make_schedule_df(
@@ -433,9 +437,9 @@ class TestRetryBehavior:
         with patch("ncaa_eval.ingest.connectors.espn._fetch_single_team_schedule") as mock_fetch:
             mock_fetch.side_effect = _side_effect
             games = connector.fetch_games(2025)
-        # At least some games should be returned (from teams that succeed)
-        # Duke's failure should not prevent other teams' data from being processed
-        assert isinstance(games, list)
+        # Non-failing teams (North Carolina, Kentucky, Kansas) should contribute games.
+        # Duke's failure must not prevent other teams' data from being processed.
+        assert len(games) > 0
 
 
 # ---------------------------------------------------------------------------

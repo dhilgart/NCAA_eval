@@ -1,6 +1,6 @@
 # Story 8.3: Fix Data Pipeline Resilience — ESPN Error Handling, Retry Logic, Typer Decoupling
 
-Status: review
+Status: done
 
 ## Story
 
@@ -318,9 +318,32 @@ None — clean implementation with no blocking issues.
 - **AC #26 (Backtest verify)**: Confirmed `backtest.py:186-187` already logs WARNING with `exc_info=True`. No change needed.
 - **AC #27-30 (Quality gates)**: `ruff check .` clean (excluding pre-existing notebook issues), `mypy --strict` passes 87 files, `pytest` 883 passed / 1 skipped / 0 failures.
 
+### Senior Developer Review (AI)
+
+**Reviewer:** Code Review Agent (Claude Sonnet 4.6) — 2026-03-03
+
+**Outcome:** APPROVED with fixes applied
+
+**Issues Found:** 1 High, 3 Medium (all fixed), 5 Low (action items below)
+
+**Fixes Applied:**
+- **[HIGH] `_fetch_per_team` summary count bug** — Teams returning `None` (empty schedule, no exception) were counted in `failed` (total − success) but not tracked in `failed_teams`. Summary warning message was inconsistent (count > named list). Fixed by adding `else: failed_teams.append(team_name)` branch and computing `failed = len(failed_teams)`.
+- **[MEDIUM] Redundant exact-match in `fuzzy_match_team`** — Both callers already do exact-match before calling `fuzzy_match_team`; the O(N) exact scan inside the function was dead code. Removed exact-match loop from `fuzzy_match_team` (now pure fuzzy). Updated docstring. Removed unused `logging` import. All `test_fuzzy.py` tests still pass (exact strings score 100 via fuzzy path).
+- **[MEDIUM] Slow retry tests** — `test_retry_succeeds_on_second_attempt` and `test_retry_exhausted_raises` called the live `@retry` decorator with real `wait_exponential(min=2s)`, making each test take 2–10s. Added `patch("time.sleep")` to both tests. Test suite now runs in ~15s instead of ~25s+.
+- **[MEDIUM] Weak assertion in `test_connector_continues_after_team_failure`** — `assert isinstance(games, list)` was trivially always true. Changed to `assert len(games) > 0` to verify non-failing teams contributed data.
+- **[MEDIUM] `iterrows()` in `_parse_schedule_df`** — Violated project no-iterrows mandate. Converted to `df.itertuples(index=False)`. Updated `_infer_loc()` signature from `pd.Series` to `object` with `hasattr`/`getattr` for named-tuple compatibility. All 883 tests pass.
+
+**Review Follow-ups (AI):**
+- [ ] [AI-Review][LOW] `sync.py` root: `format="%(message)s"` strips log level prefix — WARNING-level ESPN fetch failures appear without "WARNING:" label for CLI users. Consider `"%(levelname)s: %(message)s"` or tiered handler. [sync.py:40]
+- [ ] [AI-Review][LOW] `fuzzy_match_team()` docstring says "callers are responsible for exact matching" — verify this contract is documented in the calling sites' docstrings to prevent future regression. [fuzzy.py:12-17]
+- [ ] [AI-Review][LOW] `test_empty_name` in `test_fuzzy.py` has weak assertion `result is None or isinstance(result, int)` — always true since return type is `int | None`. Define explicit contract: empty string should return `None`. [test_fuzzy.py:63-67]
+- [ ] [AI-Review][LOW] `_resolve_team_id` logs WARNING on final no-match but no DEBUG on exact-miss-before-fuzzy — difficult to trace why fuzzy was attempted. [espn.py:77]
+- [ ] [AI-Review][LOW] `rapidfuzz = "*"` and `tenacity = "*"` have no upper bound version pins. Consider adding upper bounds once transitive version requirements are confirmed stable.
+
 ### Change Log
 
 - 2026-03-03: Story 8.3 implemented — ESPN retry logic, fetch summary, date parse logging, Typer decoupling, generalized dedup, centralized fuzzy match, PydanticUndefined fix, rapidfuzz/tenacity deps declared
+- 2026-03-03: Code review fixes — fetch summary count bug (H1), redundant exact-match in fuzzy (M1), slow retry tests mock (M2), weak test assertion (M3), iterrows → itertuples (M5)
 
 ### File List
 
@@ -331,13 +354,15 @@ None — clean implementation with no blocking issues.
 **Modified files:**
 - `pyproject.toml` — added `tenacity = "*"` and `rapidfuzz = "*"`
 - `poetry.lock` — regenerated
-- `src/ncaa_eval/ingest/connectors/espn.py` — tenacity retry, fetch summary, date parse DEBUG log, fuzzy_match_team usage
+- `src/ncaa_eval/ingest/connectors/espn.py` — tenacity retry, fetch summary, date parse DEBUG log, fuzzy_match_team usage, itertuples migration, _infer_loc signature update, fetch summary count fix
 - `src/ncaa_eval/ingest/sync.py` — typer.echo → logger.info, removed typer import, fuzzy_match_team usage
+- `src/ncaa_eval/ingest/fuzzy.py` — removed redundant exact-match loop, removed unused logging import, updated docstring
 - `src/ncaa_eval/transform/serving.py` — `_deduplicate_2025` → `_deduplicate_espn_overlap`, ESPN-prefix guard
 - `src/ncaa_eval/ingest/repository.py` — `PydanticUndefined` sentinel
 - `sync.py` (repo root CLI) — added `logging.basicConfig()` for CLI output
-- `tests/unit/test_espn_connector.py` — retry and summary logging tests
+- `tests/unit/test_espn_connector.py` — retry and summary logging tests, time.sleep mock for retry tests, strengthened assertion
 - `tests/integration/test_sync.py` — no-typer-dependency test
 - `tests/unit/test_chronological_serving.py` — generalized dedup test for non-2025 seasons
+- `_bmad-output/planning-artifacts/template-requirements.md` — two new learnings: time.sleep mock for retry tests, fetch summary count pattern
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` — status updated
 - `_bmad-output/implementation-artifacts/8-3-fix-data-pipeline-resilience-espn-error-handling.md` — story file updated

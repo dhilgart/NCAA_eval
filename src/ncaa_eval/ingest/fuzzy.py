@@ -6,11 +6,7 @@ candidate mapping, used by both the ESPN connector and the sync engine.
 
 from __future__ import annotations
 
-import logging
-
 from rapidfuzz import fuzz
-
-logger = logging.getLogger(__name__)
 
 
 def fuzzy_match_team(
@@ -18,11 +14,12 @@ def fuzzy_match_team(
     candidates: dict[str, int],
     threshold: int = 80,
 ) -> int | None:
-    """Match a team name to a candidate mapping using exact then fuzzy lookup.
+    """Match a team name to a candidate mapping using fuzzy lookup.
 
-    Performs a case-insensitive exact lookup first.  If no exact match is
-    found, falls back to ``rapidfuzz.fuzz.token_set_ratio`` and returns
-    the best candidate whose score meets the *threshold*.
+    Applies ``rapidfuzz.fuzz.token_set_ratio`` (case-insensitive) against all
+    *candidates* and returns the best match whose score meets the *threshold*.
+    Callers are responsible for attempting exact matches before calling this
+    function.
 
     Args:
         name: Team name to match.
@@ -33,13 +30,6 @@ def fuzzy_match_team(
         Matched team ID, or ``None`` if no match meets the threshold.
     """
     lower_name = name.lower()
-
-    # Exact match (case-insensitive).
-    for candidate_name, tid in candidates.items():
-        if candidate_name.lower() == lower_name:
-            return tid
-
-    # Fuzzy fallback.
     best_score = 0.0
     best_id: int | None = None
     for candidate_name, tid in candidates.items():
