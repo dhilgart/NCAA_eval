@@ -223,16 +223,34 @@ Claude Opus 4.6
 - **Task 4:** Synced Section 7 PR Checklist — renamed "Pure functions / functional design" to "Pure function design" to match PR template exactly.
 - **Task 5:** Full PEP 20 compliance review of all src/ncaa_eval/ files. Fixed 2 mechanical violations (backtest NaN logging, ESPN debug→warning). Deferred 1 to Story 8.3. Documented 18 magic number instances (5 should become constants in Stories 8.1/8.3, 13 acceptable inline). Zero C901/PLR0911/PLR0912 violations. Report at `_bmad-output/planning-artifacts/pep20-compliance-report.md`.
 - **Task 6:** All verification gates pass: `ruff check src/ncaa_eval tests` clean (EDA notebooks excluded per MEMORY.md), `mypy --strict` clean, `pytest -m smoke` 114/114 pass.
+- **PO Directive (post-review):** Audited and annotated all 16 inline `# noqa` for PLR0911/PLR0912/PLR0913/C901 with descriptive rationales (REFACTOR Story 8.1, domain justifications, CLI/schema/mock constraints). Updated Lint Suppression Policy to require PO approval for complexity-class codes (inline `# noqa` preferred over `per-file-ignores` for visibility). Added manual complexity check, complexity-code override gate, and docstring detail requirement to PR checklist. Scanned 28 noncompliant docstrings, tracked in Story 8.4. Generated SOLID and Pure Function compliance reports.
 
 ### File List
 
 | File | Action |
 |------|--------|
-| `.github/pull_request_template.md` | Modified — added 3 quality gate checkboxes |
-| `docs/STYLE_GUIDE.md` | Modified — PEP 20 expansion, accuracy fixes, ISP rewrite, Pydantic docs, layout fix, Lint Suppression Policy, Section 7 sync |
-| `src/ncaa_eval/evaluation/backtest.py` | Modified — added logging import and warning log for silent NaN substitution |
+| `.github/pull_request_template.md` | Modified — added 3 quality gate checkboxes; added function complexity, no-complexity-override, and docstring detail gates |
+| `docs/STYLE_GUIDE.md` | Modified — PEP 20 expansion, accuracy fixes, ISP rewrite, Pydantic docs, layout fix, Lint Suppression Policy (PO-approval for complexity codes), Section 1 docstring detail rule, Section 6 checklist additions, Section 7 sync |
+| `pyproject.toml` | Modified — added `[tool.ruff.lint.per-file-ignores]` section for EDA notebooks only (complexity-class codes suppressed inline with PO approval) |
+| `src/ncaa_eval/cli/train.py` | Modified — annotated `# noqa: PLR0913, C901, PLR0912 — REFACTOR Story 8.1` on `run_training()` |
+| `src/ncaa_eval/cli/main.py` | Modified — annotated `# noqa: PLR0913 — Typer CLI options dictate arg count` on `train()` |
+| `src/ncaa_eval/evaluation/backtest.py` | Modified — annotated `# noqa: PLR0913 — REFACTOR Story 8.1` on `run_backtest()`; added logging for silent NaN (earlier) |
+| `src/ncaa_eval/evaluation/simulation.py` | Modified — annotated `# noqa: PLR0913 — REFACTOR Story 8.1` on `simulate_tournament_mc()` and `simulate_tournament()` |
+| `src/ncaa_eval/transform/elo.py` | Modified — annotated `# noqa: PLR0913 — game data has inherent dimensionality` on `update_game()` |
+| `src/ncaa_eval/transform/graph.py` | Modified — annotated `# noqa: PLR0913 — graph construction has inherent dimensionality` on `add_game_to_graph()` |
 | `src/ncaa_eval/ingest/connectors/espn.py` | Modified — upgraded per-team fetch exception log from DEBUG to WARNING |
-| `_bmad-output/planning-artifacts/pep20-compliance-report.md` | Created — full PEP 20 audit findings |
+| `dashboard/lib/filters.py` | Modified — annotated `# noqa: PLR0913 — REFACTOR Story 8.1` on `run_bracket_simulation()` and `_game_win_probability()` |
+| `dashboard/lib/bracket_renderer.py` | Modified — annotated `# noqa: PLR0913 — REFACTOR Story 8.1` on `_team_cell()` and `_render_region_html()` |
+| `tests/unit/test_elo.py` | Modified — annotated `# noqa: PLR0913 — mirrors Game schema fields` on `_make_game()` |
+| `tests/unit/test_feature_serving.py` | Modified — annotated `# noqa: PLR0913 — mirrors Game schema fields` on `_make_game()` |
+| `tests/unit/test_dashboard_filters.py` | Modified — annotated `# noqa: PLR0913 — @patch mock injection` on `test_returns_result_for_elo_model()` |
+| `tests/integration/test_elo_integration.py` | Modified — annotated `# noqa: PLR0913 — mirrors Game schema fields` on `_make_game()` |
+| `tests/integration/test_feature_serving_integration.py` | Modified — annotated `# noqa: PLR0913 — mirrors Game schema fields` on `_make_game()` |
+| `_bmad-output/planning-artifacts/pep20-compliance-report.md` | Updated — documented 16 noqa annotations with descriptive rationales and PO-approval policy |
+| `_bmad-output/planning-artifacts/solid-compliance-report.md` | Created — full SOLID compliance scan of src/ncaa_eval/ |
+| `_bmad-output/planning-artifacts/pure-function-compliance-report.md` | Created — full Pure Function compliance scan of src/ncaa_eval/ |
+| `_bmad-output/planning-artifacts/noncompliant-docstrings.md` | Created — 28 functions needing detailed docstring descriptions (tracked in Story 8.4) |
+| `_bmad-output/planning-artifacts/epic-8-codebase-improvements.md` | Modified — added docstring AC to Story 8.4 |
 | `scripts/bmad_pipeline.sh` | Modified — fixed missing space before APPEND_TEXT in pipeline command arguments |
 | `_bmad-output/implementation-artifacts/sprint-status.yaml` | Modified — status in-progress → review |
 | `_bmad-output/implementation-artifacts/8-9-add-pep20-solid-pure-function-gates.md` | Modified — task checkboxes, Dev Agent Record, File List, Change Log, Status |
@@ -280,3 +298,4 @@ Claude Opus 4.6
 - 2026-03-03: Story 8.9 implemented — PR template quality gates, Style Guide PEP 20 expansion and accuracy fixes, codebase PEP 20 compliance review with 2 mechanical fixes
 - 2026-03-03: Code review Pass 1 applied 3 fixes — added scripts/bmad_pipeline.sh to File List, added noqa annotation to espn.py _parse_date, clarified Task 6.1 ruff scope
 - 2026-03-03: Code review Pass 2 applied 1 fix — added # noqa: BLE001 to espn.py:141 _fetch_per_team() fixed handler (Lint Suppression Policy consistency)
+- 2026-03-03: PO directive — audited and annotated 16 inline noqa for PLR0911/PLR0912/PLR0913/C901 with descriptive rationales (REFACTOR Story 8.1, domain justifications), updated Lint Suppression Policy to require PO approval (inline preferred over per-file-ignores), added PR checklist gates (function complexity, no-complexity-override, docstring detail), generated SOLID + Pure Function compliance reports, scanned 28 noncompliant docstrings for Story 8.4

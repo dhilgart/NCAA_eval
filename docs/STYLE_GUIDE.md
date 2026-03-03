@@ -32,6 +32,10 @@ enforcement is handled by separate stories (1.4-1.6); this document captures the
    setting and ignore entries in `pyproject.toml` are preparatory config that
    takes effect once `D` is added to `extend-select` in Story 1.4.
    At minimum, every public module and every public class should have a docstring.
+5. **Detailed description required** when a function performs 3 or more operations.
+   The description paragraph (after the summary line) must explain *how* the
+   function implements its purpose — not just restate the summary. This is enforced
+   during code review (PR checklist).
 
 ### Example
 
@@ -162,19 +166,10 @@ When `# noqa` or `# type: ignore` is unavoidable, follow these rules:
 
    ```python
    # GOOD: Specific suppression with rationale
-   def build_bracket(  # noqa: PLR0913 — bracket construction requires all dimensions
-       teams: list[Team],
-       seeds: dict[int, int],
-       regions: list[str],
-       round_structure: list[int],
-       scoring: ScoringRule,
-       rng: np.random.Generator,
-   ) -> Bracket:
-       ...
+   import joblib  # type: ignore[import-untyped] — no type stubs available
 
    # BAD: Bare suppression — which rule? why?
-   def build_bracket(  # noqa
-       ...
+   import joblib  # type: ignore
    ```
 
 2. **Prefer refactoring over suppression.** The escalation path:
@@ -182,15 +177,30 @@ When `# noqa` or `# type: ignore` is unavoidable, follow these rules:
    - Second: If refactoring is impractical, suppress with specific code and comment
    - Never: Suppress because "it's faster than fixing"
 
-3. **Acceptable suppression scenarios:**
-   - `# noqa: PLR0913` — Functions that genuinely need many parameters (e.g.,
-     constructors aggregating multiple dimensions)
+3. **Complexity-class codes require PO approval.** Inline `# noqa` for the following
+   codes is allowed only with explicit PO approval:
+   - `PLR0911` — Too many return statements (max 6)
+   - `PLR0912` — Too many branches (max 12)
+   - `PLR0913` — Too many arguments (max 5)
+   - `C901` — McCabe cyclomatic complexity (max 10)
+
+   When a suppression is approved, the inline comment must include a rationale:
+   ```python
+   # Approved — rationale
+   def update_game(  # noqa: PLR0913 — game data has inherent dimensionality
+   # Pending refactoring — tracked to a story
+   def run_training(  # noqa: PLR0913, C901, PLR0912 — REFACTOR Story 8.1
+   ```
+
+4. **Acceptable suppression scenarios:**
    - `# type: ignore[import-untyped]` — Third-party libraries without type stubs
    - `# type: ignore[no-untyped-def]` — Callback signatures imposed by frameworks
      (e.g., Streamlit event handlers)
+   - `# noqa: BLE001` — Broad exception handling with documented rationale
+   - `# noqa: PLR0913` (etc.) — With PO approval and rationale (see rule 3)
 
-4. **Unacceptable suppression scenarios:**
-   - `# noqa: C901` — If complexity is too high, split the function
+5. **Unacceptable suppression scenarios:**
+   - Any `# noqa` for PLR0911, PLR0912, PLR0913, or C901 **without** PO approval
    - `# type: ignore` on return types — Fix the return type annotation instead
    - Any suppression without the specific error code
 
@@ -549,6 +559,7 @@ def process_and_validate_then_transform_with_fallback(data, config, mode, flags)
 During code review, verify:
 
 - [ ] **Simplicity:** Functions have single, clear responsibilities (McCabe complexity ≤ 10)
+- [ ] **Single purpose:** Each function does exactly one thing; max 50 lines, nesting ≤ 3
 - [ ] **Explicitness:** No magic numbers, parameters have clear names, behavior is obvious
 - [ ] **Readability:** Domain concepts use full words, not abbreviations
 - [ ] **Flatness:** Nesting depth ≤ 3, early returns preferred
@@ -559,6 +570,8 @@ During code review, verify:
 - [ ] **Error handling:** No silent exception swallowing; handlers log or re-raise
 - [ ] **Explicit types:** No `Any`, no missing annotations, no implicit coercions
 - [ ] **Explainability:** Every function describable in one sentence
+- [ ] **No complexity-code overrides:** No `# noqa` for PLR0911/PLR0912/PLR0913/C901 without PO approval; each includes a rationale
+- [ ] **Docstring detail:** Functions with 3+ operations have detailed description explaining *how*
 
 ---
 
@@ -798,8 +811,11 @@ the philosophy behind this two-tier approach, see
 | Type-check pass | Mypy (`--strict`) | Pre-commit (fast) |
 | Test pass | Pytest | PR / CI |
 | Docstring coverage | Manual review | PR review |
+| Docstring detail | Manual review | PR review |
 | No vectorization violations | Manual review | PR review |
 | Conventional commit messages | Commitizen | Pre-commit |
+| Function complexity | Manual review | PR review |
+| No complexity-code overrides | Manual review | PR review |
 | PEP 20 compliance | Manual review | PR review |
 | SOLID principles | Manual review | PR review |
 | Pure function design | Manual review | PR review |
@@ -809,8 +825,14 @@ the philosophy behind this two-tier approach, see
 - Code follows naming conventions (Section 2).
 - Imports are ordered correctly (Section 3).
 - New public APIs have docstrings (Section 1).
+- Functions with 3+ operations include a detailed docstring description explaining
+  *how* (not just *what*) — see Section 1.
 - No `for` loops over DataFrames for calculations (Section 5).
 - Type annotations are complete (Section 4).
+- Each function does one thing; manually verify single responsibility, max 50 lines,
+  nesting ≤ 3.
+- No `# noqa` for PLR0911, PLR0912, PLR0913, or C901 without PO approval; each
+  must include a rationale (Section 3, Lint Suppression Policy).
 - PEP 20 design principles respected (Section 6).
 - Pure functions used for business logic, side effects at edges (Section 6.2).
 - SOLID principles applied for testability (Section 10).

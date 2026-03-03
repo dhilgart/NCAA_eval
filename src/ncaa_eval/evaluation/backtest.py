@@ -200,7 +200,7 @@ def _evaluate_fold(
     )
 
 
-def run_backtest(  # noqa: PLR0913
+def run_backtest(  # noqa: PLR0913 — REFACTOR Story 8.1
     model: Model,
     feature_server: StatefulFeatureServer,
     *,

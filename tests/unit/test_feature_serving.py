@@ -117,7 +117,7 @@ class TestFeatureConfig:
 # ── Helpers / Fixtures ──────────────────────────────────────────────────────
 
 
-def _make_game(  # noqa: PLR0913
+def _make_game(  # noqa: PLR0913 — mirrors Game schema fields
     game_id: str = "1",
     season: int = 2023,
     day_num: int = 10,

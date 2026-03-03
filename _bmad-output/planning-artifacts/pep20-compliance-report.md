@@ -1,6 +1,6 @@
 # PEP 20 Compliance Report — `src/ncaa_eval/`
 
-**Date:** 2026-03-03
+**Date:** 2026-03-03 (updated)
 **Story:** 8.9 — Add PEP 20, SOLID & Pure Function Gates
 **Scope:** All source files in `src/ncaa_eval/` (excludes tests, dashboard, template)
 **Methodology:** Automated Ruff analysis (C901, PLR0911, PLR0912, PLR0913, PLR2004) + manual review of exception handlers, nesting depth, and naming patterns
@@ -9,21 +9,22 @@
 
 ## Executive Summary
 
-The NCAA_eval codebase demonstrates **strong PEP 20 compliance overall**. Automated complexity checks (C901, PLR0911, PLR0912) found **zero violations**. The primary area of concern is **PEP 20 #10 ("Errors should never pass silently")** where 3 exception handlers either logged at too-quiet levels or substituted defaults without logging.
+The NCAA_eval codebase demonstrates **moderate PEP 20 compliance**. Automated complexity checks (C901, PLR0911, PLR0912) found **1 function violating multiple rules** (`run_training()` in `cli/train.py`). **16 inline `# noqa` suppressions** for complexity-class codes (PLR0911, PLR0912, PLR0913, C901) were audited and annotated with descriptive rationales per the updated Lint Suppression Policy (PO approval required; inline `# noqa` preferred over `per-file-ignores` for visibility). Functions tracked for refactoring carry `— REFACTOR Story 8.1` annotations; domain-justified suppressions carry explicit rationales. The primary area of concern is **PEP 20 #3 ("Simple is better than complex")** — multiple functions exceed the 5-argument limit, and `run_training()` is a God Function that should be decomposed.
 
 | Principle | Automated Check | Result |
 |-----------|-----------------|--------|
 | #2 Explicit > Implicit | PLR2004 (suppressed) | 18 magic number instances — see Section 2 |
-| #3 Simple > Complex | C901 (max 10) | **0 violations** |
-| #5 Flat > Nested | PLR0911/PLR0912 | **0 violations** |
-| #10 Errors pass silently | Manual review | **3 violations** (2 fixed, 1 deferred) |
+| #3 Simple > Complex | C901 (max 10) | **1 violation** (`run_training` complexity 11) |
+| #3 Simple > Complex | PLR0913 (max 5 args) | **7 violations** in `src/` (see Section 3) |
+| #5 Flat > Nested | PLR0912 (max 12 branches) | **1 violation** (`run_training` has 13 branches) |
+| #10 Errors pass silently | Manual review | **3 violations** (2 fixed in 8.9, 1 deferred) |
 | #12 Don't guess | mypy --strict | **0 violations** (all types annotated) |
 
 ---
 
 ## 1. PEP 20 #10: Errors Should Never Pass Silently
 
-### Fixed in This Story
+### Fixed in Story 8.9
 
 #### 1a. `evaluation/backtest.py:183` — Silent NaN Substitution
 - **Before:** `except Exception: metrics[name] = float("nan")` — no logging
@@ -78,13 +79,66 @@ instance and assesses whether a named constant is warranted.
 
 ## 3. PEP 20 #3/#5: Simple > Complex / Flat > Nested
 
-### Automated Analysis
+### Inline Suppression Audit (PO Directive)
 
-| Rule | Violations |
-|------|-----------|
-| C901 (McCabe complexity > 10) | **0** |
-| PLR0911 (returns > 6) | **0** |
-| PLR0912 (branches > 12) | **0** |
+All **16 inline `# noqa` suppressions** for PLR0911, PLR0912, PLR0913, and C901 were
+audited and annotated with descriptive rationales. Per the updated Lint Suppression
+Policy, these codes require PO approval. Inline `# noqa` is the preferred form (over
+`per-file-ignores` in `pyproject.toml`) because it makes suppressions visible at the
+point of use.
+
+Each suppression now carries one of:
+- **`— REFACTOR Story 8.1`**: Function is too complex; tracked for decomposition
+- **`— <domain rationale>`**: Suppression justified by inherent domain dimensionality
+- **`— Typer CLI options dictate arg count`**: CLI framework constraint
+- **`— mirrors Game schema fields`**: Test helper mirrors data model
+- **`— @patch mock injection`**: Test parameterization by pytest/mock
+
+**16 inline suppressions annotated** across `src/`, `tests/`, and `dashboard/`:
+
+#### Source Files (`src/ncaa_eval/`)
+
+| File | Line | Function | Codes | Args/Complexity | Annotation |
+|------|------|----------|-------|-----------------|------------|
+| `cli/train.py` | 73 | `run_training()` | PLR0913, C901, PLR0912 | 7 args, complexity 11, 13 branches | `— REFACTOR Story 8.1` |
+| `cli/main.py` | 44 | `train()` | PLR0913 | 6 args (Typer CLI surface) | `— Typer CLI options dictate arg count` |
+| `evaluation/backtest.py` | 203 | `run_backtest()` | PLR0913 | 8 args | `— REFACTOR Story 8.1` |
+| `evaluation/simulation.py` | 1042 | `simulate_tournament_mc()` | PLR0913 | 7 args | `— REFACTOR Story 8.1` |
+| `evaluation/simulation.py` | 1218 | `simulate_tournament()` | PLR0913 | 8 args | `— REFACTOR Story 8.1` |
+| `transform/elo.py` | 98 | `update_game()` | PLR0913 | 7 args (game dimensions) | `— game data has inherent dimensionality` |
+| `transform/graph.py` | 243 | `add_game_to_graph()` | PLR0913 | 6 args (graph dimensions) | `— graph construction has inherent dimensionality` |
+
+#### Dashboard Files
+
+| File | Line | Function | Codes | Args | Annotation |
+|------|------|----------|-------|------|------------|
+| `dashboard/lib/filters.py` | 371 | `run_bracket_simulation()` | PLR0913 | 6 args | `— REFACTOR Story 8.1` |
+| `dashboard/lib/filters.py` | 589 | `_game_win_probability()` | PLR0913 | 6 args | `— REFACTOR Story 8.1` |
+| `dashboard/lib/bracket_renderer.py` | 192 | `_team_cell()` | PLR0913 | 6 args | `— REFACTOR Story 8.1` |
+| `dashboard/lib/bracket_renderer.py` | 216 | `_render_region_html()` | PLR0913 | 6 args | `— REFACTOR Story 8.1` |
+
+#### Test Files
+
+| File | Line | Function | Codes | Args | Annotation |
+|------|------|----------|-------|------|------------|
+| `tests/unit/test_elo.py` | 16 | `_make_game()` | PLR0913 | 10 args | `— mirrors Game schema fields` |
+| `tests/unit/test_feature_serving.py` | 120 | `_make_game()` | PLR0913 | 10 args | `— mirrors Game schema fields` |
+| `tests/unit/test_dashboard_filters.py` | 614 | `test_returns_result_for_elo_model()` | PLR0913 | 9 args | `— @patch mock injection` |
+| `tests/integration/test_elo_integration.py` | 25 | `_make_game()` | PLR0913 | 10 args | `— mirrors Game schema fields` |
+| `tests/integration/test_feature_serving_integration.py` | 26 | `_make_game()` | PLR0913 | 10 args | `— mirrors Game schema fields` |
+
+### Current Suppression Status
+
+| Rule | Suppressions | Category Breakdown |
+|------|-------------|-------------------|
+| C901 (McCabe complexity > 10) | **1** | `run_training()` — REFACTOR Story 8.1 |
+| PLR0911 (returns > 6) | **0** | |
+| PLR0912 (branches > 12) | **1** | `run_training()` — REFACTOR Story 8.1 |
+| PLR0913 (args > 5) | **14** | 8 REFACTOR Story 8.1, 3 domain-justified, 1 CLI constraint, 1 schema mirror, 1 mock injection |
+
+All suppressions carry inline `# noqa` with descriptive annotations. PO approval has been
+granted for all 16 current suppressions. Any new suppression of these codes requires
+separate PO approval per the Lint Suppression Policy.
 
 ### Manual Nesting Review
 
@@ -105,7 +159,7 @@ The following modules are legitimately complex (not merely complicated):
 - `evaluation/simulation.py` — Monte Carlo tournament simulation with bracket traversal, probability propagation, and seeded randomness
 - `cli/train.py` — Training orchestration with model type dispatch, walk-forward backtesting, and Rich progress display
 
-Both modules have `# noqa: PLR0913` suppressions for functions with many parameters. These are acceptable per the Lint Suppression Policy — the parameter counts reflect genuine domain dimensions (bracket configuration, training options).
+`cli/train.py:run_training()` is flagged as a **God Function** (complexity 11, 13 branches, 7 args). It should be decomposed into an orchestrator calling focused helper functions. **Tracked for refactoring in Story 8.1.**
 
 ---
 
@@ -119,8 +173,11 @@ All files in `src/ncaa_eval/` use `from __future__ import annotations` and pass 
 
 | Action | Count | Details |
 |--------|-------|---------|
-| **Fixed in this story** | 2 | `backtest.py` NaN logging, `espn.py` debug→warning |
+| **Fixed in Story 8.9** | 2 | `backtest.py` NaN logging, `espn.py` debug→warning |
+| **Inline noqa annotated** | 16 | All PLR0911/PLR0912/PLR0913/C901 suppressions carry descriptive rationale annotations |
+| **Tracked for refactoring** | 9 | Functions with `— REFACTOR Story 8.1` annotation (God Function decomposition, simulation split) |
+| **Domain-justified** | 5 | Functions with inherent dimensionality (game data, graph construction, CLI surface, schema mirrors) |
 | **Deferred to Story 8.3** | 1 | `espn.py _parse_date()` silent None return |
-| **Deferred to Story 8.1** | 5 | Named constants in `simulation.py` and `train.py` |
+| **Named constants deferred** | 5 | Should become constants in Stories 8.1/8.3 |
 | **Acceptable as-is** | 13 | Inline domain constants with clear context |
-| **No violations found** | — | Complexity (C901), returns (PLR0911), branches (PLR0912) |
+| **Policy updated** | — | PLR0911/PLR0912/PLR0913/C901 now require PO approval; inline `# noqa` preferred over `per-file-ignores` |

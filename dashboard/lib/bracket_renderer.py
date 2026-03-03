@@ -189,7 +189,7 @@ def _build_region_rounds(
     return region_rounds
 
 
-def _team_cell(  # noqa: PLR0913
+def _team_cell(  # noqa: PLR0913 — REFACTOR Story 8.1
     team_idx: int,
     prob: float,
     bracket_team_ids: tuple[int, ...],
@@ -213,7 +213,7 @@ def _team_cell(  # noqa: PLR0913
     )
 
 
-def _render_region_html(  # noqa: PLR0913
+def _render_region_html(  # noqa: PLR0913 — REFACTOR Story 8.1
     region_rounds: list[list[tuple[int, float]]],
     region_name: str,
     bracket_team_ids: tuple[int, ...],

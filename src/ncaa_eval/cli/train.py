@@ -70,7 +70,7 @@ def _build_fold_predictions(result: BacktestResult) -> pd.DataFrame | None:
     return pd.concat(fold_frames, ignore_index=True)
 
 
-def run_training(  # noqa: PLR0913, C901, PLR0912
+def run_training(  # noqa: PLR0913, C901, PLR0912 — REFACTOR Story 8.1
     model: Model,
     *,
     start_year: int,

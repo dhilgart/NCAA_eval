@@ -1039,7 +1039,7 @@ def score_bracket_against_sims(
 # ---------------------------------------------------------------------------
 
 
-def simulate_tournament_mc(  # noqa: PLR0913
+def simulate_tournament_mc(  # noqa: PLR0913 — REFACTOR Story 8.1
     bracket: BracketStructure,
     P: npt.NDArray[np.float64],
     scoring_rules: Sequence[ScoringRule],
@@ -1215,7 +1215,7 @@ def _collect_leaves(node: BracketNode) -> list[int]:
 # ---------------------------------------------------------------------------
 
 
-def simulate_tournament(  # noqa: PLR0913
+def simulate_tournament(  # noqa: PLR0913 — REFACTOR Story 8.1
     bracket: BracketStructure,
     probability_provider: ProbabilityProvider,
     context: MatchupContext,

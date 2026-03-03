@@ -97,6 +97,7 @@ The data pipeline has multiple silent failure modes: ESPN exceptions swallowed a
 
 - [ ] All NumPy-style docstrings converted to Google-style in: `metrics.py`, `transform/elo.py`, `model/elo.py`, `model/base.py`, `model/tracking.py`
 - [ ] `_resolve_team_id` in `espn.py` has a `Returns:` section in its docstring
+- [ ] 28 functions with 3+ operations updated to include detailed docstring descriptions (see PEP 20 compliance report, Story 8.9 addendum — `_bmad-output/planning-artifacts/noncompliant-docstrings.md`)
 - [ ] `docs/tutorials/getting-started.md` expected output updated to match actual CLI output
 - [ ] Troubleshooting section added to user guide covering: Kaggle auth, ESPN rate limits, Parquet version mismatches
 - [ ] README.md has a "## License" section referencing GPL-3.0

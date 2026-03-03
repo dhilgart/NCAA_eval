@@ -368,7 +368,7 @@ def _build_team_labels(
 
 
 @st.cache_data(ttl=None)
-def run_bracket_simulation(  # noqa: PLR0913
+def run_bracket_simulation(  # noqa: PLR0913 — REFACTOR Story 8.1
     data_dir: str,
     run_id: str,
     season: int,
@@ -586,7 +586,7 @@ def export_bracket_csv(
     return buf.getvalue()
 
 
-def _game_win_probability(  # noqa: PLR0913
+def _game_win_probability(  # noqa: PLR0913 — REFACTOR Story 8.1
     round_idx: int,
     game_in_round: int,
     game_offset: int,
