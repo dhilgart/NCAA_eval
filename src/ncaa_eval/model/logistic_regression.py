@@ -40,23 +40,28 @@ class LogisticRegressionModel(Model):
         self._clf = LogisticRegression(C=self._config.C, max_iter=self._config.max_iter)
 
     def fit(self, X: pd.DataFrame, y: pd.Series) -> None:
+        """Train the model on feature matrix *X* and labels *y*."""
         self._clf.fit(X, y)
 
     def predict_proba(self, X: pd.DataFrame) -> pd.Series:
+        """Return P(team_a wins) in [0, 1] for each row of *X*."""
         probs = self._clf.predict_proba(X)[:, 1]
         return pd.Series(probs, index=X.index)
 
     def save(self, path: Path) -> None:
+        """Persist the trained classifier and config to *path*."""
         path.mkdir(parents=True, exist_ok=True)
         joblib.dump(self._clf, path / "model.joblib")
         (path / "config.json").write_text(self._config.model_dump_json())
 
     @classmethod
     def load(cls, path: Path) -> Self:
+        """Load a previously-saved model from *path*."""
         config = LogisticRegressionConfig.model_validate_json((path / "config.json").read_text())
         instance = cls(config)
         instance._clf = joblib.load(path / "model.joblib")
         return instance
 
     def get_config(self) -> LogisticRegressionConfig:
+        """Return the Pydantic-validated configuration."""
         return self._config

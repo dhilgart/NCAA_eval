@@ -99,10 +99,10 @@ so that the codebase is internally consistent, Sphinx API docs render correctly,
   - [x] 4.2 For each violation: if the class docstring documents constructor args → add per-file `D107` ignore; otherwise add `__init__` docstring
   - [x] 4.3 Verify with `ruff check src/ --select D107`
 
-- [ ] Task 5: Fix D102 violations — add missing public method docstrings (AC: #9)
-  - [ ] 5.1 Run `ruff check src/ --select D102` to list all 13 violations
-  - [ ] 5.2 Add Google-style docstrings to each undocumented public method
-  - [ ] 5.3 Verify with `ruff check src/ --select D102`
+- [x] Task 5: Fix D102 violations — add missing public method docstrings (AC: #9)
+  - [x] 5.1 Run `ruff check src/ --select D102` to list all 13 violations
+  - [x] 5.2 Add Google-style docstrings to each undocumented public method
+  - [x] 5.3 Verify with `ruff check src/ --select D102`
 
 - [ ] Task 6: Add detailed descriptions to 28 noncompliant functions (AC: #5-6)
   - [ ] 6.1 Read `_bmad-output/planning-artifacts/noncompliant-docstrings.md` for the full list

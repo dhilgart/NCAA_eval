@@ -43,12 +43,16 @@ class Calibrator(Protocol):
         self,
         y_true: npt.NDArray[np.float64],
         y_prob: npt.NDArray[np.float64],
-    ) -> None: ...
+    ) -> None:
+        """Fit the calibrator on observed labels and predicted probabilities."""
+        ...
 
     def transform(
         self,
         y_prob: npt.NDArray[np.float64],
-    ) -> npt.NDArray[np.float64]: ...
+    ) -> npt.NDArray[np.float64]:
+        """Transform raw probabilities into calibrated probabilities."""
+        ...
 
 
 class IsotonicCalibrator:

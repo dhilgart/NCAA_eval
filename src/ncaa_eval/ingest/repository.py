@@ -125,6 +125,7 @@ class ParquetRepository(Repository):
     # -- reads ---------------------------------------------------------------
 
     def get_teams(self) -> list[Team]:
+        """Load all teams from the teams Parquet file."""
         path = self._base_path / "teams.parquet"
         if not path.exists():
             return []
@@ -132,6 +133,7 @@ class ParquetRepository(Repository):
         return [Team(**row) for row in df.to_dict(orient="records")]
 
     def get_games(self, season: int) -> list[Game]:
+        """Load games for a single season from hive-partitioned Parquet."""
         games_dir = self._base_path / "games"
         if not games_dir.exists():
             return []
@@ -155,6 +157,7 @@ class ParquetRepository(Repository):
         return [Game(**row) for row in df.to_dict(orient="records")]
 
     def get_seasons(self) -> list[Season]:
+        """Load all season records from the seasons Parquet file."""
         path = self._base_path / "seasons.parquet"
         if not path.exists():
             return []
@@ -164,6 +167,7 @@ class ParquetRepository(Repository):
     # -- writes --------------------------------------------------------------
 
     def save_teams(self, teams: list[Team]) -> None:
+        """Persist team records to a Parquet file."""
         if not teams:
             return
         self._base_path.mkdir(parents=True, exist_ok=True)
@@ -174,6 +178,7 @@ class ParquetRepository(Repository):
         pq.write_table(table, self._base_path / "teams.parquet")
 
     def save_games(self, games: list[Game]) -> None:
+        """Persist game records to hive-partitioned Parquet by season."""
         if not games:
             return
 
@@ -196,6 +201,7 @@ class ParquetRepository(Repository):
             pq.write_table(table, partition_dir / "data.parquet")
 
     def save_seasons(self, seasons: list[Season]) -> None:
+        """Persist season records to a Parquet file."""
         if not seasons:
             return
         self._base_path.mkdir(parents=True, exist_ok=True)
