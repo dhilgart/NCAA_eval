@@ -74,6 +74,12 @@ def load_available_runs(data_dir: str) -> list[dict[str, object]]:
 def load_leaderboard_data(data_dir: str) -> list[dict[str, object]]:
     """Load leaderboard data: run metadata joined with metric summaries.
 
+    Lists all runs from RunStore, loads the per-year metric summaries
+    DataFrame, builds a run-metadata DataFrame from the run list, then
+    merges the two on ``run_id`` (left join from summaries).  The merged
+    result is restricted to a fixed column set before serialisation so
+    that ``st.cache_data`` can hash it.
+
     Args:
         data_dir: String path to the project data directory.
 
@@ -152,6 +158,12 @@ def load_fold_predictions(data_dir: str, run_id: str) -> list[dict[str, object]]
 def load_feature_importances(data_dir: str, run_id: str) -> list[dict[str, object]]:
     """Load feature importances for a run (XGBoost only).
 
+    Guards on ``model_type == "xgboost"``, then loads the pickled model
+    and reads ``model._clf.feature_importances_`` (the underlying
+    ``XGBClassifier`` attribute).  Pairs feature names (from
+    ``RunStore.load_feature_names``) with importances, sorts descending,
+    and serialises to a list of dicts.
+
     Args:
         data_dir: String path to the project data directory.
         run_id: The model run identifier.
@@ -173,6 +185,7 @@ def load_feature_importances(data_dir: str, run_id: str) -> list[dict[str, objec
         if model is None:
             return []
         feature_names = store.load_feature_names(run_id) or []
+        # _clf is the underlying XGBClassifier wrapped by ncaa_eval's XGBoost model class.
         clf = getattr(model, "_clf", None)
         importances = getattr(clf, "feature_importances_", None)
         if importances is None or not feature_names or len(feature_names) != len(importances):

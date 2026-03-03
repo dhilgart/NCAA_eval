@@ -66,6 +66,13 @@ def _build_provider_from_folds(
 ) -> MatrixProvider | None:
     """Build a MatrixProvider from fold predictions for stateless models.
 
+    Initialises an n×n probability matrix filled with 0.5 (neutral prior
+    for any matchup not covered by backtest predictions), then does a
+    vectorised fill: maps ``team_a_id`` / ``team_b_id`` columns to bracket
+    indices via ``bracket.team_index_map``, drops rows where either team
+    is not in the bracket, and assigns ``P[a, b] = pred_win_prob`` and
+    the complement ``P[b, a] = 1 - pred_win_prob`` in one NumPy step.
+
     Returns ``None`` if fold predictions are missing or empty for the season.
     """
     fold_df = store.load_fold_predictions(run_id)

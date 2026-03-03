@@ -118,6 +118,13 @@ def _build_season_features(ctx: _TrainingContext) -> list[pd.DataFrame]:
 def _prepare_and_train(ctx: _TrainingContext, combined: pd.DataFrame) -> list[str]:
     """Extract labels, check balance, compute feature columns, and train.
 
+    Extracts ``team_a_won`` as integer labels and warns if the label mean
+    is outside ``[0.05, 0.95]`` (heavy imbalance).  Computes ``feat_cols``
+    via ``_feature_cols(combined)``.  For stateful models, passes the full
+    ``combined`` DataFrame (model uses internal state for features); for
+    stateless models, slices to ``combined[feat_cols]`` before calling
+    ``model.fit``.
+
     Returns:
         List of feature column names used for training.
     """
@@ -177,10 +184,20 @@ def _generate_tournament_predictions(
 
 
 def _run_backtest_and_persist(ctx: _TrainingContext, run_id: str) -> None:
-    """Run walk-forward backtest and persist metrics and fold predictions."""
+    """Run walk-forward backtest and persist metrics and fold predictions.
+
+    Guards on ``len(seasons) >= 2`` — a single season cannot produce
+    walk-forward folds.  Deep-copies the model before passing it to
+    ``run_backtest`` to prevent the backtest's sequential ``fit`` calls
+    from mutating the already-trained model held in ``ctx``.  Saves the
+    summary metrics and, if fold-level predictions exist, the per-game
+    prediction DataFrame via ``RunStore``.
+    """
     seasons = list(range(ctx.start_year, ctx.end_year + 1))
     if len(seasons) >= 2:
         ctx.console.print("Running walk-forward backtest...")
+        # Deep-copy to avoid mutating the trained model: run_backtest
+        # calls model.fit() on each fold, which would overwrite ctx.model.
         backtest_model = copy.deepcopy(ctx.model)
         mode = "stateful" if ctx.is_stateful else "batch"
         result = run_backtest(

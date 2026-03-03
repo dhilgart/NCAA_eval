@@ -20,6 +20,14 @@ def export_bracket_csv(
 ) -> str:
     """Build a CSV string of the most-likely bracket picks for download.
 
+    Derives the number of rounds from ``log2(n_games + 1)`` (63 games →
+    6 rounds).  Iterates rounds outer-to-inner: each round halves
+    ``games_in_round`` and advances ``game_offset`` by the previous
+    round's game count.  Within each round, looks up the winner index
+    from ``most_likely.winners``, resolves team ID and seed from
+    ``bracket``, strips the ``"[seed] "`` prefix from the label, then
+    delegates the per-game win probability to ``_game_win_probability``.
+
     Returns one row per game (63 rows) in round-major order with columns:
     ``game_number``, ``round``, ``team_id``, ``team_name``, ``seed``,
     ``win_probability``.
@@ -37,6 +45,8 @@ def export_bracket_csv(
     buf.write("game_number,round,team_id,team_name,seed,win_probability\n")
 
     n_games = len(most_likely.winners)
+    # A single-elimination bracket with 2^n teams has 2^n - 1 games and n rounds.
+    # Inverting: n_rounds = log2(n_games + 1).  For 63 games → 6 rounds.
     n_rounds = int(np.log2(n_games + 1))
     game_offset = 0
     games_in_round = n_games + 1  # 64 teams → 32 games first round

@@ -1,0 +1,7 @@
+ncaa\_eval.evaluation.bracket module
+=====================================
+
+.. automodule:: ncaa_eval.evaluation.bracket
+   :members:
+   :show-inheritance:
+   :undoc-members:
