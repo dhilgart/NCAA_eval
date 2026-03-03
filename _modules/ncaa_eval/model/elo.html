@@ -387,9 +387,7 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_predict_one</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">team_a_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">team_b_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return P(team_a wins) using the Elo expected-score formula.&quot;&quot;&quot;</span>
-        <span class="n">r_a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_engine</span><span class="o">.</span><span class="n">get_rating</span><span class="p">(</span><span class="n">team_a_id</span><span class="p">)</span>
-        <span class="n">r_b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_engine</span><span class="o">.</span><span class="n">get_rating</span><span class="p">(</span><span class="n">team_b_id</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">EloFeatureEngine</span><span class="o">.</span><span class="n">expected_score</span><span class="p">(</span><span class="n">r_a</span><span class="p">,</span> <span class="n">r_b</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_engine</span><span class="o">.</span><span class="n">predict_matchup</span><span class="p">(</span><span class="n">team_a_id</span><span class="p">,</span> <span class="n">team_b_id</span><span class="p">)</span>
 
 <div class="viewcode-block" id="EloModel.get_state">
 <a class="viewcode-back" href="../../../api/ncaa_eval.model.elo.html#ncaa_eval.model.elo.EloModel.get_state">[docs]</a>
@@ -397,7 +395,7 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ratings and game counts as a serialisable snapshot.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">{</span>
             <span class="s2">&quot;ratings&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_engine</span><span class="o">.</span><span class="n">get_all_ratings</span><span class="p">(),</span>
-            <span class="s2">&quot;game_counts&quot;</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_engine</span><span class="o">.</span><span class="n">_game_counts</span><span class="p">),</span>
+            <span class="s2">&quot;game_counts&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_engine</span><span class="o">.</span><span class="n">get_game_counts</span><span class="p">(),</span>
         <span class="p">}</span></div>
 
 
@@ -434,11 +432,8 @@
         <span class="c1"># Coerce string keys to int so JSON-decoded dicts (all keys are str)</span>
         <span class="c1"># work correctly — without coercion, get_rating(team_id_int) would</span>
         <span class="c1"># silently return initial_rating for every team.</span>
-        <span class="c1"># EloFeatureEngine has no public setter — direct attribute assignment is</span>
-        <span class="c1"># intentional here.  If the engine later adds validation, these lines</span>
-        <span class="c1"># should be replaced with the appropriate public API.</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_engine</span><span class="o">.</span><span class="n">_ratings</span> <span class="o">=</span> <span class="p">{</span><span class="nb">int</span><span class="p">(</span><span class="n">k</span><span class="p">):</span> <span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">ratings</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_engine</span><span class="o">.</span><span class="n">_game_counts</span> <span class="o">=</span> <span class="p">{</span><span class="nb">int</span><span class="p">(</span><span class="n">k</span><span class="p">):</span> <span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">game_counts</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_engine</span><span class="o">.</span><span class="n">set_ratings</span><span class="p">({</span><span class="nb">int</span><span class="p">(</span><span class="n">k</span><span class="p">):</span> <span class="nb">float</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">ratings</span><span class="o">.</span><span class="n">items</span><span class="p">()})</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_engine</span><span class="o">.</span><span class="n">set_game_counts</span><span class="p">({</span><span class="nb">int</span><span class="p">(</span><span class="n">k</span><span class="p">):</span> <span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">game_counts</span><span class="o">.</span><span class="n">items</span><span class="p">()})</span></div>
 
 
     <span class="c1"># ------------------------------------------------------------------</span>

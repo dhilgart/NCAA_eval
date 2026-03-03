@@ -388,6 +388,17 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ModelConfig</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the Pydantic-validated configuration for this model.&quot;&quot;&quot;</span>
         <span class="o">...</span></div>
+
+
+<div class="viewcode-block" id="Model.get_feature_importances">
+<a class="viewcode-back" href="../../../api/ncaa_eval.model.base.html#ncaa_eval.model.Model.get_feature_importances">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_feature_importances</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return feature name/importance pairs, or ``None`` if unavailable.</span>
+
+<span class="sd">        The default returns ``None``.  Models that support feature importances</span>
+<span class="sd">        (e.g. XGBoost) should override this method.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
 </div>
 
 
@@ -505,6 +516,20 @@
                 <span class="p">)</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="n">games</span>
+
+    <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="c1"># Public API for external consumers</span>
+    <span class="c1"># ------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="StatefulModel.predict_matchup">
+<a class="viewcode-back" href="../../../api/ncaa_eval.model.base.html#ncaa_eval.model.StatefulModel.predict_matchup">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">predict_matchup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">team_a_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">team_b_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return P(team_a wins) for a single matchup.</span>
+
+<span class="sd">        Delegates to the ``_predict_one`` abstract hook.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_predict_one</span><span class="p">(</span><span class="n">team_a_id</span><span class="p">,</span> <span class="n">team_b_id</span><span class="p">)</span></div>
+
 
     <span class="c1"># ------------------------------------------------------------------</span>
     <span class="c1"># Abstract hooks for subclasses</span>

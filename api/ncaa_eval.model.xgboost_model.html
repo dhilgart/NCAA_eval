@@ -359,6 +359,12 @@ imbalanced, either randomise team assignment upstream or set
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.model.xgboost_model.XGBoostModel.get_feature_importances">
+<span class="sig-name descname"><span class="pre">get_feature_importances</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/model/xgboost_model.html#XGBoostModel.get_feature_importances"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.model.xgboost_model.XGBoostModel.get_feature_importances" title="Link to this definition">¶</a></dt>
+<dd><p>Return feature name/importance pairs from the fitted classifier.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="ncaa_eval.model.xgboost_model.XGBoostModel.load">
 <span class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Self</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/model/xgboost_model.html#XGBoostModel.load"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.model.xgboost_model.XGBoostModel.load" title="Link to this definition">¶</a></dt>
 <dd><p>Load a previously-saved XGBoost model from <em>path</em>.</p>
@@ -384,9 +390,10 @@ imbalanced, either randomise team assignment upstream or set
 <dt class="sig sig-object py" id="ncaa_eval.model.xgboost_model.XGBoostModel.save">
 <span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/model/xgboost_model.html#XGBoostModel.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.model.xgboost_model.XGBoostModel.save" title="Link to this definition">¶</a></dt>
 <dd><p>Persist the trained model to <em>path</em> directory.</p>
-<p>Writes two files:
+<p>Writes three files:
 - <code class="docutils literal notranslate"><span class="pre">model.ubj</span></code> — XGBoost native UBJSON format (stable across versions)
-- <code class="docutils literal notranslate"><span class="pre">config.json</span></code> — Pydantic-serialised hyperparameter config</p>
+- <code class="docutils literal notranslate"><span class="pre">config.json</span></code> — Pydantic-serialised hyperparameter config
+- <code class="docutils literal notranslate"><span class="pre">feature_names.json</span></code> — JSON array of feature column names</p>
 <dl class="field-list simple">
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>RuntimeError</strong> – If called before <a class="reference internal" href="#ncaa_eval.model.xgboost_model.XGBoostModel.fit" title="ncaa_eval.model.xgboost_model.XGBoostModel.fit"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fit()</span></code></a>.</p>
@@ -535,6 +542,7 @@ randomised before training.</p>
 <li><a class="reference internal" href="#ncaa_eval.model.xgboost_model.XGBoostModel"><code class="docutils literal notranslate"><span class="pre">XGBoostModel</span></code></a><ul>
 <li><a class="reference internal" href="#ncaa_eval.model.xgboost_model.XGBoostModel.fit"><code class="docutils literal notranslate"><span class="pre">XGBoostModel.fit()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.model.xgboost_model.XGBoostModel.get_config"><code class="docutils literal notranslate"><span class="pre">XGBoostModel.get_config()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.model.xgboost_model.XGBoostModel.get_feature_importances"><code class="docutils literal notranslate"><span class="pre">XGBoostModel.get_feature_importances()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.model.xgboost_model.XGBoostModel.load"><code class="docutils literal notranslate"><span class="pre">XGBoostModel.load()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.model.xgboost_model.XGBoostModel.predict_proba"><code class="docutils literal notranslate"><span class="pre">XGBoostModel.predict_proba()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.model.xgboost_model.XGBoostModel.save"><code class="docutils literal notranslate"><span class="pre">XGBoostModel.save()</span></code></a></li>

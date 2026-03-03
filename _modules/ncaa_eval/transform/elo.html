@@ -555,11 +555,48 @@
 
     <span class="c1"># ── Public: snapshot / bulk ───────────────────────────────────────────</span>
 
+<div class="viewcode-block" id="EloFeatureEngine.has_ratings">
+<a class="viewcode-back" href="../../../api/ncaa_eval.transform.elo.html#ncaa_eval.transform.EloFeatureEngine.has_ratings">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">has_ratings</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``True`` if at least one team has a rating.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ratings</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="EloFeatureEngine.set_ratings">
+<a class="viewcode-back" href="../../../api/ncaa_eval.transform.elo.html#ncaa_eval.transform.EloFeatureEngine.set_ratings">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_ratings</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ratings</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Replace all ratings with *ratings*.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ratings</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">ratings</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="EloFeatureEngine.set_game_counts">
+<a class="viewcode-back" href="../../../api/ncaa_eval.transform.elo.html#ncaa_eval.transform.EloFeatureEngine.set_game_counts">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_game_counts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">counts</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Replace all game counts with *counts*.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_game_counts</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="EloFeatureEngine.get_game_counts">
+<a class="viewcode-back" href="../../../api/ncaa_eval.transform.elo.html#ncaa_eval.transform.EloFeatureEngine.get_game_counts">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_game_counts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a copy of the current game-counts dict.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_game_counts</span><span class="p">)</span></div>
+
+
 <div class="viewcode-block" id="EloFeatureEngine.get_all_ratings">
 <a class="viewcode-back" href="../../../api/ncaa_eval.transform.elo.html#ncaa_eval.transform.EloFeatureEngine.get_all_ratings">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_all_ratings</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a copy of the current ratings dict.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ratings</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="EloFeatureEngine.predict_matchup">
+<a class="viewcode-back" href="../../../api/ncaa_eval.transform.elo.html#ncaa_eval.transform.EloFeatureEngine.predict_matchup">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">predict_matchup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">team_a_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">team_b_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return P(team_a wins) using the Elo expected-score formula.&quot;&quot;&quot;</span>
+        <span class="n">r_a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_rating</span><span class="p">(</span><span class="n">team_a_id</span><span class="p">)</span>
+        <span class="n">r_b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_rating</span><span class="p">(</span><span class="n">team_b_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">expected_score</span><span class="p">(</span><span class="n">r_a</span><span class="p">,</span> <span class="n">r_b</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="EloFeatureEngine.process_season">

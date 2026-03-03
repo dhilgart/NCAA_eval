@@ -334,7 +334,7 @@
 <span class="c1"># is_tournament=True games.  The flag is derived from this constant rather than</span>
 <span class="c1"># inferred from the data so that downstream consumers can distinguish &quot;no</span>
 <span class="c1"># tournament data loaded yet&quot; from &quot;tournament was cancelled this year&quot;.</span>
-<span class="n">_NO_TOURNAMENT_SEASONS</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="mi">2020</span><span class="p">})</span>
+<span class="n">NO_TOURNAMENT_SEASONS</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="mi">2020</span><span class="p">})</span>
 
 
 <div class="viewcode-block" id="SeasonGames">
@@ -512,7 +512,7 @@
             <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">g</span><span class="p">:</span> <span class="p">(</span><span class="n">_effective_date</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">year</span><span class="p">),</span> <span class="n">g</span><span class="o">.</span><span class="n">game_id</span><span class="p">),</span>
         <span class="p">)</span>
 
-        <span class="n">has_tournament</span> <span class="o">=</span> <span class="n">year</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_NO_TOURNAMENT_SEASONS</span>
+        <span class="n">has_tournament</span> <span class="o">=</span> <span class="n">year</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">NO_TOURNAMENT_SEASONS</span>
         <span class="k">return</span> <span class="n">SeasonGames</span><span class="p">(</span><span class="n">year</span><span class="o">=</span><span class="n">year</span><span class="p">,</span> <span class="n">games</span><span class="o">=</span><span class="n">games</span><span class="p">,</span> <span class="n">has_tournament</span><span class="o">=</span><span class="n">has_tournament</span><span class="p">)</span></div>
 
 

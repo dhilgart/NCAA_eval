@@ -320,6 +320,11 @@
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="ncaa_eval.transform.calibration.html">ncaa_eval.transform.calibration module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ncaa_eval.transform.calibration.html#ncaa_eval.transform.calibration.Calibrator"><code class="docutils literal notranslate"><span class="pre">Calibrator</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.calibration.html#ncaa_eval.transform.calibration.Calibrator.fit"><code class="docutils literal notranslate"><span class="pre">Calibrator.fit()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.calibration.html#ncaa_eval.transform.calibration.Calibrator.transform"><code class="docutils literal notranslate"><span class="pre">Calibrator.transform()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="ncaa_eval.transform.calibration.html#ncaa_eval.transform.calibration.IsotonicCalibrator"><code class="docutils literal notranslate"><span class="pre">IsotonicCalibrator</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.calibration.html#ncaa_eval.transform.calibration.IsotonicCalibrator.fit"><code class="docutils literal notranslate"><span class="pre">IsotonicCalibrator.fit()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.calibration.html#ncaa_eval.transform.calibration.IsotonicCalibrator.transform"><code class="docutils literal notranslate"><span class="pre">IsotonicCalibrator.transform()</span></code></a></li>
@@ -349,9 +354,14 @@
 <li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.elo.html#ncaa_eval.transform.elo.EloFeatureEngine.apply_season_mean_reversion"><code class="docutils literal notranslate"><span class="pre">EloFeatureEngine.apply_season_mean_reversion()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.elo.html#ncaa_eval.transform.elo.EloFeatureEngine.expected_score"><code class="docutils literal notranslate"><span class="pre">EloFeatureEngine.expected_score()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.elo.html#ncaa_eval.transform.elo.EloFeatureEngine.get_all_ratings"><code class="docutils literal notranslate"><span class="pre">EloFeatureEngine.get_all_ratings()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.elo.html#ncaa_eval.transform.elo.EloFeatureEngine.get_game_counts"><code class="docutils literal notranslate"><span class="pre">EloFeatureEngine.get_game_counts()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.elo.html#ncaa_eval.transform.elo.EloFeatureEngine.get_rating"><code class="docutils literal notranslate"><span class="pre">EloFeatureEngine.get_rating()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.elo.html#ncaa_eval.transform.elo.EloFeatureEngine.has_ratings"><code class="docutils literal notranslate"><span class="pre">EloFeatureEngine.has_ratings()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.elo.html#ncaa_eval.transform.elo.EloFeatureEngine.predict_matchup"><code class="docutils literal notranslate"><span class="pre">EloFeatureEngine.predict_matchup()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.elo.html#ncaa_eval.transform.elo.EloFeatureEngine.process_season"><code class="docutils literal notranslate"><span class="pre">EloFeatureEngine.process_season()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.elo.html#ncaa_eval.transform.elo.EloFeatureEngine.reset_game_counts"><code class="docutils literal notranslate"><span class="pre">EloFeatureEngine.reset_game_counts()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.elo.html#ncaa_eval.transform.elo.EloFeatureEngine.set_game_counts"><code class="docutils literal notranslate"><span class="pre">EloFeatureEngine.set_game_counts()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.elo.html#ncaa_eval.transform.elo.EloFeatureEngine.set_ratings"><code class="docutils literal notranslate"><span class="pre">EloFeatureEngine.set_ratings()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.elo.html#ncaa_eval.transform.elo.EloFeatureEngine.start_new_season"><code class="docutils literal notranslate"><span class="pre">EloFeatureEngine.start_new_season()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="ncaa_eval.transform.elo.html#ncaa_eval.transform.elo.EloFeatureEngine.update_game"><code class="docutils literal notranslate"><span class="pre">EloFeatureEngine.update_game()</span></code></a></li>
 </ul>
@@ -582,6 +592,25 @@
 </dd>
 </dl>
 </dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ncaa_eval.transform.Calibrator">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ncaa_eval.transform.</span></span><span class="sig-name descname"><span class="pre">Calibrator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ncaa_eval/transform/calibration.html#Calibrator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.transform.Calibrator" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Protocol</span></code></p>
+<p>Protocol for probability calibration transforms.</p>
+<p>Both <a class="reference internal" href="#ncaa_eval.transform.IsotonicCalibrator" title="ncaa_eval.transform.IsotonicCalibrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">IsotonicCalibrator</span></code></a> and <a class="reference internal" href="#ncaa_eval.transform.SigmoidCalibrator" title="ncaa_eval.transform.SigmoidCalibrator"><code class="xref py py-class docutils literal notranslate"><span class="pre">SigmoidCalibrator</span></code></a>
+structurally satisfy this protocol.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.transform.Calibrator.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_prob</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/transform/calibration.html#Calibrator.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.transform.Calibrator.fit" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.transform.Calibrator.transform">
+<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_prob</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/transform/calibration.html#Calibrator.transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.transform.Calibrator.transform" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -927,9 +956,27 @@ provided (falls back to global mean for all teams).</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.transform.EloFeatureEngine.get_game_counts">
+<span class="sig-name descname"><span class="pre">get_game_counts</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/transform/elo.html#EloFeatureEngine.get_game_counts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.transform.EloFeatureEngine.get_game_counts" title="Link to this definition">¶</a></dt>
+<dd><p>Return a copy of the current game-counts dict.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="ncaa_eval.transform.EloFeatureEngine.get_rating">
 <span class="sig-name descname"><span class="pre">get_rating</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">team_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/transform/elo.html#EloFeatureEngine.get_rating"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.transform.EloFeatureEngine.get_rating" title="Link to this definition">¶</a></dt>
 <dd><p>Return current Elo rating for <em>team_id</em> (initial_rating if unseen).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.transform.EloFeatureEngine.has_ratings">
+<span class="sig-name descname"><span class="pre">has_ratings</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/transform/elo.html#EloFeatureEngine.has_ratings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.transform.EloFeatureEngine.has_ratings" title="Link to this definition">¶</a></dt>
+<dd><p>Return <code class="docutils literal notranslate"><span class="pre">True</span></code> if at least one team has a rating.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.transform.EloFeatureEngine.predict_matchup">
+<span class="sig-name descname"><span class="pre">predict_matchup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">team_a_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">team_b_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/transform/elo.html#EloFeatureEngine.predict_matchup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.transform.EloFeatureEngine.predict_matchup" title="Link to this definition">¶</a></dt>
+<dd><p>Return P(team_a wins) using the Elo expected-score formula.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -958,6 +1005,18 @@ is not the very first season).</p>
 <dt class="sig sig-object py" id="ncaa_eval.transform.EloFeatureEngine.reset_game_counts">
 <span class="sig-name descname"><span class="pre">reset_game_counts</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/transform/elo.html#EloFeatureEngine.reset_game_counts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.transform.EloFeatureEngine.reset_game_counts" title="Link to this definition">¶</a></dt>
 <dd><p>Reset per-team game counts for a new season (affects variable K).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.transform.EloFeatureEngine.set_game_counts">
+<span class="sig-name descname"><span class="pre">set_game_counts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">counts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/transform/elo.html#EloFeatureEngine.set_game_counts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.transform.EloFeatureEngine.set_game_counts" title="Link to this definition">¶</a></dt>
+<dd><p>Replace all game counts with <em>counts</em>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.transform.EloFeatureEngine.set_ratings">
+<span class="sig-name descname"><span class="pre">set_ratings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ratings</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/transform/elo.html#EloFeatureEngine.set_ratings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.transform.EloFeatureEngine.set_ratings" title="Link to this definition">¶</a></dt>
+<dd><p>Replace all ratings with <em>ratings</em>.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -2340,6 +2399,11 @@ normalises every game to a 40-minute basis:</p>
 <li><a class="reference internal" href="#ncaa_eval.transform.BatchRatingSolver.compute_srs"><code class="docutils literal notranslate"><span class="pre">BatchRatingSolver.compute_srs()</span></code></a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#ncaa_eval.transform.Calibrator"><code class="docutils literal notranslate"><span class="pre">Calibrator</span></code></a><ul>
+<li><a class="reference internal" href="#ncaa_eval.transform.Calibrator.fit"><code class="docutils literal notranslate"><span class="pre">Calibrator.fit()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.transform.Calibrator.transform"><code class="docutils literal notranslate"><span class="pre">Calibrator.transform()</span></code></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#ncaa_eval.transform.ChronologicalDataServer"><code class="docutils literal notranslate"><span class="pre">ChronologicalDataServer</span></code></a><ul>
 <li><a class="reference internal" href="#ncaa_eval.transform.ChronologicalDataServer.get_chronological_season"><code class="docutils literal notranslate"><span class="pre">ChronologicalDataServer.get_chronological_season()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.transform.ChronologicalDataServer.iter_games_by_date"><code class="docutils literal notranslate"><span class="pre">ChronologicalDataServer.iter_games_by_date()</span></code></a></li>
@@ -2383,9 +2447,14 @@ normalises every game to a 40-minute basis:</p>
 <li><a class="reference internal" href="#ncaa_eval.transform.EloFeatureEngine.apply_season_mean_reversion"><code class="docutils literal notranslate"><span class="pre">EloFeatureEngine.apply_season_mean_reversion()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.transform.EloFeatureEngine.expected_score"><code class="docutils literal notranslate"><span class="pre">EloFeatureEngine.expected_score()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.transform.EloFeatureEngine.get_all_ratings"><code class="docutils literal notranslate"><span class="pre">EloFeatureEngine.get_all_ratings()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.transform.EloFeatureEngine.get_game_counts"><code class="docutils literal notranslate"><span class="pre">EloFeatureEngine.get_game_counts()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.transform.EloFeatureEngine.get_rating"><code class="docutils literal notranslate"><span class="pre">EloFeatureEngine.get_rating()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.transform.EloFeatureEngine.has_ratings"><code class="docutils literal notranslate"><span class="pre">EloFeatureEngine.has_ratings()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.transform.EloFeatureEngine.predict_matchup"><code class="docutils literal notranslate"><span class="pre">EloFeatureEngine.predict_matchup()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.transform.EloFeatureEngine.process_season"><code class="docutils literal notranslate"><span class="pre">EloFeatureEngine.process_season()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.transform.EloFeatureEngine.reset_game_counts"><code class="docutils literal notranslate"><span class="pre">EloFeatureEngine.reset_game_counts()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.transform.EloFeatureEngine.set_game_counts"><code class="docutils literal notranslate"><span class="pre">EloFeatureEngine.set_game_counts()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.transform.EloFeatureEngine.set_ratings"><code class="docutils literal notranslate"><span class="pre">EloFeatureEngine.set_ratings()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.transform.EloFeatureEngine.start_new_season"><code class="docutils literal notranslate"><span class="pre">EloFeatureEngine.start_new_season()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.transform.EloFeatureEngine.update_game"><code class="docutils literal notranslate"><span class="pre">EloFeatureEngine.update_game()</span></code></a></li>
 </ul>

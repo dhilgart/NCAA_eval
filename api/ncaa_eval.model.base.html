@@ -340,6 +340,14 @@ layer can treat all models uniformly.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.model.base.Model.get_feature_importances">
+<span class="sig-name descname"><span class="pre">get_feature_importances</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/model/base.html#Model.get_feature_importances"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.model.base.Model.get_feature_importances" title="Link to this definition">¶</a></dt>
+<dd><p>Return feature name/importance pairs, or <code class="docutils literal notranslate"><span class="pre">None</span></code> if unavailable.</p>
+<p>The default returns <code class="docutils literal notranslate"><span class="pre">None</span></code>.  Models that support feature importances
+(e.g. XGBoost) should override this method.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="ncaa_eval.model.base.Model.load">
 <span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Self</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/model/base.html#Model.load"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.model.base.Model.load" title="Link to this definition">¶</a></dt>
 <dd><p>Load a previously-saved model from <em>path</em>.</p>
@@ -401,6 +409,13 @@ template methods.  Subclasses implement the abstract hooks:</p>
 <dt class="sig sig-object py" id="ncaa_eval.model.base.StatefulModel.get_state">
 <span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">get_state</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/model/base.html#StatefulModel.get_state"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.model.base.StatefulModel.get_state" title="Link to this definition">¶</a></dt>
 <dd><p>Return a serialisable snapshot of internal ratings.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.model.base.StatefulModel.predict_matchup">
+<span class="sig-name descname"><span class="pre">predict_matchup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">team_a_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">team_b_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/model/base.html#StatefulModel.predict_matchup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.model.base.StatefulModel.predict_matchup" title="Link to this definition">¶</a></dt>
+<dd><p>Return P(team_a wins) for a single matchup.</p>
+<p>Delegates to the <code class="docutils literal notranslate"><span class="pre">_predict_one</span></code> abstract hook.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -490,6 +505,7 @@ template methods.  Subclasses implement the abstract hooks:</p>
 <li><a class="reference internal" href="#ncaa_eval.model.base.Model"><code class="docutils literal notranslate"><span class="pre">Model</span></code></a><ul>
 <li><a class="reference internal" href="#ncaa_eval.model.base.Model.fit"><code class="docutils literal notranslate"><span class="pre">Model.fit()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.model.base.Model.get_config"><code class="docutils literal notranslate"><span class="pre">Model.get_config()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.model.base.Model.get_feature_importances"><code class="docutils literal notranslate"><span class="pre">Model.get_feature_importances()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.model.base.Model.load"><code class="docutils literal notranslate"><span class="pre">Model.load()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.model.base.Model.predict_proba"><code class="docutils literal notranslate"><span class="pre">Model.predict_proba()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.model.base.Model.save"><code class="docutils literal notranslate"><span class="pre">Model.save()</span></code></a></li>
@@ -503,6 +519,7 @@ template methods.  Subclasses implement the abstract hooks:</p>
 <li><a class="reference internal" href="#ncaa_eval.model.base.StatefulModel"><code class="docutils literal notranslate"><span class="pre">StatefulModel</span></code></a><ul>
 <li><a class="reference internal" href="#ncaa_eval.model.base.StatefulModel.fit"><code class="docutils literal notranslate"><span class="pre">StatefulModel.fit()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.model.base.StatefulModel.get_state"><code class="docutils literal notranslate"><span class="pre">StatefulModel.get_state()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.model.base.StatefulModel.predict_matchup"><code class="docutils literal notranslate"><span class="pre">StatefulModel.predict_matchup()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.model.base.StatefulModel.predict_proba"><code class="docutils literal notranslate"><span class="pre">StatefulModel.predict_proba()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.model.base.StatefulModel.set_state"><code class="docutils literal notranslate"><span class="pre">StatefulModel.set_state()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.model.base.StatefulModel.start_season"><code class="docutils literal notranslate"><span class="pre">StatefulModel.start_season()</span></code></a></li>
