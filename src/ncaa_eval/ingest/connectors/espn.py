@@ -138,7 +138,7 @@ class EspnConnector(Connector):
                 df = ms.get_team_schedule(team_name, season)
                 if isinstance(df, pd.DataFrame) and not df.empty:
                     frames.append(df)
-            except Exception:  # noqa: BLE001
+            except Exception:  # noqa: BLE001  # Story 8.3: add logging/retry here
                 logger.warning("espn: get_team_schedule('%s', %d) failed", team_name, season, exc_info=True)
                 continue
         if not frames:

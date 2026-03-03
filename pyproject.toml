@@ -82,7 +82,7 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 # EDA notebooks — not subject to lint enforcement per project convention
-"notebooks/**" = ["PLR0911", "PLR0912", "C901"]
+"notebooks/**" = ["PLR0911", "PLR0912", "PLR0913", "C901"]
 
 [tool.ruff.lint.isort]
 required-imports = ["from __future__ import annotations"]

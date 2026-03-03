@@ -870,8 +870,8 @@ data/                    # Local data store (git-ignored)
 
 1. **One concept per module.** A module should do one thing. If it grows beyond
    ~300 lines, consider splitting.
-2. **Mirror `src/` in `tests/`.** `src/ncaa_eval/models/elo.py` is tested by
-   `tests/test_elo.py` (or `tests/models/test_elo.py`).
+2. **Mirror `src/` in `tests/`.** `src/ncaa_eval/model/elo.py` is tested by
+   `tests/unit/test_elo.py` (or `tests/integration/test_elo_integration.py`).
 3. **`__init__.py` re-exports.** Public symbols should be importable from the
    package level: `from ncaa_eval import EloModel`.
 4. **No circular imports.** If two modules need each other, extract shared types

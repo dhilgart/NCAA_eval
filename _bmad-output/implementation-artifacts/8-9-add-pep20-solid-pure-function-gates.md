@@ -293,9 +293,28 @@ Claude Opus 4.6
 
 **Tools verified:** `ruff check src/ncaa_eval tests` ✅, `mypy --strict src/ncaa_eval tests` ✅, `pytest -m smoke` 114/114 ✅
 
+### Senior Developer Review (AI) — Pass 3
+
+**Date:** 2026-03-03
+**Reviewer:** Claude Sonnet 4.6 (adversarial code review, 3rd pass)
+**Outcome:** Approved with 3 fixes applied
+
+**ACs verified:** All 15 AC items confirmed — no regression from Pass 1/2 fixes or PO directive.
+
+**Fixes applied:**
+1. [M1-P3] `docs/STYLE_GUIDE.md:873` — Section 8 Rule 2 example still referenced `src/ncaa_eval/models/elo.py` and `tests/models/test_elo.py` (plural `models/`). Story's AC#10 fixed the layout diagram but missed this example. Fixed to `src/ncaa_eval/model/elo.py` and `tests/unit/test_elo.py`.
+2. [L1-P3] `espn.py:141` — `# noqa: BLE001` had no companion comment, inconsistent with `espn.py:240` which has `# Story 8.3: add logging/retry here`. Added companion comment for internal consistency.
+3. [L2-P3] `pyproject.toml:85` — Notebooks per-file-ignores listed `["PLR0911", "PLR0912", "C901"]` but omitted `PLR0913`. All four are complexity-class codes; omission appeared inadvertent. Added `PLR0913` for complete notebook exclusion.
+
+**Low-severity findings (not fixed):**
+- L3-P3: `train.py:170` — `# noqa: E712` has no companion comment explaining the pandas boolean-column filtering idiom. Pre-existing, not introduced by this story; E712 is not in the complexity-class policy. Left as-is.
+
+**Tools verified:** `ruff check src/ncaa_eval tests dashboard` ✅, `mypy --strict src/ncaa_eval tests` ✅, `pytest -m smoke` 114/114 ✅
+
 ### Change Log
 
 - 2026-03-03: Story 8.9 implemented — PR template quality gates, Style Guide PEP 20 expansion and accuracy fixes, codebase PEP 20 compliance review with 2 mechanical fixes
 - 2026-03-03: Code review Pass 1 applied 3 fixes — added scripts/bmad_pipeline.sh to File List, added noqa annotation to espn.py _parse_date, clarified Task 6.1 ruff scope
 - 2026-03-03: Code review Pass 2 applied 1 fix — added # noqa: BLE001 to espn.py:141 _fetch_per_team() fixed handler (Lint Suppression Policy consistency)
 - 2026-03-03: PO directive — audited and annotated 16 inline noqa for PLR0911/PLR0912/PLR0913/C901 with descriptive rationales (REFACTOR Story 8.1, domain justifications), updated Lint Suppression Policy to require PO approval (inline preferred over per-file-ignores), added PR checklist gates (function complexity, no-complexity-override, docstring detail), generated SOLID + Pure Function compliance reports, scanned 28 noncompliant docstrings for Story 8.4
+- 2026-03-03: Code review Pass 3 applied 3 fixes — Style Guide Rule 2 example corrected to model/ (singular), espn.py:141 noqa companion comment added, pyproject.toml notebooks per-file-ignores completed with PLR0913
