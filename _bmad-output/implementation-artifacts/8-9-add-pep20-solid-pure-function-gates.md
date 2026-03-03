@@ -65,13 +65,13 @@ so that every future PR is reviewed against these design principles and existing
   - [x] 2.7 Add aphorisms #17/#18 with complexity limit reinforcement
   - [x] 2.8 Update the PEP 20 Code Review Checklist with items for all new aphorisms
 
-- [ ] Task 3: Fix Style Guide Accuracy (AC: #7-12)
-  - [ ] 3.1 Update Active Ruff Rules table — add C90, PLR0911, PLR0912, PLR0913
-  - [ ] 3.2 Update Suppressed Rules table — add PLR2004 with rationale
-  - [ ] 3.3 Add Pydantic mypy plugin documentation to Section 4
-  - [ ] 3.4 Fix project layout diagram (add cli/, fix model/ singular, fix utils/ description, fix test structure)
-  - [ ] 3.5 Update ISP guidance — ABCs primary, Protocols complement
-  - [ ] 3.6 Add Lint Suppression Policy subsection
+- [x] Task 3: Fix Style Guide Accuracy (AC: #7-12)
+  - [x] 3.1 Update Active Ruff Rules table — add C90, PLR0911, PLR0912, PLR0913
+  - [x] 3.2 Update Suppressed Rules table — add PLR2004 with rationale
+  - [x] 3.3 Add Pydantic mypy plugin documentation to Section 4
+  - [x] 3.4 Fix project layout diagram (add cli/, fix model/ singular, fix utils/ description, fix test structure)
+  - [x] 3.5 Update ISP guidance — ABCs primary, Protocols complement
+  - [x] 3.6 Add Lint Suppression Policy subsection
 
 - [ ] Task 4: Sync Section 7 PR Checklist (AC: #13)
   - [ ] 4.1 Verify Style Guide Section 7 table matches updated PR template

@@ -139,6 +139,10 @@ Beyond isort, `pyproject.toml` extends the default Ruff rules (`E`, `F`) with:
 | `UP` | pyupgrade | Modern Python syntax — e.g., `list[int]` not `List[int]`, `X \| None` not `Optional[X]` |
 | `PT` | flake8-pytest-style | Pytest best practices — e.g., `@pytest.fixture` conventions, parametrize style |
 | `TID25` | tidy-imports | Import hygiene — bans relative imports from parent packages |
+| `C90` | mccabe | McCabe cyclomatic complexity ≤ 10 (see Section 6.1) |
+| `PLR0911` | pylint-refactor | Max 6 return statements per function |
+| `PLR0912` | pylint-refactor | Max 12 branches per function |
+| `PLR0913` | pylint-refactor | Max 5 function arguments |
 
 ### Suppressed Rules
 
@@ -147,6 +151,48 @@ Beyond isort, `pyproject.toml` extends the default Ruff rules (`E`, `F`) with:
 | `E501` | Line length is enforced by the Ruff **formatter** (110 chars), not the linter. Suppressing `E501` avoids double-reporting. |
 | `D1` | Missing-docstring warnings. Not yet active (see Section 1 note). |
 | `D415` | First-line punctuation. Not yet active (see Section 1 note). |
+| `PLR2004` | Magic value comparison — too aggressive for data science code with domain-specific constants (e.g., tournament field size `64`, coin-flip probability `0.5`). See PEP 20 "Practicality Beats Purity" in Section 6. |
+
+### Lint Suppression Policy
+
+When `# noqa` or `# type: ignore` is unavoidable, follow these rules:
+
+1. **Always include the specific error code.** Never use bare `# noqa` or bare
+   `# type: ignore` — always specify which rule is being suppressed.
+
+   ```python
+   # GOOD: Specific suppression with rationale
+   def build_bracket(  # noqa: PLR0913 — bracket construction requires all dimensions
+       teams: list[Team],
+       seeds: dict[int, int],
+       regions: list[str],
+       round_structure: list[int],
+       scoring: ScoringRule,
+       rng: np.random.Generator,
+   ) -> Bracket:
+       ...
+
+   # BAD: Bare suppression — which rule? why?
+   def build_bracket(  # noqa
+       ...
+   ```
+
+2. **Prefer refactoring over suppression.** The escalation path:
+   - First: Refactor to eliminate the violation (extract function, split class, etc.)
+   - Second: If refactoring is impractical, suppress with specific code and comment
+   - Never: Suppress because "it's faster than fixing"
+
+3. **Acceptable suppression scenarios:**
+   - `# noqa: PLR0913` — Functions that genuinely need many parameters (e.g.,
+     constructors aggregating multiple dimensions)
+   - `# type: ignore[import-untyped]` — Third-party libraries without type stubs
+   - `# type: ignore[no-untyped-def]` — Callback signatures imposed by frameworks
+     (e.g., Streamlit event handlers)
+
+4. **Unacceptable suppression scenarios:**
+   - `# noqa: C901` — If complexity is too high, split the function
+   - `# type: ignore` on return types — Fix the return type annotation instead
+   - Any suppression without the specific error code
 
 ---
 
@@ -177,6 +223,31 @@ future versions; run `mypy --help` to see the current list):
    dependencies. Add `# type: ignore[<code>]` only when truly necessary and always
    include the specific error code.
 5. The `py.typed` marker at `src/ncaa_eval/py.typed` signals PEP 561 compliance.
+
+### Pydantic Integration
+
+**Configured in:** `[tool.mypy] plugins` and `[tool.pydantic-mypy]`
+
+Pydantic is the project's primary data modeling library (shared types between Logic
+and UI layers). The mypy plugin provides enhanced type checking for Pydantic models:
+
+```toml
+[tool.mypy]
+plugins = ["pydantic.mypy"]
+
+[tool.pydantic-mypy]
+init_typed = true                    # __init__ params get field types
+init_forbid_extra = true             # error on unknown fields in __init__
+warn_required_dynamic_aliases = true # warn if alias without default
+```
+
+**What this means for developers:**
+- `init_typed = true` — mypy understands `Model(field=value)` constructor calls
+  and validates argument types against field definitions.
+- `init_forbid_extra = true` — passing an unknown field name to a model constructor
+  is a type error, not a silent runtime discard.
+- `warn_required_dynamic_aliases = true` — alerts when a field with `alias=` has no
+  default value, which can cause confusing `ValidationError` messages.
 
 ---
 
@@ -755,17 +826,20 @@ the philosophy behind this two-tier approach, see
 ```
 src/
   ncaa_eval/
-    __init__.py          # Package root — re-exports public API
+    __init__.py          # Package root
     py.typed             # PEP 561 marker
+    cli/                 # CLI entry points (main, train)
     ingest/              # Data source connectors
     transform/           # Feature engineering
-    model/               # Model ABC and implementations
+    model/               # Model ABC and implementations (singular, not models/)
     evaluation/          # Metrics, CV, simulation
-    utils/               # Shared helpers (logging, assertions)
+    utils/               # Shared helpers (logger.py)
 tests/
   __init__.py
-  test_<module>.py       # Mirror src/ structure
   conftest.py            # Shared fixtures
+  unit/                  # Unit tests organized by domain
+  integration/           # Integration tests
+  fixtures/              # Test data fixtures
 dashboard/               # Streamlit UI (imports ncaa_eval — no direct IO)
 data/                    # Local data store (git-ignored)
 ```
@@ -910,31 +984,45 @@ class BrokenModel(RatingModel):
 
 **What it means:** Don't force classes to implement methods they don't need.
 
-**Already enforced by:** MyPy strict mode with Protocols (Section 4)
+**Already enforced by:** MyPy strict mode with ABCs and Protocols (Section 4)
+
+This project uses **ABCs as the primary pattern** for interface segregation (Model ABC,
+Repository ABC, Connector ABC) and **Protocols as a complement** for structural typing
+where duck typing is preferred (e.g., `ProbabilityProvider`, `ScoringRule` in the
+simulation engine). Choose based on context:
+
+- **ABCs:** When implementations must be explicitly registered and share behavior
+  (e.g., all models inherit from `Model` and get common infrastructure).
+- **Protocols:** When you need structural typing — any object with matching methods
+  qualifies, without inheriting from anything (e.g., `ProbabilityProvider` can be
+  satisfied by any class with a `predict_proba` method).
 
 ```python
-# GOOD: Small, focused interfaces
-class Predictable(Protocol):
+# PRIMARY: ABCs for explicit interface contracts
+class Model(ABC):
+    """Base class for all prediction models."""
+    @abstractmethod
     def predict(self, game: Game) -> float: ...
 
-class Trainable(Protocol):
-    def fit(self, games: pd.DataFrame) -> None: ...
-
-class EloModel:
-    # Only implements what it needs
+class EloModel(Model):
     def predict(self, game: Game) -> float: ...
+
+# COMPLEMENT: Protocols for structural typing (duck typing)
+class ProbabilityProvider(Protocol):
+    def predict_proba(self, matchup: Matchup) -> float: ...
+
+# Any class with predict_proba() satisfies this — no inheritance needed
+class EloProvider:
+    def predict_proba(self, matchup: Matchup) -> float: ...
 
 # BAD: Fat interface forces unused methods
-class Model(ABC):
+class DoEverything(ABC):
     @abstractmethod
     def predict(self, game: Game) -> float: ...
-
     @abstractmethod
     def fit(self, games: pd.DataFrame) -> None: ...
-
     @abstractmethod
     def cross_validate(self, games: pd.DataFrame) -> dict: ...
-
     # Simple models forced to implement methods they don't need!
 ```
 
@@ -982,7 +1070,7 @@ During code review, verify:
 - [ ] **SRP:** Classes/functions have single, clear responsibility (covered by PEP 20 complexity)
 - [ ] **OCP:** New features added via extension (inheritance, composition), not modification
 - [ ] **LSP:** Subtypes honor parent contracts (property tests verify this)
-- [ ] **ISP:** Interfaces are small and focused (use Protocols, not fat abstract classes)
+- [ ] **ISP:** Interfaces are small and focused (ABCs primary, Protocols for structural typing)
 - [ ] **DIP:** Depends on abstractions (Protocols, TypedDicts), not concrete classes
 
 ### Summary: What's Already Covered
@@ -992,7 +1080,7 @@ During code review, verify:
 | **SRP** | PEP 20: "Simple is better than complex" (complexity ≤ 10) |
 | **OCP** | Manual review (can't automate) |
 | **LSP** | Property tests: "probabilities in [0, 1]" invariants |
-| **ISP** | MyPy strict mode: Protocols preferred over abstract classes |
+| **ISP** | MyPy strict mode: ABCs primary (Model, Repository, Connector), Protocols complement (ProbabilityProvider, ScoringRule) |
 | **DIP** | Architecture: "Type sharing via Pydantic/TypedDicts" |
 
 **Result:** SOLID compliance is mostly automated or already covered by existing standards. Code review adds a final check for OCP and overall SOLID adherence.
