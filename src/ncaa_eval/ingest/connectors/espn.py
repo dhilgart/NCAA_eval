@@ -237,7 +237,7 @@ class EspnConnector(Connector):
             if pd.isna(ts):
                 return None
             return cast("datetime.date", ts.date())
-        except Exception:
+        except Exception:  # noqa: BLE001  # Story 8.3: add logging/retry here
             return None
 
     @staticmethod

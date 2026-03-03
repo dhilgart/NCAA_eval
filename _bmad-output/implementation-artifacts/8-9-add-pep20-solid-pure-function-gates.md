@@ -1,6 +1,6 @@
 # Story 8.9: Add PEP 20, SOLID & Pure Function Gates to PR Template + Codebase PEP 20 Review
 
-Status: review
+Status: done
 
 ## Story
 
@@ -85,7 +85,7 @@ so that every future PR is reviewed against these design principles and existing
   - [x] 5.5 Write compliance report to `_bmad-output/planning-artifacts/pep20-compliance-report.md`
 
 - [x] Task 6: Final Verification (AC: #17)
-  - [x] 6.1 Run `ruff check .`
+  - [x] 6.1 Run `ruff check src/ncaa_eval tests` (production code scope; EDA notebooks excluded per MEMORY.md — not subject to Ruff)
   - [x] 6.2 Run `mypy --strict src/ncaa_eval tests`
   - [x] 6.3 Run `pytest -m smoke` to verify no regressions
 
@@ -222,7 +222,7 @@ Claude Opus 4.6
 - **Task 3:** Fixed 6 accuracy issues (P3-3 through P3-7): Active Ruff Rules table, Suppressed Rules table, Pydantic mypy plugin docs, project layout diagram, ISP guidance rewrite, Lint Suppression Policy subsection.
 - **Task 4:** Synced Section 7 PR Checklist — renamed "Pure functions / functional design" to "Pure function design" to match PR template exactly.
 - **Task 5:** Full PEP 20 compliance review of all src/ncaa_eval/ files. Fixed 2 mechanical violations (backtest NaN logging, ESPN debug→warning). Deferred 1 to Story 8.3. Documented 18 magic number instances (5 should become constants in Stories 8.1/8.3, 13 acceptable inline). Zero C901/PLR0911/PLR0912 violations. Report at `_bmad-output/planning-artifacts/pep20-compliance-report.md`.
-- **Task 6:** All verification gates pass: `ruff check` clean, `mypy --strict` clean, `pytest -m smoke` 114/114 pass.
+- **Task 6:** All verification gates pass: `ruff check src/ncaa_eval tests` clean (EDA notebooks excluded per MEMORY.md), `mypy --strict` clean, `pytest -m smoke` 114/114 pass.
 
 ### File List
 
@@ -233,9 +233,31 @@ Claude Opus 4.6
 | `src/ncaa_eval/evaluation/backtest.py` | Modified — added logging import and warning log for silent NaN substitution |
 | `src/ncaa_eval/ingest/connectors/espn.py` | Modified — upgraded per-team fetch exception log from DEBUG to WARNING |
 | `_bmad-output/planning-artifacts/pep20-compliance-report.md` | Created — full PEP 20 audit findings |
+| `scripts/bmad_pipeline.sh` | Modified — fixed missing space before APPEND_TEXT in pipeline command arguments |
 | `_bmad-output/implementation-artifacts/sprint-status.yaml` | Modified — status in-progress → review |
 | `_bmad-output/implementation-artifacts/8-9-add-pep20-solid-pure-function-gates.md` | Modified — task checkboxes, Dev Agent Record, File List, Change Log, Status |
+
+### Senior Developer Review (AI)
+
+**Date:** 2026-03-03
+**Reviewer:** Claude Sonnet 4.6 (adversarial code review)
+**Outcome:** Approved with fixes applied
+
+**ACs verified:** All 15 AC items fully implemented. Documentation, Style Guide sections, PR template, compliance report all validated against source files.
+
+**Fixes applied:**
+1. [M1] Added `scripts/bmad_pipeline.sh` to story File List — it was modified in this story (commit `df65383`) but omitted from documentation
+2. [M2] Added `# noqa: BLE001  # Story 8.3: add logging/retry here` to `espn.py:240` `_parse_date()` bare except — the Lint Suppression Policy introduced in this story requires specific error codes on all suppressions
+3. [M3] Clarified Task 6.1 wording to `ruff check src/ncaa_eval tests` to accurately reflect what was run (EDA notebooks are excluded from Ruff per MEMORY.md)
+
+**Low-severity findings (not fixed):**
+- L2: `backtest.py:186` `# noqa: BLE001` has no companion comment — acceptable given `exc_info=True` + warning message make intent clear
+- L3: Compliance report labels PLR0911 (returns) under PEP 20 #5 (flat) — minor misattribution in planning artifact
+- L4: AC4 says "wording identical" but table uses gate names only vs template's full descriptions — correct implementation, slightly imprecise AC wording
+
+**Tools verified:** `ruff check src/ncaa_eval tests` ✅, `mypy --strict src/ncaa_eval tests` ✅, `pytest -m smoke` 114/114 ✅
 
 ### Change Log
 
 - 2026-03-03: Story 8.9 implemented — PR template quality gates, Style Guide PEP 20 expansion and accuracy fixes, codebase PEP 20 compliance review with 2 mechanical fixes
+- 2026-03-03: Code review applied 3 fixes — added scripts/bmad_pipeline.sh to File List, added noqa annotation to espn.py _parse_date, clarified Task 6.1 ruff scope
