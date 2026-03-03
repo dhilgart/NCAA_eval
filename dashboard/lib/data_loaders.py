@@ -176,9 +176,6 @@ def load_feature_importances(data_dir: str, run_id: str) -> list[dict[str, objec
         return []
     try:
         store = RunStore(path)
-        run = store.load_run(run_id)
-        if run.model_type != "xgboost":
-            return []
         model = store.load_model(run_id)
         if model is None:
             return []

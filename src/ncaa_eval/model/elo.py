@@ -67,9 +67,7 @@ class EloModel(StatefulModel):
 
     def _predict_one(self, team_a_id: int, team_b_id: int) -> float:
         """Return P(team_a wins) using the Elo expected-score formula."""
-        r_a = self._engine.get_rating(team_a_id)
-        r_b = self._engine.get_rating(team_b_id)
-        return EloFeatureEngine.expected_score(r_a, r_b)
+        return self._engine.predict_matchup(team_a_id, team_b_id)
 
     def get_state(self) -> dict[str, Any]:
         """Return ratings and game counts as a serialisable snapshot."""

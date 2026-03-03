@@ -1,6 +1,6 @@
 # Story 8.2: Expose Public APIs & Eliminate Private Attribute Access
 
-Status: review
+Status: done
 
 ## Story
 
@@ -344,6 +344,10 @@ None — clean implementation with no blocking issues.
 | Renamed `_NO_TOURNAMENT_SEASONS` → `NO_TOURNAMENT_SEASONS` | Public constant (AC #14-16) |
 | Added `Calibrator` Protocol | Structural typing for calibrator interface (AC #17-19) |
 | Updated all test files to use public APIs | Eliminate private access in tests (AC #21-24) |
+| `XGBoostModel.save()` now writes `feature_names.json`; `load()` restores `_feature_names` | Review fix: `get_feature_importances()` returned `None` after save/load round-trip (H1) |
+| `EloModel._predict_one()` delegates to `self._engine.predict_matchup()` | Review fix: eliminated DRY violation — formula was duplicated in two places (M3) |
+| `data_loaders.py` removed `model_type != "xgboost"` early return | Review fix: public API `get_feature_importances()` now consulted for all model types (L3) |
+| `test_model_base.py` uses `set_state()` instead of direct `_ratings` assignment | Review fix: eliminated private attribute access in test fixture (M2) |
 
 ### File List
 
@@ -364,5 +368,6 @@ None — clean implementation with no blocking issues.
 | `tests/unit/test_dashboard_filters.py` | Modified — uses `matchup_probability()`, updated mock |
 | `tests/unit/test_evaluation_simulation.py` | Modified — FakeElo uses `predict_matchup` |
 | `tests/unit/test_evaluation_splitter.py` | Modified — updated comment |
+| `tests/unit/test_model_base.py` | Modified (review fix) — use `set_state()` instead of direct `_ratings` assignment |
 | `_bmad-output/implementation-artifacts/8-2-expose-public-apis-eliminate-private-attribute-access.md` | Modified — story status/tasks |
-| `_bmad-output/implementation-artifacts/sprint-status.yaml` | Modified — status in-progress → review |
+| `_bmad-output/implementation-artifacts/sprint-status.yaml` | Modified — status review → done |

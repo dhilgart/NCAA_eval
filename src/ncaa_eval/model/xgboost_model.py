@@ -7,6 +7,7 @@ native UBJSON persistence format.
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Annotated, Literal, Self
 
@@ -132,9 +133,10 @@ class XGBoostModel(Model):
     def save(self, path: Path) -> None:
         """Persist the trained model to *path* directory.
 
-        Writes two files:
+        Writes three files:
         - ``model.ubj`` — XGBoost native UBJSON format (stable across versions)
         - ``config.json`` — Pydantic-serialised hyperparameter config
+        - ``feature_names.json`` — JSON array of feature column names
 
         Raises
         ------
@@ -147,6 +149,7 @@ class XGBoostModel(Model):
         path.mkdir(parents=True, exist_ok=True)
         self._clf.save_model(str(path / "model.ubj"))
         (path / "config.json").write_text(self._config.model_dump_json())
+        (path / "feature_names.json").write_text(json.dumps(self._feature_names))
 
     @classmethod
     def load(cls, path: Path) -> Self:
@@ -171,6 +174,9 @@ class XGBoostModel(Model):
         instance = cls(config)
         instance._clf.load_model(str(model_path))
         instance._is_fitted = True
+        feature_names_path = path / "feature_names.json"
+        if feature_names_path.exists():
+            instance._feature_names = json.loads(feature_names_path.read_text())
         return instance
 
     def get_config(self) -> XGBoostModelConfig:
