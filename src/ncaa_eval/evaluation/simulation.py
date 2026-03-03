@@ -2,19 +2,18 @@
 
 Implements the Phylourny algorithm (Bettisworth & Jordan 2023) for exact
 advancement probability computation, plus a vectorized Monte Carlo fallback
-for score-distribution analysis.  Provides bracket data structures,
-probability provider protocols, scoring rule plugins, and a high-level
+for score-distribution analysis.  Provides a high-level
 :func:`simulate_tournament` orchestrator.
 
 Key components:
 
-* :class:`BracketNode` / :class:`BracketStructure` — immutable bracket tree.
-* :func:`build_bracket` — constructs a 64-team tree from :class:`TourneySeed`.
-* :class:`ProbabilityProvider` — protocol for pairwise win probabilities.
 * :func:`compute_advancement_probs` — Phylourny analytical computation.
 * :func:`compute_expected_points` — ``adv_probs @ points_vector``.
 * :func:`simulate_tournament_mc` — vectorized MC simulation engine.
 * :func:`simulate_tournament` — high-level orchestrator.
+
+Bracket data structures, probability providers, and scoring rules are in
+their respective submodules (:mod:`bracket`, :mod:`providers`, :mod:`scoring`).
 
 References:
     Bettisworth et al. (2023), "Phylourny: efficiently calculating
@@ -25,623 +24,86 @@ References:
 from __future__ import annotations
 
 import logging
-from collections.abc import Callable, Iterable, Sequence
-from dataclasses import dataclass, field
-from typing import Any, Protocol, TypeVar, runtime_checkable
+from collections.abc import Iterable, Sequence
+from dataclasses import dataclass
 
 import numpy as np
 import numpy.typing as npt
 
-from ncaa_eval.transform.normalization import TourneySeed
+from ncaa_eval.evaluation.bracket import (
+    N_GAMES,
+    N_ROUNDS,
+    BracketNode,
+    BracketStructure,
+    MatchupContext,
+    _build_subtree,
+    build_bracket,
+)
+from ncaa_eval.evaluation.providers import (
+    EloProvider,
+    MatrixProvider,
+    ProbabilityProvider,
+    build_probability_matrix,
+)
+from ncaa_eval.evaluation.scoring import (
+    _SCORING_REGISTRY,
+    CustomScoring,
+    DictScoring,
+    FibonacciScoring,
+    ScoringNotFoundError,
+    ScoringRule,
+    SeedDiffBonusScoring,
+    StandardScoring,
+    get_scoring,
+    list_scorings,
+    register_scoring,
+    scoring_from_config,
+)
+
+# Re-export all symbols for backward compatibility
+__all__ = [
+    "BracketDistribution",
+    "BracketNode",
+    "BracketStructure",
+    "CustomScoring",
+    "DictScoring",
+    "EloProvider",
+    "FibonacciScoring",
+    "MatchupContext",
+    "MatrixProvider",
+    "MostLikelyBracket",
+    "N_GAMES",
+    "N_ROUNDS",
+    "ProbabilityProvider",
+    "ScoringNotFoundError",
+    "ScoringRule",
+    "SeedDiffBonusScoring",
+    "SimulationResult",
+    "StandardScoring",
+    "_SCORING_REGISTRY",
+    "_build_subtree",
+    "_collect_leaves",
+    "build_bracket",
+    "build_probability_matrix",
+    "compute_advancement_probs",
+    "compute_bracket_distribution",
+    "compute_expected_points",
+    "compute_expected_points_seed_diff",
+    "compute_most_likely_bracket",
+    "get_scoring",
+    "list_scorings",
+    "register_scoring",
+    "score_bracket_against_sims",
+    "scoring_from_config",
+    "simulate_tournament",
+    "simulate_tournament_mc",
+]
 
 logger = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
-# Constants
-# ---------------------------------------------------------------------------
-
-#: NCAA bracket matchup order per region (seed pairings).
-#: Position in this list determines bracket-tree leaf order.
-_REGION_SEED_ORDER: tuple[tuple[int, int], ...] = (
-    (1, 16),
-    (8, 9),
-    (5, 12),
-    (4, 13),
-    (6, 11),
-    (3, 14),
-    (7, 10),
-    (2, 15),
-)
-
-#: Region codes in bracket-position order.  W vs X in one semi, Y vs Z
-#: in the other, winners play in the championship.
-_REGION_ORDER: tuple[str, ...] = ("W", "X", "Y", "Z")
-
-#: Number of rounds in a 64-team single-elimination bracket.
-N_ROUNDS: int = 6
-
-#: Total number of games in a 64-team bracket (63).
-N_GAMES: int = 63
 
 # ---------------------------------------------------------------------------
-# Bracket data structures (Task 1)
-# ---------------------------------------------------------------------------
-
-
-@dataclass(frozen=True)
-class MatchupContext:
-    """Context for a hypothetical matchup probability query.
-
-    Passed to :class:`ProbabilityProvider` so that stateless models can
-    construct the correct feature row for a hypothetical pairing.  Stateful
-    models (Elo) typically ignore context and use internal ratings.
-
-    Attributes:
-        season: Tournament season year (e.g. 2024).
-        day_num: Tournament day number (e.g. 136 for Round of 64).
-        is_neutral: ``True`` for all tournament games (neutral site).
-    """
-
-    season: int
-    day_num: int
-    is_neutral: bool
-
-
-@dataclass(frozen=True)
-class BracketNode:
-    """Node in a tournament bracket tree.
-
-    A leaf node represents a single team; an internal node represents a
-    game whose winner advances.
-
-    Attributes:
-        round_index: Round number (0-indexed).  Leaves have ``round_index=-1``.
-        team_index: Index into the bracket's ``team_ids`` tuple for leaf
-            nodes.  ``-1`` for internal nodes.
-        left: Left child (``None`` for leaves).
-        right: Right child (``None`` for leaves).
-    """
-
-    round_index: int
-    team_index: int = -1
-    left: BracketNode | None = None
-    right: BracketNode | None = None
-
-    @property
-    def is_leaf(self) -> bool:
-        """Return ``True`` if this is a leaf (team) node."""
-        return self.left is None and self.right is None
-
-
-@dataclass(frozen=True)
-class BracketStructure:
-    """Immutable tournament bracket.
-
-    Attributes:
-        root: Root :class:`BracketNode` of the bracket tree.
-        team_ids: Tuple of team IDs in bracket-position order (leaf order).
-        team_index_map: Mapping of ``team_id → index`` into ``team_ids``.
-        seed_map: Mapping of ``team_id → seed_num`` for seed-aware scoring.
-    """
-
-    root: BracketNode
-    team_ids: tuple[int, ...]
-    team_index_map: dict[int, int]
-    seed_map: dict[int, int] = field(default_factory=dict)
-
-
-def _build_subtree(
-    team_indices: list[int],
-    round_offset: int,
-) -> BracketNode:
-    """Recursively build a balanced binary bracket subtree.
-
-    Args:
-        team_indices: List of team indices for this sub-bracket (must be
-            power-of-2 length).
-        round_offset: Round index for games at this level.
-
-    Returns:
-        Root :class:`BracketNode` of the subtree.
-    """
-    if len(team_indices) == 1:
-        return BracketNode(round_index=-1, team_index=team_indices[0])
-
-    mid = len(team_indices) // 2
-    left = _build_subtree(team_indices[:mid], round_offset - 1)
-    right = _build_subtree(team_indices[mid:], round_offset - 1)
-    return BracketNode(round_index=round_offset, left=left, right=right)
-
-
-def build_bracket(seeds: list[TourneySeed], season: int) -> BracketStructure:
-    """Construct a 64-team bracket tree from tournament seeds.
-
-    Play-in teams (``is_play_in=True``) are excluded.  Exactly 64 non-play-in
-    seeds are required.
-
-    Args:
-        seeds: List of :class:`TourneySeed` objects for the given season.
-        season: Season year to filter seeds.
-
-    Returns:
-        Fully constructed :class:`BracketStructure`.
-
-    Raises:
-        ValueError: If the number of non-play-in seeds for *season* is not 64.
-    """
-    season_seeds = [s for s in seeds if s.season == season and not s.is_play_in]
-
-    # Build lookup: (region, seed_num) → team_id
-    seed_lookup: dict[tuple[str, int], int] = {}
-    seed_num_map: dict[int, int] = {}
-    for s in season_seeds:
-        seed_lookup[(s.region, s.seed_num)] = s.team_id
-        seed_num_map[s.team_id] = s.seed_num
-
-    # Determine team ordering following bracket structure
-    team_ids_ordered: list[int] = []
-    for region in _REGION_ORDER:
-        for seed_a, seed_b in _REGION_SEED_ORDER:
-            team_a = seed_lookup.get((region, seed_a))
-            team_b = seed_lookup.get((region, seed_b))
-            if team_a is None or team_b is None:
-                msg = f"Missing seed for region={region}: seed {seed_a} → {team_a}, seed {seed_b} → {team_b}"
-                raise ValueError(msg)
-            team_ids_ordered.append(team_a)
-            team_ids_ordered.append(team_b)
-
-    if len(team_ids_ordered) != 64:
-        msg = f"Expected 64 teams, got {len(team_ids_ordered)}"
-        raise ValueError(msg)
-
-    team_ids_tuple = tuple(team_ids_ordered)
-    team_index_map = {tid: i for i, tid in enumerate(team_ids_tuple)}
-
-    # Build bracket tree
-    # 64 leaves → 6 rounds.  Root is round 5 (championship).
-    all_indices = list(range(64))
-    root = _build_subtree(all_indices, round_offset=N_ROUNDS - 1)
-
-    return BracketStructure(
-        root=root,
-        team_ids=team_ids_tuple,
-        team_index_map=team_index_map,
-        seed_map=seed_num_map,
-    )
-
-
-# ---------------------------------------------------------------------------
-# Probability provider protocol (Task 2)
-# ---------------------------------------------------------------------------
-
-
-@runtime_checkable
-class ProbabilityProvider(Protocol):
-    """Protocol for pairwise win probability computation.
-
-    All implementations must satisfy the complementarity contract:
-    ``P(A beats B) + P(B beats A) = 1`` for every ``(A, B)`` pair.
-    """
-
-    def matchup_probability(
-        self,
-        team_a_id: int,
-        team_b_id: int,
-        context: MatchupContext,
-    ) -> float:
-        """Return P(team_a beats team_b).
-
-        Args:
-            team_a_id: First team's canonical ID.
-            team_b_id: Second team's canonical ID.
-            context: Matchup context (season, day_num, neutral).
-
-        Returns:
-            Probability in ``[0, 1]``.
-        """
-        ...
-
-    def batch_matchup_probabilities(
-        self,
-        team_a_ids: Sequence[int],
-        team_b_ids: Sequence[int],
-        context: MatchupContext,
-    ) -> npt.NDArray[np.float64]:
-        """Return P(a_i beats b_i) for all pairs.
-
-        Args:
-            team_a_ids: Sequence of first-team IDs.
-            team_b_ids: Sequence of second-team IDs (same length).
-            context: Matchup context.
-
-        Returns:
-            1-D float64 array of shape ``(len(team_a_ids),)``.
-        """
-        ...
-
-
-class MatrixProvider:
-    """Wraps a pre-computed probability matrix as a :class:`ProbabilityProvider`.
-
-    Args:
-        prob_matrix: n×n pairwise probability matrix.
-        team_ids: Sequence of team IDs matching matrix indices.
-    """
-
-    def __init__(
-        self,
-        prob_matrix: npt.NDArray[np.float64],
-        team_ids: Sequence[int],
-    ) -> None:
-        self._P = prob_matrix
-        self._index = {tid: i for i, tid in enumerate(team_ids)}
-
-    def matchup_probability(
-        self,
-        team_a_id: int,
-        team_b_id: int,
-        context: MatchupContext,
-    ) -> float:
-        """Return P(team_a beats team_b) from the stored matrix."""
-        i = self._index[team_a_id]
-        j = self._index[team_b_id]
-        return float(self._P[i, j])
-
-    def batch_matchup_probabilities(
-        self,
-        team_a_ids: Sequence[int],
-        team_b_ids: Sequence[int],
-        context: MatchupContext,
-    ) -> npt.NDArray[np.float64]:
-        """Return batch probabilities from the stored matrix."""
-        rows = np.array([self._index[a] for a in team_a_ids])
-        cols = np.array([self._index[b] for b in team_b_ids])
-        result: npt.NDArray[np.float64] = self._P[rows, cols].astype(np.float64)
-        return result
-
-
-class EloProvider:
-    """Wraps a :class:`StatefulModel` as a :class:`ProbabilityProvider`.
-
-    Uses the model's ``_predict_one`` method for probability computation.
-
-    Args:
-        model: Any :class:`StatefulModel` instance with ``_predict_one``.
-    """
-
-    def __init__(self, model: Any) -> None:
-        if not hasattr(model, "_predict_one"):
-            msg = "model must have a _predict_one(team_a_id, team_b_id) method"
-            raise TypeError(msg)
-        self._model: Any = model
-
-    def matchup_probability(
-        self,
-        team_a_id: int,
-        team_b_id: int,
-        context: MatchupContext,
-    ) -> float:
-        """Return P(team_a beats team_b) via the model's ``_predict_one``."""
-        result: float = self._model._predict_one(team_a_id, team_b_id)
-        return result
-
-    def batch_matchup_probabilities(
-        self,
-        team_a_ids: Sequence[int],
-        team_b_ids: Sequence[int],
-        context: MatchupContext,
-    ) -> npt.NDArray[np.float64]:
-        """Return batch probabilities by looping ``_predict_one``.
-
-        Elo is O(1) per pair so looping is acceptable.
-        """
-        return np.array(
-            [self._model._predict_one(a, b) for a, b in zip(team_a_ids, team_b_ids)],
-            dtype=np.float64,
-        )
-
-
-def build_probability_matrix(
-    provider: ProbabilityProvider,
-    team_ids: Sequence[int],
-    context: MatchupContext,
-) -> npt.NDArray[np.float64]:
-    """Build n×n pairwise win probability matrix.
-
-    Uses upper-triangle batch call, then fills ``P[j,i] = 1 - P[i,j]``
-    via the complementarity contract.
-
-    Args:
-        provider: Probability provider implementing the protocol.
-        team_ids: Team IDs in bracket order.
-        context: Matchup context.
-
-    Returns:
-        Float64 array of shape ``(n, n)``.  Diagonal is zero.
-    """
-    n = len(team_ids)
-    rows, cols = np.triu_indices(n, k=1)
-    a_ids = [team_ids[int(i)] for i in rows]
-    b_ids = [team_ids[int(j)] for j in cols]
-
-    probs = provider.batch_matchup_probabilities(a_ids, b_ids, context)
-
-    P = np.zeros((n, n), dtype=np.float64)
-    P[rows, cols] = probs
-    P[cols, rows] = 1.0 - probs
-    return P
-
-
-# ---------------------------------------------------------------------------
-# Scoring rule protocol (defined before registry so _ST can reference it)
-# ---------------------------------------------------------------------------
-
-
-@runtime_checkable
-class ScoringRule(Protocol):
-    """Protocol for tournament bracket scoring rules."""
-
-    @property
-    def name(self) -> str:
-        """Human-readable name of the scoring rule."""
-        ...
-
-    def points_per_round(self, round_idx: int) -> float:
-        """Return points awarded for a correct pick in round *round_idx*.
-
-        Args:
-            round_idx: Zero-indexed round number (0=R64 through 5=NCG).
-
-        Returns:
-            Points as a float.
-        """
-        ...
-
-
-# ---------------------------------------------------------------------------
-# Scoring registry (decorator-based, mirrors model/registry.py)
-# ---------------------------------------------------------------------------
-
-_ST = TypeVar("_ST", bound="type[ScoringRule]")
-
-_SCORING_REGISTRY: dict[str, type] = {}
-
-
-class ScoringNotFoundError(KeyError):
-    """Raised when a requested scoring name is not in the registry."""
-
-
-def register_scoring(name: str) -> Callable[[_ST], _ST]:
-    """Class decorator that registers a scoring rule class.
-
-    Args:
-        name: Registry key for the scoring rule.
-
-    Returns:
-        Decorator that registers the class and returns it unchanged.
-
-    Raises:
-        ValueError: If *name* is already registered.
-    """
-
-    def decorator(cls: _ST) -> _ST:
-        if name in _SCORING_REGISTRY:
-            msg = f"Scoring name {name!r} is already registered to {_SCORING_REGISTRY[name].__name__}"
-            raise ValueError(msg)
-        _SCORING_REGISTRY[name] = cls
-        return cls
-
-    return decorator
-
-
-def get_scoring(name: str) -> type:
-    """Return the scoring class registered under *name*.
-
-    Raises:
-        ScoringNotFoundError: If *name* is not registered.
-    """
-    try:
-        return _SCORING_REGISTRY[name]
-    except KeyError:
-        msg = f"No scoring registered with name {name!r}. Available: {list_scorings()}"
-        raise ScoringNotFoundError(msg) from None
-
-
-def list_scorings() -> list[str]:
-    """Return all registered scoring names (sorted)."""
-    return sorted(_SCORING_REGISTRY)
-
-
-# ---------------------------------------------------------------------------
-# Scoring rule implementations (Task 4)
-# ---------------------------------------------------------------------------
-
-
-@register_scoring("standard")
-class StandardScoring:
-    """ESPN-style scoring: 1-2-4-8-16-32 (192 total for perfect bracket)."""
-
-    _POINTS: tuple[float, ...] = (1.0, 2.0, 4.0, 8.0, 16.0, 32.0)
-
-    @property
-    def name(self) -> str:
-        """Return ``'standard'``."""
-        return "standard"
-
-    def points_per_round(self, round_idx: int) -> float:
-        """Return standard scoring points for *round_idx*."""
-        return self._POINTS[round_idx]
-
-
-@register_scoring("fibonacci")
-class FibonacciScoring:
-    """Fibonacci-style scoring: 2-3-5-8-13-21 (231 total for perfect bracket)."""
-
-    _POINTS: tuple[float, ...] = (2.0, 3.0, 5.0, 8.0, 13.0, 21.0)
-
-    @property
-    def name(self) -> str:
-        """Return ``'fibonacci'``."""
-        return "fibonacci"
-
-    def points_per_round(self, round_idx: int) -> float:
-        """Return Fibonacci scoring points for *round_idx*."""
-        return self._POINTS[round_idx]
-
-
-@register_scoring("seed_diff_bonus")
-class SeedDiffBonusScoring:
-    """Base points + seed-difference bonus when lower seed wins.
-
-    Uses same base as StandardScoring (1-2-4-8-16-32).  When the lower
-    seed (higher seed number) wins, adds ``|seed_a - seed_b|`` bonus.
-
-    Note: This scoring rule's ``points_per_round`` returns only the base
-    points.  Full EP computation for seed-diff scoring (which requires
-    per-matchup seed information) is deferred to Story 6.6, which will add
-    a dedicated ``compute_expected_points_seed_diff`` function.
-
-    Args:
-        seed_map: Mapping of ``team_id → seed_num``.
-    """
-
-    _BASE_POINTS: tuple[float, ...] = (1.0, 2.0, 4.0, 8.0, 16.0, 32.0)
-
-    def __init__(self, seed_map: dict[int, int]) -> None:
-        self._seed_map = seed_map
-
-    @property
-    def name(self) -> str:
-        """Return ``'seed_diff_bonus'``."""
-        return "seed_diff_bonus"
-
-    def points_per_round(self, round_idx: int) -> float:
-        """Return base points (excludes seed-diff bonus)."""
-        return self._BASE_POINTS[round_idx]
-
-    def seed_diff_bonus(self, seed_a: int, seed_b: int) -> float:
-        """Return bonus points when the lower seed wins.
-
-        Args:
-            seed_a: Winner's seed number.
-            seed_b: Loser's seed number.
-
-        Returns:
-            ``|seed_a - seed_b|`` if winner has higher seed number
-            (lower seed = upset), else 0.
-        """
-        if seed_a > seed_b:
-            return float(abs(seed_a - seed_b))
-        return 0.0
-
-    @property
-    def seed_map(self) -> dict[int, int]:
-        """Return the seed lookup map."""
-        return self._seed_map
-
-
-class CustomScoring:
-    """User-defined scoring rule wrapping a callable.
-
-    Args:
-        scoring_fn: Callable mapping ``round_idx`` → points.
-        scoring_name: Name for this custom rule.
-    """
-
-    def __init__(self, scoring_fn: Callable[[int], float], scoring_name: str) -> None:
-        self._fn = scoring_fn
-        self._name = scoring_name
-
-    @property
-    def name(self) -> str:
-        """Return the custom rule name."""
-        return self._name
-
-    def points_per_round(self, round_idx: int) -> float:
-        """Return points from the wrapped callable."""
-        return self._fn(round_idx)
-
-
-class DictScoring:
-    """Scoring rule from a dict mapping round_idx to points.
-
-    Args:
-        points: Mapping of ``round_idx → points`` for rounds 0–5.
-        scoring_name: Name for this rule.
-
-    Raises:
-        ValueError: If *points* does not contain exactly 6 entries (rounds 0–5).
-    """
-
-    def __init__(self, points: dict[int, float], scoring_name: str) -> None:
-        if len(points) != N_ROUNDS:
-            msg = f"DictScoring requires exactly 6 entries (rounds 0–5), got {len(points)}"
-            raise ValueError(msg)
-        if set(points) != set(range(N_ROUNDS)):
-            msg = f"DictScoring requires keys 0–5, got {sorted(points.keys())}"
-            raise ValueError(msg)
-        self._points = points
-        self._name = scoring_name
-
-    @property
-    def name(self) -> str:
-        """Return the rule name."""
-        return self._name
-
-    def points_per_round(self, round_idx: int) -> float:
-        """Return points for *round_idx*."""
-        return self._points[round_idx]
-
-
-def scoring_from_config(config: dict[str, Any]) -> ScoringRule:
-    """Create a scoring rule from a configuration dict.
-
-    Dispatches on ``config["type"]``:
-
-    * ``"standard"`` → :class:`StandardScoring`
-    * ``"fibonacci"`` → :class:`FibonacciScoring`
-    * ``"seed_diff_bonus"`` → :class:`SeedDiffBonusScoring` (requires ``seed_map``)
-    * ``"dict"`` → :class:`DictScoring` (requires ``points`` and ``name``)
-    * ``"custom"`` → :class:`CustomScoring` (requires ``callable`` and ``name``)
-
-    Args:
-        config: Configuration dict with at least a ``"type"`` key.
-
-    Returns:
-        Instantiated scoring rule.
-
-    Raises:
-        ValueError: If ``type`` is unknown or required keys are missing.
-    """
-    if "type" not in config:
-        msg = "scoring config must contain a 'type' key"
-        raise ValueError(msg)
-    scoring_type = config["type"]
-    if scoring_type == "standard":
-        return StandardScoring()
-    if scoring_type == "fibonacci":
-        return FibonacciScoring()
-    if scoring_type == "seed_diff_bonus":
-        if "seed_map" not in config:
-            msg = "scoring config for 'seed_diff_bonus' requires a 'seed_map' key"
-            raise ValueError(msg)
-        return SeedDiffBonusScoring(config["seed_map"])
-    if scoring_type == "dict":
-        if "points" not in config:
-            msg = "scoring config for 'dict' requires a 'points' key"
-            raise ValueError(msg)
-        return DictScoring(config["points"], config.get("name", "dict"))
-    if scoring_type == "custom":
-        if "callable" not in config:
-            msg = "scoring config for 'custom' requires a 'callable' key"
-            raise ValueError(msg)
-        return CustomScoring(config["callable"], config.get("name", "custom"))
-    msg = f"Unknown scoring type: {scoring_type!r}"
-    raise ValueError(msg)
-
-
-# ---------------------------------------------------------------------------
-# SimulationResult (Task 5)
+# SimulationResult dataclasses
 # ---------------------------------------------------------------------------
 
 
@@ -969,6 +431,10 @@ def compute_bracket_distribution(
 ) -> BracketDistribution:
     """Compute score distribution statistics from raw MC scores.
 
+    Computes the 5th/25th/50th/75th/95th percentiles via ``np.percentile``,
+    builds a ``n_bins``-bucket histogram via ``np.histogram``, and wraps all
+    statistics into a :class:`BracketDistribution`.
+
     Args:
         scores: Raw per-simulation scores, shape ``(n_simulations,)``.
         n_bins: Number of histogram bins (default 50).
@@ -999,8 +465,12 @@ def score_bracket_against_sims(
 ) -> dict[str, npt.NDArray[np.float64]]:
     """Score a chosen bracket against each simulated tournament outcome.
 
-    For each simulation, counts how many of the chosen bracket's picks
-    match the simulation's actual outcomes, weighted by round points.
+    Broadcasts ``chosen_bracket`` across all simulations to build a boolean
+    match matrix (``sim_winners == chosen_bracket[None, :]``).  For each
+    scoring rule, constructs a per-game point vector by iterating rounds with
+    a running ``game_offset``, then computes per-sim scores as
+    ``(matches * game_points).sum(axis=1)`` — one vectorized dot product per
+    rule, no Python loop over simulations.
 
     Args:
         chosen_bracket: Game winners for the chosen bracket, shape ``(n_games,)``.

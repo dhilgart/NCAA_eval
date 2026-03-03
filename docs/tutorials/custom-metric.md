@@ -232,7 +232,7 @@ class ExponentialScoring:
 Alternatively, use the built-in `DictScoring` helper:
 
 ```python
-from ncaa_eval.evaluation.simulation import DictScoring
+from ncaa_eval.evaluation.scoring import DictScoring  # canonical path
 
 my_pool_scoring = DictScoring(
     points={0: 2, 1: 3, 2: 5, 3: 10, 4: 15, 5: 25},
@@ -247,13 +247,10 @@ Pass your scoring rule to the tournament simulator:
 ```python
 from pathlib import Path
 
-from ncaa_eval.evaluation.simulation import (
-    EloProvider,
-    MatchupContext,
-    StandardScoring,
-    build_bracket,
-    simulate_tournament,
-)
+from ncaa_eval.evaluation.bracket import MatchupContext, build_bracket  # canonical path
+from ncaa_eval.evaluation.providers import EloProvider  # canonical path
+from ncaa_eval.evaluation.scoring import StandardScoring  # canonical path
+from ncaa_eval.evaluation.simulation import simulate_tournament
 from ncaa_eval.model.tracking import RunStore
 from ncaa_eval.transform.normalization import TourneySeedTable
 
@@ -302,7 +299,7 @@ for rule_name, ep_array in result.expected_points.items():
 To make your scoring rule available in the dashboard and CLI, register it:
 
 ```python
-from ncaa_eval.evaluation.simulation import register_scoring
+from ncaa_eval.evaluation.scoring import register_scoring  # canonical path
 
 
 @register_scoring("exponential")
@@ -322,7 +319,7 @@ class ExponentialScoring:
 Verify registration:
 
 ```python
-from ncaa_eval.evaluation.simulation import list_scorings
+from ncaa_eval.evaluation.scoring import list_scorings  # canonical path
 
 print(list_scorings())
 # ['fibonacci', 'seed_diff_bonus', 'standard', 'exponential']

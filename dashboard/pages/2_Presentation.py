@@ -12,12 +12,8 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 from dashboard.lib.bracket_renderer import render_bracket_html
-from dashboard.lib.filters import (
-    BracketSimulationResult,
-    get_data_dir,
-    load_tourney_seeds,
-    run_bracket_simulation,
-)
+from dashboard.lib.data_loaders import get_data_dir, load_tourney_seeds
+from dashboard.lib.simulation_helpers import BracketSimulationResult, run_bracket_simulation
 from ncaa_eval.evaluation.plotting import (
     plot_advancement_heatmap,
     plot_score_distribution,

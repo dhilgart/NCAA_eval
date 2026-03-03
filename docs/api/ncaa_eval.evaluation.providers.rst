@@ -1,0 +1,7 @@
+ncaa\_eval.evaluation.providers module
+=======================================
+
+.. automodule:: ncaa_eval.evaluation.providers
+   :members:
+   :show-inheritance:
+   :undoc-members:
