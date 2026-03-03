@@ -431,6 +431,10 @@ def compute_bracket_distribution(
 ) -> BracketDistribution:
     """Compute score distribution statistics from raw MC scores.
 
+    Computes the 5th/25th/50th/75th/95th percentiles via ``np.percentile``,
+    builds a ``n_bins``-bucket histogram via ``np.histogram``, and wraps all
+    statistics into a :class:`BracketDistribution`.
+
     Args:
         scores: Raw per-simulation scores, shape ``(n_simulations,)``.
         n_bins: Number of histogram bins (default 50).
@@ -461,8 +465,12 @@ def score_bracket_against_sims(
 ) -> dict[str, npt.NDArray[np.float64]]:
     """Score a chosen bracket against each simulated tournament outcome.
 
-    For each simulation, counts how many of the chosen bracket's picks
-    match the simulation's actual outcomes, weighted by round points.
+    Broadcasts ``chosen_bracket`` across all simulations to build a boolean
+    match matrix (``sim_winners == chosen_bracket[None, :]``).  For each
+    scoring rule, constructs a per-game point vector by iterating rounds with
+    a running ``game_offset``, then computes per-sim scores as
+    ``(matches * game_points).sum(axis=1)`` — one vectorized dot product per
+    rule, no Python loop over simulations.
 
     Args:
         chosen_bracket: Game winners for the chosen bracket, shape ``(n_games,)``.
