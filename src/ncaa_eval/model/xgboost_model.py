@@ -107,9 +107,7 @@ class XGBoostModel(Model):
         ``XGBoostModelConfig``.
 
         Raises:
-        ------
-        ValueError
-            If *X* is empty.
+            ValueError: If *X* is empty.
         """
         if X.empty:
             msg = "Cannot fit on an empty DataFrame"
@@ -130,9 +128,7 @@ class XGBoostModel(Model):
         """Return P(team_a wins) for each row of *X*.
 
         Raises:
-        ------
-        RuntimeError
-            If called before :meth:`fit`.
+            RuntimeError: If called before :meth:`fit`.
         """
         if not self._is_fitted:
             msg = "Model must be fitted before calling predict_proba"
@@ -149,9 +145,7 @@ class XGBoostModel(Model):
         - ``feature_names.json`` — JSON array of feature column names
 
         Raises:
-        ------
-        RuntimeError
-            If called before :meth:`fit`.
+            RuntimeError: If called before :meth:`fit`.
         """
         if not self._is_fitted:
             msg = "Model must be fitted before saving"
@@ -166,9 +160,7 @@ class XGBoostModel(Model):
         """Load a previously-saved XGBoost model from *path*.
 
         Raises:
-        ------
-        FileNotFoundError
-            If either ``config.json`` or ``model.ubj`` is missing.
+            FileNotFoundError: If either ``config.json`` or ``model.ubj`` is missing.
         """
         config_path = path / "config.json"
         model_path = path / "model.ubj"

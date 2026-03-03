@@ -278,10 +278,38 @@ Last 3 commits (Stories 8.1–8.3) were pure refactoring focused on code archite
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+claude-sonnet-4-6
 
 ### Debug Log References
 
 ### Completion Notes List
 
+- Code review (claude-sonnet-4-6) found and fixed: unconverted NumPy-style docstrings in `calibration.py` (4 methods), `xgboost_model.py` (4 `Raises:` sections), and `feature_serving.py` (3 class/method docstrings). Also fixed `dashboard/app.py:69` CLI reference that was marked `[x]` complete but not changed.
+
 ### File List
+
+- `src/ncaa_eval/evaluation/metrics.py`
+- `src/ncaa_eval/transform/elo.py`
+- `src/ncaa_eval/model/elo.py`
+- `src/ncaa_eval/model/base.py`
+- `src/ncaa_eval/model/tracking.py`
+- `src/ncaa_eval/ingest/connectors/espn.py`
+- `src/ncaa_eval/ingest/connectors/kaggle.py`
+- `src/ncaa_eval/ingest/connectors/base.py`
+- `src/ncaa_eval/ingest/repository.py`
+- `src/ncaa_eval/evaluation/simulation.py`
+- `src/ncaa_eval/evaluation/providers.py`
+- `src/ncaa_eval/transform/feature_serving.py`
+- `src/ncaa_eval/transform/calibration.py`
+- `src/ncaa_eval/transform/opponent.py`
+- `src/ncaa_eval/model/logistic_regression.py`
+- `src/ncaa_eval/model/xgboost_model.py`
+- `src/ncaa_eval/cli/main.py`
+- `pyproject.toml`
+- `docs/user-guide.md`
+- `docs/tutorials/getting-started.md`
+- `README.md`
+- `dashboard/app.py`
+- `tests/integration/test_elo_integration.py`
+- `tests/unit/test_evaluation_metrics.py`
+- `tests/unit/test_kaggle_connector.py`

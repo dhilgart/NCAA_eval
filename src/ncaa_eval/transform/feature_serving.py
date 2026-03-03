@@ -51,28 +51,18 @@ class FeatureBlock(enum.Enum):
 class FeatureConfig:
     """Declarative specification of which feature blocks and parameters to use.
 
-    Parameters
-    ----------
-    sequential_windows
-        Rolling window sizes for sequential features (e.g., ``(5, 10, 20)``).
-    ewma_alphas
-        EWMA smoothing factors for sequential features (e.g., ``(0.15, 0.20)``).
-    graph_features_enabled
-        Whether to compute graph centrality features (PageRank, etc.).
-    batch_rating_types
-        Which batch rating systems to include (``"srs"``, ``"ridge"``, ``"colley"``).
-    ordinal_systems
-        Massey ordinal systems to use; ``None`` means use coverage-gate defaults.
-    ordinal_composite
-        Composite method: ``"simple_average"``, ``"weighted"``, ``"pca"``, or ``None`` to disable.
-    matchup_deltas
-        Whether to compute team_A − team_B deltas for matchup features.
-    gender_scope
-        ``"M"`` for men's, ``"W"`` for women's.
-    dataset_scope
-        ``"kaggle"`` for Kaggle-only games, ``"all"`` for Kaggle + ESPN enrichment.
-    calibration_method
-        ``"isotonic"``, ``"sigmoid"``, or ``None`` to skip calibration.
+    Attributes:
+        sequential_windows: Rolling window sizes for sequential features (e.g., ``(5, 10, 20)``).
+        ewma_alphas: EWMA smoothing factors for sequential features (e.g., ``(0.15, 0.20)``).
+        graph_features_enabled: Whether to compute graph centrality features (PageRank, etc.).
+        batch_rating_types: Which batch rating systems to include (``"srs"``, ``"ridge"``, ``"colley"``).
+        ordinal_systems: Massey ordinal systems to use; ``None`` means use coverage-gate defaults.
+        ordinal_composite: Composite method: ``"simple_average"``, ``"weighted"``, ``"pca"``, or
+            ``None`` to disable.
+        matchup_deltas: Whether to compute team_A − team_B deltas for matchup features.
+        gender_scope: ``"M"`` for men's, ``"W"`` for women's.
+        dataset_scope: ``"kaggle"`` for Kaggle-only games, ``"all"`` for Kaggle + ESPN enrichment.
+        calibration_method: ``"isotonic"``, ``"sigmoid"``, or ``None`` to skip calibration.
     """
 
     sequential_windows: tuple[int, ...] = (5, 10, 20)
@@ -156,18 +146,12 @@ class StatefulFeatureServer:
     * **stateful** — iterate game-by-game, accumulating state incrementally
       (suitable for Elo-style models; placeholder until Story 4.8).
 
-    Parameters
-    ----------
-    config
-        Declarative specification of which feature blocks to activate.
-    data_server
-        Chronological data serving layer wrapping the Repository.
-    seed_table
-        Tournament seed lookup table (optional; needed for seed features).
-    ordinals_store
-        Massey ordinals store (optional; needed for ordinal features).
-    elo_engine
-        Elo feature engine (optional; needed when ``elo_enabled=True``).
+    Args:
+        config: Declarative specification of which feature blocks to activate.
+        data_server: Chronological data serving layer wrapping the Repository.
+        seed_table: Tournament seed lookup table (optional; needed for seed features).
+        ordinals_store: Massey ordinals store (optional; needed for ordinal features).
+        elo_engine: Elo feature engine (optional; needed when ``elo_enabled=True``).
     """
 
     def __init__(
@@ -194,16 +178,11 @@ class StatefulFeatureServer:
     ) -> pd.DataFrame:
         """Build the feature matrix for a full season.
 
-        Parameters
-        ----------
-        year
-            Season year (e.g. 2023 for the 2022-23 season).
-        mode
-            ``"batch"`` or ``"stateful"``.
+        Args:
+            year: Season year (e.g. 2023 for the 2022-23 season).
+            mode: ``"batch"`` or ``"stateful"``.
 
         Returns:
-        -------
-        pd.DataFrame
             One row per game with metadata, feature deltas, and the target label.
         """
         if mode not in ("batch", "stateful"):

@@ -79,12 +79,9 @@ class IsotonicCalibrator:
     ) -> None:
         """Fit the isotonic regression on training fold predictions.
 
-        Parameters
-        ----------
-        y_true
-            Binary labels (0 or 1) from the training fold.
-        y_prob
-            Model-predicted probabilities from the training fold.
+        Args:
+            y_true: Binary labels (0 or 1) from the training fold.
+            y_prob: Model-predicted probabilities from the training fold.
         """
         from sklearn.isotonic import IsotonicRegression  # type: ignore[import-untyped]
 
@@ -99,20 +96,14 @@ class IsotonicCalibrator:
     ) -> npt.NDArray[np.float64]:
         """Apply calibration to test fold predictions.
 
-        Parameters
-        ----------
-        y_prob
-            Model-predicted probabilities to calibrate.
+        Args:
+            y_prob: Model-predicted probabilities to calibrate.
 
         Returns:
-        -------
-        npt.NDArray[np.float64]
             Calibrated probabilities in [0, 1].
 
         Raises:
-        ------
-        RuntimeError
-            If ``fit()`` has not been called.
+            RuntimeError: If ``fit()`` has not been called.
         """
         if not self._fitted:
             msg = "IsotonicCalibrator is not fitted. Call fit() first."
@@ -151,12 +142,9 @@ class SigmoidCalibrator:
     ) -> None:
         """Fit Platt scaling parameters on training fold predictions.
 
-        Parameters
-        ----------
-        y_true
-            Binary labels (0 or 1) from the training fold.
-        y_prob
-            Model-predicted probabilities from the training fold.
+        Args:
+            y_true: Binary labels (0 or 1) from the training fold.
+            y_prob: Model-predicted probabilities from the training fold.
         """
         from sklearn.linear_model import LogisticRegression  # type: ignore[import-untyped]
 
@@ -177,20 +165,14 @@ class SigmoidCalibrator:
     ) -> npt.NDArray[np.float64]:
         """Apply sigmoid calibration to test fold predictions.
 
-        Parameters
-        ----------
-        y_prob
-            Model-predicted probabilities to calibrate.
+        Args:
+            y_prob: Model-predicted probabilities to calibrate.
 
         Returns:
-        -------
-        npt.NDArray[np.float64]
             Calibrated probabilities in [0, 1].
 
         Raises:
-        ------
-        RuntimeError
-            If ``fit()`` has not been called.
+            RuntimeError: If ``fit()`` has not been called.
         """
         if not self._fitted:
             msg = "SigmoidCalibrator is not fitted. Call fit() first."
