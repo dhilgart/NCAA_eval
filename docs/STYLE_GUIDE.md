@@ -32,6 +32,10 @@ enforcement is handled by separate stories (1.4-1.6); this document captures the
    setting and ignore entries in `pyproject.toml` are preparatory config that
    takes effect once `D` is added to `extend-select` in Story 1.4.
    At minimum, every public module and every public class should have a docstring.
+5. **Detailed description required** when a function performs 3 or more operations.
+   The description paragraph (after the summary line) must explain *how* the
+   function implements its purpose — not just restate the summary. This is enforced
+   during code review (PR checklist).
 
 ### Example
 
@@ -139,6 +143,10 @@ Beyond isort, `pyproject.toml` extends the default Ruff rules (`E`, `F`) with:
 | `UP` | pyupgrade | Modern Python syntax — e.g., `list[int]` not `List[int]`, `X \| None` not `Optional[X]` |
 | `PT` | flake8-pytest-style | Pytest best practices — e.g., `@pytest.fixture` conventions, parametrize style |
 | `TID25` | tidy-imports | Import hygiene — bans relative imports from parent packages |
+| `C90` | mccabe | McCabe cyclomatic complexity ≤ 10 (see Section 6.1) |
+| `PLR0911` | pylint-refactor | Max 6 return statements per function |
+| `PLR0912` | pylint-refactor | Max 12 branches per function |
+| `PLR0913` | pylint-refactor | Max 5 function arguments |
 
 ### Suppressed Rules
 
@@ -147,6 +155,54 @@ Beyond isort, `pyproject.toml` extends the default Ruff rules (`E`, `F`) with:
 | `E501` | Line length is enforced by the Ruff **formatter** (110 chars), not the linter. Suppressing `E501` avoids double-reporting. |
 | `D1` | Missing-docstring warnings. Not yet active (see Section 1 note). |
 | `D415` | First-line punctuation. Not yet active (see Section 1 note). |
+| `PLR2004` | Magic value comparison — too aggressive for data science code with domain-specific constants (e.g., tournament field size `64`, coin-flip probability `0.5`). See PEP 20 "Practicality Beats Purity" in Section 6. |
+
+### Lint Suppression Policy
+
+When `# noqa` or `# type: ignore` is unavoidable, follow these rules:
+
+1. **Always include the specific error code.** Never use bare `# noqa` or bare
+   `# type: ignore` — always specify which rule is being suppressed.
+
+   ```python
+   # GOOD: Specific suppression with rationale
+   import joblib  # type: ignore[import-untyped] — no type stubs available
+
+   # BAD: Bare suppression — which rule? why?
+   import joblib  # type: ignore
+   ```
+
+2. **Prefer refactoring over suppression.** The escalation path:
+   - First: Refactor to eliminate the violation (extract function, split class, etc.)
+   - Second: If refactoring is impractical, suppress with specific code and comment
+   - Never: Suppress because "it's faster than fixing"
+
+3. **Complexity-class codes require PO approval.** Inline `# noqa` for the following
+   codes is allowed only with explicit PO approval:
+   - `PLR0911` — Too many return statements (max 6)
+   - `PLR0912` — Too many branches (max 12)
+   - `PLR0913` — Too many arguments (max 5)
+   - `C901` — McCabe cyclomatic complexity (max 10)
+
+   When a suppression is approved, the inline comment must include a rationale:
+   ```python
+   # Approved — rationale
+   def update_game(  # noqa: PLR0913 — game data has inherent dimensionality
+   # Pending refactoring — tracked to a story
+   def run_training(  # noqa: PLR0913, C901, PLR0912 — REFACTOR Story 8.1
+   ```
+
+4. **Acceptable suppression scenarios:**
+   - `# type: ignore[import-untyped]` — Third-party libraries without type stubs
+   - `# type: ignore[no-untyped-def]` — Callback signatures imposed by frameworks
+     (e.g., Streamlit event handlers)
+   - `# noqa: BLE001` — Broad exception handling with documented rationale
+   - `# noqa: PLR0913` (etc.) — With PO approval and rationale (see rule 3)
+
+5. **Unacceptable suppression scenarios:**
+   - Any `# noqa` for PLR0911, PLR0912, PLR0913, or C901 **without** PO approval
+   - `# type: ignore` on return types — Fix the return type annotation instead
+   - Any suppression without the specific error code
 
 ---
 
@@ -177,6 +233,31 @@ future versions; run `mypy --help` to see the current list):
    dependencies. Add `# type: ignore[<code>]` only when truly necessary and always
    include the specific error code.
 5. The `py.typed` marker at `src/ncaa_eval/py.typed` signals PEP 561 compliance.
+
+### Pydantic Integration
+
+**Configured in:** `[tool.mypy] plugins` and `[tool.pydantic-mypy]`
+
+Pydantic is the project's primary data modeling library (shared types between Logic
+and UI layers). The mypy plugin provides enhanced type checking for Pydantic models:
+
+```toml
+[tool.mypy]
+plugins = ["pydantic.mypy"]
+
+[tool.pydantic-mypy]
+init_typed = true                    # __init__ params get field types
+init_forbid_extra = true             # error on unknown fields in __init__
+warn_required_dynamic_aliases = true # warn if alias without default
+```
+
+**What this means for developers:**
+- `init_typed = true` — mypy understands `Model(field=value)` constructor calls
+  and validates argument types against field definitions.
+- `init_forbid_extra = true` — passing an unknown field name to a model constructor
+  is a type error, not a silent runtime discard.
+- `warn_required_dynamic_aliases = true` — alerts when a field with `alias=` has no
+  default value, which can cause confusing `ValidationError` messages.
 
 ---
 
@@ -340,15 +421,157 @@ for idx in range(len(game_df)):
     game_df.loc[idx, "margin"] = game_df.loc[idx, "home_score"] - game_df.loc[idx, "away_score"]
 ```
 
+#### Complex is Better Than Complicated
+- **Review:** Accept genuine complexity; reject unnecessary complication
+- **Guideline:** Some systems are inherently complex (simulation engines, Elo rating
+  chains, cross-validation orchestrators). The goal is *managed complexity* — complex
+  internals behind simple interfaces — not *complication* from tangled logic.
+
+```python
+# GOOD: Complex but not complicated — clear interface, complex internals
+class MonteCarloSimulator:
+    """Simulate tournament outcomes via Monte Carlo sampling.
+
+    The algorithm is inherently complex (bracket traversal, probability
+    propagation, seeded randomness), but the interface is simple.
+    """
+    def simulate(self, bracket: Bracket, n_simulations: int = 10_000) -> SimulationResult:
+        ...
+
+# BAD: Complicated — unnecessary indirection, unclear purpose
+def run_sim(data, opts, flags, ctx, mode="default", **kwargs):
+    if mode == "default":
+        ...  # 200 lines of nested conditionals
+```
+
+#### Sparse is Better Than Dense
+- **Tooling:** 110-character line length limit, Ruff formatting
+- **Review:** One operation per line, generous whitespace, no clever one-liners
+- **Guideline:** When a line does too much, split it. When a function packs too many
+  operations together, extract named intermediates.
+
+```python
+# GOOD: Sparse — each step is clear
+expected_win_rate = 1 / (1 + 10 ** ((opponent_rating - team_rating) / 400))
+actual_outcome = 1.0 if won else 0.0
+rating_change = k_factor * (actual_outcome - expected_win_rate)
+
+# BAD: Dense — everything crammed together
+return int(32*(int(w)-1/(1+10**((o-r)/400))))
+```
+
+#### Special Cases Aren't Special Enough / Practicality Beats Purity
+- **Review:** Allow pragmatic exceptions when properly documented
+- **Guideline:** The vectorization-first rule (Section 5) has legitimate exceptions:
+  graph traversal, small fixed collections, side-effect loops. Data science code has
+  domain-specific constants (`0.5` for coin-flip probability, `64` for tournament
+  teams) that PLR2004 would flag — we suppress PLR2004 because practicality beats
+  purity for these cases. The key: every exception must be *documented and intentional*,
+  never silent.
+
+```python
+# GOOD: Pragmatic exception with justification
+# PLR2004 suppressed project-wide — domain constants like tournament size
+# are clearer inline than as named constants
+def build_bracket(teams: list[Team]) -> Bracket:
+    if len(teams) != 64:  # NCAA tournament field size
+        raise ValueError(f"Expected 64 teams, got {len(teams)}")
+    ...
+
+# BAD: Bare magic number with no context
+def process(data):
+    if len(data) > 42:  # What is 42?
+        data = data[:42]
+```
+
+#### Errors Should Never Pass Silently / Unless Explicitly Silenced
+- **Review:** Every exception handler must log or re-raise; no bare `except: pass`
+- **Guideline:** This is the project's most-violated PEP 20 principle (see Pattern D
+  from codebase audit). The convention:
+  1. **Default:** Log at WARNING level with structured context, then re-raise or return
+     a sentinel that callers check.
+  2. **Explicitly silenced:** Log at DEBUG level with a code comment explaining *why*
+     silence is acceptable. Use `# noqa` or `# type: ignore` with specific codes.
+  3. **Never:** Bare `except Exception: pass` or `except Exception` that substitutes
+     a value without logging.
+
+```python
+# GOOD: Error surfaced with context
+try:
+    response = fetch_team_schedule(team_id)
+except RequestError as exc:
+    logger.warning("Failed to fetch schedule for team %d: %s", team_id, exc)
+    raise
+
+# GOOD: Explicitly silenced with rationale
+try:
+    optional_enrichment = fetch_extra_stats(team_id)
+except RequestError:
+    # Enrichment is non-critical; base stats are sufficient for predictions.
+    logger.debug("Optional enrichment unavailable for team %d", team_id)
+    optional_enrichment = None
+
+# BAD: Silent swallowing — Pattern D violation
+try:
+    data = fetch_team_schedule(team_id)
+except Exception:
+    data = pd.DataFrame()  # Caller has no idea data is missing
+```
+
+#### Refuse the Temptation to Guess
+- **Tooling:** `mypy --strict` — forces explicit types everywhere
+- **Review:** No implicit type coercions, no unvalidated assumptions
+- **Guideline:** This aphorism is the philosophical foundation for `mypy --strict`.
+  When types are explicit, the compiler catches wrong assumptions before runtime.
+  When types are `Any` or missing, the code *guesses* — and guesses wrong at the
+  worst possible time.
+
+```python
+# GOOD: Explicit types — no guessing
+def get_team_rating(team_id: int, ratings: dict[int, float]) -> float | None:
+    return ratings.get(team_id)
+
+# BAD: Implicit types — code guesses about structure
+def get_team_rating(team_id, ratings):
+    return ratings[team_id]  # KeyError? ratings is a list? Who knows.
+```
+
+#### If the Implementation Is Hard to Explain, It's a Bad Idea / If It's Easy to Explain, It May Be a Good Idea
+- **Tooling:** McCabe complexity ≤ 10, max 50 lines per function
+- **Review:** If you can't describe a function in one sentence, it needs splitting
+- **Guideline:** This reinforces the complexity limits. If a code reviewer asks
+  "what does this do?" and the answer requires a paragraph, the function is doing
+  too much. The `run_training()` function in `cli/train.py` (70+ statements, 3
+  `noqa` suppressions) is the canonical example of code that is hard to explain.
+
+```python
+# GOOD: Easy to explain — "calculates Brier score for probability predictions"
+def brier_score(probabilities: np.ndarray, outcomes: np.ndarray) -> float:
+    return float(np.mean((probabilities - outcomes) ** 2))
+
+# BAD: Hard to explain — "it processes... things... with conditions..."
+def process_and_validate_then_transform_with_fallback(data, config, mode, flags):
+    ...  # 80 lines that require 5 minutes to explain
+```
+
 ### Code Review Checklist for PEP 20
 
 During code review, verify:
 
 - [ ] **Simplicity:** Functions have single, clear responsibilities (McCabe complexity ≤ 10)
+- [ ] **Single purpose:** Each function does exactly one thing; max 50 lines, nesting ≤ 3
 - [ ] **Explicitness:** No magic numbers, parameters have clear names, behavior is obvious
 - [ ] **Readability:** Domain concepts use full words, not abbreviations
 - [ ] **Flatness:** Nesting depth ≤ 3, early returns preferred
 - [ ] **Consistency:** Follows existing project patterns (vectorization, type sharing, etc.)
+- [ ] **Complexity vs complication:** Inherent complexity is managed behind simple interfaces
+- [ ] **Sparseness:** One operation per line, no clever one-liners, named intermediates
+- [ ] **Pragmatic exceptions:** Deviations from rules are documented and intentional
+- [ ] **Error handling:** No silent exception swallowing; handlers log or re-raise
+- [ ] **Explicit types:** No `Any`, no missing annotations, no implicit coercions
+- [ ] **Explainability:** Every function describable in one sentence
+- [ ] **No complexity-code overrides:** No `# noqa` for PLR0911/PLR0912/PLR0913/C901 without PO approval; each includes a rationale
+- [ ] **Docstring detail:** Functions with 3+ operations have detailed description explaining *how*
 
 ---
 
@@ -588,19 +811,28 @@ the philosophy behind this two-tier approach, see
 | Type-check pass | Mypy (`--strict`) | Pre-commit (fast) |
 | Test pass | Pytest | PR / CI |
 | Docstring coverage | Manual review | PR review |
+| Docstring detail | Manual review | PR review |
 | No vectorization violations | Manual review | PR review |
 | Conventional commit messages | Commitizen | Pre-commit |
+| Function complexity | Manual review | PR review |
+| No complexity-code overrides | Manual review | PR review |
 | PEP 20 compliance | Manual review | PR review |
 | SOLID principles | Manual review | PR review |
-| Pure functions / functional design | Manual review | PR review |
+| Pure function design | Manual review | PR review |
 
 ### Review Criteria
 
 - Code follows naming conventions (Section 2).
 - Imports are ordered correctly (Section 3).
 - New public APIs have docstrings (Section 1).
+- Functions with 3+ operations include a detailed docstring description explaining
+  *how* (not just *what*) — see Section 1.
 - No `for` loops over DataFrames for calculations (Section 5).
 - Type annotations are complete (Section 4).
+- Each function does one thing; manually verify single responsibility, max 50 lines,
+  nesting ≤ 3.
+- No `# noqa` for PLR0911, PLR0912, PLR0913, or C901 without PO approval; each
+  must include a rationale (Section 3, Lint Suppression Policy).
 - PEP 20 design principles respected (Section 6).
 - Pure functions used for business logic, side effects at edges (Section 6.2).
 - SOLID principles applied for testability (Section 10).
@@ -616,17 +848,20 @@ the philosophy behind this two-tier approach, see
 ```
 src/
   ncaa_eval/
-    __init__.py          # Package root — re-exports public API
+    __init__.py          # Package root
     py.typed             # PEP 561 marker
+    cli/                 # CLI entry points (main, train)
     ingest/              # Data source connectors
     transform/           # Feature engineering
-    model/               # Model ABC and implementations
+    model/               # Model ABC and implementations (singular, not models/)
     evaluation/          # Metrics, CV, simulation
-    utils/               # Shared helpers (logging, assertions)
+    utils/               # Shared helpers (logger.py)
 tests/
   __init__.py
-  test_<module>.py       # Mirror src/ structure
   conftest.py            # Shared fixtures
+  unit/                  # Unit tests organized by domain
+  integration/           # Integration tests
+  fixtures/              # Test data fixtures
 dashboard/               # Streamlit UI (imports ncaa_eval — no direct IO)
 data/                    # Local data store (git-ignored)
 ```
@@ -635,8 +870,8 @@ data/                    # Local data store (git-ignored)
 
 1. **One concept per module.** A module should do one thing. If it grows beyond
    ~300 lines, consider splitting.
-2. **Mirror `src/` in `tests/`.** `src/ncaa_eval/models/elo.py` is tested by
-   `tests/test_elo.py` (or `tests/models/test_elo.py`).
+2. **Mirror `src/` in `tests/`.** `src/ncaa_eval/model/elo.py` is tested by
+   `tests/unit/test_elo.py` (or `tests/integration/test_elo_integration.py`).
 3. **`__init__.py` re-exports.** Public symbols should be importable from the
    package level: `from ncaa_eval import EloModel`.
 4. **No circular imports.** If two modules need each other, extract shared types
@@ -771,31 +1006,45 @@ class BrokenModel(RatingModel):
 
 **What it means:** Don't force classes to implement methods they don't need.
 
-**Already enforced by:** MyPy strict mode with Protocols (Section 4)
+**Already enforced by:** MyPy strict mode with ABCs and Protocols (Section 4)
+
+This project uses **ABCs as the primary pattern** for interface segregation (Model ABC,
+Repository ABC, Connector ABC) and **Protocols as a complement** for structural typing
+where duck typing is preferred (e.g., `ProbabilityProvider`, `ScoringRule` in the
+simulation engine). Choose based on context:
+
+- **ABCs:** When implementations must be explicitly registered and share behavior
+  (e.g., all models inherit from `Model` and get common infrastructure).
+- **Protocols:** When you need structural typing — any object with matching methods
+  qualifies, without inheriting from anything (e.g., `ProbabilityProvider` can be
+  satisfied by any class with a `predict_proba` method).
 
 ```python
-# GOOD: Small, focused interfaces
-class Predictable(Protocol):
+# PRIMARY: ABCs for explicit interface contracts
+class Model(ABC):
+    """Base class for all prediction models."""
+    @abstractmethod
     def predict(self, game: Game) -> float: ...
 
-class Trainable(Protocol):
-    def fit(self, games: pd.DataFrame) -> None: ...
-
-class EloModel:
-    # Only implements what it needs
+class EloModel(Model):
     def predict(self, game: Game) -> float: ...
+
+# COMPLEMENT: Protocols for structural typing (duck typing)
+class ProbabilityProvider(Protocol):
+    def predict_proba(self, matchup: Matchup) -> float: ...
+
+# Any class with predict_proba() satisfies this — no inheritance needed
+class EloProvider:
+    def predict_proba(self, matchup: Matchup) -> float: ...
 
 # BAD: Fat interface forces unused methods
-class Model(ABC):
+class DoEverything(ABC):
     @abstractmethod
     def predict(self, game: Game) -> float: ...
-
     @abstractmethod
     def fit(self, games: pd.DataFrame) -> None: ...
-
     @abstractmethod
     def cross_validate(self, games: pd.DataFrame) -> dict: ...
-
     # Simple models forced to implement methods they don't need!
 ```
 
@@ -843,7 +1092,7 @@ During code review, verify:
 - [ ] **SRP:** Classes/functions have single, clear responsibility (covered by PEP 20 complexity)
 - [ ] **OCP:** New features added via extension (inheritance, composition), not modification
 - [ ] **LSP:** Subtypes honor parent contracts (property tests verify this)
-- [ ] **ISP:** Interfaces are small and focused (use Protocols, not fat abstract classes)
+- [ ] **ISP:** Interfaces are small and focused (ABCs primary, Protocols for structural typing)
 - [ ] **DIP:** Depends on abstractions (Protocols, TypedDicts), not concrete classes
 
 ### Summary: What's Already Covered
@@ -853,7 +1102,7 @@ During code review, verify:
 | **SRP** | PEP 20: "Simple is better than complex" (complexity ≤ 10) |
 | **OCP** | Manual review (can't automate) |
 | **LSP** | Property tests: "probabilities in [0, 1]" invariants |
-| **ISP** | MyPy strict mode: Protocols preferred over abstract classes |
+| **ISP** | MyPy strict mode: ABCs primary (Model, Repository, Connector), Protocols complement (ProbabilityProvider, ScoringRule) |
 | **DIP** | Architecture: "Type sharing via Pydantic/TypedDicts" |
 
 **Result:** SOLID compliance is mostly automated or already covered by existing standards. Code review adds a final check for OCP and overall SOLID adherence.

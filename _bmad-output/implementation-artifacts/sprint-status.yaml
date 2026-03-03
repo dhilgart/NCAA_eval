@@ -113,7 +113,20 @@ development_status:
   epic-7-retrospective: optional
 
   # Epic 8: Codebase Improvements & Technical Debt Resolution
-  epic-8: backlog
+  epic-8: in-progress
+  8-1-code-architecture-cleanup-simulation-module-split: backlog
+  8-2-expose-public-apis-eliminate-private-attribute-access: backlog
+  8-3-fix-data-pipeline-resilience-espn-error-handling: backlog
+  8-4-fix-docstring-style-violations-documentation-gaps: backlog
+  8-5-testing-gaps-missing-tests-dead-code-cleanup: backlog
+  8-6-type-safety-configuration-improvements: backlog
+  8-7-sprint-housekeeping-ci-cd-improvements: backlog
+  8-8-dashboard-ux-quick-fixes: backlog
+  8-9-add-pep20-solid-pure-function-gates: done
+  8-10-documentation-command-e2e-integration-tests: backlog
+  8-11-fix-testing-documentation-staleness-marker-gaps: backlog
+  8-12-epics-backlog-grooming-track-all-deferred-items: backlog
+  8-13-gather-po-direction-category-1-2-items: backlog
   epic-8-retrospective: optional
 
   # Epic 9: Template & Knowledge Transfer

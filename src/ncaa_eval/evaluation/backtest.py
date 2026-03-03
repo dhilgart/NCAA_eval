@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import copy
 import dataclasses
+import logging
 import math
 import time
 import types
@@ -32,6 +33,8 @@ from ncaa_eval.evaluation.metrics import (
 from ncaa_eval.evaluation.splitter import CVFold, walk_forward_splits
 from ncaa_eval.model.base import Model, StatefulModel
 from ncaa_eval.transform.feature_serving import StatefulFeatureServer
+
+logger = logging.getLogger(__name__)
 
 # Metadata columns that must be stripped before feeding stateless models.
 METADATA_COLS: frozenset[str] = frozenset(
@@ -181,6 +184,7 @@ def _evaluate_fold(
         try:
             metrics[name] = fn(y_true_np, y_prob_np)
         except Exception:  # noqa: BLE001
+            logger.warning("Metric '%s' computation failed; substituting NaN", name, exc_info=True)
             metrics[name] = float("nan")
 
     elapsed = time.perf_counter() - start
@@ -196,7 +200,7 @@ def _evaluate_fold(
     )
 
 
-def run_backtest(  # noqa: PLR0913
+def run_backtest(  # noqa: PLR0913 — REFACTOR Story 8.1
     model: Model,
     feature_server: StatefulFeatureServer,
     *,

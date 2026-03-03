@@ -95,7 +95,7 @@ class EloFeatureEngine:
         """Return current Elo rating for *team_id* (initial_rating if unseen)."""
         return self._ratings.get(team_id, self._config.initial_rating)
 
-    def update_game(  # noqa: PLR0913
+    def update_game(  # noqa: PLR0913 — game data has inherent dimensionality
         self,
         w_team_id: int,
         l_team_id: int,

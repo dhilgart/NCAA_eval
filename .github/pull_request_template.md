@@ -52,13 +52,18 @@ Steps to reproduce the behavior:
 
 ## Code Quality
 
-- [ ] **Docstrings** — New/changed public APIs have accurate Google-style docstrings
+- [ ] **Docstrings** — New/changed public APIs have accurate Google-style docstrings; functions with 3+ operations include a detailed description explaining *how* (not just *what*)
 - [ ] **Inline comments** — Non-obvious logic has explanatory comments
 - [ ] **Type annotations** — All function signatures, return types, and variables are annotated
 - [ ] **Naming conventions** — Follows project standards ([STYLE_GUIDE.md](../docs/STYLE_GUIDE.md) Section 2)
 - [ ] **Import ordering** — stdlib / third-party / local groups; `from __future__ import annotations` first
 - [ ] **No vectorization violations** — No `for` loops over DataFrames for metric calculations
 - [ ] **Line length** — Lines stay within 110 characters
+- [ ] **Function complexity** — Each function does one thing; manually verify single responsibility, max 50 lines, nesting ≤ 3
+- [ ] **No complexity-code overrides** — No `# noqa` for PLR0911, PLR0912, PLR0913, or C901 without PO approval; each must include a rationale
+- [ ] **PEP 20 compliance** — Simple (complexity ≤ 10), explicit (no magic numbers), readable (full domain words), flat (nesting ≤ 3), consistent with project patterns
+- [ ] **SOLID principles** — Single responsibility, open for extension, Liskov substitution, interface segregation, dependency inversion
+- [ ] **Pure function design** — Business logic is pure, side effects at edges, no I/O mixed with calculations
 
 ## Architecture Compliance
 

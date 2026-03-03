@@ -611,7 +611,7 @@ class TestRunBracketSimulation:
     @patch("dashboard.lib.filters.simulate_tournament")
     @patch("dashboard.lib.filters.get_scoring")
     @patch("dashboard.lib.filters._build_team_labels")
-    def test_returns_result_for_elo_model(  # noqa: PLR0913
+    def test_returns_result_for_elo_model(  # noqa: PLR0913 — @patch mock injection
         self,
         mock_labels: MagicMock,
         mock_get_scoring: MagicMock,

@@ -41,7 +41,7 @@ def _instantiate_model(model_cls: type[Model], config_path: Path | None) -> Mode
 
 
 @app.command()
-def train(  # noqa: PLR0913
+def train(  # noqa: PLR0913 — Typer CLI options dictate arg count
     model: str = typer.Option(..., "--model", help="Registered model plugin name"),
     start_year: int = typer.Option(2015, "--start-year", help="First season year (inclusive)"),
     end_year: int = typer.Option(2025, "--end-year", help="Last season year (inclusive)"),

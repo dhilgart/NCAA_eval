@@ -240,7 +240,7 @@ class GraphTransformer:
             recency_multiplier=self._recency_multiplier,
         )
 
-    def add_game_to_graph(  # noqa: PLR0913
+    def add_game_to_graph(  # noqa: PLR0913 — graph construction has inherent dimensionality
         self,
         graph: nx.DiGraph,
         w_team_id: int,

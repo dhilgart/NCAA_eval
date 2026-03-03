@@ -3073,3 +3073,52 @@ When a user guide contains a section documenting a **planned/future feature**, o
 **Applies to:** Documentation stories for any project that documents planned features alongside implemented ones.
 
 *(Discovered: Story 7.7 Code Review — two-slider recommendation vs three-slider UX spec, 2026-02-24)*
+
+### Specify Ruff/Mypy Scope Explicitly in Task Descriptions (Discovered Story 8.9 Code Review, 2026-03-03)
+
+When a story task says "Run `ruff check .`", the literal `.` includes EDA notebooks (`notebooks/eda/`), which are explicitly excluded from Ruff enforcement per MEMORY.md. Running `ruff check .` from the project root will produce false-positive violations (missing `from __future__`, unsorted imports, complexity violations) from notebooks.
+
+**Pattern:** Always specify the exact scope in verification task descriptions:
+```
+# WRONG — ambiguous, fails on notebooks
+- [ ] Run `ruff check .`
+
+# CORRECT — explicit scope
+- [ ] Run `ruff check src/ncaa_eval tests` (EDA notebooks excluded per project standards)
+```
+
+**Applies to:** Any project where Ruff is not configured to exclude notebooks via `pyproject.toml → [tool.ruff] exclude = ["notebooks/"]`. If using `pyproject.toml` exclusions, `ruff check .` is safe; otherwise scope explicitly.
+
+### `# noqa` Annotations on Deferred Exceptions Mark Intent and Prevent Lint Churn (Discovered Story 8.9 Code Review, 2026-03-03)
+
+When a bare `except Exception` is documented as a deferred fix (e.g., in a compliance report), the code should immediately receive a `# noqa: BLE001` with a story reference comment. Without this:
+1. The next ruff run may flag it (if BLE001 is activated in the future)
+2. The next code reviewer will re-discover and re-defer it — wasted review cycles
+
+**Pattern:**
+```python
+# DEFERRED FIX — add this when identified, don't wait for the fixing story:
+except Exception:  # noqa: BLE001  # Story 8.3: add logging/retry here
+    return None
+```
+
+This makes the intent explicit, suppresses lint with a specific code, and serves as a searchable marker (`git grep "Story 8.3"`) for the fixing story to find all deferred items.
+
+### Apply `# noqa` to Fixed Bare-Except Handlers Too, Not Just Deferred Ones (Discovered Story 8.9 Code Review Pass 2, 2026-03-03)
+
+When upgrading a silent exception handler (e.g., `logger.debug` → `logger.warning`), the `except Exception:` clause should also receive `# noqa: BLE001` even though it is now "fixed." Rationale: if BLE001 is ever added to Ruff's active rules, the handler will immediately flag — requiring an unplanned annotation fix that distracts from the actual story work.
+
+**Pattern:** Add `# noqa: BLE001` to ALL bare `except Exception:` handlers when you touch them, regardless of whether the handler body is correct:
+
+```python
+# FIXED handler — logging at correct level, but still needs annotation:
+except Exception:  # noqa: BLE001
+    logger.warning("operation failed", exc_info=True)
+    continue
+
+# DEFERRED handler — needs annotation + story reference:
+except Exception:  # noqa: BLE001  # Story 8.3: add logging/retry here
+    return None
+```
+
+**Applies to:** Any project with BLE001 not yet active but likely to be activated in a future story (e.g., Story 8.3 "ESPN connector resilience").
