@@ -224,8 +224,11 @@
 </li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="api/ncaa_eval.evaluation.html">ncaa_eval.evaluation package</a><input aria-label="Toggle navigation of ncaa_eval.evaluation package" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.evaluation.backtest.html">ncaa_eval.evaluation.backtest module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.evaluation.bracket.html">ncaa_eval.evaluation.bracket module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.evaluation.metrics.html">ncaa_eval.evaluation.metrics module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.evaluation.plotting.html">ncaa_eval.evaluation.plotting module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.evaluation.providers.html">ncaa_eval.evaluation.providers module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.evaluation.scoring.html">ncaa_eval.evaluation.scoring module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.evaluation.simulation.html">ncaa_eval.evaluation.simulation module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.evaluation.splitter.html">ncaa_eval.evaluation.splitter module</a></li>
 </ul>
@@ -378,6 +381,12 @@
 </li>
           <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.ProbabilityProvider.batch_matchup_probabilities">(ncaa_eval.evaluation.ProbabilityProvider method)</a>
 </li>
+          <li><a href="api/ncaa_eval.evaluation.providers.html#ncaa_eval.evaluation.providers.EloProvider.batch_matchup_probabilities">(ncaa_eval.evaluation.providers.EloProvider method)</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.providers.html#ncaa_eval.evaluation.providers.MatrixProvider.batch_matchup_probabilities">(ncaa_eval.evaluation.providers.MatrixProvider method)</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.providers.html#ncaa_eval.evaluation.providers.ProbabilityProvider.batch_matchup_probabilities">(ncaa_eval.evaluation.providers.ProbabilityProvider method)</a>
+</li>
           <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.EloProvider.batch_matchup_probabilities">(ncaa_eval.evaluation.simulation.EloProvider method)</a>
 </li>
           <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.MatrixProvider.batch_matchup_probabilities">(ncaa_eval.evaluation.simulation.MatrixProvider method)</a>
@@ -432,12 +441,16 @@
         <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketNode">BracketNode (class in ncaa_eval.evaluation)</a>
 
         <ul>
+          <li><a href="api/ncaa_eval.evaluation.bracket.html#ncaa_eval.evaluation.bracket.BracketNode">(class in ncaa_eval.evaluation.bracket)</a>
+</li>
           <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.BracketNode">(class in ncaa_eval.evaluation.simulation)</a>
 </li>
         </ul></li>
         <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketStructure">BracketStructure (class in ncaa_eval.evaluation)</a>
 
         <ul>
+          <li><a href="api/ncaa_eval.evaluation.bracket.html#ncaa_eval.evaluation.bracket.BracketStructure">(class in ncaa_eval.evaluation.bracket)</a>
+</li>
           <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.BracketStructure">(class in ncaa_eval.evaluation.simulation)</a>
 </li>
         </ul></li>
@@ -450,6 +463,8 @@
         <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.build_bracket">build_bracket() (in module ncaa_eval.evaluation)</a>
 
         <ul>
+          <li><a href="api/ncaa_eval.evaluation.bracket.html#ncaa_eval.evaluation.bracket.build_bracket">(in module ncaa_eval.evaluation.bracket)</a>
+</li>
           <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.build_bracket">(in module ncaa_eval.evaluation.simulation)</a>
 </li>
         </ul></li>
@@ -462,6 +477,8 @@
         <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.build_probability_matrix">build_probability_matrix() (in module ncaa_eval.evaluation)</a>
 
         <ul>
+          <li><a href="api/ncaa_eval.evaluation.providers.html#ncaa_eval.evaluation.providers.build_probability_matrix">(in module ncaa_eval.evaluation.providers)</a>
+</li>
           <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.build_probability_matrix">(in module ncaa_eval.evaluation.simulation)</a>
 </li>
         </ul></li>
@@ -708,6 +725,8 @@
         <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.CustomScoring">CustomScoring (class in ncaa_eval.evaluation)</a>
 
         <ul>
+          <li><a href="api/ncaa_eval.evaluation.scoring.html#ncaa_eval.evaluation.scoring.CustomScoring">(class in ncaa_eval.evaluation.scoring)</a>
+</li>
           <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.CustomScoring">(class in ncaa_eval.evaluation.simulation)</a>
 </li>
         </ul></li>
@@ -739,9 +758,11 @@
           <li><a href="api/ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Game.date">(ncaa_eval.ingest.schema.Game attribute)</a>
 </li>
         </ul></li>
-        <li><a href="api/ncaa_eval.evaluation.html#id28">day_num (ncaa_eval.evaluation.MatchupContext attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.MatchupContext.day_num">[1]</a>
+        <li><a href="api/ncaa_eval.evaluation.bracket.html#id8">day_num (ncaa_eval.evaluation.bracket.MatchupContext attribute)</a>, <a href="api/ncaa_eval.evaluation.bracket.html#ncaa_eval.evaluation.bracket.MatchupContext.day_num">[1]</a>
 
         <ul>
+          <li><a href="api/ncaa_eval.evaluation.html#id28">(ncaa_eval.evaluation.MatchupContext attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.MatchupContext.day_num">[1]</a>
+</li>
           <li><a href="api/ncaa_eval.evaluation.simulation.html#id14">(ncaa_eval.evaluation.simulation.MatchupContext attribute)</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.MatchupContext.day_num">[1]</a>
 </li>
           <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.Game.day_num">(ncaa_eval.ingest.Game attribute)</a>
@@ -762,6 +783,8 @@
         <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.DictScoring">DictScoring (class in ncaa_eval.evaluation)</a>
 
         <ul>
+          <li><a href="api/ncaa_eval.evaluation.scoring.html#ncaa_eval.evaluation.scoring.DictScoring">(class in ncaa_eval.evaluation.scoring)</a>
+</li>
           <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.DictScoring">(class in ncaa_eval.evaluation.simulation)</a>
 </li>
         </ul></li>
@@ -840,6 +863,8 @@
         <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.EloProvider">EloProvider (class in ncaa_eval.evaluation)</a>
 
         <ul>
+          <li><a href="api/ncaa_eval.evaluation.providers.html#ncaa_eval.evaluation.providers.EloProvider">(class in ncaa_eval.evaluation.providers)</a>
+</li>
           <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.EloProvider">(class in ncaa_eval.evaluation.simulation)</a>
 </li>
         </ul></li>
@@ -976,6 +1001,8 @@
         <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.FibonacciScoring">FibonacciScoring (class in ncaa_eval.evaluation)</a>
 
         <ul>
+          <li><a href="api/ncaa_eval.evaluation.scoring.html#ncaa_eval.evaluation.scoring.FibonacciScoring">(class in ncaa_eval.evaluation.scoring)</a>
+</li>
           <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.FibonacciScoring">(class in ncaa_eval.evaluation.simulation)</a>
 </li>
         </ul></li>
@@ -1150,6 +1177,8 @@
         <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.get_scoring">get_scoring() (in module ncaa_eval.evaluation)</a>
 
         <ul>
+          <li><a href="api/ncaa_eval.evaluation.scoring.html#ncaa_eval.evaluation.scoring.get_scoring">(in module ncaa_eval.evaluation.scoring)</a>
+</li>
           <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.get_scoring">(in module ncaa_eval.evaluation.simulation)</a>
 </li>
         </ul></li>
@@ -1273,15 +1302,19 @@
           <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.EloConfig.initial_rating">(ncaa_eval.transform.EloConfig attribute)</a>
 </li>
         </ul></li>
-        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketNode.is_leaf">is_leaf (ncaa_eval.evaluation.BracketNode property)</a>
+        <li><a href="api/ncaa_eval.evaluation.bracket.html#ncaa_eval.evaluation.bracket.BracketNode.is_leaf">is_leaf (ncaa_eval.evaluation.bracket.BracketNode property)</a>
 
         <ul>
+          <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketNode.is_leaf">(ncaa_eval.evaluation.BracketNode property)</a>
+</li>
           <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.BracketNode.is_leaf">(ncaa_eval.evaluation.simulation.BracketNode property)</a>
 </li>
         </ul></li>
-        <li><a href="api/ncaa_eval.evaluation.html#id29">is_neutral (ncaa_eval.evaluation.MatchupContext attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.MatchupContext.is_neutral">[1]</a>
+        <li><a href="api/ncaa_eval.evaluation.bracket.html#id9">is_neutral (ncaa_eval.evaluation.bracket.MatchupContext attribute)</a>, <a href="api/ncaa_eval.evaluation.bracket.html#ncaa_eval.evaluation.bracket.MatchupContext.is_neutral">[1]</a>
 
         <ul>
+          <li><a href="api/ncaa_eval.evaluation.html#id29">(ncaa_eval.evaluation.MatchupContext attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.MatchupContext.is_neutral">[1]</a>
+</li>
           <li><a href="api/ncaa_eval.evaluation.simulation.html#id15">(ncaa_eval.evaluation.simulation.MatchupContext attribute)</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.MatchupContext.is_neutral">[1]</a>
 </li>
         </ul></li>
@@ -1375,9 +1408,11 @@
         </ul></li>
         <li><a href="api/ncaa_eval.model.xgboost_model.html#ncaa_eval.model.xgboost_model.XGBoostModelConfig.learning_rate">learning_rate (ncaa_eval.model.xgboost_model.XGBoostModelConfig attribute)</a>
 </li>
-        <li><a href="api/ncaa_eval.evaluation.html#id9">left (ncaa_eval.evaluation.BracketNode attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketNode.left">[1]</a>
+        <li><a href="api/ncaa_eval.evaluation.bracket.html#id0">left (ncaa_eval.evaluation.bracket.BracketNode attribute)</a>, <a href="api/ncaa_eval.evaluation.bracket.html#ncaa_eval.evaluation.bracket.BracketNode.left">[1]</a>
 
         <ul>
+          <li><a href="api/ncaa_eval.evaluation.html#id9">(ncaa_eval.evaluation.BracketNode attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketNode.left">[1]</a>
+</li>
           <li><a href="api/ncaa_eval.evaluation.simulation.html#id6">(ncaa_eval.evaluation.simulation.BracketNode attribute)</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.BracketNode.left">[1]</a>
 </li>
         </ul></li>
@@ -1392,6 +1427,8 @@
         <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.list_scorings">list_scorings() (in module ncaa_eval.evaluation)</a>
 
         <ul>
+          <li><a href="api/ncaa_eval.evaluation.scoring.html#ncaa_eval.evaluation.scoring.list_scorings">(in module ncaa_eval.evaluation.scoring)</a>
+</li>
           <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.list_scorings">(in module ncaa_eval.evaluation.simulation)</a>
 </li>
         </ul></li>
@@ -1488,6 +1525,12 @@
 </li>
           <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.ProbabilityProvider.matchup_probability">(ncaa_eval.evaluation.ProbabilityProvider method)</a>
 </li>
+          <li><a href="api/ncaa_eval.evaluation.providers.html#ncaa_eval.evaluation.providers.EloProvider.matchup_probability">(ncaa_eval.evaluation.providers.EloProvider method)</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.providers.html#ncaa_eval.evaluation.providers.MatrixProvider.matchup_probability">(ncaa_eval.evaluation.providers.MatrixProvider method)</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.providers.html#ncaa_eval.evaluation.providers.ProbabilityProvider.matchup_probability">(ncaa_eval.evaluation.providers.ProbabilityProvider method)</a>
+</li>
           <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.EloProvider.matchup_probability">(ncaa_eval.evaluation.simulation.EloProvider method)</a>
 </li>
           <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.MatrixProvider.matchup_probability">(ncaa_eval.evaluation.simulation.MatrixProvider method)</a>
@@ -1498,12 +1541,16 @@
         <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.MatchupContext">MatchupContext (class in ncaa_eval.evaluation)</a>
 
         <ul>
+          <li><a href="api/ncaa_eval.evaluation.bracket.html#ncaa_eval.evaluation.bracket.MatchupContext">(class in ncaa_eval.evaluation.bracket)</a>
+</li>
           <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.MatchupContext">(class in ncaa_eval.evaluation.simulation)</a>
 </li>
         </ul></li>
         <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.MatrixProvider">MatrixProvider (class in ncaa_eval.evaluation)</a>
 
         <ul>
+          <li><a href="api/ncaa_eval.evaluation.providers.html#ncaa_eval.evaluation.providers.MatrixProvider">(class in ncaa_eval.evaluation.providers)</a>
+</li>
           <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.MatrixProvider">(class in ncaa_eval.evaluation.simulation)</a>
 </li>
         </ul></li>
@@ -1629,9 +1676,15 @@
 </li>
           <li><a href="api/ncaa_eval.evaluation.backtest.html#module-ncaa_eval.evaluation.backtest">ncaa_eval.evaluation.backtest</a>
 </li>
+          <li><a href="api/ncaa_eval.evaluation.bracket.html#module-ncaa_eval.evaluation.bracket">ncaa_eval.evaluation.bracket</a>
+</li>
           <li><a href="api/ncaa_eval.evaluation.metrics.html#module-ncaa_eval.evaluation.metrics">ncaa_eval.evaluation.metrics</a>
 </li>
           <li><a href="api/ncaa_eval.evaluation.plotting.html#module-ncaa_eval.evaluation.plotting">ncaa_eval.evaluation.plotting</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.providers.html#module-ncaa_eval.evaluation.providers">ncaa_eval.evaluation.providers</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.scoring.html#module-ncaa_eval.evaluation.scoring">ncaa_eval.evaluation.scoring</a>
 </li>
           <li><a href="api/ncaa_eval.evaluation.simulation.html#module-ncaa_eval.evaluation.simulation">ncaa_eval.evaluation.simulation</a>
 </li>
@@ -1712,9 +1765,9 @@
         </ul></li>
         <li><a href="api/ncaa_eval.model.xgboost_model.html#ncaa_eval.model.xgboost_model.XGBoostModelConfig.n_estimators">n_estimators (ncaa_eval.model.xgboost_model.XGBoostModelConfig attribute)</a>
 </li>
-        <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.N_GAMES">N_GAMES (in module ncaa_eval.evaluation.simulation)</a>
+        <li><a href="api/ncaa_eval.evaluation.bracket.html#ncaa_eval.evaluation.bracket.N_GAMES">N_GAMES (in module ncaa_eval.evaluation.bracket)</a>
 </li>
-        <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.N_ROUNDS">N_ROUNDS (in module ncaa_eval.evaluation.simulation)</a>
+        <li><a href="api/ncaa_eval.evaluation.bracket.html#ncaa_eval.evaluation.bracket.N_ROUNDS">N_ROUNDS (in module ncaa_eval.evaluation.bracket)</a>
 </li>
         <li><a href="api/ncaa_eval.evaluation.simulation.html#id25">n_simulations (ncaa_eval.evaluation.simulation.SimulationResult attribute)</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.SimulationResult.n_simulations">[1]</a>
 
@@ -1728,6 +1781,18 @@
           <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.DictScoring.name">(ncaa_eval.evaluation.DictScoring property)</a>
 </li>
           <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.FibonacciScoring.name">(ncaa_eval.evaluation.FibonacciScoring property)</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.scoring.html#ncaa_eval.evaluation.scoring.CustomScoring.name">(ncaa_eval.evaluation.scoring.CustomScoring property)</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.scoring.html#ncaa_eval.evaluation.scoring.DictScoring.name">(ncaa_eval.evaluation.scoring.DictScoring property)</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.scoring.html#ncaa_eval.evaluation.scoring.FibonacciScoring.name">(ncaa_eval.evaluation.scoring.FibonacciScoring property)</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.scoring.html#ncaa_eval.evaluation.scoring.ScoringRule.name">(ncaa_eval.evaluation.scoring.ScoringRule property)</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.scoring.html#ncaa_eval.evaluation.scoring.SeedDiffBonusScoring.name">(ncaa_eval.evaluation.scoring.SeedDiffBonusScoring property)</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.scoring.html#ncaa_eval.evaluation.scoring.StandardScoring.name">(ncaa_eval.evaluation.scoring.StandardScoring property)</a>
 </li>
           <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.ScoringRule.name">(ncaa_eval.evaluation.ScoringRule property)</a>
 </li>
@@ -1791,6 +1856,13 @@
 </li>
         </ul></li>
         <li>
+    ncaa_eval.evaluation.bracket
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.bracket.html#module-ncaa_eval.evaluation.bracket">module</a>
+</li>
+        </ul></li>
+        <li>
     ncaa_eval.evaluation.metrics
 
         <ul>
@@ -1802,6 +1874,20 @@
 
         <ul>
           <li><a href="api/ncaa_eval.evaluation.plotting.html#module-ncaa_eval.evaluation.plotting">module</a>
+</li>
+        </ul></li>
+        <li>
+    ncaa_eval.evaluation.providers
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.providers.html#module-ncaa_eval.evaluation.providers">module</a>
+</li>
+        </ul></li>
+        <li>
+    ncaa_eval.evaluation.scoring
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.scoring.html#module-ncaa_eval.evaluation.scoring">module</a>
 </li>
         </ul></li>
         <li>
@@ -1839,6 +1925,8 @@
           <li><a href="api/ncaa_eval.ingest.connectors.base.html#module-ncaa_eval.ingest.connectors.base">module</a>
 </li>
         </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li>
     ncaa_eval.ingest.connectors.espn
 
@@ -1860,8 +1948,6 @@
           <li><a href="api/ncaa_eval.ingest.repository.html#module-ncaa_eval.ingest.repository">module</a>
 </li>
         </ul></li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li>
     ncaa_eval.ingest.schema
 
@@ -2127,6 +2213,18 @@
 </li>
           <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.FibonacciScoring.points_per_round">(ncaa_eval.evaluation.FibonacciScoring method)</a>
 </li>
+          <li><a href="api/ncaa_eval.evaluation.scoring.html#ncaa_eval.evaluation.scoring.CustomScoring.points_per_round">(ncaa_eval.evaluation.scoring.CustomScoring method)</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.scoring.html#ncaa_eval.evaluation.scoring.DictScoring.points_per_round">(ncaa_eval.evaluation.scoring.DictScoring method)</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.scoring.html#ncaa_eval.evaluation.scoring.FibonacciScoring.points_per_round">(ncaa_eval.evaluation.scoring.FibonacciScoring method)</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.scoring.html#ncaa_eval.evaluation.scoring.ScoringRule.points_per_round">(ncaa_eval.evaluation.scoring.ScoringRule method)</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.scoring.html#ncaa_eval.evaluation.scoring.SeedDiffBonusScoring.points_per_round">(ncaa_eval.evaluation.scoring.SeedDiffBonusScoring method)</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.scoring.html#ncaa_eval.evaluation.scoring.StandardScoring.points_per_round">(ncaa_eval.evaluation.scoring.StandardScoring method)</a>
+</li>
           <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.ScoringRule.points_per_round">(ncaa_eval.evaluation.ScoringRule method)</a>
 </li>
           <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.SeedDiffBonusScoring.points_per_round">(ncaa_eval.evaluation.SeedDiffBonusScoring method)</a>
@@ -2189,6 +2287,8 @@
         <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.ProbabilityProvider">ProbabilityProvider (class in ncaa_eval.evaluation)</a>
 
         <ul>
+          <li><a href="api/ncaa_eval.evaluation.providers.html#ncaa_eval.evaluation.providers.ProbabilityProvider">(class in ncaa_eval.evaluation.providers)</a>
+</li>
           <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.ProbabilityProvider">(class in ncaa_eval.evaluation.simulation)</a>
 </li>
         </ul></li>
@@ -2241,6 +2341,8 @@
         <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.register_scoring">register_scoring() (in module ncaa_eval.evaluation)</a>
 
         <ul>
+          <li><a href="api/ncaa_eval.evaluation.scoring.html#ncaa_eval.evaluation.scoring.register_scoring">(in module ncaa_eval.evaluation.scoring)</a>
+</li>
           <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.register_scoring">(in module ncaa_eval.evaluation.simulation)</a>
 </li>
         </ul></li>
@@ -2268,17 +2370,19 @@
           <li><a href="api/ncaa_eval.transform.serving.html#ncaa_eval.transform.serving.rescale_overtime">(in module ncaa_eval.transform.serving)</a>
 </li>
         </ul></li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="api/ncaa_eval.transform.elo.html#ncaa_eval.transform.elo.EloFeatureEngine.reset_game_counts">reset_game_counts() (ncaa_eval.transform.elo.EloFeatureEngine method)</a>
 
         <ul>
           <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.EloFeatureEngine.reset_game_counts">(ncaa_eval.transform.EloFeatureEngine method)</a>
 </li>
         </ul></li>
-        <li><a href="api/ncaa_eval.evaluation.html#id10">right (ncaa_eval.evaluation.BracketNode attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketNode.right">[1]</a>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.evaluation.bracket.html#id1">right (ncaa_eval.evaluation.bracket.BracketNode attribute)</a>, <a href="api/ncaa_eval.evaluation.bracket.html#ncaa_eval.evaluation.bracket.BracketNode.right">[1]</a>
 
         <ul>
+          <li><a href="api/ncaa_eval.evaluation.html#id10">(ncaa_eval.evaluation.BracketNode attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketNode.right">[1]</a>
+</li>
           <li><a href="api/ncaa_eval.evaluation.simulation.html#id7">(ncaa_eval.evaluation.simulation.BracketNode attribute)</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.BracketNode.right">[1]</a>
 </li>
         </ul></li>
@@ -2288,15 +2392,19 @@
           <li><a href="api/ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.roc_auc">(in module ncaa_eval.evaluation.metrics)</a>
 </li>
         </ul></li>
-        <li><a href="api/ncaa_eval.evaluation.html#id13">root (ncaa_eval.evaluation.BracketStructure attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketStructure.root">[1]</a>
+        <li><a href="api/ncaa_eval.evaluation.bracket.html#id4">root (ncaa_eval.evaluation.bracket.BracketStructure attribute)</a>, <a href="api/ncaa_eval.evaluation.bracket.html#ncaa_eval.evaluation.bracket.BracketStructure.root">[1]</a>
 
         <ul>
+          <li><a href="api/ncaa_eval.evaluation.html#id13">(ncaa_eval.evaluation.BracketStructure attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketStructure.root">[1]</a>
+</li>
           <li><a href="api/ncaa_eval.evaluation.simulation.html#id10">(ncaa_eval.evaluation.simulation.BracketStructure attribute)</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.BracketStructure.root">[1]</a>
 </li>
         </ul></li>
-        <li><a href="api/ncaa_eval.evaluation.html#id11">round_index (ncaa_eval.evaluation.BracketNode attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketNode.round_index">[1]</a>
+        <li><a href="api/ncaa_eval.evaluation.bracket.html#id2">round_index (ncaa_eval.evaluation.bracket.BracketNode attribute)</a>, <a href="api/ncaa_eval.evaluation.bracket.html#ncaa_eval.evaluation.bracket.BracketNode.round_index">[1]</a>
 
         <ul>
+          <li><a href="api/ncaa_eval.evaluation.html#id11">(ncaa_eval.evaluation.BracketNode attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketNode.round_index">[1]</a>
+</li>
           <li><a href="api/ncaa_eval.evaluation.simulation.html#id8">(ncaa_eval.evaluation.simulation.BracketNode attribute)</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.BracketNode.round_index">[1]</a>
 </li>
         </ul></li>
@@ -2403,14 +2511,18 @@
         <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.scoring_from_config">scoring_from_config() (in module ncaa_eval.evaluation)</a>
 
         <ul>
+          <li><a href="api/ncaa_eval.evaluation.scoring.html#ncaa_eval.evaluation.scoring.scoring_from_config">(in module ncaa_eval.evaluation.scoring)</a>
+</li>
           <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.scoring_from_config">(in module ncaa_eval.evaluation.simulation)</a>
 </li>
         </ul></li>
-        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.ScoringNotFoundError">ScoringNotFoundError</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.ScoringNotFoundError">[1]</a>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.ScoringNotFoundError">ScoringNotFoundError</a>, <a href="api/ncaa_eval.evaluation.scoring.html#ncaa_eval.evaluation.scoring.ScoringNotFoundError">[1]</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.ScoringNotFoundError">[2]</a>
 </li>
         <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.ScoringRule">ScoringRule (class in ncaa_eval.evaluation)</a>
 
         <ul>
+          <li><a href="api/ncaa_eval.evaluation.scoring.html#ncaa_eval.evaluation.scoring.ScoringRule">(class in ncaa_eval.evaluation.scoring)</a>
+</li>
           <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.ScoringRule">(class in ncaa_eval.evaluation.simulation)</a>
 </li>
         </ul></li>
@@ -2420,9 +2532,11 @@
           <li><a href="api/ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Season">(class in ncaa_eval.ingest.schema)</a>
 </li>
         </ul></li>
-        <li><a href="api/ncaa_eval.evaluation.html#id30">season (ncaa_eval.evaluation.MatchupContext attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.MatchupContext.season">[1]</a>
+        <li><a href="api/ncaa_eval.evaluation.bracket.html#id10">season (ncaa_eval.evaluation.bracket.MatchupContext attribute)</a>, <a href="api/ncaa_eval.evaluation.bracket.html#ncaa_eval.evaluation.bracket.MatchupContext.season">[1]</a>
 
         <ul>
+          <li><a href="api/ncaa_eval.evaluation.html#id30">(ncaa_eval.evaluation.MatchupContext attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.MatchupContext.season">[1]</a>
+</li>
           <li><a href="api/ncaa_eval.evaluation.simulation.html#id16">(ncaa_eval.evaluation.simulation.MatchupContext attribute)</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.MatchupContext.season">[1]</a>
 </li>
           <li><a href="api/ncaa_eval.evaluation.simulation.html#id27">(ncaa_eval.evaluation.simulation.SimulationResult attribute)</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.SimulationResult.season">[1]</a>
@@ -2464,15 +2578,21 @@
           <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.FeatureBlock.SEED">(ncaa_eval.transform.FeatureBlock attribute)</a>
 </li>
         </ul></li>
-        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.SeedDiffBonusScoring.seed_diff_bonus">seed_diff_bonus() (ncaa_eval.evaluation.SeedDiffBonusScoring method)</a>
+        <li><a href="api/ncaa_eval.evaluation.scoring.html#ncaa_eval.evaluation.scoring.SeedDiffBonusScoring.seed_diff_bonus">seed_diff_bonus() (ncaa_eval.evaluation.scoring.SeedDiffBonusScoring method)</a>
 
         <ul>
+          <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.SeedDiffBonusScoring.seed_diff_bonus">(ncaa_eval.evaluation.SeedDiffBonusScoring method)</a>
+</li>
           <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.SeedDiffBonusScoring.seed_diff_bonus">(ncaa_eval.evaluation.simulation.SeedDiffBonusScoring method)</a>
 </li>
         </ul></li>
-        <li><a href="api/ncaa_eval.evaluation.html#id14">seed_map (ncaa_eval.evaluation.BracketStructure attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketStructure.seed_map">[1]</a>
+        <li><a href="api/ncaa_eval.evaluation.bracket.html#id5">seed_map (ncaa_eval.evaluation.bracket.BracketStructure attribute)</a>, <a href="api/ncaa_eval.evaluation.bracket.html#ncaa_eval.evaluation.bracket.BracketStructure.seed_map">[1]</a>
 
         <ul>
+          <li><a href="api/ncaa_eval.evaluation.html#id14">(ncaa_eval.evaluation.BracketStructure attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketStructure.seed_map">[1]</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.scoring.html#ncaa_eval.evaluation.scoring.SeedDiffBonusScoring.seed_map">(ncaa_eval.evaluation.scoring.SeedDiffBonusScoring property)</a>
+</li>
           <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.SeedDiffBonusScoring.seed_map">(ncaa_eval.evaluation.SeedDiffBonusScoring property)</a>
 </li>
           <li><a href="api/ncaa_eval.evaluation.simulation.html#id11">(ncaa_eval.evaluation.simulation.BracketStructure attribute)</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.BracketStructure.seed_map">[1]</a>
@@ -2497,6 +2617,8 @@
         <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.SeedDiffBonusScoring">SeedDiffBonusScoring (class in ncaa_eval.evaluation)</a>
 
         <ul>
+          <li><a href="api/ncaa_eval.evaluation.scoring.html#ncaa_eval.evaluation.scoring.SeedDiffBonusScoring">(class in ncaa_eval.evaluation.scoring)</a>
+</li>
           <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.SeedDiffBonusScoring">(class in ncaa_eval.evaluation.simulation)</a>
 </li>
         </ul></li>
@@ -2571,6 +2693,8 @@
         <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.StandardScoring">StandardScoring (class in ncaa_eval.evaluation)</a>
 
         <ul>
+          <li><a href="api/ncaa_eval.evaluation.scoring.html#ncaa_eval.evaluation.scoring.StandardScoring">(class in ncaa_eval.evaluation.scoring)</a>
+</li>
           <li><a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.StandardScoring">(class in ncaa_eval.evaluation.simulation)</a>
 </li>
         </ul></li>
@@ -2674,21 +2798,27 @@
           <li><a href="api/ncaa_eval.transform.html#id12">(ncaa_eval.transform.TourneySeed attribute)</a>, <a href="api/ncaa_eval.transform.html#ncaa_eval.transform.TourneySeed.team_id">[1]</a>
 </li>
         </ul></li>
-        <li><a href="api/ncaa_eval.evaluation.html#id15">team_ids (ncaa_eval.evaluation.BracketStructure attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketStructure.team_ids">[1]</a>
+        <li><a href="api/ncaa_eval.evaluation.bracket.html#id6">team_ids (ncaa_eval.evaluation.bracket.BracketStructure attribute)</a>, <a href="api/ncaa_eval.evaluation.bracket.html#ncaa_eval.evaluation.bracket.BracketStructure.team_ids">[1]</a>
 
         <ul>
+          <li><a href="api/ncaa_eval.evaluation.html#id15">(ncaa_eval.evaluation.BracketStructure attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketStructure.team_ids">[1]</a>
+</li>
           <li><a href="api/ncaa_eval.evaluation.simulation.html#id12">(ncaa_eval.evaluation.simulation.BracketStructure attribute)</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.BracketStructure.team_ids">[1]</a>
 </li>
         </ul></li>
-        <li><a href="api/ncaa_eval.evaluation.html#id12">team_index (ncaa_eval.evaluation.BracketNode attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketNode.team_index">[1]</a>
+        <li><a href="api/ncaa_eval.evaluation.bracket.html#id3">team_index (ncaa_eval.evaluation.bracket.BracketNode attribute)</a>, <a href="api/ncaa_eval.evaluation.bracket.html#ncaa_eval.evaluation.bracket.BracketNode.team_index">[1]</a>
 
         <ul>
+          <li><a href="api/ncaa_eval.evaluation.html#id12">(ncaa_eval.evaluation.BracketNode attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketNode.team_index">[1]</a>
+</li>
           <li><a href="api/ncaa_eval.evaluation.simulation.html#id9">(ncaa_eval.evaluation.simulation.BracketNode attribute)</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.BracketNode.team_index">[1]</a>
 </li>
         </ul></li>
-        <li><a href="api/ncaa_eval.evaluation.html#id16">team_index_map (ncaa_eval.evaluation.BracketStructure attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketStructure.team_index_map">[1]</a>
+        <li><a href="api/ncaa_eval.evaluation.bracket.html#id7">team_index_map (ncaa_eval.evaluation.bracket.BracketStructure attribute)</a>, <a href="api/ncaa_eval.evaluation.bracket.html#ncaa_eval.evaluation.bracket.BracketStructure.team_index_map">[1]</a>
 
         <ul>
+          <li><a href="api/ncaa_eval.evaluation.html#id16">(ncaa_eval.evaluation.BracketStructure attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketStructure.team_index_map">[1]</a>
+</li>
           <li><a href="api/ncaa_eval.evaluation.simulation.html#id13">(ncaa_eval.evaluation.simulation.BracketStructure attribute)</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.BracketStructure.team_index_map">[1]</a>
 </li>
         </ul></li>
@@ -2710,14 +2840,14 @@
           <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.SyncResult.teams_written">(ncaa_eval.ingest.SyncResult attribute)</a>
 </li>
         </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="api/ncaa_eval.evaluation.html#id17">test (ncaa_eval.evaluation.CVFold attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.CVFold.test">[1]</a>
 
         <ul>
           <li><a href="api/ncaa_eval.evaluation.splitter.html#id0">(ncaa_eval.evaluation.splitter.CVFold attribute)</a>, <a href="api/ncaa_eval.evaluation.splitter.html#ncaa_eval.evaluation.splitter.CVFold.test">[1]</a>
 </li>
         </ul></li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="api/ncaa_eval.evaluation.backtest.html#id7">test_game_ids (ncaa_eval.evaluation.backtest.FoldResult attribute)</a>, <a href="api/ncaa_eval.evaluation.backtest.html#ncaa_eval.evaluation.backtest.FoldResult.test_game_ids">[1]</a>
 
         <ul>

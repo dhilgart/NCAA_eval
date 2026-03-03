@@ -226,8 +226,11 @@
 </li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="ncaa_eval.evaluation.html">ncaa_eval.evaluation package</a><input aria-label="Toggle navigation of ncaa_eval.evaluation package" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.backtest.html">ncaa_eval.evaluation.backtest module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.bracket.html">ncaa_eval.evaluation.bracket module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html">ncaa_eval.evaluation.metrics module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.plotting.html">ncaa_eval.evaluation.plotting module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.providers.html">ncaa_eval.evaluation.providers module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.scoring.html">ncaa_eval.evaluation.scoring module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html">ncaa_eval.evaluation.simulation module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.splitter.html">ncaa_eval.evaluation.splitter module</a></li>
 </ul>
@@ -340,6 +343,15 @@
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.backtest.html#ncaa_eval.evaluation.backtest.run_backtest"><code class="docutils literal notranslate"><span class="pre">run_backtest()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.bracket.html">ncaa_eval.evaluation.bracket module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.bracket.html#ncaa_eval.evaluation.bracket.BracketNode"><code class="docutils literal notranslate"><span class="pre">BracketNode</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.bracket.html#ncaa_eval.evaluation.bracket.BracketStructure"><code class="docutils literal notranslate"><span class="pre">BracketStructure</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.bracket.html#ncaa_eval.evaluation.bracket.MatchupContext"><code class="docutils literal notranslate"><span class="pre">MatchupContext</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.bracket.html#ncaa_eval.evaluation.bracket.N_GAMES"><code class="docutils literal notranslate"><span class="pre">N_GAMES</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.bracket.html#ncaa_eval.evaluation.bracket.N_ROUNDS"><code class="docutils literal notranslate"><span class="pre">N_ROUNDS</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.bracket.html#ncaa_eval.evaluation.bracket.build_bracket"><code class="docutils literal notranslate"><span class="pre">build_bracket()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html">ncaa_eval.evaluation.metrics module</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.ReliabilityData"><code class="docutils literal notranslate"><span class="pre">ReliabilityData</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.brier_score"><code class="docutils literal notranslate"><span class="pre">brier_score()</span></code></a></li>
@@ -357,6 +369,27 @@
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.plotting.html#ncaa_eval.evaluation.plotting.plot_score_distribution"><code class="docutils literal notranslate"><span class="pre">plot_score_distribution()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.providers.html">ncaa_eval.evaluation.providers module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.providers.html#ncaa_eval.evaluation.providers.EloProvider"><code class="docutils literal notranslate"><span class="pre">EloProvider</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.providers.html#ncaa_eval.evaluation.providers.MatrixProvider"><code class="docutils literal notranslate"><span class="pre">MatrixProvider</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.providers.html#ncaa_eval.evaluation.providers.ProbabilityProvider"><code class="docutils literal notranslate"><span class="pre">ProbabilityProvider</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.providers.html#ncaa_eval.evaluation.providers.build_probability_matrix"><code class="docutils literal notranslate"><span class="pre">build_probability_matrix()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.scoring.html">ncaa_eval.evaluation.scoring module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.scoring.html#ncaa_eval.evaluation.scoring.CustomScoring"><code class="docutils literal notranslate"><span class="pre">CustomScoring</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.scoring.html#ncaa_eval.evaluation.scoring.DictScoring"><code class="docutils literal notranslate"><span class="pre">DictScoring</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.scoring.html#ncaa_eval.evaluation.scoring.FibonacciScoring"><code class="docutils literal notranslate"><span class="pre">FibonacciScoring</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.scoring.html#ncaa_eval.evaluation.scoring.ScoringNotFoundError"><code class="docutils literal notranslate"><span class="pre">ScoringNotFoundError</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.scoring.html#ncaa_eval.evaluation.scoring.ScoringRule"><code class="docutils literal notranslate"><span class="pre">ScoringRule</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.scoring.html#ncaa_eval.evaluation.scoring.SeedDiffBonusScoring"><code class="docutils literal notranslate"><span class="pre">SeedDiffBonusScoring</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.scoring.html#ncaa_eval.evaluation.scoring.StandardScoring"><code class="docutils literal notranslate"><span class="pre">StandardScoring</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.scoring.html#ncaa_eval.evaluation.scoring.get_scoring"><code class="docutils literal notranslate"><span class="pre">get_scoring()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.scoring.html#ncaa_eval.evaluation.scoring.list_scorings"><code class="docutils literal notranslate"><span class="pre">list_scorings()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.scoring.html#ncaa_eval.evaluation.scoring.register_scoring"><code class="docutils literal notranslate"><span class="pre">register_scoring()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.scoring.html#ncaa_eval.evaluation.scoring.scoring_from_config"><code class="docutils literal notranslate"><span class="pre">scoring_from_config()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html">ncaa_eval.evaluation.simulation module</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.BracketDistribution"><code class="docutils literal notranslate"><span class="pre">BracketDistribution</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.BracketNode"><code class="docutils literal notranslate"><span class="pre">BracketNode</span></code></a></li>
@@ -368,8 +401,6 @@
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.MatchupContext"><code class="docutils literal notranslate"><span class="pre">MatchupContext</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.MatrixProvider"><code class="docutils literal notranslate"><span class="pre">MatrixProvider</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.MostLikelyBracket"><code class="docutils literal notranslate"><span class="pre">MostLikelyBracket</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.N_GAMES"><code class="docutils literal notranslate"><span class="pre">N_GAMES</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.N_ROUNDS"><code class="docutils literal notranslate"><span class="pre">N_ROUNDS</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.ProbabilityProvider"><code class="docutils literal notranslate"><span class="pre">ProbabilityProvider</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.ScoringNotFoundError"><code class="docutils literal notranslate"><span class="pre">ScoringNotFoundError</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.ScoringRule"><code class="docutils literal notranslate"><span class="pre">ScoringRule</span></code></a></li>

@@ -225,8 +225,11 @@
 </li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="../../../api/ncaa_eval.evaluation.html">ncaa_eval.evaluation package</a><input aria-label="Toggle navigation of ncaa_eval.evaluation package" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api/ncaa_eval.evaluation.backtest.html">ncaa_eval.evaluation.backtest module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/ncaa_eval.evaluation.bracket.html">ncaa_eval.evaluation.bracket module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api/ncaa_eval.evaluation.metrics.html">ncaa_eval.evaluation.metrics module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api/ncaa_eval.evaluation.plotting.html">ncaa_eval.evaluation.plotting module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/ncaa_eval.evaluation.providers.html">ncaa_eval.evaluation.providers module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/ncaa_eval.evaluation.scoring.html">ncaa_eval.evaluation.scoring module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api/ncaa_eval.evaluation.simulation.html">ncaa_eval.evaluation.simulation module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api/ncaa_eval.evaluation.splitter.html">ncaa_eval.evaluation.splitter module</a></li>
 </ul>
@@ -308,19 +311,18 @@
 
 <span class="sd">Implements the Phylourny algorithm (Bettisworth &amp; Jordan 2023) for exact</span>
 <span class="sd">advancement probability computation, plus a vectorized Monte Carlo fallback</span>
-<span class="sd">for score-distribution analysis.  Provides bracket data structures,</span>
-<span class="sd">probability provider protocols, scoring rule plugins, and a high-level</span>
+<span class="sd">for score-distribution analysis.  Provides a high-level</span>
 <span class="sd">:func:`simulate_tournament` orchestrator.</span>
 
 <span class="sd">Key components:</span>
 
-<span class="sd">* :class:`BracketNode` / :class:`BracketStructure` — immutable bracket tree.</span>
-<span class="sd">* :func:`build_bracket` — constructs a 64-team tree from :class:`TourneySeed`.</span>
-<span class="sd">* :class:`ProbabilityProvider` — protocol for pairwise win probabilities.</span>
 <span class="sd">* :func:`compute_advancement_probs` — Phylourny analytical computation.</span>
 <span class="sd">* :func:`compute_expected_points` — ``adv_probs @ points_vector``.</span>
 <span class="sd">* :func:`simulate_tournament_mc` — vectorized MC simulation engine.</span>
 <span class="sd">* :func:`simulate_tournament` — high-level orchestrator.</span>
+
+<span class="sd">Bracket data structures, probability providers, and scoring rules are in</span>
+<span class="sd">their respective submodules (:mod:`bracket`, :mod:`providers`, :mod:`scoring`).</span>
 
 <span class="sd">References:</span>
 <span class="sd">    Bettisworth et al. (2023), &quot;Phylourny: efficiently calculating</span>
@@ -331,719 +333,86 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Sequence</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Protocol</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">runtime_checkable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">npt</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.transform.normalization</span><span class="w"> </span><span class="kn">import</span> <span class="n">TourneySeed</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.evaluation.bracket</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">N_GAMES</span><span class="p">,</span>
+    <span class="n">N_ROUNDS</span><span class="p">,</span>
+    <span class="n">BracketNode</span><span class="p">,</span>
+    <span class="n">BracketStructure</span><span class="p">,</span>
+    <span class="n">MatchupContext</span><span class="p">,</span>
+    <span class="n">_build_subtree</span><span class="p">,</span>
+    <span class="n">build_bracket</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.evaluation.providers</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">EloProvider</span><span class="p">,</span>
+    <span class="n">MatrixProvider</span><span class="p">,</span>
+    <span class="n">ProbabilityProvider</span><span class="p">,</span>
+    <span class="n">build_probability_matrix</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.evaluation.scoring</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_SCORING_REGISTRY</span><span class="p">,</span>
+    <span class="n">CustomScoring</span><span class="p">,</span>
+    <span class="n">DictScoring</span><span class="p">,</span>
+    <span class="n">FibonacciScoring</span><span class="p">,</span>
+    <span class="n">ScoringNotFoundError</span><span class="p">,</span>
+    <span class="n">ScoringRule</span><span class="p">,</span>
+    <span class="n">SeedDiffBonusScoring</span><span class="p">,</span>
+    <span class="n">StandardScoring</span><span class="p">,</span>
+    <span class="n">get_scoring</span><span class="p">,</span>
+    <span class="n">list_scorings</span><span class="p">,</span>
+    <span class="n">register_scoring</span><span class="p">,</span>
+    <span class="n">scoring_from_config</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Re-export all symbols for backward compatibility</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;BracketDistribution&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;BracketNode&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;BracketStructure&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;CustomScoring&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;DictScoring&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;EloProvider&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;FibonacciScoring&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;MatchupContext&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;MatrixProvider&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;MostLikelyBracket&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;N_GAMES&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;N_ROUNDS&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ProbabilityProvider&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ScoringNotFoundError&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ScoringRule&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;SeedDiffBonusScoring&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;SimulationResult&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;StandardScoring&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;_SCORING_REGISTRY&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;_build_subtree&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;_collect_leaves&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;build_bracket&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;build_probability_matrix&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;compute_advancement_probs&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;compute_bracket_distribution&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;compute_expected_points&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;compute_expected_points_seed_diff&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;compute_most_likely_bracket&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;get_scoring&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;list_scorings&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;register_scoring&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;score_bracket_against_sims&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;scoring_from_config&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;simulate_tournament&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;simulate_tournament_mc&quot;</span><span class="p">,</span>
+<span class="p">]</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
-<span class="c1"># ---------------------------------------------------------------------------</span>
-<span class="c1"># Constants</span>
-<span class="c1"># ---------------------------------------------------------------------------</span>
-
-<span class="c1">#: NCAA bracket matchup order per region (seed pairings).</span>
-<span class="c1">#: Position in this list determines bracket-tree leaf order.</span>
-<span class="n">_REGION_SEED_ORDER</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">16</span><span class="p">),</span>
-    <span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">),</span>
-    <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">12</span><span class="p">),</span>
-    <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">13</span><span class="p">),</span>
-    <span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">11</span><span class="p">),</span>
-    <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">14</span><span class="p">),</span>
-    <span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span>
-    <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">15</span><span class="p">),</span>
-<span class="p">)</span>
-
-<span class="c1">#: Region codes in bracket-position order.  W vs X in one semi, Y vs Z</span>
-<span class="c1">#: in the other, winners play in the championship.</span>
-<span class="n">_REGION_ORDER</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;W&quot;</span><span class="p">,</span> <span class="s2">&quot;X&quot;</span><span class="p">,</span> <span class="s2">&quot;Y&quot;</span><span class="p">,</span> <span class="s2">&quot;Z&quot;</span><span class="p">)</span>
-
-<span class="c1">#: Number of rounds in a 64-team single-elimination bracket.</span>
-<span class="n">N_ROUNDS</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">6</span>
-
-<span class="c1">#: Total number of games in a 64-team bracket (63).</span>
-<span class="n">N_GAMES</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">63</span>
 
 <span class="c1"># ---------------------------------------------------------------------------</span>
-<span class="c1"># Bracket data structures (Task 1)</span>
-<span class="c1"># ---------------------------------------------------------------------------</span>
-
-
-<div class="viewcode-block" id="MatchupContext">
-<a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.MatchupContext">[docs]</a>
-<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">MatchupContext</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Context for a hypothetical matchup probability query.</span>
-
-<span class="sd">    Passed to :class:`ProbabilityProvider` so that stateless models can</span>
-<span class="sd">    construct the correct feature row for a hypothetical pairing.  Stateful</span>
-<span class="sd">    models (Elo) typically ignore context and use internal ratings.</span>
-
-<span class="sd">    Attributes:</span>
-<span class="sd">        season: Tournament season year (e.g. 2024).</span>
-<span class="sd">        day_num: Tournament day number (e.g. 136 for Round of 64).</span>
-<span class="sd">        is_neutral: ``True`` for all tournament games (neutral site).</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="n">season</span><span class="p">:</span> <span class="nb">int</span>
-    <span class="n">day_num</span><span class="p">:</span> <span class="nb">int</span>
-    <span class="n">is_neutral</span><span class="p">:</span> <span class="nb">bool</span></div>
-
-
-
-<div class="viewcode-block" id="BracketNode">
-<a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.BracketNode">[docs]</a>
-<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">BracketNode</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Node in a tournament bracket tree.</span>
-
-<span class="sd">    A leaf node represents a single team; an internal node represents a</span>
-<span class="sd">    game whose winner advances.</span>
-
-<span class="sd">    Attributes:</span>
-<span class="sd">        round_index: Round number (0-indexed).  Leaves have ``round_index=-1``.</span>
-<span class="sd">        team_index: Index into the bracket&#39;s ``team_ids`` tuple for leaf</span>
-<span class="sd">            nodes.  ``-1`` for internal nodes.</span>
-<span class="sd">        left: Left child (``None`` for leaves).</span>
-<span class="sd">        right: Right child (``None`` for leaves).</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="n">round_index</span><span class="p">:</span> <span class="nb">int</span>
-    <span class="n">team_index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
-    <span class="n">left</span><span class="p">:</span> <span class="n">BracketNode</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">right</span><span class="p">:</span> <span class="n">BracketNode</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">is_leaf</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``True`` if this is a leaf (team) node.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">left</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">right</span> <span class="ow">is</span> <span class="kc">None</span></div>
-
-
-
-<div class="viewcode-block" id="BracketStructure">
-<a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.BracketStructure">[docs]</a>
-<span class="nd">@dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">BracketStructure</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Immutable tournament bracket.</span>
-
-<span class="sd">    Attributes:</span>
-<span class="sd">        root: Root :class:`BracketNode` of the bracket tree.</span>
-<span class="sd">        team_ids: Tuple of team IDs in bracket-position order (leaf order).</span>
-<span class="sd">        team_index_map: Mapping of ``team_id → index`` into ``team_ids``.</span>
-<span class="sd">        seed_map: Mapping of ``team_id → seed_num`` for seed-aware scoring.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="n">root</span><span class="p">:</span> <span class="n">BracketNode</span>
-    <span class="n">team_ids</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span>
-    <span class="n">team_index_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
-    <span class="n">seed_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span></div>
-
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_build_subtree</span><span class="p">(</span>
-    <span class="n">team_indices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
-    <span class="n">round_offset</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BracketNode</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Recursively build a balanced binary bracket subtree.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        team_indices: List of team indices for this sub-bracket (must be</span>
-<span class="sd">            power-of-2 length).</span>
-<span class="sd">        round_offset: Round index for games at this level.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        Root :class:`BracketNode` of the subtree.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">team_indices</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">BracketNode</span><span class="p">(</span><span class="n">round_index</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">team_index</span><span class="o">=</span><span class="n">team_indices</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-
-    <span class="n">mid</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">team_indices</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
-    <span class="n">left</span> <span class="o">=</span> <span class="n">_build_subtree</span><span class="p">(</span><span class="n">team_indices</span><span class="p">[:</span><span class="n">mid</span><span class="p">],</span> <span class="n">round_offset</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
-    <span class="n">right</span> <span class="o">=</span> <span class="n">_build_subtree</span><span class="p">(</span><span class="n">team_indices</span><span class="p">[</span><span class="n">mid</span><span class="p">:],</span> <span class="n">round_offset</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">BracketNode</span><span class="p">(</span><span class="n">round_index</span><span class="o">=</span><span class="n">round_offset</span><span class="p">,</span> <span class="n">left</span><span class="o">=</span><span class="n">left</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="n">right</span><span class="p">)</span>
-
-
-<div class="viewcode-block" id="build_bracket">
-<a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.build_bracket">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">build_bracket</span><span class="p">(</span><span class="n">seeds</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">TourneySeed</span><span class="p">],</span> <span class="n">season</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BracketStructure</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Construct a 64-team bracket tree from tournament seeds.</span>
-
-<span class="sd">    Play-in teams (``is_play_in=True``) are excluded.  Exactly 64 non-play-in</span>
-<span class="sd">    seeds are required.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        seeds: List of :class:`TourneySeed` objects for the given season.</span>
-<span class="sd">        season: Season year to filter seeds.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        Fully constructed :class:`BracketStructure`.</span>
-
-<span class="sd">    Raises:</span>
-<span class="sd">        ValueError: If the number of non-play-in seeds for *season* is not 64.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">season_seeds</span> <span class="o">=</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">seeds</span> <span class="k">if</span> <span class="n">s</span><span class="o">.</span><span class="n">season</span> <span class="o">==</span> <span class="n">season</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">s</span><span class="o">.</span><span class="n">is_play_in</span><span class="p">]</span>
-
-    <span class="c1"># Build lookup: (region, seed_num) → team_id</span>
-    <span class="n">seed_lookup</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">seed_num_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">season_seeds</span><span class="p">:</span>
-        <span class="n">seed_lookup</span><span class="p">[(</span><span class="n">s</span><span class="o">.</span><span class="n">region</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">seed_num</span><span class="p">)]</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">team_id</span>
-        <span class="n">seed_num_map</span><span class="p">[</span><span class="n">s</span><span class="o">.</span><span class="n">team_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">seed_num</span>
-
-    <span class="c1"># Determine team ordering following bracket structure</span>
-    <span class="n">team_ids_ordered</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">region</span> <span class="ow">in</span> <span class="n">_REGION_ORDER</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">seed_a</span><span class="p">,</span> <span class="n">seed_b</span> <span class="ow">in</span> <span class="n">_REGION_SEED_ORDER</span><span class="p">:</span>
-            <span class="n">team_a</span> <span class="o">=</span> <span class="n">seed_lookup</span><span class="o">.</span><span class="n">get</span><span class="p">((</span><span class="n">region</span><span class="p">,</span> <span class="n">seed_a</span><span class="p">))</span>
-            <span class="n">team_b</span> <span class="o">=</span> <span class="n">seed_lookup</span><span class="o">.</span><span class="n">get</span><span class="p">((</span><span class="n">region</span><span class="p">,</span> <span class="n">seed_b</span><span class="p">))</span>
-            <span class="k">if</span> <span class="n">team_a</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">team_b</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Missing seed for region=</span><span class="si">{</span><span class="n">region</span><span class="si">}</span><span class="s2">: seed </span><span class="si">{</span><span class="n">seed_a</span><span class="si">}</span><span class="s2"> → </span><span class="si">{</span><span class="n">team_a</span><span class="si">}</span><span class="s2">, seed </span><span class="si">{</span><span class="n">seed_b</span><span class="si">}</span><span class="s2"> → </span><span class="si">{</span><span class="n">team_b</span><span class="si">}</span><span class="s2">&quot;</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-            <span class="n">team_ids_ordered</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">team_a</span><span class="p">)</span>
-            <span class="n">team_ids_ordered</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">team_b</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">team_ids_ordered</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">64</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Expected 64 teams, got </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">team_ids_ordered</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-    <span class="n">team_ids_tuple</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">team_ids_ordered</span><span class="p">)</span>
-    <span class="n">team_index_map</span> <span class="o">=</span> <span class="p">{</span><span class="n">tid</span><span class="p">:</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">tid</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">team_ids_tuple</span><span class="p">)}</span>
-
-    <span class="c1"># Build bracket tree</span>
-    <span class="c1"># 64 leaves → 6 rounds.  Root is round 5 (championship).</span>
-    <span class="n">all_indices</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">64</span><span class="p">))</span>
-    <span class="n">root</span> <span class="o">=</span> <span class="n">_build_subtree</span><span class="p">(</span><span class="n">all_indices</span><span class="p">,</span> <span class="n">round_offset</span><span class="o">=</span><span class="n">N_ROUNDS</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="n">BracketStructure</span><span class="p">(</span>
-        <span class="n">root</span><span class="o">=</span><span class="n">root</span><span class="p">,</span>
-        <span class="n">team_ids</span><span class="o">=</span><span class="n">team_ids_tuple</span><span class="p">,</span>
-        <span class="n">team_index_map</span><span class="o">=</span><span class="n">team_index_map</span><span class="p">,</span>
-        <span class="n">seed_map</span><span class="o">=</span><span class="n">seed_num_map</span><span class="p">,</span>
-    <span class="p">)</span></div>
-
-
-
-<span class="c1"># ---------------------------------------------------------------------------</span>
-<span class="c1"># Probability provider protocol (Task 2)</span>
-<span class="c1"># ---------------------------------------------------------------------------</span>
-
-
-<div class="viewcode-block" id="ProbabilityProvider">
-<a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.ProbabilityProvider">[docs]</a>
-<span class="nd">@runtime_checkable</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">ProbabilityProvider</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Protocol for pairwise win probability computation.</span>
-
-<span class="sd">    All implementations must satisfy the complementarity contract:</span>
-<span class="sd">    ``P(A beats B) + P(B beats A) = 1`` for every ``(A, B)`` pair.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-<div class="viewcode-block" id="ProbabilityProvider.matchup_probability">
-<a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.ProbabilityProvider.matchup_probability">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">matchup_probability</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">team_a_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-        <span class="n">team_b_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-        <span class="n">context</span><span class="p">:</span> <span class="n">MatchupContext</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return P(team_a beats team_b).</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            team_a_id: First team&#39;s canonical ID.</span>
-<span class="sd">            team_b_id: Second team&#39;s canonical ID.</span>
-<span class="sd">            context: Matchup context (season, day_num, neutral).</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            Probability in ``[0, 1]``.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="o">...</span></div>
-
-
-<div class="viewcode-block" id="ProbabilityProvider.batch_matchup_probabilities">
-<a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.ProbabilityProvider.batch_matchup_probabilities">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">batch_matchup_probabilities</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">team_a_ids</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
-        <span class="n">team_b_ids</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
-        <span class="n">context</span><span class="p">:</span> <span class="n">MatchupContext</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return P(a_i beats b_i) for all pairs.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            team_a_ids: Sequence of first-team IDs.</span>
-<span class="sd">            team_b_ids: Sequence of second-team IDs (same length).</span>
-<span class="sd">            context: Matchup context.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            1-D float64 array of shape ``(len(team_a_ids),)``.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="o">...</span></div>
-</div>
-
-
-
-<div class="viewcode-block" id="MatrixProvider">
-<a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.MatrixProvider">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">MatrixProvider</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Wraps a pre-computed probability matrix as a :class:`ProbabilityProvider`.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        prob_matrix: n×n pairwise probability matrix.</span>
-<span class="sd">        team_ids: Sequence of team IDs matching matrix indices.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">prob_matrix</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
-        <span class="n">team_ids</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_P</span> <span class="o">=</span> <span class="n">prob_matrix</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_index</span> <span class="o">=</span> <span class="p">{</span><span class="n">tid</span><span class="p">:</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">tid</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">team_ids</span><span class="p">)}</span>
-
-<div class="viewcode-block" id="MatrixProvider.matchup_probability">
-<a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.MatrixProvider.matchup_probability">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">matchup_probability</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">team_a_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-        <span class="n">team_b_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-        <span class="n">context</span><span class="p">:</span> <span class="n">MatchupContext</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return P(team_a beats team_b) from the stored matrix.&quot;&quot;&quot;</span>
-        <span class="n">i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_index</span><span class="p">[</span><span class="n">team_a_id</span><span class="p">]</span>
-        <span class="n">j</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_index</span><span class="p">[</span><span class="n">team_b_id</span><span class="p">]</span>
-        <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_P</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">])</span></div>
-
-
-<div class="viewcode-block" id="MatrixProvider.batch_matchup_probabilities">
-<a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.MatrixProvider.batch_matchup_probabilities">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">batch_matchup_probabilities</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">team_a_ids</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
-        <span class="n">team_b_ids</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
-        <span class="n">context</span><span class="p">:</span> <span class="n">MatchupContext</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return batch probabilities from the stored matrix.&quot;&quot;&quot;</span>
-        <span class="n">rows</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_index</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">team_a_ids</span><span class="p">])</span>
-        <span class="n">cols</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_index</span><span class="p">[</span><span class="n">b</span><span class="p">]</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">team_b_ids</span><span class="p">])</span>
-        <span class="n">result</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_P</span><span class="p">[</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">result</span></div>
-</div>
-
-
-
-<div class="viewcode-block" id="EloProvider">
-<a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.EloProvider">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">EloProvider</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Wraps a :class:`StatefulModel` as a :class:`ProbabilityProvider`.</span>
-
-<span class="sd">    Uses the model&#39;s ``_predict_one`` method for probability computation.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        model: Any :class:`StatefulModel` instance with ``_predict_one``.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s2">&quot;_predict_one&quot;</span><span class="p">):</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;model must have a _predict_one(team_a_id, team_b_id) method&quot;</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">model</span>
-
-<div class="viewcode-block" id="EloProvider.matchup_probability">
-<a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.EloProvider.matchup_probability">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">matchup_probability</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">team_a_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-        <span class="n">team_b_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-        <span class="n">context</span><span class="p">:</span> <span class="n">MatchupContext</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return P(team_a beats team_b) via the model&#39;s ``_predict_one``.&quot;&quot;&quot;</span>
-        <span class="n">result</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">_predict_one</span><span class="p">(</span><span class="n">team_a_id</span><span class="p">,</span> <span class="n">team_b_id</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">result</span></div>
-
-
-<div class="viewcode-block" id="EloProvider.batch_matchup_probabilities">
-<a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.EloProvider.batch_matchup_probabilities">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">batch_matchup_probabilities</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">team_a_ids</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
-        <span class="n">team_b_ids</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
-        <span class="n">context</span><span class="p">:</span> <span class="n">MatchupContext</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return batch probabilities by looping ``_predict_one``.</span>
-
-<span class="sd">        Elo is O(1) per pair so looping is acceptable.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
-            <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">_predict_one</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">team_a_ids</span><span class="p">,</span> <span class="n">team_b_ids</span><span class="p">)],</span>
-            <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span>
-        <span class="p">)</span></div>
-</div>
-
-
-
-<div class="viewcode-block" id="build_probability_matrix">
-<a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.build_probability_matrix">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">build_probability_matrix</span><span class="p">(</span>
-    <span class="n">provider</span><span class="p">:</span> <span class="n">ProbabilityProvider</span><span class="p">,</span>
-    <span class="n">team_ids</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
-    <span class="n">context</span><span class="p">:</span> <span class="n">MatchupContext</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build n×n pairwise win probability matrix.</span>
-
-<span class="sd">    Uses upper-triangle batch call, then fills ``P[j,i] = 1 - P[i,j]``</span>
-<span class="sd">    via the complementarity contract.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        provider: Probability provider implementing the protocol.</span>
-<span class="sd">        team_ids: Team IDs in bracket order.</span>
-<span class="sd">        context: Matchup context.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        Float64 array of shape ``(n, n)``.  Diagonal is zero.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">team_ids</span><span class="p">)</span>
-    <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">triu_indices</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-    <span class="n">a_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">team_ids</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="p">)]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">]</span>
-    <span class="n">b_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">team_ids</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">j</span><span class="p">)]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">cols</span><span class="p">]</span>
-
-    <span class="n">probs</span> <span class="o">=</span> <span class="n">provider</span><span class="o">.</span><span class="n">batch_matchup_probabilities</span><span class="p">(</span><span class="n">a_ids</span><span class="p">,</span> <span class="n">b_ids</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
-
-    <span class="n">P</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
-    <span class="n">P</span><span class="p">[</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">]</span> <span class="o">=</span> <span class="n">probs</span>
-    <span class="n">P</span><span class="p">[</span><span class="n">cols</span><span class="p">,</span> <span class="n">rows</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">probs</span>
-    <span class="k">return</span> <span class="n">P</span></div>
-
-
-
-<span class="c1"># ---------------------------------------------------------------------------</span>
-<span class="c1"># Scoring rule protocol (defined before registry so _ST can reference it)</span>
-<span class="c1"># ---------------------------------------------------------------------------</span>
-
-
-<div class="viewcode-block" id="ScoringRule">
-<a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.ScoringRule">[docs]</a>
-<span class="nd">@runtime_checkable</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">ScoringRule</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Protocol for tournament bracket scoring rules.&quot;&quot;&quot;</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Human-readable name of the scoring rule.&quot;&quot;&quot;</span>
-        <span class="o">...</span>
-
-<div class="viewcode-block" id="ScoringRule.points_per_round">
-<a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.ScoringRule.points_per_round">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">points_per_round</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">round_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return points awarded for a correct pick in round *round_idx*.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            round_idx: Zero-indexed round number (0=R64 through 5=NCG).</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            Points as a float.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="o">...</span></div>
-</div>
-
-
-
-<span class="c1"># ---------------------------------------------------------------------------</span>
-<span class="c1"># Scoring registry (decorator-based, mirrors model/registry.py)</span>
-<span class="c1"># ---------------------------------------------------------------------------</span>
-
-<span class="n">_ST</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;_ST&quot;</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="s2">&quot;type[ScoringRule]&quot;</span><span class="p">)</span>
-
-<span class="n">_SCORING_REGISTRY</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">type</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-
-
-<div class="viewcode-block" id="ScoringNotFoundError">
-<a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.ScoringNotFoundError">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">ScoringNotFoundError</span><span class="p">(</span><span class="ne">KeyError</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Raised when a requested scoring name is not in the registry.&quot;&quot;&quot;</span></div>
-
-
-
-<div class="viewcode-block" id="register_scoring">
-<a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.register_scoring">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">register_scoring</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">_ST</span><span class="p">],</span> <span class="n">_ST</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Class decorator that registers a scoring rule class.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        name: Registry key for the scoring rule.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        Decorator that registers the class and returns it unchanged.</span>
-
-<span class="sd">    Raises:</span>
-<span class="sd">        ValueError: If *name* is already registered.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">decorator</span><span class="p">(</span><span class="bp">cls</span><span class="p">:</span> <span class="n">_ST</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_ST</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_SCORING_REGISTRY</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Scoring name </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> is already registered to </span><span class="si">{</span><span class="n">_SCORING_REGISTRY</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="n">_SCORING_REGISTRY</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">cls</span>
-        <span class="k">return</span> <span class="bp">cls</span>
-
-    <span class="k">return</span> <span class="n">decorator</span></div>
-
-
-
-<div class="viewcode-block" id="get_scoring">
-<a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.get_scoring">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">get_scoring</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">type</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the scoring class registered under *name*.</span>
-
-<span class="sd">    Raises:</span>
-<span class="sd">        ScoringNotFoundError: If *name* is not registered.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">_SCORING_REGISTRY</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
-    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;No scoring registered with name </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">. Available: </span><span class="si">{</span><span class="n">list_scorings</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="k">raise</span> <span class="n">ScoringNotFoundError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span></div>
-
-
-
-<div class="viewcode-block" id="list_scorings">
-<a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.list_scorings">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">list_scorings</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return all registered scoring names (sorted).&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">_SCORING_REGISTRY</span><span class="p">)</span></div>
-
-
-
-<span class="c1"># ---------------------------------------------------------------------------</span>
-<span class="c1"># Scoring rule implementations (Task 4)</span>
-<span class="c1"># ---------------------------------------------------------------------------</span>
-
-
-<div class="viewcode-block" id="StandardScoring">
-<a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.StandardScoring">[docs]</a>
-<span class="nd">@register_scoring</span><span class="p">(</span><span class="s2">&quot;standard&quot;</span><span class="p">)</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">StandardScoring</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;ESPN-style scoring: 1-2-4-8-16-32 (192 total for perfect bracket).&quot;&quot;&quot;</span>
-
-    <span class="n">_POINTS</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">,</span> <span class="mf">8.0</span><span class="p">,</span> <span class="mf">16.0</span><span class="p">,</span> <span class="mf">32.0</span><span class="p">)</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``&#39;standard&#39;``.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="s2">&quot;standard&quot;</span>
-
-<div class="viewcode-block" id="StandardScoring.points_per_round">
-<a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.StandardScoring.points_per_round">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">points_per_round</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">round_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return standard scoring points for *round_idx*.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_POINTS</span><span class="p">[</span><span class="n">round_idx</span><span class="p">]</span></div>
-</div>
-
-
-
-<div class="viewcode-block" id="FibonacciScoring">
-<a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.FibonacciScoring">[docs]</a>
-<span class="nd">@register_scoring</span><span class="p">(</span><span class="s2">&quot;fibonacci&quot;</span><span class="p">)</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">FibonacciScoring</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Fibonacci-style scoring: 2-3-5-8-13-21 (231 total for perfect bracket).&quot;&quot;&quot;</span>
-
-    <span class="n">_POINTS</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">,</span> <span class="mf">8.0</span><span class="p">,</span> <span class="mf">13.0</span><span class="p">,</span> <span class="mf">21.0</span><span class="p">)</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``&#39;fibonacci&#39;``.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="s2">&quot;fibonacci&quot;</span>
-
-<div class="viewcode-block" id="FibonacciScoring.points_per_round">
-<a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.FibonacciScoring.points_per_round">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">points_per_round</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">round_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return Fibonacci scoring points for *round_idx*.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_POINTS</span><span class="p">[</span><span class="n">round_idx</span><span class="p">]</span></div>
-</div>
-
-
-
-<div class="viewcode-block" id="SeedDiffBonusScoring">
-<a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.SeedDiffBonusScoring">[docs]</a>
-<span class="nd">@register_scoring</span><span class="p">(</span><span class="s2">&quot;seed_diff_bonus&quot;</span><span class="p">)</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">SeedDiffBonusScoring</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base points + seed-difference bonus when lower seed wins.</span>
-
-<span class="sd">    Uses same base as StandardScoring (1-2-4-8-16-32).  When the lower</span>
-<span class="sd">    seed (higher seed number) wins, adds ``|seed_a - seed_b|`` bonus.</span>
-
-<span class="sd">    Note: This scoring rule&#39;s ``points_per_round`` returns only the base</span>
-<span class="sd">    points.  Full EP computation for seed-diff scoring (which requires</span>
-<span class="sd">    per-matchup seed information) is deferred to Story 6.6, which will add</span>
-<span class="sd">    a dedicated ``compute_expected_points_seed_diff`` function.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        seed_map: Mapping of ``team_id → seed_num``.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="n">_BASE_POINTS</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">,</span> <span class="mf">8.0</span><span class="p">,</span> <span class="mf">16.0</span><span class="p">,</span> <span class="mf">32.0</span><span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed_map</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_seed_map</span> <span class="o">=</span> <span class="n">seed_map</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return ``&#39;seed_diff_bonus&#39;``.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="s2">&quot;seed_diff_bonus&quot;</span>
-
-<div class="viewcode-block" id="SeedDiffBonusScoring.points_per_round">
-<a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.SeedDiffBonusScoring.points_per_round">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">points_per_round</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">round_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return base points (excludes seed-diff bonus).&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_BASE_POINTS</span><span class="p">[</span><span class="n">round_idx</span><span class="p">]</span></div>
-
-
-<div class="viewcode-block" id="SeedDiffBonusScoring.seed_diff_bonus">
-<a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.SeedDiffBonusScoring.seed_diff_bonus">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">seed_diff_bonus</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seed_a</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">seed_b</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return bonus points when the lower seed wins.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            seed_a: Winner&#39;s seed number.</span>
-<span class="sd">            seed_b: Loser&#39;s seed number.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            ``|seed_a - seed_b|`` if winner has higher seed number</span>
-<span class="sd">            (lower seed = upset), else 0.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">seed_a</span> <span class="o">&gt;</span> <span class="n">seed_b</span><span class="p">:</span>
-            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">seed_a</span> <span class="o">-</span> <span class="n">seed_b</span><span class="p">))</span>
-        <span class="k">return</span> <span class="mf">0.0</span></div>
-
-
-    <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">seed_map</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the seed lookup map.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_seed_map</span></div>
-
-
-
-<div class="viewcode-block" id="CustomScoring">
-<a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.CustomScoring">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">CustomScoring</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;User-defined scoring rule wrapping a callable.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        scoring_fn: Callable mapping ``round_idx`` → points.</span>
-<span class="sd">        scoring_name: Name for this custom rule.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scoring_fn</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">],</span> <span class="nb">float</span><span class="p">],</span> <span class="n">scoring_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_fn</span> <span class="o">=</span> <span class="n">scoring_fn</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">scoring_name</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the custom rule name.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span>
-
-<div class="viewcode-block" id="CustomScoring.points_per_round">
-<a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.CustomScoring.points_per_round">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">points_per_round</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">round_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return points from the wrapped callable.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fn</span><span class="p">(</span><span class="n">round_idx</span><span class="p">)</span></div>
-</div>
-
-
-
-<div class="viewcode-block" id="DictScoring">
-<a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.DictScoring">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">DictScoring</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Scoring rule from a dict mapping round_idx to points.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        points: Mapping of ``round_idx → points`` for rounds 0–5.</span>
-<span class="sd">        scoring_name: Name for this rule.</span>
-
-<span class="sd">    Raises:</span>
-<span class="sd">        ValueError: If *points* does not contain exactly 6 entries (rounds 0–5).</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span> <span class="n">scoring_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">)</span> <span class="o">!=</span> <span class="n">N_ROUNDS</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;DictScoring requires exactly 6 entries (rounds 0–5), got </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">points</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">set</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">N_ROUNDS</span><span class="p">)):</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;DictScoring requires keys 0–5, got </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">points</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_points</span> <span class="o">=</span> <span class="n">points</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">scoring_name</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the rule name.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span>
-
-<div class="viewcode-block" id="DictScoring.points_per_round">
-<a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.DictScoring.points_per_round">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">points_per_round</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">round_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return points for *round_idx*.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_points</span><span class="p">[</span><span class="n">round_idx</span><span class="p">]</span></div>
-</div>
-
-
-
-<div class="viewcode-block" id="scoring_from_config">
-<a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.scoring_from_config">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">scoring_from_config</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">ScoringRule</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a scoring rule from a configuration dict.</span>
-
-<span class="sd">    Dispatches on ``config[&quot;type&quot;]``:</span>
-
-<span class="sd">    * ``&quot;standard&quot;`` → :class:`StandardScoring`</span>
-<span class="sd">    * ``&quot;fibonacci&quot;`` → :class:`FibonacciScoring`</span>
-<span class="sd">    * ``&quot;seed_diff_bonus&quot;`` → :class:`SeedDiffBonusScoring` (requires ``seed_map``)</span>
-<span class="sd">    * ``&quot;dict&quot;`` → :class:`DictScoring` (requires ``points`` and ``name``)</span>
-<span class="sd">    * ``&quot;custom&quot;`` → :class:`CustomScoring` (requires ``callable`` and ``name``)</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        config: Configuration dict with at least a ``&quot;type&quot;`` key.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        Instantiated scoring rule.</span>
-
-<span class="sd">    Raises:</span>
-<span class="sd">        ValueError: If ``type`` is unknown or required keys are missing.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="s2">&quot;type&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;scoring config must contain a &#39;type&#39; key&quot;</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-    <span class="n">scoring_type</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;type&quot;</span><span class="p">]</span>
-    <span class="k">if</span> <span class="n">scoring_type</span> <span class="o">==</span> <span class="s2">&quot;standard&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">StandardScoring</span><span class="p">()</span>
-    <span class="k">if</span> <span class="n">scoring_type</span> <span class="o">==</span> <span class="s2">&quot;fibonacci&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">FibonacciScoring</span><span class="p">()</span>
-    <span class="k">if</span> <span class="n">scoring_type</span> <span class="o">==</span> <span class="s2">&quot;seed_diff_bonus&quot;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="s2">&quot;seed_map&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;scoring config for &#39;seed_diff_bonus&#39; requires a &#39;seed_map&#39; key&quot;</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">SeedDiffBonusScoring</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;seed_map&quot;</span><span class="p">])</span>
-    <span class="k">if</span> <span class="n">scoring_type</span> <span class="o">==</span> <span class="s2">&quot;dict&quot;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="s2">&quot;points&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;scoring config for &#39;dict&#39; requires a &#39;points&#39; key&quot;</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">DictScoring</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;points&quot;</span><span class="p">],</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;dict&quot;</span><span class="p">))</span>
-    <span class="k">if</span> <span class="n">scoring_type</span> <span class="o">==</span> <span class="s2">&quot;custom&quot;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="s2">&quot;callable&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;scoring config for &#39;custom&#39; requires a &#39;callable&#39; key&quot;</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">CustomScoring</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;callable&quot;</span><span class="p">],</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;custom&quot;</span><span class="p">))</span>
-    <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Unknown scoring type: </span><span class="si">{</span><span class="n">scoring_type</span><span class="si">!r}</span><span class="s2">&quot;</span>
-    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
-
-
-
-<span class="c1"># ---------------------------------------------------------------------------</span>
-<span class="c1"># SimulationResult (Task 5)</span>
+<span class="c1"># SimulationResult dataclasses</span>
 <span class="c1"># ---------------------------------------------------------------------------</span>
 
 
@@ -1394,6 +763,10 @@
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BracketDistribution</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute score distribution statistics from raw MC scores.</span>
 
+<span class="sd">    Computes the 5th/25th/50th/75th/95th percentiles via ``np.percentile``,</span>
+<span class="sd">    builds a ``n_bins``-bucket histogram via ``np.histogram``, and wraps all</span>
+<span class="sd">    statistics into a :class:`BracketDistribution`.</span>
+
 <span class="sd">    Args:</span>
 <span class="sd">        scores: Raw per-simulation scores, shape ``(n_simulations,)``.</span>
 <span class="sd">        n_bins: Number of histogram bins (default 50).</span>
@@ -1427,8 +800,12 @@
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Score a chosen bracket against each simulated tournament outcome.</span>
 
-<span class="sd">    For each simulation, counts how many of the chosen bracket&#39;s picks</span>
-<span class="sd">    match the simulation&#39;s actual outcomes, weighted by round points.</span>
+<span class="sd">    Broadcasts ``chosen_bracket`` across all simulations to build a boolean</span>
+<span class="sd">    match matrix (``sim_winners == chosen_bracket[None, :]``).  For each</span>
+<span class="sd">    scoring rule, constructs a per-game point vector by iterating rounds with</span>
+<span class="sd">    a running ``game_offset``, then computes per-sim scores as</span>
+<span class="sd">    ``(matches * game_points).sum(axis=1)`` — one vectorized dot product per</span>
+<span class="sd">    rule, no Python loop over simulations.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        chosen_bracket: Game winners for the chosen bracket, shape ``(n_games,)``.</span>
