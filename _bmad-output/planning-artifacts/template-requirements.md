@@ -2280,7 +2280,7 @@ When a shared validation helper (`_validate_inputs`) covers N metrics, edge-case
 
 Dev agents default to **NumPy docstring style** (`Parameters\n----------`, `Returns\n-------`, `Raises\n------`) when writing docstrings for data-science-oriented code. This project mandates **Google style** (`Args:`, `Returns:`, `Raises:`) per STYLE_GUIDE Section 1 and `pyproject.toml` pydocstyle convention.
 
-**Drift is invisible to Ruff** — the Google convention in `[tool.ruff.lint.pydocstyle]` only activates when `D` rules are added to `extend-select`. Until then, NumPy-style docstrings pass all linters silently.
+**Drift is invisible to Ruff** — the Google convention in `[tool.ruff.lint.pydocstyle]` implicitly activates certain D-rules, but `"D"` should be **explicitly added to `extend-select`** for auditable, self-documenting enforcement. Until that is done, NumPy-style docstrings still pass all linters silently (D-rules only verify *presence* and section *names*, not format style).
 
 **Template requirement:** Code review must explicitly verify all new docstrings in `src/` use Google style. Flag NumPy-style docs as a MEDIUM finding. Add a reminder to Dev Agent story notes: *"Use Google docstring style (Args:, Returns:, Raises:), NOT NumPy style (Parameters\n----------)"*.
 

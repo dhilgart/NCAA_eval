@@ -13,7 +13,12 @@ Download NCAA game data from Kaggle (historical seasons 1985–2025) and ESPN
 (current-season scores):
 
 ```bash
-python sync.py --source all --dest data/
+ncaa-eval sync --source all --dest data/
+```
+
+```{note}
+The legacy `python sync.py --source all --dest data/` invocation also works
+and accepts the same flags.  The `ncaa-eval sync` CLI is the canonical form.
 ```
 
 Sample output (first run — exact counts vary by season):

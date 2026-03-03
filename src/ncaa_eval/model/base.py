@@ -120,12 +120,23 @@ class StatefulModel(Model):
     def _to_games(X: pd.DataFrame, y: pd.Series) -> list[Game]:
         """Reconstruct :class:`Game` objects from the feature DataFrame.
 
+        Hoists optional-column checks outside the row loop to avoid O(n)
+        column-existence tests, decodes ``loc_encoding`` via a lookup dict,
+        resolves winner/loser ordering from the binary label, and coerces
+        date values using ``pd.isna`` to handle ``None``, float ``NaN``,
+        and ``pd.NaT`` uniformly.
+
         Args:
             X: Feature matrix with columns: ``team_a_id``, ``team_b_id``,
                 ``season``, ``day_num``, ``date``, ``loc_encoding``,
                 ``game_id``, ``is_tournament``.  Optionally ``w_score``,
                 ``l_score``, ``num_ot``.
             y: Binary label — ``1`` (or ``True``) means team_a won.
+
+        Returns:
+            Chronologically-ordered list of :class:`Game` objects ready for
+            sequential model processing via :meth:`update` and
+            :meth:`start_season`.
         """
         # Hoist column-existence checks outside the loop (O(1) each, not O(n))
         has_scores = "w_score" in X.columns and "l_score" in X.columns

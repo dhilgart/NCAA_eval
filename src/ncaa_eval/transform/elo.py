@@ -106,8 +106,10 @@ class EloFeatureEngine:
     ) -> tuple[float, float]:
         """Process one game and update ratings.
 
-        Returns ``(elo_w_before, elo_l_before)`` — the ratings *before* this
-        game's update — suitable for use as feature values.
+        Snapshots before-ratings for feature use, applies home-court
+        effective-rating adjustment to expected-score computation, computes
+        the margin-of-victory multiplier and variable K-factor, then mutates
+        internal rating state for both teams.
 
         Args:
             w_team_id: Winner team ID.
@@ -118,6 +120,11 @@ class EloFeatureEngine:
                 (neutral).
             is_tournament: Whether this is a tournament game.
             num_ot: Number of overtime periods (used for margin rescaling).
+
+        Returns:
+            Tuple of ``(elo_w_before, elo_l_before)`` — the winner's and
+            loser's ratings *before* this game's update, suitable for use
+            as walk-forward feature values.
         """
         r_w = self.get_rating(w_team_id)
         r_l = self.get_rating(l_team_id)
@@ -167,8 +174,12 @@ class EloFeatureEngine:
     def apply_season_mean_reversion(self, season: int) -> None:
         """Regress each team toward its conference mean (or global mean).
 
-        No-op when no prior ratings exist or no ``ConferenceLookup`` was
-        provided (falls back to global mean for all teams).
+        Groups all rated teams by conference via ``ConferenceLookup``,
+        computes each conference's mean rating, then shifts every team's
+        rating a fraction ``mean_reversion_fraction`` of the way toward its
+        conference mean.  Teams with no conference entry fall back to the
+        global mean; when no ``ConferenceLookup`` is provided all teams
+        use the global mean.  Is a no-op when no prior ratings exist.
         """
         if not self._ratings:
             return

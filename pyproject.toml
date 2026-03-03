@@ -71,6 +71,7 @@ extend-select = [
     "PT",     # flake8-pytest-style rules
     "TID25",  # flake8-tidy-imports rules
     "C90",    # McCabe complexity
+    "D",      # Docstring enforcement (Google convention via pydocstyle)
     "PLR0911",  # Too many return statements (configured: max-returns = 6)
     "PLR0912",  # Too many branches (configured: max-branches = 12)
     "PLR0913",  # Too many arguments (configured: max-args = 5)
