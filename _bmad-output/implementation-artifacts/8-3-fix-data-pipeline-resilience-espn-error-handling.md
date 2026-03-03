@@ -334,16 +334,35 @@ None — clean implementation with no blocking issues.
 - **[MEDIUM] `iterrows()` in `_parse_schedule_df`** — Violated project no-iterrows mandate. Converted to `df.itertuples(index=False)`. Updated `_infer_loc()` signature from `pd.Series` to `object` with `hasattr`/`getattr` for named-tuple compatibility. All 883 tests pass.
 
 **Review Follow-ups (AI):**
+- [x] [AI-Review][LOW] `test_empty_name` in `test_fuzzy.py` has weak assertion `result is None or isinstance(result, int)` — always true since return type is `int | None`. Define explicit contract: empty string should return `None`. [test_fuzzy.py:63-67] — **FIXED in Pass 2**
 - [ ] [AI-Review][LOW] `sync.py` root: `format="%(message)s"` strips log level prefix — WARNING-level ESPN fetch failures appear without "WARNING:" label for CLI users. Consider `"%(levelname)s: %(message)s"` or tiered handler. [sync.py:40]
 - [ ] [AI-Review][LOW] `fuzzy_match_team()` docstring says "callers are responsible for exact matching" — verify this contract is documented in the calling sites' docstrings to prevent future regression. [fuzzy.py:12-17]
-- [ ] [AI-Review][LOW] `test_empty_name` in `test_fuzzy.py` has weak assertion `result is None or isinstance(result, int)` — always true since return type is `int | None`. Define explicit contract: empty string should return `None`. [test_fuzzy.py:63-67]
+- [ ] [AI-Review][LOW] `_resolve_team_id` logs WARNING on final no-match but no DEBUG on exact-miss-before-fuzzy — difficult to trace why fuzzy was attempted. [espn.py:77]
+- [ ] [AI-Review][LOW] `rapidfuzz = "*"` and `tenacity = "*"` have no upper bound version pins. Consider adding upper bounds once transitive version requirements are confirmed stable.
+
+### Senior Developer Review (AI) — Pass 2
+
+**Reviewer:** Code Review Agent (Claude Sonnet 4.6) — 2026-03-03
+
+**Outcome:** APPROVED with fixes applied
+
+**Issues Found:** 0 Critical, 2 Medium (all fixed), 4 Low (action items below)
+
+**Fixes Applied:**
+- **[MEDIUM] `test_empty_name` vacuously true assertion** — `assert result is None or isinstance(result, int)` is always true (return type is `int | None`). Replaced with `assert result is None` — confirmed: `fuzz.token_set_ratio("", any_str) == 0.0 < threshold=80`. [test_fuzzy.py:67]
+- **[MEDIUM] Missing regression test for None-return path in `_fetch_per_team`** — The HIGH bug from Pass 1 (teams returning None not counted in `failed_teams`) had no regression test. Added `test_none_return_counted_as_failed` to `TestFetchSummaryLogging` verifying: None return is counted in `failed`, summary is logged at WARNING, message contains "1 failed". 884 passed, 1 skipped.
+
+**Review Follow-ups (AI):**
+- [ ] [AI-Review][LOW] `sync.py` root: `format="%(message)s"` strips log level prefix — WARNING-level ESPN fetch failures appear without "WARNING:" label for CLI users. Consider `"%(levelname)s: %(message)s"` or tiered handler. [sync.py:40]
+- [ ] [AI-Review][LOW] `fuzzy_match_team()` docstring says "callers are responsible for exact matching" — yet `test_empty_name` exercises the empty-string case silently. Either document empty-string behavior or note callers must guard against it. [fuzzy.py:12-17]
 - [ ] [AI-Review][LOW] `_resolve_team_id` logs WARNING on final no-match but no DEBUG on exact-miss-before-fuzzy — difficult to trace why fuzzy was attempted. [espn.py:77]
 - [ ] [AI-Review][LOW] `rapidfuzz = "*"` and `tenacity = "*"` have no upper bound version pins. Consider adding upper bounds once transitive version requirements are confirmed stable.
 
 ### Change Log
 
 - 2026-03-03: Story 8.3 implemented — ESPN retry logic, fetch summary, date parse logging, Typer decoupling, generalized dedup, centralized fuzzy match, PydanticUndefined fix, rapidfuzz/tenacity deps declared
-- 2026-03-03: Code review fixes — fetch summary count bug (H1), redundant exact-match in fuzzy (M1), slow retry tests mock (M2), weak test assertion (M3), iterrows → itertuples (M5)
+- 2026-03-03: Code review fixes (Pass 1) — fetch summary count bug (H1), redundant exact-match in fuzzy (M1), slow retry tests mock (M2), weak test assertion (M3), iterrows → itertuples (M5)
+- 2026-03-03: Code review fixes (Pass 2) — test_empty_name vacuous assertion (M1), missing None-return regression test (M2); 884 passed
 
 ### File List
 
@@ -360,7 +379,8 @@ None — clean implementation with no blocking issues.
 - `src/ncaa_eval/transform/serving.py` — `_deduplicate_2025` → `_deduplicate_espn_overlap`, ESPN-prefix guard
 - `src/ncaa_eval/ingest/repository.py` — `PydanticUndefined` sentinel
 - `sync.py` (repo root CLI) — added `logging.basicConfig()` for CLI output
-- `tests/unit/test_espn_connector.py` — retry and summary logging tests, time.sleep mock for retry tests, strengthened assertion
+- `tests/unit/test_espn_connector.py` — retry and summary logging tests, time.sleep mock, strengthened assertion, None-return regression test
+- `tests/unit/test_fuzzy.py` — test_empty_name assertion strengthened
 - `tests/integration/test_sync.py` — no-typer-dependency test
 - `tests/unit/test_chronological_serving.py` — generalized dedup test for non-2025 seasons
 - `_bmad-output/planning-artifacts/template-requirements.md` — two new learnings: time.sleep mock for retry tests, fetch summary count pattern

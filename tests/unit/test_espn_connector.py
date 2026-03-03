@@ -482,3 +482,33 @@ class TestFetchSummaryLogging:
         summary_msgs = [r for r in caplog.records if "fetched" in r.message and "failed" in r.message]
         assert len(summary_msgs) >= 1
         assert summary_msgs[0].levelno == logging.WARNING
+
+    def test_none_return_counted_as_failed(
+        self, connector: EspnConnector, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """Teams returning None (empty schedule, no exception) are counted in failed summary."""
+        # _fetch_single_team_schedule returns None for the first team (empty schedule),
+        # and a real DataFrame for the rest.  The None case must appear in failed_teams
+        # and trigger a WARNING summary — this is the regression test for the prior HIGH bug.
+        first_call = True
+
+        def _side_effect(team: str, season: int) -> pd.DataFrame | None:
+            nonlocal first_call
+            if first_call:
+                first_call = False
+                return None  # empty schedule — no exception
+            return _make_schedule_df()
+
+        with patch("ncaa_eval.ingest.connectors.espn._fetch_single_team_schedule") as mock_fetch:
+            mock_fetch.side_effect = _side_effect
+            with caplog.at_level(logging.WARNING, logger="ncaa_eval.ingest.connectors.espn"):
+                result = connector._fetch_per_team(2025)
+
+        # Partial failure — should log at WARNING level
+        summary_msgs = [r for r in caplog.records if "fetched" in r.message and "failed" in r.message]
+        assert len(summary_msgs) >= 1
+        assert summary_msgs[0].levelno == logging.WARNING
+        # "1 failed" should appear in the message (1 team returned None)
+        assert "1 failed" in summary_msgs[0].message
+        # Result should still contain data from the succeeding teams
+        assert result is not None

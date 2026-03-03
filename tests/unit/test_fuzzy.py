@@ -62,6 +62,6 @@ class TestFuzzyMatchTeam:
 
     def test_empty_name(self) -> None:
         result = fuzzy_match_team("", _CANDIDATES)
-        # Either None or some low-score match — depends on rapidfuzz behavior.
-        # Key is that it doesn't raise.
-        assert result is None or isinstance(result, int)
+        # rapidfuzz.fuzz.token_set_ratio("", any_string) == 0.0, which is below
+        # the default threshold of 80, so empty input always returns None.
+        assert result is None
