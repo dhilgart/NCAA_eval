@@ -8,6 +8,7 @@ from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pandas as pd  # type: ignore[import-untyped]
+import pytest
 
 from ncaa_eval.ingest.schema import Season, Team
 from ncaa_eval.model.tracking import ModelRun
@@ -307,12 +308,8 @@ class TestLoadFeatureImportances:
     @patch("dashboard.lib.data_loaders.RunStore")
     def test_returns_sorted_importances(self, mock_store_cls: MagicMock, mock_exists: MagicMock) -> None:
         mock_store = MagicMock()
-        mock_store.load_feature_names.return_value = ["elo_delta", "seed_diff"]
         mock_model = MagicMock()
-        mock_model._clf = MagicMock()
-        import numpy as np
-
-        mock_model._clf.feature_importances_ = np.array([0.3, 0.7])
+        mock_model.get_feature_importances.return_value = [("elo_delta", 0.3), ("seed_diff", 0.7)]
         mock_store.load_model.return_value = mock_model
         mock_run = MagicMock()
         mock_run.model_type = "xgboost"
@@ -373,6 +370,48 @@ class TestLoadFeatureImportances:
         from dashboard.lib.data_loaders import load_feature_importances
 
         result: list[dict[str, object]] = _unwrap(load_feature_importances)("/fake/data", "missing-run")
+        assert result == []
+
+    @patch("dashboard.lib.data_loaders.Path.exists", return_value=True)
+    @patch("dashboard.lib.data_loaders.RunStore")
+    def test_legacy_fallback_uses_clf_feature_importances(
+        self, mock_store_cls: MagicMock, mock_exists: MagicMock
+    ) -> None:
+        """Legacy path: get_feature_importances() returns None, fall back to _clf."""
+        mock_store = MagicMock()
+        mock_model = MagicMock()
+        mock_model.get_feature_importances.return_value = None
+        mock_clf = MagicMock()
+        mock_clf.feature_importances_ = np.array([0.6, 0.4])
+        mock_model._clf = mock_clf
+        mock_store.load_model.return_value = mock_model
+        mock_store.load_feature_names.return_value = ["seed_diff", "elo_delta"]
+        mock_store_cls.return_value = mock_store
+
+        from dashboard.lib.data_loaders import load_feature_importances
+
+        result: list[dict[str, object]] = _unwrap(load_feature_importances)("/fake/data", "run-1")
+        assert len(result) == 2
+        assert result[0]["feature"] == "seed_diff"
+        assert result[0]["importance"] == pytest.approx(0.6)
+
+    @patch("dashboard.lib.data_loaders.Path.exists", return_value=True)
+    @patch("dashboard.lib.data_loaders.RunStore")
+    def test_legacy_fallback_empty_when_feature_names_missing(
+        self, mock_store_cls: MagicMock, mock_exists: MagicMock
+    ) -> None:
+        """Legacy path: returns empty if no feature names stored (truly legacy run)."""
+        mock_store = MagicMock()
+        mock_model = MagicMock()
+        mock_model.get_feature_importances.return_value = None
+        mock_model._clf = None
+        mock_store.load_model.return_value = mock_model
+        mock_store.load_feature_names.return_value = None
+        mock_store_cls.return_value = mock_store
+
+        from dashboard.lib.data_loaders import load_feature_importances
+
+        result: list[dict[str, object]] = _unwrap(load_feature_importances)("/fake/data", "run-1")
         assert result == []
 
 
@@ -512,10 +551,12 @@ class TestBuildProviderFromFolds:
         result = _build_provider_from_folds(mock_store, "run-1", 2023, bracket)
 
         assert result is not None
-        # Verify the probability matrix was filled correctly
-        # P[0,1] should be 0.7 (team_a=100→idx=0 beats team_b=200→idx=1)
-        assert abs(result._P[0, 1] - 0.7) < 1e-6
-        assert abs(result._P[1, 0] - 0.3) < 1e-6
+        # Verify the probability matrix was filled correctly via public API
+        from ncaa_eval.evaluation.bracket import MatchupContext
+
+        ctx = MatchupContext(season=2023, day_num=136, is_neutral=True)
+        assert abs(result.matchup_probability(100, 200, ctx) - 0.7) < 1e-6
+        assert abs(result.matchup_probability(200, 100, ctx) - 0.3) < 1e-6
 
     def test_returns_none_when_no_fold_predictions(self) -> None:
         from dashboard.lib.simulation_helpers import _build_provider_from_folds
@@ -562,7 +603,10 @@ class TestBuildProviderFromFolds:
 
         assert result is not None
         # Only the valid row (100 vs 200) should be filled; 999/888 row ignored
-        assert abs(result._P[0, 1] - 0.7) < 1e-6
+        from ncaa_eval.evaluation.bracket import MatchupContext
+
+        ctx = MatchupContext(season=2023, day_num=136, is_neutral=True)
+        assert abs(result.matchup_probability(100, 200, ctx) - 0.7) < 1e-6
 
 
 class TestBuildTeamLabels:

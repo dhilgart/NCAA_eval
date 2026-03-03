@@ -262,7 +262,7 @@ class TestEdgeCases:
         server = _make_feature_server(dfs)
 
         folds = list(walk_forward_splits(seasons, server))
-        # 2011 is NOT in _NO_TOURNAMENT_SEASONS, but has 0 tournament games
+        # 2011 is NOT in NO_TOURNAMENT_SEASONS, but has 0 tournament games
         # → yield fold with empty test
         assert len(folds) == 1
         assert folds[0].year == 2011

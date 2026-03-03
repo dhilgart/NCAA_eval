@@ -298,7 +298,7 @@ class StatefulFeatureServer:
         elo_active = FeatureBlock.ELO in active and self._elo_engine is not None
 
         # Apply season mean-reversion if Elo engine has prior ratings
-        if elo_active and self._elo_engine is not None and self._elo_engine._ratings:
+        if elo_active and self._elo_engine is not None and self._elo_engine.has_ratings():
             self._elo_engine.start_new_season(year)
 
         result_rows: list[dict[str, object]] = []

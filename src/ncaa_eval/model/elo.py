@@ -67,15 +67,13 @@ class EloModel(StatefulModel):
 
     def _predict_one(self, team_a_id: int, team_b_id: int) -> float:
         """Return P(team_a wins) using the Elo expected-score formula."""
-        r_a = self._engine.get_rating(team_a_id)
-        r_b = self._engine.get_rating(team_b_id)
-        return EloFeatureEngine.expected_score(r_a, r_b)
+        return self._engine.predict_matchup(team_a_id, team_b_id)
 
     def get_state(self) -> dict[str, Any]:
         """Return ratings and game counts as a serialisable snapshot."""
         return {
             "ratings": self._engine.get_all_ratings(),
-            "game_counts": dict(self._engine._game_counts),
+            "game_counts": self._engine.get_game_counts(),
         }
 
     def set_state(self, state: dict[str, Any]) -> None:
@@ -109,11 +107,8 @@ class EloModel(StatefulModel):
         # Coerce string keys to int so JSON-decoded dicts (all keys are str)
         # work correctly — without coercion, get_rating(team_id_int) would
         # silently return initial_rating for every team.
-        # EloFeatureEngine has no public setter — direct attribute assignment is
-        # intentional here.  If the engine later adds validation, these lines
-        # should be replaced with the appropriate public API.
-        self._engine._ratings = {int(k): float(v) for k, v in ratings.items()}
-        self._engine._game_counts = {int(k): int(v) for k, v in game_counts.items()}
+        self._engine.set_ratings({int(k): float(v) for k, v in ratings.items()})
+        self._engine.set_game_counts({int(k): int(v) for k, v in game_counts.items()})
 
     # ------------------------------------------------------------------
     # Model ABC: persistence

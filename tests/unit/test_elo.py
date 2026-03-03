@@ -157,8 +157,8 @@ class TestEloFeatureEngineUpdate:
         engine = EloFeatureEngine(EloConfig())
         engine.update_game(101, 102, 75, 60, "N", False)
         # Both teams should have 1 game played
-        assert engine._game_counts[101] == 1
-        assert engine._game_counts[102] == 1
+        assert engine.get_game_counts()[101] == 1
+        assert engine.get_game_counts()[102] == 1
 
 
 class TestEloMarginScaling:
@@ -380,7 +380,7 @@ class TestEloSeasonManagement:
         """Without ConferenceLookup, regress toward global mean."""
         engine = EloFeatureEngine(EloConfig(mean_reversion_fraction=0.25))
         # Set up some ratings
-        engine._ratings = {101: 1600.0, 102: 1400.0}
+        engine.set_ratings({101: 1600.0, 102: 1400.0})
         # global mean = (1600+1400)/2 = 1500
 
         engine.apply_season_mean_reversion(season=2024)
@@ -406,12 +406,14 @@ class TestEloSeasonManagement:
             EloConfig(mean_reversion_fraction=0.25),
             conference_lookup=lookup,
         )
-        engine._ratings = {
-            101: 1600.0,
-            102: 1400.0,  # ACC mean = 1500
-            201: 1550.0,
-            202: 1450.0,  # B10 mean = 1500
-        }
+        engine.set_ratings(
+            {
+                101: 1600.0,
+                102: 1400.0,  # ACC mean = 1500
+                201: 1550.0,
+                202: 1450.0,  # B10 mean = 1500
+            }
+        )
 
         engine.apply_season_mean_reversion(season=2024)
 
@@ -437,7 +439,7 @@ class TestEloSeasonManagement:
             EloConfig(mean_reversion_fraction=0.25),
             conference_lookup=lookup,
         )
-        engine._ratings = {101: 1600.0, 102: 1400.0, 201: 1700.0}
+        engine.set_ratings({101: 1600.0, 102: 1400.0, 201: 1700.0})
         global_mean = (1600.0 + 1400.0 + 1700.0) / 3.0
 
         engine.apply_season_mean_reversion(season=2024)
@@ -450,19 +452,19 @@ class TestEloSeasonManagement:
         """No-op when no prior ratings exist."""
         engine = EloFeatureEngine(EloConfig())
         engine.apply_season_mean_reversion(season=2024)  # Should not raise
-        assert engine._ratings == {}
+        assert not engine.has_ratings()
 
     def test_reset_game_counts(self) -> None:
         engine = EloFeatureEngine(EloConfig())
-        engine._game_counts = {101: 30, 102: 28}
+        engine.set_game_counts({101: 30, 102: 28})
         engine.reset_game_counts()
-        assert engine._game_counts == {}
+        assert engine.get_game_counts() == {}
 
     def test_start_new_season_orchestrates(self) -> None:
         """start_new_season does mean-reversion then resets counts."""
         engine = EloFeatureEngine(EloConfig(mean_reversion_fraction=0.25))
-        engine._ratings = {101: 1600.0, 102: 1400.0}
-        engine._game_counts = {101: 30, 102: 28}
+        engine.set_ratings({101: 1600.0, 102: 1400.0})
+        engine.set_game_counts({101: 30, 102: 28})
 
         engine.start_new_season(season=2024)
 
@@ -470,7 +472,7 @@ class TestEloSeasonManagement:
         assert engine.get_rating(101) == pytest.approx(1575.0)
         assert engine.get_rating(102) == pytest.approx(1425.0)
         # Game counts should be reset
-        assert engine._game_counts == {}
+        assert engine.get_game_counts() == {}
 
 
 # ── Task 4: Snapshot and bulk processing tests ───────────────────────────────
@@ -481,7 +483,7 @@ class TestEloSnapshotAndBulk:
 
     def test_get_all_ratings_returns_copy(self) -> None:
         engine = EloFeatureEngine(EloConfig())
-        engine._ratings = {101: 1600.0, 102: 1400.0}
+        engine.set_ratings({101: 1600.0, 102: 1400.0})
         snapshot = engine.get_all_ratings()
         assert snapshot == {101: 1600.0, 102: 1400.0}
         # Modifying copy should not affect engine
@@ -530,8 +532,8 @@ class TestEloSnapshotAndBulk:
         """If prior ratings exist, process_season calls start_new_season."""
         engine = EloFeatureEngine(EloConfig(mean_reversion_fraction=0.25))
         # Simulate prior season
-        engine._ratings = {101: 1600.0, 102: 1400.0}
-        engine._game_counts = {101: 30, 102: 28}
+        engine.set_ratings({101: 1600.0, 102: 1400.0})
+        engine.set_game_counts({101: 30, 102: 28})
 
         games = [
             _make_game(game_id="1", season=2024, day_num=10, w_team_id=101, l_team_id=102),

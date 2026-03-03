@@ -216,8 +216,8 @@ class TestStatefulModel:
 
     def test_get_set_state_round_trip(self) -> None:
         model = _DummyStatefulModel()
-        model._ratings = {1: 1500.0, 2: 1600.0}
+        model.set_state({"ratings": {1: 1500.0, 2: 1600.0}})
         state = model.get_state()
         new_model = _DummyStatefulModel()
         new_model.set_state(state)
-        assert new_model._ratings == {1: 1500.0, 2: 1600.0}
+        assert new_model.get_state() == {"ratings": {1: 1500.0, 2: 1600.0}}

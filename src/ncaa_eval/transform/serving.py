@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 # is_tournament=True games.  The flag is derived from this constant rather than
 # inferred from the data so that downstream consumers can distinguish "no
 # tournament data loaded yet" from "tournament was cancelled this year".
-_NO_TOURNAMENT_SEASONS: frozenset[int] = frozenset({2020})
+NO_TOURNAMENT_SEASONS: frozenset[int] = frozenset({2020})
 
 
 @dataclass(frozen=True)
@@ -193,7 +193,7 @@ class ChronologicalDataServer:
             key=lambda g: (_effective_date(g, year), g.game_id),
         )
 
-        has_tournament = year not in _NO_TOURNAMENT_SEASONS
+        has_tournament = year not in NO_TOURNAMENT_SEASONS
         return SeasonGames(year=year, games=games, has_tournament=has_tournament)
 
     def iter_games_by_date(

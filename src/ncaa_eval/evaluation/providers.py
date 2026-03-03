@@ -4,7 +4,7 @@ Provides the :class:`ProbabilityProvider` protocol and concrete
 implementations for pairwise win probability computation:
 
 * :class:`MatrixProvider` — wraps a pre-computed probability matrix.
-* :class:`EloProvider` — wraps a stateful model's ``_predict_one`` method.
+* :class:`EloProvider` — wraps a stateful model's ``predict_matchup`` method.
 * :func:`build_probability_matrix` — builds an n×n pairwise matrix.
 """
 
@@ -107,15 +107,15 @@ class MatrixProvider:
 class EloProvider:
     """Wraps a :class:`StatefulModel` as a :class:`ProbabilityProvider`.
 
-    Uses the model's ``_predict_one`` method for probability computation.
+    Uses the model's ``predict_matchup`` method for probability computation.
 
     Args:
-        model: Any :class:`StatefulModel` instance with ``_predict_one``.
+        model: Any :class:`StatefulModel` instance with ``predict_matchup``.
     """
 
     def __init__(self, model: Any) -> None:
-        if not hasattr(model, "_predict_one"):
-            msg = "model must have a _predict_one(team_a_id, team_b_id) method"
+        if not hasattr(model, "predict_matchup"):
+            msg = "model must have a predict_matchup(team_a_id, team_b_id) method"
             raise TypeError(msg)
         self._model: Any = model
 
@@ -125,8 +125,8 @@ class EloProvider:
         team_b_id: int,
         context: MatchupContext,
     ) -> float:
-        """Return P(team_a beats team_b) via the model's ``_predict_one``."""
-        result: float = self._model._predict_one(team_a_id, team_b_id)
+        """Return P(team_a beats team_b) via the model's ``predict_matchup``."""
+        result: float = self._model.predict_matchup(team_a_id, team_b_id)
         return result
 
     def batch_matchup_probabilities(
@@ -135,12 +135,12 @@ class EloProvider:
         team_b_ids: Sequence[int],
         context: MatchupContext,
     ) -> npt.NDArray[np.float64]:
-        """Return batch probabilities by looping ``_predict_one``.
+        """Return batch probabilities by looping ``predict_matchup``.
 
         Elo is O(1) per pair so looping is acceptable.
         """
         return np.array(
-            [self._model._predict_one(a, b) for a, b in zip(team_a_ids, team_b_ids)],
+            [self._model.predict_matchup(a, b) for a, b in zip(team_a_ids, team_b_ids)],
             dtype=np.float64,
         )
 

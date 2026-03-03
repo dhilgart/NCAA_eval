@@ -23,12 +23,32 @@ Design invariants:
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, Protocol, runtime_checkable
 
 import numpy as np
 import numpy.typing as npt
 
 logger = logging.getLogger(__name__)
+
+
+@runtime_checkable
+class Calibrator(Protocol):
+    """Protocol for probability calibration transforms.
+
+    Both :class:`IsotonicCalibrator` and :class:`SigmoidCalibrator`
+    structurally satisfy this protocol.
+    """
+
+    def fit(
+        self,
+        y_true: npt.NDArray[np.float64],
+        y_prob: npt.NDArray[np.float64],
+    ) -> None: ...
+
+    def transform(
+        self,
+        y_prob: npt.NDArray[np.float64],
+    ) -> npt.NDArray[np.float64]: ...
 
 
 class IsotonicCalibrator:

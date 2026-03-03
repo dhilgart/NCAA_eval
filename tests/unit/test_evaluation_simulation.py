@@ -287,9 +287,9 @@ class TestMatrixProvider:
 class TestEloProvider:
     """Tests for EloProvider."""
 
-    def test_wraps_predict_one(self) -> None:
+    def test_wraps_predict_matchup(self) -> None:
         class FakeElo:
-            def _predict_one(self, team_a_id: int, team_b_id: int) -> float:
+            def predict_matchup(self, team_a_id: int, team_b_id: int) -> float:
                 return 0.75 if team_a_id < team_b_id else 0.25
 
         provider = EloProvider(FakeElo())
@@ -299,7 +299,7 @@ class TestEloProvider:
 
     def test_batch_consistency(self) -> None:
         class FakeElo:
-            def _predict_one(self, team_a_id: int, team_b_id: int) -> float:
+            def predict_matchup(self, team_a_id: int, team_b_id: int) -> float:
                 return 0.6
 
         provider = EloProvider(FakeElo())
@@ -308,13 +308,13 @@ class TestEloProvider:
         assert batch.shape == (2,)
         np.testing.assert_allclose(batch, [0.6, 0.6])
 
-    def test_requires_predict_one(self) -> None:
-        with pytest.raises(TypeError, match="_predict_one"):
+    def test_requires_predict_matchup(self) -> None:
+        with pytest.raises(TypeError, match="predict_matchup"):
             EloProvider(object())
 
     def test_complementarity(self) -> None:
         class FakeElo:
-            def _predict_one(self, team_a_id: int, team_b_id: int) -> float:
+            def predict_matchup(self, team_a_id: int, team_b_id: int) -> float:
                 return 0.7 if team_a_id < team_b_id else 0.3
 
         provider = EloProvider(FakeElo())

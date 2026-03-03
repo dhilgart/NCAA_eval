@@ -111,37 +111,34 @@ class TestEloModelUpdate:
 
 
 # ---------------------------------------------------------------------------
-# Task 5.3: _predict_one returns correct probability
+# Task 5.3: predict_matchup returns correct probability (public API)
 # ---------------------------------------------------------------------------
 
 
 class TestPredictOne:
     def test_equal_ratings_give_50_percent(self) -> None:
         model = EloModel()
-        prob = model._predict_one(1, 2)
+        prob = model.predict_matchup(1, 2)
         assert prob == pytest.approx(0.5, abs=1e-10)
 
     def test_higher_rated_team_favored(self) -> None:
         model = EloModel()
-        # Manually set different ratings
-        model._engine._ratings[1] = 1600.0
-        model._engine._ratings[2] = 1400.0
-        prob = model._predict_one(1, 2)
+        # Set different ratings via public API
+        model._engine.set_ratings({1: 1600.0, 2: 1400.0})
+        prob = model.predict_matchup(1, 2)
         assert prob > 0.5
 
     def test_lower_rated_team_unfavored(self) -> None:
         model = EloModel()
-        model._engine._ratings[1] = 1400.0
-        model._engine._ratings[2] = 1600.0
-        prob = model._predict_one(1, 2)
+        model._engine.set_ratings({1: 1400.0, 2: 1600.0})
+        prob = model.predict_matchup(1, 2)
         assert prob < 0.5
 
     def test_predict_one_matches_expected_score(self) -> None:
-        """_predict_one should delegate to EloFeatureEngine.expected_score."""
+        """predict_matchup should delegate to EloFeatureEngine.expected_score."""
         model = EloModel()
-        model._engine._ratings[10] = 1550.0
-        model._engine._ratings[20] = 1450.0
-        prob = model._predict_one(10, 20)
+        model._engine.set_ratings({10: 1550.0, 20: 1450.0})
+        prob = model.predict_matchup(10, 20)
         expected = EloFeatureEngine.expected_score(1550.0, 1450.0)
         assert prob == pytest.approx(expected, abs=1e-12)
 
@@ -154,10 +151,8 @@ class TestPredictOne:
 class TestStartSeason:
     def test_start_season_applies_mean_reversion(self) -> None:
         model = EloModel()
-        model._engine._ratings[1] = 1600.0
-        model._engine._ratings[2] = 1400.0
-        model._engine._game_counts[1] = 30
-        model._engine._game_counts[2] = 30
+        model._engine.set_ratings({1: 1600.0, 2: 1400.0})
+        model._engine.set_game_counts({1: 30, 2: 30})
 
         model.start_season(2021)
 
@@ -165,7 +160,7 @@ class TestStartSeason:
         assert model._engine.get_rating(1) < 1600.0
         assert model._engine.get_rating(2) > 1400.0
         # Game counts should be reset
-        assert model._engine._game_counts == {}
+        assert model._engine.get_game_counts() == {}
 
 
 # ---------------------------------------------------------------------------
@@ -176,8 +171,8 @@ class TestStartSeason:
 class TestGetSetState:
     def test_round_trip(self) -> None:
         model = EloModel()
-        model._engine._ratings = {1: 1550.0, 2: 1450.0}
-        model._engine._game_counts = {1: 10, 2: 15}
+        model._engine.set_ratings({1: 1550.0, 2: 1450.0})
+        model._engine.set_game_counts({1: 10, 2: 15})
 
         state = model.get_state()
         assert state["ratings"] == {1: 1550.0, 2: 1450.0}
@@ -190,14 +185,14 @@ class TestGetSetState:
     def test_state_is_independent_copy(self) -> None:
         """Modifying returned state should not affect model (ratings or game_counts)."""
         model = EloModel()
-        model._engine._ratings = {1: 1550.0}
-        model._engine._game_counts = {1: 5}
+        model._engine.set_ratings({1: 1550.0})
+        model._engine.set_game_counts({1: 5})
 
         state = model.get_state()
         state["ratings"][1] = 9999.0
         state["game_counts"][1] = 8888
         assert model._engine.get_rating(1) == 1550.0
-        assert model._engine._game_counts[1] == 5
+        assert model._engine.get_game_counts()[1] == 5
 
     def test_set_state_coerces_string_keys(self) -> None:
         """set_state() coerces string keys to int (JSON-decoded dict compatibility)."""
@@ -206,7 +201,7 @@ class TestGetSetState:
         # int key lookup must work after coercion
         assert model._engine.get_rating(1) == pytest.approx(1600.0, abs=1e-10)
         assert model._engine.get_rating(2) == pytest.approx(1400.0, abs=1e-10)
-        assert model._engine._game_counts[1] == 5
+        assert model._engine.get_game_counts()[1] == 5
 
     def test_set_state_missing_key_raises(self) -> None:
         """set_state() rejects dicts missing required keys."""
@@ -230,8 +225,8 @@ class TestSaveLoad:
     def test_round_trip(self, tmp_path: Path) -> None:
         config = EloModelConfig(k_early=40.0, initial_rating=1600.0)
         model = EloModel(config)
-        model._engine._ratings = {1: 1650.0, 2: 1550.0}
-        model._engine._game_counts = {1: 10, 2: 12}
+        model._engine.set_ratings({1: 1650.0, 2: 1550.0})
+        model._engine.set_game_counts({1: 10, 2: 12})
 
         save_dir = tmp_path / "elo_model"
         model.save(save_dir)
@@ -250,8 +245,8 @@ class TestSaveLoad:
     def test_state_json_has_string_keys(self, tmp_path: Path) -> None:
         """JSON spec requires string keys."""
         model = EloModel()
-        model._engine._ratings = {1: 1550.0}
-        model._engine._game_counts = {1: 5}
+        model._engine.set_ratings({1: 1550.0})
+        model._engine.set_game_counts({1: 5})
         save_dir = tmp_path / "elo_model"
         model.save(save_dir)
 
@@ -262,14 +257,14 @@ class TestSaveLoad:
     def test_load_restores_predictions(self, tmp_path: Path) -> None:
         """Predictions from loaded model should match original."""
         model = EloModel()
-        model._engine._ratings = {1: 1600.0, 2: 1400.0}
-        model._engine._game_counts = {1: 10, 2: 10}
-        pred_before = model._predict_one(1, 2)
+        model._engine.set_ratings({1: 1600.0, 2: 1400.0})
+        model._engine.set_game_counts({1: 10, 2: 10})
+        pred_before = model.predict_matchup(1, 2)
 
         save_dir = tmp_path / "elo_model"
         model.save(save_dir)
         loaded = EloModel.load(save_dir)
-        pred_after = loaded._predict_one(1, 2)
+        pred_after = loaded.predict_matchup(1, 2)
 
         assert pred_before == pytest.approx(pred_after, abs=1e-12)
 
@@ -404,10 +399,9 @@ class TestKnownNumericCalculation:
     def test_predict_one_known_probability(self) -> None:
         """Verify P(A wins) for a known rating difference."""
         model = EloModel()
-        model._engine._ratings[1] = 1600.0
-        model._engine._ratings[2] = 1400.0
+        model._engine.set_ratings({1: 1600.0, 2: 1400.0})
 
-        prob = model._predict_one(1, 2)
+        prob = model.predict_matchup(1, 2)
         # expected = 1 / (1 + 10^((1400 - 1600)/400)) = 1 / (1 + 10^(-0.5))
         expected = 1.0 / (1.0 + 10.0 ** (-0.5))
         assert prob == pytest.approx(expected, abs=1e-10)
@@ -506,9 +500,8 @@ class TestPredictOneProperties:
     def test_predict_one_always_in_unit_interval(self, rating_a: float, rating_b: float) -> None:
         """P(team_a wins) must always be in [0, 1] regardless of rating values."""
         model = EloModel()
-        model._engine._ratings[1] = rating_a
-        model._engine._ratings[2] = rating_b
-        prob = model._predict_one(1, 2)
+        model._engine.set_ratings({1: rating_a, 2: rating_b})
+        prob = model.predict_matchup(1, 2)
         assert 0.0 <= prob <= 1.0
 
     @given(
@@ -518,10 +511,9 @@ class TestPredictOneProperties:
     def test_predict_one_symmetric(self, rating_a: float, rating_b: float) -> None:
         """P(A beats B) + P(B beats A) must equal 1.0."""
         model = EloModel()
-        model._engine._ratings[1] = rating_a
-        model._engine._ratings[2] = rating_b
-        prob_ab = model._predict_one(1, 2)
-        prob_ba = model._predict_one(2, 1)
+        model._engine.set_ratings({1: rating_a, 2: rating_b})
+        prob_ab = model.predict_matchup(1, 2)
+        prob_ba = model.predict_matchup(2, 1)
         assert prob_ab + prob_ba == pytest.approx(1.0, abs=1e-12)
 
 
