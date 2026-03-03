@@ -237,7 +237,7 @@ Claude Opus 4.6
 | `_bmad-output/implementation-artifacts/sprint-status.yaml` | Modified — status in-progress → review |
 | `_bmad-output/implementation-artifacts/8-9-add-pep20-solid-pure-function-gates.md` | Modified — task checkboxes, Dev Agent Record, File List, Change Log, Status |
 
-### Senior Developer Review (AI)
+### Senior Developer Review (AI) — Pass 1
 
 **Date:** 2026-03-03
 **Reviewer:** Claude Sonnet 4.6 (adversarial code review)
@@ -257,7 +257,26 @@ Claude Opus 4.6
 
 **Tools verified:** `ruff check src/ncaa_eval tests` ✅, `mypy --strict src/ncaa_eval tests` ✅, `pytest -m smoke` 114/114 ✅
 
+### Senior Developer Review (AI) — Pass 2
+
+**Date:** 2026-03-03
+**Reviewer:** Claude Sonnet 4.6 (adversarial code review, 2nd pass)
+**Outcome:** Approved with 1 fix applied
+
+**ACs verified:** All 15 AC items confirmed — no regression from Pass 1 fixes.
+
+**Fix applied:**
+1. [M1-P2] Added `# noqa: BLE001` to `espn.py:141` `_fetch_per_team()` `except Exception:` — the fixed handler (upgraded debug→warning) was missing the noqa annotation that the Lint Suppression Policy (added by this story) requires on all bare-except clauses. Consistent with the annotation already present at line 240.
+
+**Low-severity findings (not fixed):**
+- L1: Compliance report claims "20 files at 4+ indentation levels" without naming them — reduces audit traceability for a planning artifact, acceptable for this story scope
+- L2: Pre-commit `pytest-smoke` hook stale Poetry venv (`~/.cache/pypoetry/virtualenvs/`) — pre-existing environment issue, not introduced by this story, no tracking item created
+- L3: PLR0911 (returns) misattributed to PEP 20 #5 (flat) in compliance report — minor, carried from Pass 1 L3
+
+**Tools verified:** `ruff check src/ncaa_eval tests` ✅, `mypy --strict src/ncaa_eval tests` ✅, `pytest -m smoke` 114/114 ✅
+
 ### Change Log
 
 - 2026-03-03: Story 8.9 implemented — PR template quality gates, Style Guide PEP 20 expansion and accuracy fixes, codebase PEP 20 compliance review with 2 mechanical fixes
-- 2026-03-03: Code review applied 3 fixes — added scripts/bmad_pipeline.sh to File List, added noqa annotation to espn.py _parse_date, clarified Task 6.1 ruff scope
+- 2026-03-03: Code review Pass 1 applied 3 fixes — added scripts/bmad_pipeline.sh to File List, added noqa annotation to espn.py _parse_date, clarified Task 6.1 ruff scope
+- 2026-03-03: Code review Pass 2 applied 1 fix — added # noqa: BLE001 to espn.py:141 _fetch_per_team() fixed handler (Lint Suppression Policy consistency)
