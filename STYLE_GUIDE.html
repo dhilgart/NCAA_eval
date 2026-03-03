@@ -344,6 +344,10 @@ lives in annotations only.</p></li>
 setting and ignore entries in <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code> are preparatory config that
 takes effect once <code class="docutils literal notranslate"><span class="pre">D</span></code> is added to <code class="docutils literal notranslate"><span class="pre">extend-select</span></code> in Story 1.4.
 At minimum, every public module and every public class should have a docstring.</p></li>
+<li><p><strong>Detailed description required</strong> when a function performs 3 or more operations.
+The description paragraph (after the summary line) must explain <em>how</em> the
+function implements its purpose — not just restate the summary. This is enforced
+during code review (PR checklist).</p></li>
 </ol>
 </section>
 <section id="example">
@@ -526,6 +530,22 @@ At minimum, every public module and every public class should have a docstring.<
 <td><p>tidy-imports</p></td>
 <td><p>Import hygiene — bans relative imports from parent packages</p></td>
 </tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">C90</span></code></p></td>
+<td><p>mccabe</p></td>
+<td><p>McCabe cyclomatic complexity ≤ 10 (see Section 6.1)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PLR0911</span></code></p></td>
+<td><p>pylint-refactor</p></td>
+<td><p>Max 6 return statements per function</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">PLR0912</span></code></p></td>
+<td><p>pylint-refactor</p></td>
+<td><p>Max 12 branches per function</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PLR0913</span></code></p></td>
+<td><p>pylint-refactor</p></td>
+<td><p>Max 5 function arguments</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -549,9 +569,67 @@ At minimum, every public module and every public class should have a docstring.<
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">D415</span></code></p></td>
 <td><p>First-line punctuation. Not yet active (see Section 1 note).</p></td>
 </tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">PLR2004</span></code></p></td>
+<td><p>Magic value comparison — too aggressive for data science code with domain-specific constants (e.g., tournament field size <code class="docutils literal notranslate"><span class="pre">64</span></code>, coin-flip probability <code class="docutils literal notranslate"><span class="pre">0.5</span></code>). See PEP 20 “Practicality Beats Purity” in Section 6.</p></td>
+</tr>
 </tbody>
 </table>
 </div>
+</section>
+<section id="lint-suppression-policy">
+<h3>Lint Suppression Policy<a class="headerlink" href="#lint-suppression-policy" title="Link to this heading">¶</a></h3>
+<p>When <code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">noqa</span></code> or <code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">type:</span> <span class="pre">ignore</span></code> is unavoidable, follow these rules:</p>
+<ol class="arabic">
+<li><p><strong>Always include the specific error code.</strong> Never use bare <code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">noqa</span></code> or bare
+<code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">type:</span> <span class="pre">ignore</span></code> — always specify which rule is being suppressed.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># GOOD: Specific suppression with rationale</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">joblib</span>  <span class="c1"># type: ignore[import-untyped] — no type stubs available</span>
+
+<span class="c1"># BAD: Bare suppression — which rule? why?</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">joblib</span>  <span class="c1"># type: ignore</span>
+</pre></div>
+</div>
+</li>
+<li><p><strong>Prefer refactoring over suppression.</strong> The escalation path:</p>
+<ul class="simple">
+<li><p>First: Refactor to eliminate the violation (extract function, split class, etc.)</p></li>
+<li><p>Second: If refactoring is impractical, suppress with specific code and comment</p></li>
+<li><p>Never: Suppress because “it’s faster than fixing”</p></li>
+</ul>
+</li>
+<li><p><strong>Complexity-class codes require PO approval.</strong> Inline <code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">noqa</span></code> for the following
+codes is allowed only with explicit PO approval:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">PLR0911</span></code> — Too many return statements (max 6)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PLR0912</span></code> — Too many branches (max 12)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PLR0913</span></code> — Too many arguments (max 5)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">C901</span></code> — McCabe cyclomatic complexity (max 10)</p></li>
+</ul>
+<p>When a suppression is approved, the inline comment must include a rationale:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Approved — rationale</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">update_game</span><span class="p">(</span>  <span class="c1"># noqa: PLR0913 — game data has inherent dimensionality</span>
+<span class="c1"># Pending refactoring — tracked to a story</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">run_training</span><span class="p">(</span>  <span class="c1"># noqa: PLR0913, C901, PLR0912 — REFACTOR Story 8.1</span>
+</pre></div>
+</div>
+</li>
+<li><p><strong>Acceptable suppression scenarios:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">type:</span> <span class="pre">ignore[import-untyped]</span></code> — Third-party libraries without type stubs</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">type:</span> <span class="pre">ignore[no-untyped-def]</span></code> — Callback signatures imposed by frameworks
+(e.g., Streamlit event handlers)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">noqa:</span> <span class="pre">BLE001</span></code> — Broad exception handling with documented rationale</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">noqa:</span> <span class="pre">PLR0913</span></code> (etc.) — With PO approval and rationale (see rule 3)</p></li>
+</ul>
+</li>
+<li><p><strong>Unacceptable suppression scenarios:</strong></p>
+<ul class="simple">
+<li><p>Any <code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">noqa</span></code> for PLR0911, PLR0912, PLR0913, or C901 <strong>without</strong> PO approval</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">type:</span> <span class="pre">ignore</span></code> on return types — Fix the return type annotation instead</p></li>
+<li><p>Any suppression without the specific error code</p></li>
+</ul>
+</li>
+</ol>
 </section>
 </section>
 <hr class="docutils" />
@@ -584,6 +662,30 @@ dependencies. Add <code class="docutils literal notranslate"><span class="pre">#
 include the specific error code.</p></li>
 <li><p>The <code class="docutils literal notranslate"><span class="pre">py.typed</span></code> marker at <code class="docutils literal notranslate"><span class="pre">src/ncaa_eval/py.typed</span></code> signals PEP 561 compliance.</p></li>
 </ol>
+</section>
+<section id="pydantic-integration">
+<h3>Pydantic Integration<a class="headerlink" href="#pydantic-integration" title="Link to this heading">¶</a></h3>
+<p><strong>Configured in:</strong> <code class="docutils literal notranslate"><span class="pre">[tool.mypy]</span> <span class="pre">plugins</span></code> and <code class="docutils literal notranslate"><span class="pre">[tool.pydantic-mypy]</span></code></p>
+<p>Pydantic is the project’s primary data modeling library (shared types between Logic
+and UI layers). The mypy plugin provides enhanced type checking for Pydantic models:</p>
+<div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[tool.mypy]</span>
+<span class="n">plugins</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;pydantic.mypy&quot;</span><span class="p">]</span>
+
+<span class="k">[tool.pydantic-mypy]</span>
+<span class="n">init_typed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="w">                    </span><span class="c1"># __init__ params get field types</span>
+<span class="n">init_forbid_extra</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="w">             </span><span class="c1"># error on unknown fields in __init__</span>
+<span class="n">warn_required_dynamic_aliases</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="c1"># warn if alias without default</span>
+</pre></div>
+</div>
+<p><strong>What this means for developers:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">init_typed</span> <span class="pre">=</span> <span class="pre">true</span></code> — mypy understands <code class="docutils literal notranslate"><span class="pre">Model(field=value)</span></code> constructor calls
+and validates argument types against field definitions.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">init_forbid_extra</span> <span class="pre">=</span> <span class="pre">true</span></code> — passing an unknown field name to a model constructor
+is a type error, not a silent runtime discard.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">warn_required_dynamic_aliases</span> <span class="pre">=</span> <span class="pre">true</span></code> — alerts when a field with <code class="docutils literal notranslate"><span class="pre">alias=</span></code> has no
+default value, which can cause confusing <code class="docutils literal notranslate"><span class="pre">ValidationError</span></code> messages.</p></li>
+</ul>
 </section>
 </section>
 <hr class="docutils" />
@@ -757,16 +859,173 @@ writing files per team).</p></li>
 </pre></div>
 </div>
 </section>
+<section id="complex-is-better-than-complicated">
+<h4>Complex is Better Than Complicated<a class="headerlink" href="#complex-is-better-than-complicated" title="Link to this heading">¶</a></h4>
+<ul class="simple">
+<li><p><strong>Review:</strong> Accept genuine complexity; reject unnecessary complication</p></li>
+<li><p><strong>Guideline:</strong> Some systems are inherently complex (simulation engines, Elo rating
+chains, cross-validation orchestrators). The goal is <em>managed complexity</em> — complex
+internals behind simple interfaces — not <em>complication</em> from tangled logic.</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># GOOD: Complex but not complicated — clear interface, complex internals</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">MonteCarloSimulator</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Simulate tournament outcomes via Monte Carlo sampling.</span>
+
+<span class="sd">    The algorithm is inherently complex (bracket traversal, probability</span>
+<span class="sd">    propagation, seeded randomness), but the interface is simple.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">simulate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bracket</span><span class="p">:</span> <span class="n">Bracket</span><span class="p">,</span> <span class="n">n_simulations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10_000</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SimulationResult</span><span class="p">:</span>
+        <span class="o">...</span>
+
+<span class="c1"># BAD: Complicated — unnecessary indirection, unclear purpose</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">run_sim</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">opts</span><span class="p">,</span> <span class="n">flags</span><span class="p">,</span> <span class="n">ctx</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;default&quot;</span><span class="p">:</span>
+        <span class="o">...</span>  <span class="c1"># 200 lines of nested conditionals</span>
+</pre></div>
+</div>
+</section>
+<section id="sparse-is-better-than-dense">
+<h4>Sparse is Better Than Dense<a class="headerlink" href="#sparse-is-better-than-dense" title="Link to this heading">¶</a></h4>
+<ul class="simple">
+<li><p><strong>Tooling:</strong> 110-character line length limit, Ruff formatting</p></li>
+<li><p><strong>Review:</strong> One operation per line, generous whitespace, no clever one-liners</p></li>
+<li><p><strong>Guideline:</strong> When a line does too much, split it. When a function packs too many
+operations together, extract named intermediates.</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># GOOD: Sparse — each step is clear</span>
+<span class="n">expected_win_rate</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mi">10</span> <span class="o">**</span> <span class="p">((</span><span class="n">opponent_rating</span> <span class="o">-</span> <span class="n">team_rating</span><span class="p">)</span> <span class="o">/</span> <span class="mi">400</span><span class="p">))</span>
+<span class="n">actual_outcome</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="k">if</span> <span class="n">won</span> <span class="k">else</span> <span class="mf">0.0</span>
+<span class="n">rating_change</span> <span class="o">=</span> <span class="n">k_factor</span> <span class="o">*</span> <span class="p">(</span><span class="n">actual_outcome</span> <span class="o">-</span> <span class="n">expected_win_rate</span><span class="p">)</span>
+
+<span class="c1"># BAD: Dense — everything crammed together</span>
+<span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="mi">32</span><span class="o">*</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">w</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="mi">10</span><span class="o">**</span><span class="p">((</span><span class="n">o</span><span class="o">-</span><span class="n">r</span><span class="p">)</span><span class="o">/</span><span class="mi">400</span><span class="p">))))</span>
+</pre></div>
+</div>
+</section>
+<section id="special-cases-aren-t-special-enough-practicality-beats-purity">
+<h4>Special Cases Aren’t Special Enough / Practicality Beats Purity<a class="headerlink" href="#special-cases-aren-t-special-enough-practicality-beats-purity" title="Link to this heading">¶</a></h4>
+<ul class="simple">
+<li><p><strong>Review:</strong> Allow pragmatic exceptions when properly documented</p></li>
+<li><p><strong>Guideline:</strong> The vectorization-first rule (Section 5) has legitimate exceptions:
+graph traversal, small fixed collections, side-effect loops. Data science code has
+domain-specific constants (<code class="docutils literal notranslate"><span class="pre">0.5</span></code> for coin-flip probability, <code class="docutils literal notranslate"><span class="pre">64</span></code> for tournament
+teams) that PLR2004 would flag — we suppress PLR2004 because practicality beats
+purity for these cases. The key: every exception must be <em>documented and intentional</em>,
+never silent.</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># GOOD: Pragmatic exception with justification</span>
+<span class="c1"># PLR2004 suppressed project-wide — domain constants like tournament size</span>
+<span class="c1"># are clearer inline than as named constants</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_bracket</span><span class="p">(</span><span class="n">teams</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Team</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Bracket</span><span class="p">:</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">teams</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">64</span><span class="p">:</span>  <span class="c1"># NCAA tournament field size</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Expected 64 teams, got </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">teams</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="o">...</span>
+
+<span class="c1"># BAD: Bare magic number with no context</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">process</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">42</span><span class="p">:</span>  <span class="c1"># What is 42?</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="p">[:</span><span class="mi">42</span><span class="p">]</span>
+</pre></div>
+</div>
+</section>
+<section id="errors-should-never-pass-silently-unless-explicitly-silenced">
+<h4>Errors Should Never Pass Silently / Unless Explicitly Silenced<a class="headerlink" href="#errors-should-never-pass-silently-unless-explicitly-silenced" title="Link to this heading">¶</a></h4>
+<ul class="simple">
+<li><p><strong>Review:</strong> Every exception handler must log or re-raise; no bare <code class="docutils literal notranslate"><span class="pre">except:</span> <span class="pre">pass</span></code></p></li>
+<li><p><strong>Guideline:</strong> This is the project’s most-violated PEP 20 principle (see Pattern D
+from codebase audit). The convention:</p>
+<ol class="arabic simple">
+<li><p><strong>Default:</strong> Log at WARNING level with structured context, then re-raise or return
+a sentinel that callers check.</p></li>
+<li><p><strong>Explicitly silenced:</strong> Log at DEBUG level with a code comment explaining <em>why</em>
+silence is acceptable. Use <code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">noqa</span></code> or <code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">type:</span> <span class="pre">ignore</span></code> with specific codes.</p></li>
+<li><p><strong>Never:</strong> Bare <code class="docutils literal notranslate"><span class="pre">except</span> <span class="pre">Exception:</span> <span class="pre">pass</span></code> or <code class="docutils literal notranslate"><span class="pre">except</span> <span class="pre">Exception</span></code> that substitutes
+a value without logging.</p></li>
+</ol>
+</li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># GOOD: Error surfaced with context</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="n">fetch_team_schedule</span><span class="p">(</span><span class="n">team_id</span><span class="p">)</span>
+<span class="k">except</span> <span class="n">RequestError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Failed to fetch schedule for team </span><span class="si">%d</span><span class="s2">: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">team_id</span><span class="p">,</span> <span class="n">exc</span><span class="p">)</span>
+    <span class="k">raise</span>
+
+<span class="c1"># GOOD: Explicitly silenced with rationale</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">optional_enrichment</span> <span class="o">=</span> <span class="n">fetch_extra_stats</span><span class="p">(</span><span class="n">team_id</span><span class="p">)</span>
+<span class="k">except</span> <span class="n">RequestError</span><span class="p">:</span>
+    <span class="c1"># Enrichment is non-critical; base stats are sufficient for predictions.</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Optional enrichment unavailable for team </span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">team_id</span><span class="p">)</span>
+    <span class="n">optional_enrichment</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="c1"># BAD: Silent swallowing — Pattern D violation</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">fetch_team_schedule</span><span class="p">(</span><span class="n">team_id</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>  <span class="c1"># Caller has no idea data is missing</span>
+</pre></div>
+</div>
+</section>
+<section id="refuse-the-temptation-to-guess">
+<h4>Refuse the Temptation to Guess<a class="headerlink" href="#refuse-the-temptation-to-guess" title="Link to this heading">¶</a></h4>
+<ul class="simple">
+<li><p><strong>Tooling:</strong> <code class="docutils literal notranslate"><span class="pre">mypy</span> <span class="pre">--strict</span></code> — forces explicit types everywhere</p></li>
+<li><p><strong>Review:</strong> No implicit type coercions, no unvalidated assumptions</p></li>
+<li><p><strong>Guideline:</strong> This aphorism is the philosophical foundation for <code class="docutils literal notranslate"><span class="pre">mypy</span> <span class="pre">--strict</span></code>.
+When types are explicit, the compiler catches wrong assumptions before runtime.
+When types are <code class="docutils literal notranslate"><span class="pre">Any</span></code> or missing, the code <em>guesses</em> — and guesses wrong at the
+worst possible time.</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># GOOD: Explicit types — no guessing</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_team_rating</span><span class="p">(</span><span class="n">team_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">ratings</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">float</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">ratings</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">team_id</span><span class="p">)</span>
+
+<span class="c1"># BAD: Implicit types — code guesses about structure</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_team_rating</span><span class="p">(</span><span class="n">team_id</span><span class="p">,</span> <span class="n">ratings</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">ratings</span><span class="p">[</span><span class="n">team_id</span><span class="p">]</span>  <span class="c1"># KeyError? ratings is a list? Who knows.</span>
+</pre></div>
+</div>
+</section>
+<section id="if-the-implementation-is-hard-to-explain-it-s-a-bad-idea-if-it-s-easy-to-explain-it-may-be-a-good-idea">
+<h4>If the Implementation Is Hard to Explain, It’s a Bad Idea / If It’s Easy to Explain, It May Be a Good Idea<a class="headerlink" href="#if-the-implementation-is-hard-to-explain-it-s-a-bad-idea-if-it-s-easy-to-explain-it-may-be-a-good-idea" title="Link to this heading">¶</a></h4>
+<ul class="simple">
+<li><p><strong>Tooling:</strong> McCabe complexity ≤ 10, max 50 lines per function</p></li>
+<li><p><strong>Review:</strong> If you can’t describe a function in one sentence, it needs splitting</p></li>
+<li><p><strong>Guideline:</strong> This reinforces the complexity limits. If a code reviewer asks
+“what does this do?” and the answer requires a paragraph, the function is doing
+too much. The <code class="docutils literal notranslate"><span class="pre">run_training()</span></code> function in <code class="docutils literal notranslate"><span class="pre">cli/train.py</span></code> (70+ statements, 3
+<code class="docutils literal notranslate"><span class="pre">noqa</span></code> suppressions) is the canonical example of code that is hard to explain.</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># GOOD: Easy to explain — &quot;calculates Brier score for probability predictions&quot;</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">brier_score</span><span class="p">(</span><span class="n">probabilities</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">outcomes</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">((</span><span class="n">probabilities</span> <span class="o">-</span> <span class="n">outcomes</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">))</span>
+
+<span class="c1"># BAD: Hard to explain — &quot;it processes... things... with conditions...&quot;</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">process_and_validate_then_transform_with_fallback</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">flags</span><span class="p">):</span>
+    <span class="o">...</span>  <span class="c1"># 80 lines that require 5 minutes to explain</span>
+</pre></div>
+</div>
+</section>
 </section>
 <section id="code-review-checklist-for-pep-20">
 <h3>Code Review Checklist for PEP 20<a class="headerlink" href="#code-review-checklist-for-pep-20" title="Link to this heading">¶</a></h3>
 <p>During code review, verify:</p>
 <ul class="simple">
 <li><p>[ ] <strong>Simplicity:</strong> Functions have single, clear responsibilities (McCabe complexity ≤ 10)</p></li>
+<li><p>[ ] <strong>Single purpose:</strong> Each function does exactly one thing; max 50 lines, nesting ≤ 3</p></li>
 <li><p>[ ] <strong>Explicitness:</strong> No magic numbers, parameters have clear names, behavior is obvious</p></li>
 <li><p>[ ] <strong>Readability:</strong> Domain concepts use full words, not abbreviations</p></li>
 <li><p>[ ] <strong>Flatness:</strong> Nesting depth ≤ 3, early returns preferred</p></li>
 <li><p>[ ] <strong>Consistency:</strong> Follows existing project patterns (vectorization, type sharing, etc.)</p></li>
+<li><p>[ ] <strong>Complexity vs complication:</strong> Inherent complexity is managed behind simple interfaces</p></li>
+<li><p>[ ] <strong>Sparseness:</strong> One operation per line, no clever one-liners, named intermediates</p></li>
+<li><p>[ ] <strong>Pragmatic exceptions:</strong> Deviations from rules are documented and intentional</p></li>
+<li><p>[ ] <strong>Error handling:</strong> No silent exception swallowing; handlers log or re-raise</p></li>
+<li><p>[ ] <strong>Explicit types:</strong> No <code class="docutils literal notranslate"><span class="pre">Any</span></code>, no missing annotations, no implicit coercions</p></li>
+<li><p>[ ] <strong>Explainability:</strong> Every function describable in one sentence</p></li>
+<li><p>[ ] <strong>No complexity-code overrides:</strong> No <code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">noqa</span></code> for PLR0911/PLR0912/PLR0913/C901 without PO approval; each includes a rationale</p></li>
+<li><p>[ ] <strong>Docstring detail:</strong> Functions with 3+ operations have detailed description explaining <em>how</em></p></li>
 </ul>
 </section>
 <hr class="docutils" />
@@ -1064,23 +1323,35 @@ the philosophy behind this two-tier approach, see
 <td><p>Manual review</p></td>
 <td><p>PR review</p></td>
 </tr>
-<tr class="row-even"><td><p>No vectorization violations</p></td>
+<tr class="row-even"><td><p>Docstring detail</p></td>
 <td><p>Manual review</p></td>
 <td><p>PR review</p></td>
 </tr>
-<tr class="row-odd"><td><p>Conventional commit messages</p></td>
+<tr class="row-odd"><td><p>No vectorization violations</p></td>
+<td><p>Manual review</p></td>
+<td><p>PR review</p></td>
+</tr>
+<tr class="row-even"><td><p>Conventional commit messages</p></td>
 <td><p>Commitizen</p></td>
 <td><p>Pre-commit</p></td>
 </tr>
-<tr class="row-even"><td><p>PEP 20 compliance</p></td>
+<tr class="row-odd"><td><p>Function complexity</p></td>
 <td><p>Manual review</p></td>
 <td><p>PR review</p></td>
 </tr>
-<tr class="row-odd"><td><p>SOLID principles</p></td>
+<tr class="row-even"><td><p>No complexity-code overrides</p></td>
 <td><p>Manual review</p></td>
 <td><p>PR review</p></td>
 </tr>
-<tr class="row-even"><td><p>Pure functions / functional design</p></td>
+<tr class="row-odd"><td><p>PEP 20 compliance</p></td>
+<td><p>Manual review</p></td>
+<td><p>PR review</p></td>
+</tr>
+<tr class="row-even"><td><p>SOLID principles</p></td>
+<td><p>Manual review</p></td>
+<td><p>PR review</p></td>
+</tr>
+<tr class="row-odd"><td><p>Pure function design</p></td>
 <td><p>Manual review</p></td>
 <td><p>PR review</p></td>
 </tr>
@@ -1093,8 +1364,14 @@ the philosophy behind this two-tier approach, see
 <li><p>Code follows naming conventions (Section 2).</p></li>
 <li><p>Imports are ordered correctly (Section 3).</p></li>
 <li><p>New public APIs have docstrings (Section 1).</p></li>
+<li><p>Functions with 3+ operations include a detailed docstring description explaining
+<em>how</em> (not just <em>what</em>) — see Section 1.</p></li>
 <li><p>No <code class="docutils literal notranslate"><span class="pre">for</span></code> loops over DataFrames for calculations (Section 5).</p></li>
 <li><p>Type annotations are complete (Section 4).</p></li>
+<li><p>Each function does one thing; manually verify single responsibility, max 50 lines,
+nesting ≤ 3.</p></li>
+<li><p>No <code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">noqa</span></code> for PLR0911, PLR0912, PLR0913, or C901 without PO approval; each
+must include a rationale (Section 3, Lint Suppression Policy).</p></li>
 <li><p>PEP 20 design principles respected (Section 6).</p></li>
 <li><p>Pure functions used for business logic, side effects at edges (Section 6.2).</p></li>
 <li><p>SOLID principles applied for testability (Section 10).</p></li>
@@ -1110,17 +1387,20 @@ the philosophy behind this two-tier approach, see
 <h3>Project Layout<a class="headerlink" href="#project-layout" title="Link to this heading">¶</a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">src</span><span class="o">/</span>
   <span class="n">ncaa_eval</span><span class="o">/</span>
-    <span class="fm">__init__</span><span class="o">.</span><span class="n">py</span>          <span class="c1"># Package root — re-exports public API</span>
+    <span class="fm">__init__</span><span class="o">.</span><span class="n">py</span>          <span class="c1"># Package root</span>
     <span class="n">py</span><span class="o">.</span><span class="n">typed</span>             <span class="c1"># PEP 561 marker</span>
+    <span class="n">cli</span><span class="o">/</span>                 <span class="c1"># CLI entry points (main, train)</span>
     <span class="n">ingest</span><span class="o">/</span>              <span class="c1"># Data source connectors</span>
     <span class="n">transform</span><span class="o">/</span>           <span class="c1"># Feature engineering</span>
-    <span class="n">model</span><span class="o">/</span>               <span class="c1"># Model ABC and implementations</span>
+    <span class="n">model</span><span class="o">/</span>               <span class="c1"># Model ABC and implementations (singular, not models/)</span>
     <span class="n">evaluation</span><span class="o">/</span>          <span class="c1"># Metrics, CV, simulation</span>
-    <span class="n">utils</span><span class="o">/</span>               <span class="c1"># Shared helpers (logging, assertions)</span>
+    <span class="n">utils</span><span class="o">/</span>               <span class="c1"># Shared helpers (logger.py)</span>
 <span class="n">tests</span><span class="o">/</span>
   <span class="fm">__init__</span><span class="o">.</span><span class="n">py</span>
-  <span class="n">test_</span><span class="o">&lt;</span><span class="n">module</span><span class="o">&gt;.</span><span class="n">py</span>       <span class="c1"># Mirror src/ structure</span>
   <span class="n">conftest</span><span class="o">.</span><span class="n">py</span>            <span class="c1"># Shared fixtures</span>
+  <span class="n">unit</span><span class="o">/</span>                  <span class="c1"># Unit tests organized by domain</span>
+  <span class="n">integration</span><span class="o">/</span>           <span class="c1"># Integration tests</span>
+  <span class="n">fixtures</span><span class="o">/</span>              <span class="c1"># Test data fixtures</span>
 <span class="n">dashboard</span><span class="o">/</span>               <span class="c1"># Streamlit UI (imports ncaa_eval — no direct IO)</span>
 <span class="n">data</span><span class="o">/</span>                    <span class="c1"># Local data store (git-ignored)</span>
 </pre></div>
@@ -1131,8 +1411,8 @@ the philosophy behind this two-tier approach, see
 <ol class="arabic simple">
 <li><p><strong>One concept per module.</strong> A module should do one thing. If it grows beyond
 ~300 lines, consider splitting.</p></li>
-<li><p><strong>Mirror <code class="docutils literal notranslate"><span class="pre">src/</span></code> in <code class="docutils literal notranslate"><span class="pre">tests/</span></code>.</strong> <code class="docutils literal notranslate"><span class="pre">src/ncaa_eval/models/elo.py</span></code> is tested by
-<code class="docutils literal notranslate"><span class="pre">tests/test_elo.py</span></code> (or <code class="docutils literal notranslate"><span class="pre">tests/models/test_elo.py</span></code>).</p></li>
+<li><p><strong>Mirror <code class="docutils literal notranslate"><span class="pre">src/</span></code> in <code class="docutils literal notranslate"><span class="pre">tests/</span></code>.</strong> <code class="docutils literal notranslate"><span class="pre">src/ncaa_eval/model/elo.py</span></code> is tested by
+<code class="docutils literal notranslate"><span class="pre">tests/unit/test_elo.py</span></code> (or <code class="docutils literal notranslate"><span class="pre">tests/integration/test_elo_integration.py</span></code>).</p></li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">__init__.py</span></code> re-exports.</strong> Public symbols should be importable from the
 package level: <code class="docutils literal notranslate"><span class="pre">from</span> <span class="pre">ncaa_eval</span> <span class="pre">import</span> <span class="pre">EloModel</span></code>.</p></li>
 <li><p><strong>No circular imports.</strong> If two modules need each other, extract shared types
@@ -1275,29 +1555,43 @@ for tools that support <code class="docutils literal notranslate"><span class="p
 <div><p>“Many specific interfaces are better than one general-purpose interface.”</p>
 </div></blockquote>
 <p><strong>What it means:</strong> Don’t force classes to implement methods they don’t need.</p>
-<p><strong>Already enforced by:</strong> MyPy strict mode with Protocols (Section 4)</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># GOOD: Small, focused interfaces</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">Predictable</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+<p><strong>Already enforced by:</strong> MyPy strict mode with ABCs and Protocols (Section 4)</p>
+<p>This project uses <strong>ABCs as the primary pattern</strong> for interface segregation (Model ABC,
+Repository ABC, Connector ABC) and <strong>Protocols as a complement</strong> for structural typing
+where duck typing is preferred (e.g., <code class="docutils literal notranslate"><span class="pre">ProbabilityProvider</span></code>, <code class="docutils literal notranslate"><span class="pre">ScoringRule</span></code> in the
+simulation engine). Choose based on context:</p>
+<ul class="simple">
+<li><p><strong>ABCs:</strong> When implementations must be explicitly registered and share behavior
+(e.g., all models inherit from <code class="docutils literal notranslate"><span class="pre">Model</span></code> and get common infrastructure).</p></li>
+<li><p><strong>Protocols:</strong> When you need structural typing — any object with matching methods
+qualifies, without inheriting from anything (e.g., <code class="docutils literal notranslate"><span class="pre">ProbabilityProvider</span></code> can be
+satisfied by any class with a <code class="docutils literal notranslate"><span class="pre">predict_proba</span></code> method).</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># PRIMARY: ABCs for explicit interface contracts</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Model</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for all prediction models.&quot;&quot;&quot;</span>
+    <span class="nd">@abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">game</span><span class="p">:</span> <span class="n">Game</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span> <span class="o">...</span>
 
-<span class="k">class</span><span class="w"> </span><span class="nc">Trainable</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">games</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
-
-<span class="k">class</span><span class="w"> </span><span class="nc">EloModel</span><span class="p">:</span>
-    <span class="c1"># Only implements what it needs</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">EloModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">game</span><span class="p">:</span> <span class="n">Game</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span> <span class="o">...</span>
+
+<span class="c1"># COMPLEMENT: Protocols for structural typing (duck typing)</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">ProbabilityProvider</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">predict_proba</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">matchup</span><span class="p">:</span> <span class="n">Matchup</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span> <span class="o">...</span>
+
+<span class="c1"># Any class with predict_proba() satisfies this — no inheritance needed</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">EloProvider</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">predict_proba</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">matchup</span><span class="p">:</span> <span class="n">Matchup</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span> <span class="o">...</span>
 
 <span class="c1"># BAD: Fat interface forces unused methods</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">Model</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">DoEverything</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">game</span><span class="p">:</span> <span class="n">Game</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span> <span class="o">...</span>
-
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">games</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
-
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">cross_validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">games</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span> <span class="o">...</span>
-
     <span class="c1"># Simple models forced to implement methods they don&#39;t need!</span>
 </pre></div>
 </div>
@@ -1341,7 +1635,7 @@ for tools that support <code class="docutils literal notranslate"><span class="p
 <li><p>[ ] <strong>SRP:</strong> Classes/functions have single, clear responsibility (covered by PEP 20 complexity)</p></li>
 <li><p>[ ] <strong>OCP:</strong> New features added via extension (inheritance, composition), not modification</p></li>
 <li><p>[ ] <strong>LSP:</strong> Subtypes honor parent contracts (property tests verify this)</p></li>
-<li><p>[ ] <strong>ISP:</strong> Interfaces are small and focused (use Protocols, not fat abstract classes)</p></li>
+<li><p>[ ] <strong>ISP:</strong> Interfaces are small and focused (ABCs primary, Protocols for structural typing)</p></li>
 <li><p>[ ] <strong>DIP:</strong> Depends on abstractions (Protocols, TypedDicts), not concrete classes</p></li>
 </ul>
 </section>
@@ -1365,7 +1659,7 @@ for tools that support <code class="docutils literal notranslate"><span class="p
 <td><p>Property tests: “probabilities in [0, 1]” invariants</p></td>
 </tr>
 <tr class="row-odd"><td><p><strong>ISP</strong></p></td>
-<td><p>MyPy strict mode: Protocols preferred over abstract classes</p></td>
+<td><p>MyPy strict mode: ABCs primary (Model, Repository, Connector), Protocols complement (ProbabilityProvider, ScoringRule)</p></td>
 </tr>
 <tr class="row-even"><td><p><strong>DIP</strong></p></td>
 <td><p>Architecture: “Type sharing via Pydantic/TypedDicts”</p></td>
@@ -1459,11 +1753,13 @@ for tools that support <code class="docutils literal notranslate"><span class="p
 <li><a class="reference internal" href="#id1">Example</a></li>
 <li><a class="reference internal" href="#active-ruff-rules">Active Ruff Rules</a></li>
 <li><a class="reference internal" href="#suppressed-rules">Suppressed Rules</a></li>
+<li><a class="reference internal" href="#lint-suppression-policy">Lint Suppression Policy</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#type-annotation-standards">4. Type Annotation Standards</a><ul>
 <li><a class="reference internal" href="#what-strict-means-for-developers">What <code class="docutils literal notranslate"><span class="pre">--strict</span></code> Means for Developers</a></li>
 <li><a class="reference internal" href="#practical-guidelines">Practical Guidelines</a></li>
+<li><a class="reference internal" href="#pydantic-integration">Pydantic Integration</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#vectorization-first">5. Vectorization First</a><ul>
@@ -1480,6 +1776,12 @@ for tools that support <code class="docutils literal notranslate"><span class="p
 <li><a class="reference internal" href="#readability-counts">Readability Counts</a></li>
 <li><a class="reference internal" href="#flat-is-better-than-nested">Flat is Better Than Nested</a></li>
 <li><a class="reference internal" href="#there-should-be-one-obvious-way-to-do-it">There Should Be One Obvious Way to Do It</a></li>
+<li><a class="reference internal" href="#complex-is-better-than-complicated">Complex is Better Than Complicated</a></li>
+<li><a class="reference internal" href="#sparse-is-better-than-dense">Sparse is Better Than Dense</a></li>
+<li><a class="reference internal" href="#special-cases-aren-t-special-enough-practicality-beats-purity">Special Cases Aren’t Special Enough / Practicality Beats Purity</a></li>
+<li><a class="reference internal" href="#errors-should-never-pass-silently-unless-explicitly-silenced">Errors Should Never Pass Silently / Unless Explicitly Silenced</a></li>
+<li><a class="reference internal" href="#refuse-the-temptation-to-guess">Refuse the Temptation to Guess</a></li>
+<li><a class="reference internal" href="#if-the-implementation-is-hard-to-explain-it-s-a-bad-idea-if-it-s-easy-to-explain-it-may-be-a-good-idea">If the Implementation Is Hard to Explain, It’s a Bad Idea / If It’s Easy to Explain, It May Be a Good Idea</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#code-review-checklist-for-pep-20">Code Review Checklist for PEP 20</a></li>
