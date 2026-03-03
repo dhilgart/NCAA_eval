@@ -1,0 +1,326 @@
+# Story 8.2: Expose Public APIs & Eliminate Private Attribute Access
+
+Status: ready-for-dev
+
+## Story
+
+As a developer,
+I want all cross-module interactions to use public methods and constants instead of accessing private (`_`-prefixed) attributes,
+so that the codebase has explicit API contracts, is safe to refactor, and passes `mypy --strict` without implicit coupling.
+
+## Acceptance Criteria
+
+### AC1: EloFeatureEngine Public API Expansion
+
+1. `EloFeatureEngine` in `src/ncaa_eval/transform/elo.py` exposes a new public method `has_ratings() -> bool` that returns `True` if `_ratings` is non-empty
+2. `EloFeatureEngine` exposes `set_ratings(ratings: dict[int, float]) -> None` to replace direct `_ratings` assignment
+3. `EloFeatureEngine` exposes `set_game_counts(counts: dict[int, int]) -> None` to replace direct `_game_counts` assignment
+4. `EloFeatureEngine` exposes `get_game_counts() -> dict[int, int]` returning a copy (mirrors existing `get_all_ratings()` pattern)
+5. `EloFeatureEngine` exposes `predict_matchup(team_a_id: int, team_b_id: int) -> float` that returns P(team_a wins) via the Elo expected-score formula — this is the public equivalent of the current `_predict_one` private method
+
+### AC2: Feature Serving Uses Public API
+
+6. `src/ncaa_eval/transform/feature_serving.py:301` uses `self._elo_engine.has_ratings()` instead of accessing `self._elo_engine._ratings` directly
+
+### AC3: EloModel Uses Public Setters/Getters
+
+7. `src/ncaa_eval/model/elo.py` `get_state()` uses `self._engine.get_game_counts()` instead of `dict(self._engine._game_counts)`
+8. `src/ncaa_eval/model/elo.py` `set_state()` uses `self._engine.set_ratings(...)` and `self._engine.set_game_counts(...)` instead of direct `_ratings` / `_game_counts` assignment
+
+### AC4: StatefulModel Public Prediction Hook
+
+9. `StatefulModel` ABC in `src/ncaa_eval/model/base.py` exposes a public `predict_matchup(team_a_id: int, team_b_id: int) -> float` method that delegates to the existing abstract `_predict_one` hook — this gives external consumers a public API without breaking the internal hook contract
+10. `src/ncaa_eval/evaluation/providers.py` `EloProvider` uses `self._model.predict_matchup(...)` instead of `self._model._predict_one(...)` (including the `hasattr` check in `__init__`)
+
+### AC5: Model Feature Importances Public API
+
+11. `Model` ABC in `src/ncaa_eval/model/base.py` provides a default `get_feature_importances() -> list[tuple[str, float]] | None` method returning `None` (base behavior: no importances available)
+12. `XGBoostModel` in `src/ncaa_eval/model/xgboost_model.py` overrides `get_feature_importances()` to return feature names + importance values from `self._clf.feature_importances_` (requires storing `feature_names` during `fit()`)
+13. `dashboard/lib/data_loaders.py` `load_feature_importances()` uses `model.get_feature_importances()` instead of `getattr(model, "_clf", None)`
+
+### AC6: Public Constant for No-Tournament Seasons
+
+14. `src/ncaa_eval/transform/serving.py` renames `_NO_TOURNAMENT_SEASONS` to `NO_TOURNAMENT_SEASONS` (public constant)
+15. `src/ncaa_eval/evaluation/splitter.py` imports `NO_TOURNAMENT_SEASONS` (public name)
+16. `src/ncaa_eval/transform/__init__.py` exports `NO_TOURNAMENT_SEASONS` if it currently exports the private version
+
+### AC7: Calibrator Protocol
+
+17. A `Calibrator` Protocol (or ABC) is created in `src/ncaa_eval/transform/calibration.py` defining `fit(probs, outcomes)` and `transform(probs)` as the common interface
+18. `IsotonicCalibrator` and `SigmoidCalibrator` explicitly implement the `Calibrator` protocol
+19. Any code that accepts calibrator instances uses the `Calibrator` type annotation instead of `IsotonicCalibrator | SigmoidCalibrator`
+
+### AC8: MatrixProvider Public Accessor
+
+20. `MatrixProvider` in `src/ncaa_eval/evaluation/providers.py` exposes a public `matchup_probability(team_a_id: int, team_b_id: int) -> float` method (may already exist — verify and add if missing)
+
+### AC9: Test Updates
+
+21. `tests/unit/test_dashboard_filters.py` assertions on `result._P[i, j]` replaced with `result.matchup_probability(team_a_id, team_b_id)` calls
+22. `tests/unit/test_model_elo.py` tests calling `model._predict_one(...)` updated to use `model.predict_matchup(...)`
+23. `tests/unit/test_model_elo.py` tests assigning `model._engine._ratings[...]` updated to use `model._engine.set_ratings(...)` (or test via the public `set_state()` / `get_state()` round-trip)
+24. `tests/unit/test_model_elo.py` tests assigning `model._engine._game_counts[...]` updated to use `model._engine.set_game_counts(...)`
+
+### AC10: Quality Gates
+
+25. `ruff check .` passes (no new violations)
+26. `mypy --strict src/ncaa_eval tests` passes
+27. All existing tests pass (import path / API changes only — no behavioral changes)
+28. No behavioral changes — same inputs produce same outputs; this is a pure API surface refactoring
+
+## Tasks / Subtasks
+
+- [ ] Task 1: Expand EloFeatureEngine public API (AC: #1-5)
+  - [ ] 1.1 Add `has_ratings() -> bool` method to `EloFeatureEngine`
+  - [ ] 1.2 Add `set_ratings(ratings: dict[int, float]) -> None` method
+  - [ ] 1.3 Add `set_game_counts(counts: dict[int, int]) -> None` method
+  - [ ] 1.4 Add `get_game_counts() -> dict[int, int]` method (return copy like `get_all_ratings()`)
+  - [ ] 1.5 Add `predict_matchup(team_a_id: int, team_b_id: int) -> float` public method wrapping the expected-score formula currently in `_predict_one`
+  - [ ] 1.6 Run `ruff check src/ncaa_eval/transform/elo.py` and `mypy --strict src/ncaa_eval/transform/elo.py`
+
+- [ ] Task 2: Update feature_serving.py to use public API (AC: #6)
+  - [ ] 2.1 Replace `self._elo_engine._ratings` check with `self._elo_engine.has_ratings()` in `_serve_stateful()`
+  - [ ] 2.2 Run `mypy --strict src/ncaa_eval/transform/feature_serving.py`
+
+- [ ] Task 3: Update model/elo.py to use public setters/getters (AC: #7-8)
+  - [ ] 3.1 In `get_state()`, replace `dict(self._engine._game_counts)` with `self._engine.get_game_counts()`
+  - [ ] 3.2 In `set_state()`, replace `self._engine._ratings = {...}` with `self._engine.set_ratings({...})`
+  - [ ] 3.3 In `set_state()`, replace `self._engine._game_counts = {...}` with `self._engine.set_game_counts({...})`
+  - [ ] 3.4 Run `mypy --strict src/ncaa_eval/model/elo.py`
+
+- [ ] Task 4: Add public predict_matchup to StatefulModel ABC (AC: #9-10)
+  - [ ] 4.1 Add concrete `predict_matchup(team_a_id: int, team_b_id: int) -> float` method to `StatefulModel` that delegates to `self._predict_one(team_a_id, team_b_id)`
+  - [ ] 4.2 In `providers.py` `EloProvider.__init__`, replace `hasattr(model, "_predict_one")` check with `hasattr(model, "predict_matchup")` (or use a Protocol/isinstance check)
+  - [ ] 4.3 In `providers.py` `EloProvider.get_probability` and `build_matrix`, replace `self._model._predict_one(...)` with `self._model.predict_matchup(...)`
+  - [ ] 4.4 Run `mypy --strict src/ncaa_eval/model/base.py src/ncaa_eval/evaluation/providers.py`
+
+- [ ] Task 5: Add get_feature_importances to Model ABC (AC: #11-13)
+  - [ ] 5.1 Add default `get_feature_importances() -> list[tuple[str, float]] | None` returning `None` to `Model` ABC in `base.py`
+  - [ ] 5.2 In `XGBoostModel.fit()`, store `self._feature_names = list(X.columns)` before training
+  - [ ] 5.3 Override `get_feature_importances()` in `XGBoostModel` to return `list(zip(self._feature_names, self._clf.feature_importances_))` if fitted, else `None`
+  - [ ] 5.4 Update `dashboard/lib/data_loaders.py` `load_feature_importances()` to call `model.get_feature_importances()` instead of `getattr(model, "_clf", None)`
+  - [ ] 5.5 Run `mypy --strict src/ncaa_eval/model/base.py src/ncaa_eval/model/xgboost_model.py`
+
+- [ ] Task 6: Rename _NO_TOURNAMENT_SEASONS to public (AC: #14-16)
+  - [ ] 6.1 In `serving.py`, rename `_NO_TOURNAMENT_SEASONS` to `NO_TOURNAMENT_SEASONS`
+  - [ ] 6.2 Update all references in `serving.py` itself
+  - [ ] 6.3 Update import in `splitter.py`
+  - [ ] 6.4 Update `transform/__init__.py` if it re-exports this constant
+  - [ ] 6.5 Update any test references
+  - [ ] 6.6 Run `ruff check .` and `mypy --strict src/ncaa_eval tests`
+
+- [ ] Task 7: Create Calibrator Protocol (AC: #17-19)
+  - [ ] 7.1 Define `Calibrator` Protocol in `calibration.py` with `fit()` and `transform()` signatures
+  - [ ] 7.2 Verify `IsotonicCalibrator` and `SigmoidCalibrator` structurally satisfy the protocol (no changes needed if signatures match)
+  - [ ] 7.3 Update type annotations in `feature_serving.py` or anywhere calibrators are accepted to use `Calibrator` type
+  - [ ] 7.4 Run `mypy --strict src/ncaa_eval/transform/calibration.py src/ncaa_eval/transform/feature_serving.py`
+
+- [ ] Task 8: MatrixProvider public accessor (AC: #20)
+  - [ ] 8.1 Check if `MatrixProvider` already has a `matchup_probability()` method — if not, add one
+  - [ ] 8.2 Verify the public method returns the same value as `self._P[i, j]` access
+  - [ ] 8.3 Run `mypy --strict src/ncaa_eval/evaluation/providers.py`
+
+- [ ] Task 9: Update test files (AC: #21-24)
+  - [ ] 9.1 In `test_dashboard_filters.py`, replace `result._P[i, j]` assertions with `result.matchup_probability(team_a, team_b)`
+  - [ ] 9.2 In `test_model_elo.py`, replace `model._predict_one(...)` calls with `model.predict_matchup(...)`
+  - [ ] 9.3 In `test_model_elo.py`, replace direct `model._engine._ratings[...]` assignments with `model._engine.set_ratings({...})`
+  - [ ] 9.4 In `test_model_elo.py`, replace direct `model._engine._game_counts[...]` assignments with `model._engine.set_game_counts({...})`
+  - [ ] 9.5 Run `pytest tests/unit/test_model_elo.py tests/unit/test_dashboard_filters.py -x`
+
+- [ ] Task 10: Final validation (AC: #25-28)
+  - [ ] 10.1 `ruff check .` — zero violations
+  - [ ] 10.2 `mypy --strict src/ncaa_eval tests` — zero errors
+  - [ ] 10.3 `pytest` — all tests pass
+  - [ ] 10.4 Verify no behavioral changes (pure API surface refactoring)
+
+## Dev Notes
+
+### Key Principle
+
+This story follows **Pattern B** from the codebase audit ("Private API Leakage Across Module Boundaries"). The goal is to convert every cross-module `_`-prefixed access into a public method call, creating explicit API contracts that `mypy --strict` can enforce.
+
+**This is a pure refactoring story** — no behavioral changes. The same inputs produce the same outputs. The only change is that what was implicit (reaching into internals) becomes explicit (calling public methods).
+
+### Architecture Patterns and Constraints
+
+- **`from __future__ import annotations`** required in ALL Python files (Ruff-enforced)
+- **Google-style docstrings** — not NumPy-style
+- **`mypy --strict`** mandatory for `src/ncaa_eval/` and `tests/`
+- **Dashboard files are NOT under mypy strict** — but the `data_loaders.py` changes should still use proper types
+- **Backward compatibility**: Private methods like `_predict_one` should NOT be removed — they remain as the internal hook. The public method delegates to them.
+
+### EloFeatureEngine — Current State
+
+**File:** `src/ncaa_eval/transform/elo.py` (lines 73–296)
+
+**Existing public methods (keep as-is):**
+- `get_rating(team_id: int) -> float` — returns single team rating
+- `get_all_ratings() -> dict[int, float]` — returns copy of ratings dict
+- `reset_game_counts() -> None` — resets game counts
+- `process_season(games, season)` — orchestrates full season
+- `update_game(game)` — updates ratings for a single game
+- `start_new_season(season)` — applies mean reversion
+
+**Private attributes being accessed cross-module:**
+- `_ratings: dict[int, float]` — accessed by `feature_serving.py:301` (truthiness check) and `model/elo.py:115` (assignment)
+- `_game_counts: dict[int, int]` — accessed by `model/elo.py:78` (read) and `model/elo.py:116` (assignment)
+- `_predict_one(team_a_id, team_b_id)` — This is NOT on `EloFeatureEngine`; it is on `EloModel`. However, the public `predict_matchup()` on `EloFeatureEngine` should wrap the expected-score formula that `EloModel._predict_one()` currently implements.
+
+**Important distinction**: The `_predict_one` accessed in `providers.py` is on `EloModel` (a `StatefulModel` subclass), NOT on `EloFeatureEngine`. The fix is to add `predict_matchup()` as a concrete method on `StatefulModel` that delegates to `_predict_one()`.
+
+### StatefulModel._predict_one Architecture
+
+**File:** `src/ncaa_eval/model/base.py`
+
+`_predict_one(team_a_id: int, team_b_id: int) -> float` is an **abstract hook** on `StatefulModel`. It is the internal contract that subclasses implement. Making it public would expose the hook contract to external consumers, which is undesirable.
+
+**Correct design:**
+```python
+class StatefulModel(Model):
+    # Public API for external consumers:
+    def predict_matchup(self, team_a_id: int, team_b_id: int) -> float:
+        """Return P(team_a wins) for a single matchup."""
+        return self._predict_one(team_a_id, team_b_id)
+
+    # Internal hook for subclasses:
+    @abstractmethod
+    def _predict_one(self, team_a_id: int, team_b_id: int) -> float: ...
+```
+
+This preserves the Template Method pattern: `_predict_one` remains the subclass hook, `predict_matchup` is the public API.
+
+### EloProvider — Current Private Access
+
+**File:** `src/ncaa_eval/evaluation/providers.py` (lines 117–143)
+
+```python
+# Current (line 117-120):
+if not hasattr(model, "_predict_one"):
+    msg = "model must have a _predict_one(team_a_id, team_b_id) method"
+    raise TypeError(msg)
+
+# Current (line 129):
+result: float = self._model._predict_one(team_a_id, team_b_id)
+```
+
+**Fix:** Replace `_predict_one` with `predict_matchup` throughout.
+
+### Dashboard Feature Importances — Current Private Access
+
+**File:** `dashboard/lib/data_loaders.py` (line 189)
+
+```python
+# Current:
+clf = getattr(model, "_clf", None)
+importances = getattr(clf, "feature_importances_", None)
+```
+
+**Fix:** Model ABC provides `get_feature_importances()` with a default `None` return. `XGBoostModel` overrides it. `LogisticRegressionModel` (test fixture) could also override it (`.coef_`), but this is optional — only implement for models where it's clearly useful.
+
+**Note on `_feature_names`:** `XGBoostModel.fit()` currently receives `X: pd.DataFrame`, so `X.columns` is available. Store `self._feature_names: list[str] = list(X.columns)` during fit. Include feature names in `save()`/`load()` round-trip — write to `config.json` or a separate `feature_names.json`.
+
+### Calibrator Protocol Design
+
+**File:** `src/ncaa_eval/transform/calibration.py`
+
+Both `IsotonicCalibrator` and `SigmoidCalibrator` share:
+- `fit(probs: npt.NDArray[np.float64], outcomes: npt.NDArray[np.float64]) -> None`
+- `transform(probs: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]`
+
+Use a `Protocol` (not ABC) since both classes already structurally conform:
+
+```python
+class Calibrator(Protocol):
+    def fit(self, probs: npt.NDArray[np.float64], outcomes: npt.NDArray[np.float64]) -> None: ...
+    def transform(self, probs: npt.NDArray[np.float64]) -> npt.NDArray[np.float64]: ...
+```
+
+This matches the project's convention: ABCs for the major contracts (Model, Repository), Protocols for lightweight structural typing.
+
+### MatrixProvider — _P Access
+
+**File:** `src/ncaa_eval/evaluation/providers.py`
+
+`MatrixProvider` stores `self._P` (the probability matrix). Check if it already has a `matchup_probability()` method (from the `ProbabilityProvider` protocol). If so, tests should use that. If not, add one.
+
+### NO_TOURNAMENT_SEASONS Rename
+
+**File:** `src/ncaa_eval/transform/serving.py:28`
+
+```python
+# Current:
+_NO_TOURNAMENT_SEASONS: frozenset[int] = frozenset({2020})
+
+# Fix:
+NO_TOURNAMENT_SEASONS: frozenset[int] = frozenset({2020})
+```
+
+Check `transform/__init__.py` for re-exports. Also check `tests/unit/test_evaluation_splitter.py` for references.
+
+### Previous Story Learnings (Story 8.1)
+
+- **Backward compatibility via re-exports**: Story 8.1 used re-exports extensively when splitting modules. Same principle applies here — private methods should continue to exist (as internal hooks), just with new public methods wrapping them.
+- **mypy strict**: Dashboard files are NOT under mypy strict. Don't add `# type: ignore` to fix dashboard type issues — they are pre-existing.
+- **Pre-commit hooks**: `debug-statements`, `check-yaml`, `ruff`, `ruff-format` all run. The `template/` directory is excluded.
+- **Story 8.1 review follow-up** (line 100 of 8-1 story): `EloProvider` accessing `model._predict_one` was explicitly called out as "Pre-existing pattern — not a regression from this story. Track under Story 8.2." This story resolves that exact item.
+
+### Git Intelligence
+
+Recent commits show Story 8.1 just completed:
+- `6f96429` — Story 8.1: decompose simulation.py, filters.py, and run_training() God Function
+- `219d29a` — Add PEP 20, SOLID & pure function gates to PR template + codebase audit
+
+The codebase is freshly refactored. The new module locations from Story 8.1 are:
+- `src/ncaa_eval/evaluation/providers.py` — where `EloProvider._predict_one` access lives (moved from `simulation.py`)
+- `src/ncaa_eval/evaluation/scoring.py` — `_SCORING_REGISTRY` is already typed as `dict[str, type[ScoringRule]]` (fixed in Story 8.1, confirmed by explore agent)
+- `dashboard/lib/data_loaders.py` — where `_clf` access lives (moved from `filters.py`)
+
+### Scoring Registry — Already Fixed
+
+The codebase audit finding 3.10 (scoring registry uses untyped `dict[str, type]`) was already resolved in Story 8.1. The registry in `scoring.py:60` is now `dict[str, type[ScoringRule]]`. **No work needed for this AC.**
+
+### Files to Modify
+
+| File | Changes |
+|------|---------|
+| `src/ncaa_eval/transform/elo.py` | Add `has_ratings()`, `set_ratings()`, `set_game_counts()`, `get_game_counts()`, `predict_matchup()` |
+| `src/ncaa_eval/transform/feature_serving.py` | Replace `_ratings` access with `has_ratings()` |
+| `src/ncaa_eval/transform/serving.py` | Rename `_NO_TOURNAMENT_SEASONS` → `NO_TOURNAMENT_SEASONS` |
+| `src/ncaa_eval/transform/calibration.py` | Add `Calibrator` Protocol |
+| `src/ncaa_eval/transform/__init__.py` | Update re-export if applicable |
+| `src/ncaa_eval/model/base.py` | Add `predict_matchup()` to `StatefulModel`, `get_feature_importances()` to `Model` |
+| `src/ncaa_eval/model/elo.py` | Use `set_ratings()`, `set_game_counts()`, `get_game_counts()` |
+| `src/ncaa_eval/model/xgboost_model.py` | Override `get_feature_importances()`, store `_feature_names` |
+| `src/ncaa_eval/evaluation/providers.py` | Use `predict_matchup()` instead of `_predict_one()` |
+| `src/ncaa_eval/evaluation/splitter.py` | Import `NO_TOURNAMENT_SEASONS` (public name) |
+| `dashboard/lib/data_loaders.py` | Use `model.get_feature_importances()` |
+| `tests/unit/test_model_elo.py` | Use public APIs in all test assertions |
+| `tests/unit/test_dashboard_filters.py` | Replace `._P` access with `matchup_probability()` |
+| `tests/unit/test_evaluation_splitter.py` | Update import to public constant name |
+
+### Source Document References
+
+- [Source: `_bmad-output/planning-artifacts/codebase-audit-report.md` — Finding 3.4 (EloFeatureEngine private access x3)]
+- [Source: `_bmad-output/planning-artifacts/codebase-audit-report.md` — Finding 3.10 (scoring registry — already fixed in 8.1)]
+- [Source: `_bmad-output/planning-artifacts/codebase-audit-report.md` — Finding 3.11 (private constant import)]
+- [Source: `_bmad-output/planning-artifacts/codebase-audit-report.md` — Finding 3.13 (dashboard _clf access)]
+- [Source: `_bmad-output/planning-artifacts/codebase-audit-report.md` — Finding 3.15 (no calibrator ABC)]
+- [Source: `_bmad-output/planning-artifacts/codebase-audit-report.md` — Finding 3.25 (tests access private ._P)]
+- [Source: `_bmad-output/planning-artifacts/codebase-audit-pass2-addendum.md` — Pattern B (Private API Leakage Across Module Boundaries)]
+- [Source: `_bmad-output/planning-artifacts/epic-8-codebase-improvements.md` — Story 8.2 section]
+- [Source: `_bmad-output/implementation-artifacts/8-1-code-architecture-cleanup-simulation-module-split.md` — Review Follow-up: EloProvider._predict_one tracked for Story 8.2]
+- [Source: `_bmad-output/planning-artifacts/template-requirements.md` — Defensive Private Attribute Access in Tests]
+
+## Dev Agent Record
+
+### Agent Model Used
+
+{{agent_model_name_version}}
+
+### Debug Log References
+
+### Completion Notes List
+
+### Change Log
+
+### File List
