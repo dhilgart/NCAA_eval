@@ -340,6 +340,139 @@ for idx in range(len(game_df)):
     game_df.loc[idx, "margin"] = game_df.loc[idx, "home_score"] - game_df.loc[idx, "away_score"]
 ```
 
+#### Complex is Better Than Complicated
+- **Review:** Accept genuine complexity; reject unnecessary complication
+- **Guideline:** Some systems are inherently complex (simulation engines, Elo rating
+  chains, cross-validation orchestrators). The goal is *managed complexity* — complex
+  internals behind simple interfaces — not *complication* from tangled logic.
+
+```python
+# GOOD: Complex but not complicated — clear interface, complex internals
+class MonteCarloSimulator:
+    """Simulate tournament outcomes via Monte Carlo sampling.
+
+    The algorithm is inherently complex (bracket traversal, probability
+    propagation, seeded randomness), but the interface is simple.
+    """
+    def simulate(self, bracket: Bracket, n_simulations: int = 10_000) -> SimulationResult:
+        ...
+
+# BAD: Complicated — unnecessary indirection, unclear purpose
+def run_sim(data, opts, flags, ctx, mode="default", **kwargs):
+    if mode == "default":
+        ...  # 200 lines of nested conditionals
+```
+
+#### Sparse is Better Than Dense
+- **Tooling:** 110-character line length limit, Ruff formatting
+- **Review:** One operation per line, generous whitespace, no clever one-liners
+- **Guideline:** When a line does too much, split it. When a function packs too many
+  operations together, extract named intermediates.
+
+```python
+# GOOD: Sparse — each step is clear
+expected_win_rate = 1 / (1 + 10 ** ((opponent_rating - team_rating) / 400))
+actual_outcome = 1.0 if won else 0.0
+rating_change = k_factor * (actual_outcome - expected_win_rate)
+
+# BAD: Dense — everything crammed together
+return int(32*(int(w)-1/(1+10**((o-r)/400))))
+```
+
+#### Special Cases Aren't Special Enough / Practicality Beats Purity
+- **Review:** Allow pragmatic exceptions when properly documented
+- **Guideline:** The vectorization-first rule (Section 5) has legitimate exceptions:
+  graph traversal, small fixed collections, side-effect loops. Data science code has
+  domain-specific constants (`0.5` for coin-flip probability, `64` for tournament
+  teams) that PLR2004 would flag — we suppress PLR2004 because practicality beats
+  purity for these cases. The key: every exception must be *documented and intentional*,
+  never silent.
+
+```python
+# GOOD: Pragmatic exception with justification
+# PLR2004 suppressed project-wide — domain constants like tournament size
+# are clearer inline than as named constants
+def build_bracket(teams: list[Team]) -> Bracket:
+    if len(teams) != 64:  # NCAA tournament field size
+        raise ValueError(f"Expected 64 teams, got {len(teams)}")
+    ...
+
+# BAD: Bare magic number with no context
+def process(data):
+    if len(data) > 42:  # What is 42?
+        data = data[:42]
+```
+
+#### Errors Should Never Pass Silently / Unless Explicitly Silenced
+- **Review:** Every exception handler must log or re-raise; no bare `except: pass`
+- **Guideline:** This is the project's most-violated PEP 20 principle (see Pattern D
+  from codebase audit). The convention:
+  1. **Default:** Log at WARNING level with structured context, then re-raise or return
+     a sentinel that callers check.
+  2. **Explicitly silenced:** Log at DEBUG level with a code comment explaining *why*
+     silence is acceptable. Use `# noqa` or `# type: ignore` with specific codes.
+  3. **Never:** Bare `except Exception: pass` or `except Exception` that substitutes
+     a value without logging.
+
+```python
+# GOOD: Error surfaced with context
+try:
+    response = fetch_team_schedule(team_id)
+except RequestError as exc:
+    logger.warning("Failed to fetch schedule for team %d: %s", team_id, exc)
+    raise
+
+# GOOD: Explicitly silenced with rationale
+try:
+    optional_enrichment = fetch_extra_stats(team_id)
+except RequestError:
+    # Enrichment is non-critical; base stats are sufficient for predictions.
+    logger.debug("Optional enrichment unavailable for team %d", team_id)
+    optional_enrichment = None
+
+# BAD: Silent swallowing — Pattern D violation
+try:
+    data = fetch_team_schedule(team_id)
+except Exception:
+    data = pd.DataFrame()  # Caller has no idea data is missing
+```
+
+#### Refuse the Temptation to Guess
+- **Tooling:** `mypy --strict` — forces explicit types everywhere
+- **Review:** No implicit type coercions, no unvalidated assumptions
+- **Guideline:** This aphorism is the philosophical foundation for `mypy --strict`.
+  When types are explicit, the compiler catches wrong assumptions before runtime.
+  When types are `Any` or missing, the code *guesses* — and guesses wrong at the
+  worst possible time.
+
+```python
+# GOOD: Explicit types — no guessing
+def get_team_rating(team_id: int, ratings: dict[int, float]) -> float | None:
+    return ratings.get(team_id)
+
+# BAD: Implicit types — code guesses about structure
+def get_team_rating(team_id, ratings):
+    return ratings[team_id]  # KeyError? ratings is a list? Who knows.
+```
+
+#### If the Implementation Is Hard to Explain, It's a Bad Idea / If It's Easy to Explain, It May Be a Good Idea
+- **Tooling:** McCabe complexity ≤ 10, max 50 lines per function
+- **Review:** If you can't describe a function in one sentence, it needs splitting
+- **Guideline:** This reinforces the complexity limits. If a code reviewer asks
+  "what does this do?" and the answer requires a paragraph, the function is doing
+  too much. The `run_training()` function in `cli/train.py` (70+ statements, 3
+  `noqa` suppressions) is the canonical example of code that is hard to explain.
+
+```python
+# GOOD: Easy to explain — "calculates Brier score for probability predictions"
+def brier_score(probabilities: np.ndarray, outcomes: np.ndarray) -> float:
+    return float(np.mean((probabilities - outcomes) ** 2))
+
+# BAD: Hard to explain — "it processes... things... with conditions..."
+def process_and_validate_then_transform_with_fallback(data, config, mode, flags):
+    ...  # 80 lines that require 5 minutes to explain
+```
+
 ### Code Review Checklist for PEP 20
 
 During code review, verify:
@@ -349,6 +482,12 @@ During code review, verify:
 - [ ] **Readability:** Domain concepts use full words, not abbreviations
 - [ ] **Flatness:** Nesting depth ≤ 3, early returns preferred
 - [ ] **Consistency:** Follows existing project patterns (vectorization, type sharing, etc.)
+- [ ] **Complexity vs complication:** Inherent complexity is managed behind simple interfaces
+- [ ] **Sparseness:** One operation per line, no clever one-liners, named intermediates
+- [ ] **Pragmatic exceptions:** Deviations from rules are documented and intentional
+- [ ] **Error handling:** No silent exception swallowing; handlers log or re-raise
+- [ ] **Explicit types:** No `Any`, no missing annotations, no implicit coercions
+- [ ] **Explainability:** Every function describable in one sentence
 
 ---
 

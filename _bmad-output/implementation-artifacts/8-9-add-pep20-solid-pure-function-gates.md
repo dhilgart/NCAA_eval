@@ -55,15 +55,15 @@ so that every future PR is reviewed against these design principles and existing
   - [x] 1.2 Add three new checkboxes to Code Quality section
   - [x] 1.3 Verify checkbox wording matches Style Guide Section 7 exactly
 
-- [ ] Task 2: Expand Style Guide Section 6 — PEP 20 Aphorisms (AC: #5-6)
-  - [ ] 2.1 Read current `docs/STYLE_GUIDE.md` Section 6
-  - [ ] 2.2 Add aphorism #4 with project example (simulation engine complexity)
-  - [ ] 2.3 Add aphorism #6 with project example
-  - [ ] 2.4 Add aphorisms #8/#9 with vectorization exception framing
-  - [ ] 2.5 Add aphorisms #10/#11 with Pattern D error handling convention
-  - [ ] 2.6 Add aphorism #12 with mypy --strict rationale
-  - [ ] 2.7 Add aphorisms #17/#18 with complexity limit reinforcement
-  - [ ] 2.8 Update the PEP 20 Code Review Checklist with items for all new aphorisms
+- [x] Task 2: Expand Style Guide Section 6 — PEP 20 Aphorisms (AC: #5-6)
+  - [x] 2.1 Read current `docs/STYLE_GUIDE.md` Section 6
+  - [x] 2.2 Add aphorism #4 with project example (simulation engine complexity)
+  - [x] 2.3 Add aphorism #6 with project example
+  - [x] 2.4 Add aphorisms #8/#9 with vectorization exception framing
+  - [x] 2.5 Add aphorisms #10/#11 with Pattern D error handling convention
+  - [x] 2.6 Add aphorism #12 with mypy --strict rationale
+  - [x] 2.7 Add aphorisms #17/#18 with complexity limit reinforcement
+  - [x] 2.8 Update the PEP 20 Code Review Checklist with items for all new aphorisms
 
 - [ ] Task 3: Fix Style Guide Accuracy (AC: #7-12)
   - [ ] 3.1 Update Active Ruff Rules table — add C90, PLR0911, PLR0912, PLR0913
