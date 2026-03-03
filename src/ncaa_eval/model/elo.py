@@ -79,21 +79,17 @@ class EloModel(StatefulModel):
     def set_state(self, state: dict[str, Any]) -> None:
         """Restore ratings and game counts from a snapshot.
 
-        Parameters
-        ----------
-        state
-            Must contain ``"ratings"`` (``dict[int, float]``) and
-            ``"game_counts"`` (``dict[int, int]``) keys, as returned by
-            :meth:`get_state`.  Keys may be ``int`` or ``str``; string keys
-            are coerced to ``int`` so that JSON-decoded dicts (where all keys
-            are strings) work correctly without silent rating loss.
+        Args:
+            state: Must contain ``"ratings"`` (``dict[int, float]``) and
+                ``"game_counts"`` (``dict[int, int]``) keys, as returned by
+                :meth:`get_state`.  Keys may be ``int`` or ``str``; string
+                keys are coerced to ``int`` so that JSON-decoded dicts (where
+                all keys are strings) work correctly without silent rating
+                loss.
 
         Raises:
-        ------
-        KeyError
-            If ``"ratings"`` or ``"game_counts"`` keys are absent.
-        TypeError
-            If either value is not a ``dict``.
+            KeyError: If ``"ratings"`` or ``"game_counts"`` keys are absent.
+            TypeError: If either value is not a ``dict``.
         """
         if "ratings" not in state or "game_counts" not in state:
             missing = {"ratings", "game_counts"} - state.keys()
@@ -131,10 +127,9 @@ class EloModel(StatefulModel):
         """Reconstruct an EloModel from a saved directory.
 
         Raises:
-        ------
-        FileNotFoundError
-            If either ``config.json`` or ``state.json`` is missing.  A missing
-            file indicates an incomplete :meth:`save` (e.g., interrupted write).
+            FileNotFoundError: If either ``config.json`` or ``state.json`` is
+                missing.  A missing file indicates an incomplete :meth:`save`
+                (e.g., interrupted write).
         """
         config_path = path / "config.json"
         state_path = path / "state.json"

@@ -114,9 +114,8 @@ class RunStore:
         """Load run metadata from JSON.
 
         Raises:
-        ------
-        FileNotFoundError
-            If the run directory or ``run.json`` does not exist.
+            FileNotFoundError: If the run directory or ``run.json`` does not
+                exist.
         """
         run_json = self._runs_dir / run_id / "run.json"
         if not run_json.exists():
@@ -128,9 +127,7 @@ class RunStore:
         """Load predictions from Parquet as a DataFrame.
 
         Raises:
-        ------
-        FileNotFoundError
-            If the predictions Parquet file does not exist.
+            FileNotFoundError: If the predictions Parquet file does not exist.
         """
         pq_path = self._runs_dir / run_id / "predictions.parquet"
         if not pq_path.exists():

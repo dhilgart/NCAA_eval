@@ -83,13 +83,13 @@ so that the codebase is internally consistent, Sphinx API docs render correctly,
   - [x] 1.1 Run `ruff check src/ --fix --select D416,D411` to auto-fix 27 violations
   - [x] 1.2 Verify fixes with `ruff check src/ --select D416,D411`
 
-- [ ] Task 2: Convert NumPy-style docstrings to Google style (AC: #1-3)
-  - [ ] 2.1 `src/ncaa_eval/evaluation/metrics.py` — convert all `Parameters`/`Returns`/`Raises` sections
-  - [ ] 2.2 `src/ncaa_eval/transform/elo.py` — convert class docstring, `update_game`, `process_season`
-  - [ ] 2.3 `src/ncaa_eval/model/elo.py` — convert `set_state`, `load`
-  - [ ] 2.4 `src/ncaa_eval/model/base.py` — convert `_to_games`
-  - [ ] 2.5 `src/ncaa_eval/model/tracking.py` — convert `load_run`, `load_predictions`
-  - [ ] 2.6 Verify no types are duplicated in docstrings (types in signatures only)
+- [x] Task 2: Convert NumPy-style docstrings to Google style (AC: #1-3)
+  - [x] 2.1 `src/ncaa_eval/evaluation/metrics.py` — convert all `Parameters`/`Returns`/`Raises` sections
+  - [x] 2.2 `src/ncaa_eval/transform/elo.py` — convert class docstring, `update_game`, `process_season`
+  - [x] 2.3 `src/ncaa_eval/model/elo.py` — convert `set_state`, `load`
+  - [x] 2.4 `src/ncaa_eval/model/base.py` — convert `_to_games`
+  - [x] 2.5 `src/ncaa_eval/model/tracking.py` — convert `load_run`, `load_predictions`
+  - [x] 2.6 Verify no types are duplicated in docstrings (types in signatures only)
 
 - [ ] Task 3: Add missing `Returns:` section (AC: #4)
   - [ ] 3.1 Add `Returns:` section to `_resolve_team_id` in `espn.py`
