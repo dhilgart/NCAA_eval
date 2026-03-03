@@ -12,17 +12,13 @@ import logging
 from pathlib import Path
 
 import pandas as pd  # type: ignore[import-untyped]
-import typer
-from rapidfuzz import fuzz
 
 from ncaa_eval.ingest.connectors.espn import EspnConnector
 from ncaa_eval.ingest.connectors.kaggle import KaggleConnector
+from ncaa_eval.ingest.fuzzy import fuzzy_match_team
 from ncaa_eval.ingest.repository import Repository
 
 logger = logging.getLogger(__name__)
-
-# Minimum fuzzy-match score when resolving ESPN locations not found in spellings.
-_FUZZY_THRESHOLD = 80
 
 # ESPN location names that aren't covered by MTeamSpellings.csv.  These are
 # persistent ESPN abbreviations/nicknames that no generic fuzzy algorithm
@@ -84,15 +80,9 @@ def _build_espn_team_map(year: int, spellings: dict[str, int]) -> dict[str, int]
             result[location] = kaggle_id
             continue
         # Fuzzy fallback for locations not covered by the spellings file.
-        best_score = 0.0
-        best_id: int | None = None
-        for spelling, tid in spellings.items():
-            score = float(fuzz.token_set_ratio(location.lower(), spelling))
-            if score > best_score:
-                best_score = score
-                best_id = tid
-        if best_score >= _FUZZY_THRESHOLD and best_id is not None:
-            result[location] = best_id
+        fuzzy_id = fuzzy_match_team(location, spellings)
+        if fuzzy_id is not None:
+            result[location] = fuzzy_id
         else:
             unmatched.append(location)
 
@@ -157,9 +147,9 @@ class SyncEngine:
             teams = connector.fetch_teams()
             self._repo.save_teams(teams)
             result.teams_written = len(teams)
-            typer.echo(f"[kaggle] teams: {len(teams)} written")
+            logger.info("[kaggle] teams: %d written", len(teams))
         else:
-            typer.echo("[kaggle] teams: cache hit, skipped")
+            logger.info("[kaggle] teams: cache hit, skipped")
 
         # Seasons: Parquet-level cache
         seasons_path = self._data_dir / "seasons.parquet"
@@ -167,22 +157,22 @@ class SyncEngine:
             seasons = connector.fetch_seasons()
             self._repo.save_seasons(seasons)
             result.seasons_written = len(seasons)
-            typer.echo(f"[kaggle] seasons: {len(seasons)} written")
+            logger.info("[kaggle] seasons: %d written", len(seasons))
         else:
             seasons = self._repo.get_seasons()
-            typer.echo("[kaggle] seasons: cache hit, skipped")
+            logger.info("[kaggle] seasons: cache hit, skipped")
 
         # Games: per-season Parquet-level cache
         for season in seasons:
             game_path = self._data_dir / "games" / f"season={season.year}" / "data.parquet"
             if not force_refresh and game_path.exists():
                 result.seasons_cached += 1
-                typer.echo(f"[kaggle] season {season.year}: cache hit, skipped")
+                logger.info("[kaggle] season %d: cache hit, skipped", season.year)
                 continue
             games = connector.fetch_games(season.year)
             self._repo.save_games(games)
             result.games_written += len(games)
-            typer.echo(f"[kaggle] season {season.year}: {len(games)} games written")
+            logger.info("[kaggle] season %d: %d games written", season.year, len(games))
 
         return result
 
@@ -231,7 +221,7 @@ class SyncEngine:
         marker = self._espn_marker(year)
         if not force_refresh and marker.exists():
             result.seasons_cached += 1
-            typer.echo(f"[espn] season {year}: cache hit, skipped")
+            logger.info("[espn] season %d: cache hit, skipped", year)
             return result
 
         if force_refresh and marker.exists():
@@ -248,7 +238,7 @@ class SyncEngine:
         all_games = existing_games + espn_games
         self._repo.save_games(all_games)
         result.games_written = len(espn_games)
-        typer.echo(f"[espn] season {year}: {len(espn_games)} games written")
+        logger.info("[espn] season %d: %d games written", year, len(espn_games))
 
         # Mark season as synced
         self._data_dir.mkdir(parents=True, exist_ok=True)

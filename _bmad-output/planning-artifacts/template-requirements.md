@@ -3233,4 +3233,79 @@ When a story adds new public API methods to a class (e.g., `EloFeatureEngine.set
 
 **Rule:** When building the story File List for a public API exposure story, explicitly search for test files that test the class being extended (not just the callers), and include them with `grep -r "_private_attr" tests/`.
 
+---
+
+### Mock `time.sleep` in Unit Tests for `@tenacity.retry`-Decorated Functions (Discovered Story 8.3 Code Review, 2026-03-03)
+
+`@retry(wait=wait_exponential(multiplier=2, min=2, max=30))` has real sleep between retries. Unit tests that call a `@retry`-decorated function directly (to test retry attempt counts) will sleep for 2+ seconds per retry, making them slow in CI.
+
+**Problem:** A 3-attempt test with `min=2s` exponential backoff takes ~6 seconds per invocation.
+
+**Fix:** Patch `time.sleep` as a no-op inside the test:
+
+```python
+def test_retry_exhausted_raises(self) -> None:
+    with patch("time.sleep"):  # skip backoff delays
+        with patch("ncaa_eval.ingest.connectors.espn.ms") as mock_ms:
+            mock_ms.get_team_schedule.side_effect = ConnectionError("persistent error")
+            with pytest.raises(ConnectionError):
+                _fetch_single_team_schedule("Duke", 2025)
+    assert mock_ms.get_team_schedule.call_count == 3
+```
+
+**Rule:** Any unit test that invokes a `@tenacity.retry`-decorated function directly MUST patch `time.sleep` to prevent real waits. Integration tests that test the full retry cycle (including actual timing behavior) may omit the patch, but should be marked `@pytest.mark.slow`.
+
+---
+
+### `_fetch_per_team` Summary Count Must Track ALL Failures, Including Empty Returns (Discovered Story 8.3 Code Review, 2026-03-03)
+
+A common pattern when building per-item fetch loops with a summary is:
+
+```python
+success = len(frames)
+failed = total - success  # ❌ Wrong: counts both exception-raisers AND None-returns
+```
+
+The `failed_teams` list (used for the warning message) only contains exception-raisers, but the `failed` count includes teams that returned `None` (no exception, empty data). This makes the summary message inconsistent: `"5 failed: ['Duke']"` when 5 teams produced no data but only 1 raised an exception.
+
+**Fix:** Track all failures explicitly:
+```python
+else:
+    failed_teams.append(team_name)  # also track None-returns as failures
+
+failed = len(failed_teams)  # ✅ count matches the list
+```
+
+**Rule:** In per-item fetch loops with summary reporting, the failure count must always equal `len(failed_teams)`. Track `None`-returning items alongside exception-raisers if both count as "no data".
+
+### Write Regression Tests Immediately After Fixing a HIGH Code-Review Bug (Discovered Story 8.3 Code Review Pass 2, 2026-03-03)
+
+When a code-review agent fixes a HIGH bug (e.g., the `_fetch_per_team` summary count bug), a regression test must be written **in the same commit** to prevent silent reversion.
+
+**Pattern:** The Pass 1 review found and fixed the None-return tracking bug. Pass 2 discovered that no test validated the fixed path — making the fix invisible to future regressions.
+
+**Rule:** Every HIGH or CRITICAL code-review fix must be accompanied by at least one test that:
+1. Exercises the exact failing path that was fixed
+2. Would fail if the fix were reverted
+3. Has a comment explaining which review finding it guards against
+
+### Avoid Vacuously-True Test Assertions (Discovered Story 8.3 Code Review Pass 2, 2026-03-03)
+
+Test assertions that are always true regardless of behavior provide false confidence.
+
+**Common anti-patterns:**
+```python
+# ❌ Always true — return type is int | None
+assert result is None or isinstance(result, int)
+
+# ❌ Always true — list is always a list
+assert isinstance(games, list)
+
+# ❌ Always true — object dtype includes everything
+assert df["col"].dtype in (np.dtype("int64"), object)
+```
+
+**Rule:** Before writing an assertion, ask: "Would this assertion pass if the code returned an obviously wrong value?" If yes, it's vacuously true. Replace with a specific expected value (`assert result is None`, `assert len(games) > 0`, `assert pd.api.types.is_integer_dtype(df["col"])`).
+
+
 **Applies to:** Any story that adds public setter/getter methods to replace private attribute access.

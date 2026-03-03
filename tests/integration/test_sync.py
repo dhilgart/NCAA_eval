@@ -7,6 +7,7 @@ connectors and the real ParquetRepository to verify end-to-end behaviour.
 from __future__ import annotations
 
 import datetime
+import inspect
 import shutil
 import sys
 from pathlib import Path
@@ -385,6 +386,21 @@ def test_sync_all_order(tmp_path: Path) -> None:
 
     assert call_order == ["kaggle", "espn"]
     assert results == [kaggle_result, espn_result]
+
+
+# ---------------------------------------------------------------------------
+# Test 8.3: SyncEngine is decoupled from Typer
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.integration
+def test_sync_engine_no_typer_dependency() -> None:
+    """SyncEngine module does not import typer (AC #10-12)."""
+    import ncaa_eval.ingest.sync as sync_module
+
+    source = inspect.getsource(sync_module)
+    assert "import typer" not in source
+    assert "typer.echo" not in source
 
 
 # ---------------------------------------------------------------------------

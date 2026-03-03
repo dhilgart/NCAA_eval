@@ -99,17 +99,18 @@ def _effective_date(game: Game, year: int) -> datetime.date:
     return fallback
 
 
-def _deduplicate_2025(games: list[Game]) -> list[Game]:
-    """Remove duplicate 2025 games, preferring ESPN records for loc and num_ot.
+def _deduplicate_espn_overlap(games: list[Game]) -> list[Game]:
+    """Remove duplicate games when ESPN and Kaggle records overlap.
 
-    The 2025 season ingests 4,545 games twice — once from Kaggle (numeric
-    ``game_id``) and once from ESPN (``game_id`` prefixed with ``"espn_"``).
+    Seasons that include ESPN-sourced games (identified by ``game_id``
+    starting with ``"espn_"``) may contain duplicates — the same physical
+    game appears once from Kaggle (numeric ``game_id``) and once from ESPN.
     The canonical deduplication key is ``(w_team_id, l_team_id, day_num)``.
     When both records exist for the same physical game the ESPN record is kept
     because it provides more accurate ``loc`` (H/A/N) and ``num_ot`` values.
 
     Args:
-        games: Raw game list for the 2025 season (may contain duplicates).
+        games: Raw game list for a season (may contain duplicates).
 
     Returns:
         Deduplicated list with at most one record per canonical game triplet.
@@ -182,8 +183,8 @@ class ChronologicalDataServer:
 
         games = self._repo.get_games(year)
 
-        if year == 2025:
-            games = _deduplicate_2025(games)
+        if any(g.game_id.startswith("espn_") for g in games):
+            games = _deduplicate_espn_overlap(games)
 
         if cutoff_date is not None:
             games = [g for g in games if _effective_date(g, year) <= cutoff_date]

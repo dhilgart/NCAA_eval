@@ -12,6 +12,7 @@ Usage:
 
 from __future__ import annotations
 
+import logging
 import time
 from pathlib import Path
 
@@ -36,6 +37,7 @@ def main(
     ),
 ) -> None:
     """Fetch NCAA data from external sources and persist to local store."""
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
     if source not in VALID_SOURCES:
         typer.echo(f"Error: --source must be one of: {', '.join(VALID_SOURCES)}", err=True)
         raise typer.Exit(code=1)

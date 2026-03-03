@@ -15,18 +15,16 @@ from typing import Literal, cast
 
 import cbbpy.mens_scraper as ms  # type: ignore[import-untyped]
 import pandas as pd  # type: ignore[import-untyped]
-from rapidfuzz import fuzz
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from ncaa_eval.ingest.connectors.base import (
     Connector,
     DataFormatError,
 )
+from ncaa_eval.ingest.fuzzy import fuzzy_match_team
 from ncaa_eval.ingest.schema import Game
 
 logger = logging.getLogger(__name__)
-
-# Minimum fuzzy-match score (0–100) for team name resolution.
-_FUZZY_THRESHOLD = 80
 
 # Expected columns from cbbpy get_team_schedule() output.
 _SCHEDULE_COLUMNS = {"game_id", "game_day", "game_result", "team", "opponent"}
@@ -58,7 +56,8 @@ def _resolve_team_id(
 ) -> int | None:
     """Resolve an ESPN team name to a Kaggle team ID.
 
-    Tries exact match first, then falls back to fuzzy matching via rapidfuzz.
+    Tries exact match first, then falls back to fuzzy matching via
+    :func:`~ncaa_eval.ingest.fuzzy.fuzzy_match_team`.
 
     Args:
         name: ESPN team name to resolve.
@@ -70,18 +69,26 @@ def _resolve_team_id(
     if exact is not None:
         return exact
 
-    # Fuzzy match.
-    best_score = 0.0
-    best_id: int | None = None
-    for known_name, tid in original_mapping.items():
-        score = fuzz.token_set_ratio(name.lower(), known_name.lower())
-        if score > best_score:
-            best_score = score
-            best_id = tid
-    if best_score >= _FUZZY_THRESHOLD and best_id is not None:
-        return best_id
+    # Fuzzy fallback via centralized utility.
+    result = fuzzy_match_team(name, original_mapping)
+    if result is not None:
+        return result
 
-    logger.warning("espn: no team ID match for '%s' (best score: %.0f)", name, best_score)
+    logger.warning("espn: no team ID match for '%s'", name)
+    return None
+
+
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=2, min=2, max=30),
+    retry=retry_if_exception_type(Exception),
+    reraise=True,
+)
+def _fetch_single_team_schedule(team_name: str, season: int) -> pd.DataFrame | None:
+    """Fetch a single team's schedule with retry on transient failures."""
+    df = ms.get_team_schedule(team_name, season)
+    if isinstance(df, pd.DataFrame) and not df.empty:
+        return df
     return None
 
 
@@ -133,20 +140,45 @@ class EspnConnector(Connector):
     def _fetch_per_team(self, season: int) -> pd.DataFrame | None:
         """Fetch schedules for each team in the mapping and concatenate."""
         frames: list[pd.DataFrame] = []
+        total = len(self._team_name_to_id)
+        failed_teams: list[str] = []
+
         for team_name in self._team_name_to_id:
             try:
-                df = ms.get_team_schedule(team_name, season)
-                if isinstance(df, pd.DataFrame) and not df.empty:
+                df = _fetch_single_team_schedule(team_name, season)
+                if df is not None:
                     frames.append(df)
-            except Exception:  # noqa: BLE001  # Story 8.3: add logging/retry here
-                logger.warning("espn: get_team_schedule('%s', %d) failed", team_name, season, exc_info=True)
+                else:
+                    # Empty schedule returned (no exception, but no data).
+                    failed_teams.append(team_name)
+            except Exception:  # noqa: BLE001
+                logger.warning(
+                    "espn: get_team_schedule('%s', %d) failed after retries",
+                    team_name,
+                    season,
+                    exc_info=True,
+                )
+                failed_teams.append(team_name)
                 continue
-        if not frames:
+
+        success = len(frames)
+        failed = len(failed_teams)
+
+        # AC #5-6: Summary reporting
+        if failed > 0:
+            first_five = failed_teams[:5]
             logger.warning(
-                "espn: all %d per-team schedule fetches failed for season %d — no data available",
-                len(self._team_name_to_id),
+                "espn: fetched %d/%d teams for season %d (%d failed): %s",
+                success,
+                total,
                 season,
+                failed,
+                first_five,
             )
+        else:
+            logger.info("espn: fetched %d/%d teams for season %d (%d failed)", success, total, season, failed)
+
+        if not frames:
             return None
         combined = pd.concat(frames, ignore_index=True)
         # Deduplicate by ESPN game_id (each game appears in both teams' schedules).
@@ -165,23 +197,23 @@ class EspnConnector(Connector):
         games: list[Game] = []
         seen_ids: set[str] = set()
 
-        for _, row in df.iterrows():
-            espn_game_id = str(row["game_id"])
+        for row in df.itertuples(index=False):
+            espn_game_id = str(row.game_id)
             game_id = f"espn_{espn_game_id}"
             if game_id in seen_ids:
                 continue
             seen_ids.add(game_id)
 
             # Parse scores from game_result.
-            parsed = _parse_game_result(str(row.get("game_result", "")))
+            parsed = _parse_game_result(str(getattr(row, "game_result", "")))
             if parsed is None:
                 logger.debug("espn: skipping game %s — unparseable result", espn_game_id)
                 continue
             team_score, opp_score = parsed
 
             # Resolve team IDs.
-            team_name = str(row["team"])
-            opp_name = str(row["opponent"])
+            team_name = str(row.team)
+            opp_name = str(row.opponent)
             team_tid = _resolve_team_id(team_name, self._lower_team_map, self._team_name_to_id)
             opp_tid = _resolve_team_id(opp_name, self._lower_team_map, self._team_name_to_id)
             if team_tid is None or opp_tid is None:
@@ -204,7 +236,7 @@ class EspnConnector(Connector):
                 continue
 
             # Parse date and compute day_num.
-            game_date = self._parse_date(row.get("game_day"))
+            game_date = self._parse_date(getattr(row, "game_day", None))
             day_num = 0
             if game_date is not None and day_zero is not None:
                 day_num = (game_date - day_zero).days
@@ -237,27 +269,30 @@ class EspnConnector(Connector):
             if pd.isna(ts):
                 return None
             return cast("datetime.date", ts.date())
-        except Exception:  # noqa: BLE001  # Story 8.3: add logging/retry here
+        except Exception:  # noqa: BLE001
+            logger.debug("espn: could not parse date value %r for game", value)
             return None
 
     @staticmethod
     def _infer_loc(
-        row: pd.Series,
+        row: object,
         team_tid: int,
         w_team_id: int,
     ) -> Literal["H", "A", "N"]:
         """Infer game location from available ESPN context.
 
-        Falls back to ``"N"`` (neutral) when location cannot be determined.
+        Accepts any row-like object (named tuple from ``itertuples`` or
+        ``pd.Series``).  Falls back to ``"N"`` (neutral) when location
+        cannot be determined.
         """
         # Some DataFrames include a 'home_away' or 'is_neutral' column.
-        if "is_neutral" in row.index:
-            val = row["is_neutral"]
+        if hasattr(row, "is_neutral"):
+            val = getattr(row, "is_neutral")
             if val is True or str(val).lower() in ("true", "1", "yes"):
                 return "N"
 
-        if "home_away" in row.index:
-            ha = str(row["home_away"]).lower()
+        if hasattr(row, "home_away"):
+            ha = str(getattr(row, "home_away")).lower()
             if ha == "home":
                 # The row's team was home.
                 return "H" if team_tid == w_team_id else "A"
