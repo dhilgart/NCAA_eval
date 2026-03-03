@@ -351,7 +351,7 @@ class TestIterGamesByDate:
 
 
 class TestDeduplication2025:
-    """Tests for 2025 duplicate game elimination (AC 1, 6.7–6.8)."""
+    """Tests for ESPN overlap deduplication (AC 1, 6.7–6.8; generalized in Story 8.3)."""
 
     @pytest.mark.unit
     def test_deduplication_reduces_to_single_game(
@@ -441,11 +441,11 @@ class TestDeduplication2025:
         assert result.games[0].num_ot == 2
 
     @pytest.mark.unit
-    def test_deduplication_not_applied_to_non_2025(
+    def test_deduplication_not_applied_without_espn_games(
         self, repo: ParquetRepository, server: ChronologicalDataServer
     ) -> None:
-        """Deduplication is only applied for year=2025; other years untouched."""
-        # Two different games in 2024 with same team pair on different days — no dedup
+        """Deduplication skipped when no ESPN-prefixed game IDs are present."""
+        # Two different Kaggle-only games in 2024 — no dedup triggered
         games = [
             _make_game(
                 season=2024,
@@ -465,6 +465,36 @@ class TestDeduplication2025:
         repo.save_games(games)
         result = server.get_chronological_season(2024)
         assert len(result.games) == 2
+
+    @pytest.mark.unit
+    def test_deduplication_triggers_for_non_2025_with_espn(
+        self, repo: ParquetRepository, server: ChronologicalDataServer
+    ) -> None:
+        """Deduplication fires for any season that contains ESPN-prefixed IDs (Story 8.3 AC #15)."""
+        kaggle_game = _make_game(
+            game_id="999999",
+            season=2026,
+            day_num=50,
+            date=datetime.date(2026, 2, 15),
+            w_team_id=1101,
+            l_team_id=1102,
+            loc="N",
+            num_ot=0,
+        )
+        espn_game = _make_game(
+            game_id="espn_abc999",
+            season=2026,
+            day_num=50,
+            date=datetime.date(2026, 2, 15),
+            w_team_id=1101,
+            l_team_id=1102,
+            loc="H",
+            num_ot=1,
+        )
+        repo.save_games([kaggle_game, espn_game])
+        result = server.get_chronological_season(2026)
+        assert len(result.games) == 1
+        assert result.games[0].loc == "H"  # ESPN preferred
 
     @pytest.mark.unit
     def test_deduplication_preserves_unique_games(

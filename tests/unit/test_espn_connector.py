@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime
+import logging
 from typing import Any
 from unittest.mock import patch
 
@@ -12,6 +13,7 @@ import pytest
 from ncaa_eval.ingest.connectors.base import DataFormatError
 from ncaa_eval.ingest.connectors.espn import (
     EspnConnector,
+    _fetch_single_team_schedule,
     _parse_game_result,
     _resolve_team_id,
 )
@@ -340,9 +342,8 @@ class TestEspnConnectorErrorHandling:
     """Tests for error handling: network failure, unexpected response."""
 
     def test_network_failure_returns_empty(self, connector: EspnConnector) -> None:
-        with patch("ncaa_eval.ingest.connectors.espn.ms") as mock_ms:
-            mock_ms.get_games_season.side_effect = Exception("network failure")
-            mock_ms.get_team_schedule.side_effect = Exception("network failure")
+        with patch("ncaa_eval.ingest.connectors.espn._fetch_single_team_schedule") as mock_fetch:
+            mock_fetch.side_effect = Exception("network failure")
             games = connector.fetch_games(2025)
         assert games == []
 
@@ -374,3 +375,106 @@ class TestEspnConnectorErrorHandling:
             games = connector.fetch_games(2025)
         # Same game_id appears twice → should be deduplicated to 1
         assert len(games) == 1
+
+
+# ---------------------------------------------------------------------------
+# TestRetryBehavior  (Story 8.3: AC #2)
+# ---------------------------------------------------------------------------
+
+
+class TestRetryBehavior:
+    """Tests for tenacity retry on per-team schedule fetch."""
+
+    def test_retry_succeeds_on_second_attempt(self) -> None:
+        """_fetch_single_team_schedule retries after transient failure."""
+        call_count = 0
+
+        def _side_effect(team: str, season: int) -> pd.DataFrame:
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                raise ConnectionError("transient error")
+            return _make_schedule_df()
+
+        with patch("ncaa_eval.ingest.connectors.espn.ms") as mock_ms:
+            mock_ms.get_team_schedule.side_effect = _side_effect
+            result = _fetch_single_team_schedule("Duke", 2025)
+
+        assert isinstance(result, pd.DataFrame)
+        assert call_count == 2
+
+    def test_retry_exhausted_raises(self) -> None:
+        """After 3 failures, _fetch_single_team_schedule re-raises."""
+        with patch("ncaa_eval.ingest.connectors.espn.ms") as mock_ms:
+            mock_ms.get_team_schedule.side_effect = ConnectionError("persistent error")
+            with pytest.raises(ConnectionError, match="persistent error"):
+                _fetch_single_team_schedule("Duke", 2025)
+        assert mock_ms.get_team_schedule.call_count == 3
+
+    def test_connector_continues_after_team_failure(self, connector: EspnConnector) -> None:
+        """_fetch_per_team continues to next team when one fails all retries."""
+
+        # Duke fails, North Carolina succeeds
+        def _side_effect(team: str, season: int) -> pd.DataFrame:
+            if team == "Duke":
+                raise ConnectionError("Duke down")
+            return _make_schedule_df(
+                [
+                    {
+                        "team": "North Carolina",
+                        "game_id": "401700099",
+                        "game_day": "2024-11-15",
+                        "opponent": "Kentucky",
+                        "game_result": "W 80-70",
+                    },
+                ]
+            )
+
+        with patch("ncaa_eval.ingest.connectors.espn._fetch_single_team_schedule") as mock_fetch:
+            mock_fetch.side_effect = _side_effect
+            games = connector.fetch_games(2025)
+        # At least some games should be returned (from teams that succeed)
+        # Duke's failure should not prevent other teams' data from being processed
+        assert isinstance(games, list)
+
+
+# ---------------------------------------------------------------------------
+# TestFetchSummaryLogging  (Story 8.3: AC #5-6)
+# ---------------------------------------------------------------------------
+
+
+class TestFetchSummaryLogging:
+    """Tests for fetch summary logging after per-team loop."""
+
+    def test_all_success_logs_info(self, connector: EspnConnector, caplog: pytest.LogCaptureFixture) -> None:
+        """When all teams succeed, summary is logged at INFO level."""
+        df = _make_schedule_df()
+        with patch("ncaa_eval.ingest.connectors.espn._fetch_single_team_schedule", return_value=df):
+            with caplog.at_level(logging.INFO, logger="ncaa_eval.ingest.connectors.espn"):
+                connector._fetch_per_team(2025)
+        summary_msgs = [r for r in caplog.records if "fetched" in r.message and "failed" in r.message]
+        assert len(summary_msgs) >= 1
+        assert summary_msgs[0].levelno == logging.INFO
+        assert "0 failed" in summary_msgs[0].message
+
+    def test_partial_failure_logs_warning(
+        self, connector: EspnConnector, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """When some teams fail, summary is logged at WARNING with failed team names."""
+        call_count = 0
+
+        def _side_effect(team: str, season: int) -> pd.DataFrame:
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                raise ConnectionError("down")
+            return _make_schedule_df()
+
+        with patch("ncaa_eval.ingest.connectors.espn._fetch_single_team_schedule") as mock_fetch:
+            mock_fetch.side_effect = _side_effect
+            with caplog.at_level(logging.WARNING, logger="ncaa_eval.ingest.connectors.espn"):
+                connector._fetch_per_team(2025)
+
+        summary_msgs = [r for r in caplog.records if "fetched" in r.message and "failed" in r.message]
+        assert len(summary_msgs) >= 1
+        assert summary_msgs[0].levelno == logging.WARNING

@@ -15,18 +15,16 @@ from typing import Literal, cast
 
 import cbbpy.mens_scraper as ms  # type: ignore[import-untyped]
 import pandas as pd  # type: ignore[import-untyped]
-from rapidfuzz import fuzz
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from ncaa_eval.ingest.connectors.base import (
     Connector,
     DataFormatError,
 )
+from ncaa_eval.ingest.fuzzy import fuzzy_match_team
 from ncaa_eval.ingest.schema import Game
 
 logger = logging.getLogger(__name__)
-
-# Minimum fuzzy-match score (0–100) for team name resolution.
-_FUZZY_THRESHOLD = 80
 
 # Expected columns from cbbpy get_team_schedule() output.
 _SCHEDULE_COLUMNS = {"game_id", "game_day", "game_result", "team", "opponent"}
@@ -58,7 +56,8 @@ def _resolve_team_id(
 ) -> int | None:
     """Resolve an ESPN team name to a Kaggle team ID.
 
-    Tries exact match first, then falls back to fuzzy matching via rapidfuzz.
+    Tries exact match first, then falls back to fuzzy matching via
+    :func:`~ncaa_eval.ingest.fuzzy.fuzzy_match_team`.
 
     Args:
         name: ESPN team name to resolve.
@@ -70,18 +69,26 @@ def _resolve_team_id(
     if exact is not None:
         return exact
 
-    # Fuzzy match.
-    best_score = 0.0
-    best_id: int | None = None
-    for known_name, tid in original_mapping.items():
-        score = fuzz.token_set_ratio(name.lower(), known_name.lower())
-        if score > best_score:
-            best_score = score
-            best_id = tid
-    if best_score >= _FUZZY_THRESHOLD and best_id is not None:
-        return best_id
+    # Fuzzy fallback via centralized utility.
+    result = fuzzy_match_team(name, original_mapping)
+    if result is not None:
+        return result
 
-    logger.warning("espn: no team ID match for '%s' (best score: %.0f)", name, best_score)
+    logger.warning("espn: no team ID match for '%s'", name)
+    return None
+
+
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=2, min=2, max=30),
+    retry=retry_if_exception_type(Exception),
+    reraise=True,
+)
+def _fetch_single_team_schedule(team_name: str, season: int) -> pd.DataFrame | None:
+    """Fetch a single team's schedule with retry on transient failures."""
+    df = ms.get_team_schedule(team_name, season)
+    if isinstance(df, pd.DataFrame) and not df.empty:
+        return df
     return None
 
 
@@ -133,20 +140,42 @@ class EspnConnector(Connector):
     def _fetch_per_team(self, season: int) -> pd.DataFrame | None:
         """Fetch schedules for each team in the mapping and concatenate."""
         frames: list[pd.DataFrame] = []
+        total = len(self._team_name_to_id)
+        failed_teams: list[str] = []
+
         for team_name in self._team_name_to_id:
             try:
-                df = ms.get_team_schedule(team_name, season)
-                if isinstance(df, pd.DataFrame) and not df.empty:
+                df = _fetch_single_team_schedule(team_name, season)
+                if df is not None:
                     frames.append(df)
-            except Exception:  # noqa: BLE001  # Story 8.3: add logging/retry here
-                logger.warning("espn: get_team_schedule('%s', %d) failed", team_name, season, exc_info=True)
+            except Exception:  # noqa: BLE001
+                logger.warning(
+                    "espn: get_team_schedule('%s', %d) failed after retries",
+                    team_name,
+                    season,
+                    exc_info=True,
+                )
+                failed_teams.append(team_name)
                 continue
-        if not frames:
+
+        success = len(frames)
+        failed = total - success
+
+        # AC #5-6: Summary reporting
+        if failed > 0:
+            first_five = failed_teams[:5]
             logger.warning(
-                "espn: all %d per-team schedule fetches failed for season %d — no data available",
-                len(self._team_name_to_id),
+                "espn: fetched %d/%d teams for season %d (%d failed): %s",
+                success,
+                total,
                 season,
+                failed,
+                first_five,
             )
+        else:
+            logger.info("espn: fetched %d/%d teams for season %d (%d failed)", success, total, season, failed)
+
+        if not frames:
             return None
         combined = pd.concat(frames, ignore_index=True)
         # Deduplicate by ESPN game_id (each game appears in both teams' schedules).
@@ -237,7 +266,8 @@ class EspnConnector(Connector):
             if pd.isna(ts):
                 return None
             return cast("datetime.date", ts.date())
-        except Exception:  # noqa: BLE001  # Story 8.3: add logging/retry here
+        except Exception:  # noqa: BLE001
+            logger.debug("espn: could not parse date value %r for game", value)
             return None
 
     @staticmethod

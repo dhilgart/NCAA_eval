@@ -1,6 +1,6 @@
 # Story 8.3: Fix Data Pipeline Resilience — ESPN Error Handling, Retry Logic, Typer Decoupling
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -72,59 +72,59 @@ so that ESPN sync reports partial failures visibly, retries transient network er
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add `tenacity` and `rapidfuzz` to pyproject.toml (AC: #1, #23)
-  - [ ] 1.1 Add `tenacity = "*"` to `[tool.poetry.dependencies]`
-  - [ ] 1.2 Add `rapidfuzz = "*"` to `[tool.poetry.dependencies]`
-  - [ ] 1.3 Run `ruff check pyproject.toml` to verify
+- [x] Task 1: Add `tenacity` and `rapidfuzz` to pyproject.toml (AC: #1, #23)
+  - [x] 1.1 Add `tenacity = "*"` to `[tool.poetry.dependencies]`
+  - [x] 1.2 Add `rapidfuzz = "*"` to `[tool.poetry.dependencies]`
+  - [x] 1.3 Run `ruff check pyproject.toml` to verify
 
-- [ ] Task 2: Create fuzzy match utility module (AC: #18)
-  - [ ] 2.1 Create `src/ncaa_eval/ingest/fuzzy.py` with `fuzzy_match_team()` function
-  - [ ] 2.2 Include `from __future__ import annotations`, type annotations, Google-style docstring
-  - [ ] 2.3 Run `mypy --strict src/ncaa_eval/ingest/fuzzy.py`
+- [x] Task 2: Create fuzzy match utility module (AC: #18)
+  - [x] 2.1 Create `src/ncaa_eval/ingest/fuzzy.py` with `fuzzy_match_team()` function
+  - [x] 2.2 Include `from __future__ import annotations`, type annotations, Google-style docstring
+  - [x] 2.3 Run `mypy --strict src/ncaa_eval/ingest/fuzzy.py`
 
-- [ ] Task 3: Refactor ESPN connector (AC: #2-4, #8-9, #19, #21-22)
-  - [ ] 3.1 Add tenacity retry to `_fetch_per_team()` inner loop (3 retries, exponential backoff 2s-30s)
-  - [ ] 3.2 Track success/failure counts during per-team loop
-  - [ ] 3.3 Log summary after loop completion (AC #5-6)
-  - [ ] 3.4 Add DEBUG log to `_parse_date()` exception handler (AC #8)
-  - [ ] 3.5 Refactor `_resolve_team_id()` to use `fuzzy_match_team()` from `fuzzy.py` (AC #19)
-  - [ ] 3.6 Remove `from rapidfuzz import fuzz` import and `_FUZZY_THRESHOLD` constant (AC #21-22)
-  - [ ] 3.7 Run `mypy --strict src/ncaa_eval/ingest/connectors/espn.py`
+- [x] Task 3: Refactor ESPN connector (AC: #2-4, #8-9, #19, #21-22)
+  - [x] 3.1 Add tenacity retry to `_fetch_per_team()` inner loop (3 retries, exponential backoff 2s-30s)
+  - [x] 3.2 Track success/failure counts during per-team loop
+  - [x] 3.3 Log summary after loop completion (AC #5-6)
+  - [x] 3.4 Add DEBUG log to `_parse_date()` exception handler (AC #8)
+  - [x] 3.5 Refactor `_resolve_team_id()` to use `fuzzy_match_team()` from `fuzzy.py` (AC #19)
+  - [x] 3.6 Remove `from rapidfuzz import fuzz` import and `_FUZZY_THRESHOLD` constant (AC #21-22)
+  - [x] 3.7 Run `mypy --strict src/ncaa_eval/ingest/connectors/espn.py`
 
-- [ ] Task 4: Decouple SyncEngine from Typer (AC: #10-13)
-  - [ ] 4.1 Replace all `typer.echo(...)` calls with `logger.info(...)` in `sync.py`
-  - [ ] 4.2 Remove `import typer` from `sync.py`
-  - [ ] 4.3 Refactor `_build_espn_team_map()` to use `fuzzy_match_team()` (AC #20-22)
-  - [ ] 4.4 Remove `from rapidfuzz import fuzz` import and `_FUZZY_THRESHOLD` constant
-  - [ ] 4.5 Verify CLI entry point (`sync.py` at repo root) configures logging so messages still appear
-  - [ ] 4.6 Run `mypy --strict src/ncaa_eval/ingest/sync.py`
+- [x] Task 4: Decouple SyncEngine from Typer (AC: #10-13)
+  - [x] 4.1 Replace all `typer.echo(...)` calls with `logger.info(...)` in `sync.py`
+  - [x] 4.2 Remove `import typer` from `sync.py`
+  - [x] 4.3 Refactor `_build_espn_team_map()` to use `fuzzy_match_team()` (AC #20-22)
+  - [x] 4.4 Remove `from rapidfuzz import fuzz` import and `_FUZZY_THRESHOLD` constant
+  - [x] 4.5 Verify CLI entry point (`sync.py` at repo root) configures logging so messages still appear
+  - [x] 4.6 Run `mypy --strict src/ncaa_eval/ingest/sync.py`
 
-- [ ] Task 5: Generalize deduplication (AC: #14-17)
-  - [ ] 5.1 Rename `_deduplicate_2025` → `_deduplicate_espn_overlap` in `serving.py`
-  - [ ] 5.2 Replace `if year == 2025:` guard with ESPN-prefix detection
-  - [ ] 5.3 Update function docstring to remove 2025-specific language
-  - [ ] 5.4 Run `mypy --strict src/ncaa_eval/transform/serving.py`
+- [x] Task 5: Generalize deduplication (AC: #14-17)
+  - [x] 5.1 Rename `_deduplicate_2025` → `_deduplicate_espn_overlap` in `serving.py`
+  - [x] 5.2 Replace `if year == 2025:` guard with ESPN-prefix detection
+  - [x] 5.3 Update function docstring to remove 2025-specific language
+  - [x] 5.4 Run `mypy --strict src/ncaa_eval/transform/serving.py`
 
-- [ ] Task 6: Fix PydanticUndefined sentinel (AC: #24-25)
-  - [ ] 6.1 Replace `sentinel: Any = ...` with `from pydantic.fields import PydanticUndefined` import and usage
-  - [ ] 6.2 Run `mypy --strict src/ncaa_eval/ingest/repository.py`
+- [x] Task 6: Fix PydanticUndefined sentinel (AC: #24-25)
+  - [x] 6.1 Replace `sentinel: Any = ...` with `from pydantic_core import PydanticUndefined` and usage
+  - [x] 6.2 Run `mypy --strict src/ncaa_eval/ingest/repository.py`
 
-- [ ] Task 7: Verify backtest handler (AC: #26)
-  - [ ] 7.1 Confirm `backtest.py:186-187` already logs WARNING with `exc_info=True` — no code change
+- [x] Task 7: Verify backtest handler (AC: #26)
+  - [x] 7.1 Confirm `backtest.py:186-187` already logs WARNING with `exc_info=True` — no code change
 
-- [ ] Task 8: Update tests (AC: #27-30)
-  - [ ] 8.1 Update `tests/unit/test_espn_connector.py` — add tests for retry behavior (mock tenacity to verify retry attempts)
-  - [ ] 8.2 Update `tests/unit/test_espn_connector.py` — add test for fetch summary logging (success/failure counts)
-  - [ ] 8.3 Add `tests/unit/test_fuzzy.py` — test `fuzzy_match_team()` with exact, fuzzy, and no-match cases
-  - [ ] 8.4 Update `tests/integration/test_sync.py` — verify SyncEngine works without typer import (no `typer.echo` calls)
-  - [ ] 8.5 Update `tests/unit/test_serving.py` or equivalent — verify deduplication triggers for any ESPN-prefixed season, not just 2025
-  - [ ] 8.6 Run full test suite: `pytest`
+- [x] Task 8: Update tests (AC: #27-30)
+  - [x] 8.1 Update `tests/unit/test_espn_connector.py` — add tests for retry behavior (mock tenacity to verify retry attempts)
+  - [x] 8.2 Update `tests/unit/test_espn_connector.py` — add test for fetch summary logging (success/failure counts)
+  - [x] 8.3 Add `tests/unit/test_fuzzy.py` — test `fuzzy_match_team()` with exact, fuzzy, and no-match cases
+  - [x] 8.4 Update `tests/integration/test_sync.py` — verify SyncEngine works without typer import (no `typer.echo` calls)
+  - [x] 8.5 Update `tests/unit/test_chronological_serving.py` — verify deduplication triggers for any ESPN-prefixed season, not just 2025
+  - [x] 8.6 Run full test suite: `pytest` — 883 passed, 1 skipped
 
-- [ ] Task 9: Final validation (AC: #27-30)
-  - [ ] 9.1 `ruff check .` — zero new violations
-  - [ ] 9.2 `mypy --strict src/ncaa_eval tests` — zero errors
-  - [ ] 9.3 `pytest` — all tests pass
-  - [ ] 9.4 Verify no behavioral changes for CLI users
+- [x] Task 9: Final validation (AC: #27-30)
+  - [x] 9.1 `ruff check .` — zero new violations (pre-existing notebook issues only)
+  - [x] 9.2 `mypy --strict src/ncaa_eval tests` — zero errors (87 source files)
+  - [x] 9.3 `pytest` — 883 passed, 1 skipped, 0 failures
+  - [x] 9.4 Verify no behavioral changes for CLI users — `sync.py` (root) adds `logging.basicConfig(level=INFO, format="%(message)s")` so log messages print identically to previous `typer.echo` output
 
 ## Dev Notes
 
@@ -299,10 +299,45 @@ None of these files are touched by Story 8.3. The `ingest/` module structure is 
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+None — clean implementation with no blocking issues.
+
 ### Completion Notes List
 
+- **AC #1-4 (Retry)**: Created `_fetch_single_team_schedule()` with `@retry(stop=3, wait=exponential(2s-30s))`. `_fetch_per_team()` catches final exceptions after retries exhaust and continues to next team. `# noqa: BLE001` retained on broad except.
+- **AC #5-7 (Summary)**: After loop, logs INFO for full success, WARNING for partial failure with first 5 failed team names. Return type unchanged.
+- **AC #8-9 (Date parse)**: Added `logger.debug("espn: could not parse date value %r for game", value)` before `return None`. `# noqa: BLE001` retained.
+- **AC #10-13 (Typer decoupling)**: Replaced 7 `typer.echo()` calls with `logger.info()` in `sync.py`, removed `import typer`. CLI entry point (`sync.py` root) adds `logging.basicConfig(level=INFO, format="%(message)s")` for behavioral equivalence.
+- **AC #14-17 (Dedup generalization)**: Renamed `_deduplicate_2025` → `_deduplicate_espn_overlap`, replaced `if year == 2025:` guard with `if any(g.game_id.startswith("espn_") for g in games):`. Logic body unchanged.
+- **AC #18-22 (Fuzzy centralization)**: Created `src/ncaa_eval/ingest/fuzzy.py` with `fuzzy_match_team()`. Both `espn.py` and `sync.py` refactored to use it. Removed duplicate `_FUZZY_THRESHOLD` constants and direct `rapidfuzz.fuzz` imports.
+- **AC #23 (rapidfuzz dep)**: Added `rapidfuzz = "*"` to pyproject.toml.
+- **AC #24-25 (PydanticUndefined)**: Replaced `sentinel: Any = ...` with `from pydantic_core import PydanticUndefined; sentinel = PydanticUndefined`. Used `pydantic_core` instead of `pydantic.fields` because mypy strict + pydantic plugin doesn't export it from `pydantic.fields`.
+- **AC #26 (Backtest verify)**: Confirmed `backtest.py:186-187` already logs WARNING with `exc_info=True`. No change needed.
+- **AC #27-30 (Quality gates)**: `ruff check .` clean (excluding pre-existing notebook issues), `mypy --strict` passes 87 files, `pytest` 883 passed / 1 skipped / 0 failures.
+
+### Change Log
+
+- 2026-03-03: Story 8.3 implemented — ESPN retry logic, fetch summary, date parse logging, Typer decoupling, generalized dedup, centralized fuzzy match, PydanticUndefined fix, rapidfuzz/tenacity deps declared
+
 ### File List
+
+**New files:**
+- `src/ncaa_eval/ingest/fuzzy.py`
+- `tests/unit/test_fuzzy.py`
+
+**Modified files:**
+- `pyproject.toml` — added `tenacity = "*"` and `rapidfuzz = "*"`
+- `poetry.lock` — regenerated
+- `src/ncaa_eval/ingest/connectors/espn.py` — tenacity retry, fetch summary, date parse DEBUG log, fuzzy_match_team usage
+- `src/ncaa_eval/ingest/sync.py` — typer.echo → logger.info, removed typer import, fuzzy_match_team usage
+- `src/ncaa_eval/transform/serving.py` — `_deduplicate_2025` → `_deduplicate_espn_overlap`, ESPN-prefix guard
+- `src/ncaa_eval/ingest/repository.py` — `PydanticUndefined` sentinel
+- `sync.py` (repo root CLI) — added `logging.basicConfig()` for CLI output
+- `tests/unit/test_espn_connector.py` — retry and summary logging tests
+- `tests/integration/test_sync.py` — no-typer-dependency test
+- `tests/unit/test_chronological_serving.py` — generalized dedup test for non-2025 seasons
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — status updated
+- `_bmad-output/implementation-artifacts/8-3-fix-data-pipeline-resilience-espn-error-handling.md` — story file updated

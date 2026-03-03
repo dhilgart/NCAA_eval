@@ -11,12 +11,12 @@ from __future__ import annotations
 
 import abc
 from pathlib import Path
-from typing import Any
 
 import pandas as pd  # type: ignore[import-untyped]
 import pyarrow as pa  # type: ignore[import-untyped]
 import pyarrow.dataset as ds  # type: ignore[import-untyped]
 import pyarrow.parquet as pq  # type: ignore[import-untyped]
+from pydantic_core import PydanticUndefined
 
 from ncaa_eval.ingest.schema import Game, Season, Team
 
@@ -99,7 +99,7 @@ def _apply_model_defaults(df: pd.DataFrame, model: type[Game]) -> None:
     model defaults so that ``model(**row)`` doesn't receive ``None`` for a
     field that expects a concrete default value.
     """
-    sentinel: Any = ...  # PydanticUndefined is represented as Ellipsis
+    sentinel = PydanticUndefined
     for name, field_info in model.model_fields.items():
         default = field_info.default
         if name in df.columns and default is not sentinel and default is not None:
