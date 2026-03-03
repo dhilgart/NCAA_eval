@@ -77,12 +77,12 @@ so that every future PR is reviewed against these design principles and existing
   - [x] 4.1 Verify Style Guide Section 7 table matches updated PR template
   - [x] 4.2 Fix any mismatches between the two
 
-- [ ] Task 5: Codebase PEP 20 Compliance Review (AC: #14-16)
-  - [ ] 5.1 Audit all `src/ncaa_eval/` files for PEP 20 #10 violations (silent exception swallowing)
-  - [ ] 5.2 Audit for PEP 20 #2 violations (magic numbers — reference `ruff check` PLR2004 results)
-  - [ ] 5.3 Audit for PEP 20 #3/#5 violations (complexity/nesting — reference `ruff check` C901/PLR results)
-  - [ ] 5.4 Fix small/mechanical violations directly (e.g., changing `logger.debug` to `logger.warning` for exception handlers)
-  - [ ] 5.5 Write compliance report to `_bmad-output/planning-artifacts/pep20-compliance-report.md`
+- [x] Task 5: Codebase PEP 20 Compliance Review (AC: #14-16)
+  - [x] 5.1 Audit all `src/ncaa_eval/` files for PEP 20 #10 violations (silent exception swallowing)
+  - [x] 5.2 Audit for PEP 20 #2 violations (magic numbers — reference `ruff check` PLR2004 results)
+  - [x] 5.3 Audit for PEP 20 #3/#5 violations (complexity/nesting — reference `ruff check` C901/PLR results)
+  - [x] 5.4 Fix small/mechanical violations directly (e.g., changing `logger.debug` to `logger.warning` for exception handlers)
+  - [x] 5.5 Write compliance report to `_bmad-output/planning-artifacts/pep20-compliance-report.md`
 
 - [ ] Task 6: Final Verification (AC: #17)
   - [ ] 6.1 Run `ruff check .`

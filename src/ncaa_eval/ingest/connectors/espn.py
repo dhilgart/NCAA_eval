@@ -139,7 +139,7 @@ class EspnConnector(Connector):
                 if isinstance(df, pd.DataFrame) and not df.empty:
                     frames.append(df)
             except Exception:
-                logger.debug("espn: get_team_schedule('%s', %d) failed", team_name, season)
+                logger.warning("espn: get_team_schedule('%s', %d) failed", team_name, season, exc_info=True)
                 continue
         if not frames:
             logger.warning(
