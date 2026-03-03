@@ -91,8 +91,8 @@ so that the codebase is internally consistent, Sphinx API docs render correctly,
   - [x] 2.5 `src/ncaa_eval/model/tracking.py` — convert `load_run`, `load_predictions`
   - [x] 2.6 Verify no types are duplicated in docstrings (types in signatures only)
 
-- [ ] Task 3: Add missing `Returns:` section (AC: #4)
-  - [ ] 3.1 Add `Returns:` section to `_resolve_team_id` in `espn.py`
+- [x] Task 3: Add missing `Returns:` section (AC: #4)
+  - [x] 3.1 Add `Returns:` section to `_resolve_team_id` in `espn.py`
 
 - [ ] Task 4: Fix D107 violations — add `__init__` docstrings (AC: #7)
   - [ ] 4.1 Run `ruff check src/ --select D107` to list all 25 violations

@@ -63,6 +63,9 @@ def _resolve_team_id(
         name: ESPN team name to resolve.
         lower_map: Pre-computed lowercase-keyed mapping (avoids per-call rebuild).
         original_mapping: Original mapping with original-case keys (used for fuzzy).
+
+    Returns:
+        Kaggle team ID if resolved, or ``None`` if no match was found.
     """
     # Exact match (case-insensitive).
     exact = lower_map.get(name.lower())
