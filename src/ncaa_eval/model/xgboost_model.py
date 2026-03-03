@@ -62,6 +62,16 @@ class XGBoostModel(Model):
     """
 
     def __init__(self, config: XGBoostModelConfig | None = None) -> None:
+        """Initialize XGBoost model with optional configuration.
+
+        Builds an :class:`XGBClassifier` from config hyperparameters, setting
+        ``objective="binary:logistic"`` and ``scale_pos_weight`` only when
+        explicitly provided.
+
+        Args:
+            config: Pydantic config; defaults to
+                :class:`XGBoostModelConfig` when ``None``.
+        """
         self._config = config or XGBoostModelConfig()
         self._is_fitted = False
         self._feature_names: list[str] = []

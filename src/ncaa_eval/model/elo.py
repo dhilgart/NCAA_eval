@@ -42,6 +42,12 @@ class EloModel(StatefulModel):
     """Elo rating model wrapping :class:`EloFeatureEngine`."""
 
     def __init__(self, config: EloModelConfig | None = None) -> None:
+        """Initialize Elo model with optional configuration.
+
+        Args:
+            config: Pydantic config; defaults to :class:`EloModelConfig`
+                with standard hyperparameters when ``None``.
+        """
         self._config = config or EloModelConfig()
         self._engine = EloFeatureEngine(self._to_elo_config(self._config))
 

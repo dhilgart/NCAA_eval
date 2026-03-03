@@ -30,6 +30,12 @@ class LogisticRegressionModel(Model):
     """Thin wrapper around sklearn ``LogisticRegression``."""
 
     def __init__(self, config: LogisticRegressionConfig | None = None) -> None:
+        """Initialize logistic regression model with optional configuration.
+
+        Args:
+            config: Pydantic config; defaults to
+                :class:`LogisticRegressionConfig` when ``None``.
+        """
         self._config = config or LogisticRegressionConfig()
         self._clf = LogisticRegression(C=self._config.C, max_iter=self._config.max_iter)
 

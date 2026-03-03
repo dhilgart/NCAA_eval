@@ -85,6 +85,22 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 # EDA notebooks — not subject to lint enforcement per project convention
 "notebooks/**" = ["PLR0911", "PLR0912", "PLR0913", "C901"]
+# D107: __init__ docstrings suppressed where class docstring covers the contract
+"src/ncaa_eval/evaluation/providers.py" = ["D107"]
+"src/ncaa_eval/evaluation/scoring.py" = ["D107"]
+"src/ncaa_eval/ingest/connectors/espn.py" = ["D107"]
+"src/ncaa_eval/ingest/connectors/kaggle.py" = ["D107"]
+"src/ncaa_eval/ingest/repository.py" = ["D107"]
+"src/ncaa_eval/ingest/sync.py" = ["D107"]
+"src/ncaa_eval/model/tracking.py" = ["D107"]
+"src/ncaa_eval/transform/calibration.py" = ["D107"]
+"src/ncaa_eval/transform/elo.py" = ["D107"]
+"src/ncaa_eval/transform/feature_serving.py" = ["D107"]
+"src/ncaa_eval/transform/graph.py" = ["D107"]
+"src/ncaa_eval/transform/normalization.py" = ["D107"]
+"src/ncaa_eval/transform/opponent.py" = ["D107"]
+"src/ncaa_eval/transform/sequential.py" = ["D107"]
+"src/ncaa_eval/transform/serving.py" = ["D107"]
 
 [tool.ruff.lint.isort]
 required-imports = ["from __future__ import annotations"]

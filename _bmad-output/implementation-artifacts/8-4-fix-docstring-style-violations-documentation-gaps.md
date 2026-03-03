@@ -94,10 +94,10 @@ so that the codebase is internally consistent, Sphinx API docs render correctly,
 - [x] Task 3: Add missing `Returns:` section (AC: #4)
   - [x] 3.1 Add `Returns:` section to `_resolve_team_id` in `espn.py`
 
-- [ ] Task 4: Fix D107 violations — add `__init__` docstrings (AC: #7)
-  - [ ] 4.1 Run `ruff check src/ --select D107` to list all 25 violations
-  - [ ] 4.2 For each violation: if the class docstring documents constructor args → add per-file `D107` ignore; otherwise add `__init__` docstring
-  - [ ] 4.3 Verify with `ruff check src/ --select D107`
+- [x] Task 4: Fix D107 violations — add `__init__` docstrings (AC: #7)
+  - [x] 4.1 Run `ruff check src/ --select D107` to list all 25 violations
+  - [x] 4.2 For each violation: if the class docstring documents constructor args → add per-file `D107` ignore; otherwise add `__init__` docstring
+  - [x] 4.3 Verify with `ruff check src/ --select D107`
 
 - [ ] Task 5: Fix D102 violations — add missing public method docstrings (AC: #9)
   - [ ] 5.1 Run `ruff check src/ --select D102` to list all 13 violations
