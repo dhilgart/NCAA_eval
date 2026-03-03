@@ -1,6 +1,6 @@
 # Story 8.1: Code Architecture Cleanup — Simulation Module Split & Kitchen Sink Refactors
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -42,54 +42,54 @@ so that the codebase is maintainable, testable, and aligned with SRP and the pro
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Split `simulation.py` — Extract `bracket.py` (AC: #1, #5, #6)
-  - [ ] 1.1 Create `src/ncaa_eval/evaluation/bracket.py` with `MatchupContext`, `BracketNode`, `BracketStructure`, `build_bracket`, `_build_subtree`, `N_ROUNDS`, `N_GAMES`
-  - [ ] 1.2 Add `from __future__ import annotations` and required imports (`TourneySeed`, `dataclasses`, `typing`)
-  - [ ] 1.3 Remove extracted code from `simulation.py`, add imports from `bracket`
-  - [ ] 1.4 Verify `ruff check .` and `mypy --strict` pass
+- [x] Task 1: Split `simulation.py` — Extract `bracket.py` (AC: #1, #5, #6)
+  - [x]1.1 Create `src/ncaa_eval/evaluation/bracket.py` with `MatchupContext`, `BracketNode`, `BracketStructure`, `build_bracket`, `_build_subtree`, `N_ROUNDS`, `N_GAMES`
+  - [x]1.2 Add `from __future__ import annotations` and required imports (`TourneySeed`, `dataclasses`, `typing`)
+  - [x]1.3 Remove extracted code from `simulation.py`, add imports from `bracket`
+  - [x]1.4 Verify `ruff check .` and `mypy --strict` pass
 
-- [ ] Task 2: Split `simulation.py` — Extract `scoring.py` (AC: #2, #5, #6)
-  - [ ] 2.1 Create `src/ncaa_eval/evaluation/scoring.py` with `ScoringRule` protocol, all 5 concrete scoring classes, registry functions, `scoring_from_config`, `ScoringNotFoundError`, `_SCORING_REGISTRY`
-  - [ ] 2.2 Remove extracted code from `simulation.py`, add imports from `scoring`
-  - [ ] 2.3 Verify `ruff check .` and `mypy --strict` pass
+- [x] Task 2: Split `simulation.py` — Extract `scoring.py` (AC: #2, #5, #6)
+  - [x]2.1 Create `src/ncaa_eval/evaluation/scoring.py` with `ScoringRule` protocol, all 5 concrete scoring classes, registry functions, `scoring_from_config`, `ScoringNotFoundError`, `_SCORING_REGISTRY`
+  - [x]2.2 Remove extracted code from `simulation.py`, add imports from `scoring`
+  - [x]2.3 Verify `ruff check .` and `mypy --strict` pass
 
-- [ ] Task 3: Split `simulation.py` — Extract `providers.py` (AC: #3, #5, #6)
-  - [ ] 3.1 Create `src/ncaa_eval/evaluation/providers.py` with `ProbabilityProvider` protocol, `MatrixProvider`, `EloProvider`, `build_probability_matrix`
-  - [ ] 3.2 Remove extracted code from `simulation.py`, add imports from `providers`
-  - [ ] 3.3 Verify `ruff check .` and `mypy --strict` pass
+- [x] Task 3: Split `simulation.py` — Extract `providers.py` (AC: #3, #5, #6)
+  - [x]3.1 Create `src/ncaa_eval/evaluation/providers.py` with `ProbabilityProvider` protocol, `MatrixProvider`, `EloProvider`, `build_probability_matrix`
+  - [x]3.2 Remove extracted code from `simulation.py`, add imports from `providers`
+  - [x]3.3 Verify `ruff check .` and `mypy --strict` pass
 
-- [ ] Task 4: Clean up `simulation.py` and ensure backward compatibility (AC: #4, #5, #6)
-  - [ ] 4.1 Verify `simulation.py` retains only: result dataclasses, analytical functions, MC engine, orchestrator
-  - [ ] 4.2 Add re-exports in `simulation.py` for all symbols that were previously importable from `ncaa_eval.evaluation.simulation` — use explicit imports from new submodules
-  - [ ] 4.3 Update `evaluation/__init__.py` to import from new submodules (bracket, scoring, providers) while keeping the same `__all__` list
-  - [ ] 4.4 Verify all 10 files that import from `ncaa_eval.evaluation.simulation` still work (see Dev Notes — Import Consumers)
-  - [ ] 4.5 Run full test suite — `pytest`
+- [x] Task 4: Clean up `simulation.py` and ensure backward compatibility (AC: #4, #5, #6)
+  - [x]4.1 Verify `simulation.py` retains only: result dataclasses, analytical functions, MC engine, orchestrator
+  - [x]4.2 Add re-exports in `simulation.py` for all symbols that were previously importable from `ncaa_eval.evaluation.simulation` — use explicit imports from new submodules
+  - [x]4.3 Update `evaluation/__init__.py` to import from new submodules (bracket, scoring, providers) while keeping the same `__all__` list
+  - [x]4.4 Verify all 10 files that import from `ncaa_eval.evaluation.simulation` still work (see Dev Notes — Import Consumers)
+  - [x]4.5 Run full test suite — `pytest`
 
-- [ ] Task 5: Split `dashboard/lib/filters.py` (AC: #7-11)
-  - [ ] 5.1 Create `dashboard/lib/data_loaders.py` — move all `load_*` functions and `get_data_dir`
-  - [ ] 5.2 Create `dashboard/lib/simulation_helpers.py` — move `BracketSimulationResult`, `_build_provider_from_folds`, `_build_team_labels`, `run_bracket_simulation`
-  - [ ] 5.3 Create `dashboard/lib/export.py` — move `export_bracket_csv`, `_game_win_probability`
-  - [ ] 5.4 Update `filters.py` to retain only scoring orchestration functions + constants
-  - [ ] 5.5 Update imports in all 6 dashboard consumer files (see Dev Notes — Dashboard Import Consumers)
-  - [ ] 5.6 Update imports in test files: `tests/unit/test_dashboard_app.py` and `tests/unit/test_dashboard_filters.py`
-  - [ ] 5.7 Run `pytest tests/unit/test_dashboard_app.py tests/unit/test_dashboard_filters.py` to verify
+- [x] Task 5: Split `dashboard/lib/filters.py` (AC: #7-11)
+  - [x]5.1 Create `dashboard/lib/data_loaders.py` — move all `load_*` functions and `get_data_dir`
+  - [x]5.2 Create `dashboard/lib/simulation_helpers.py` — move `BracketSimulationResult`, `_build_provider_from_folds`, `_build_team_labels`, `run_bracket_simulation`
+  - [x]5.3 Create `dashboard/lib/export.py` — move `export_bracket_csv`, `_game_win_probability`
+  - [x]5.4 Update `filters.py` to retain only scoring orchestration functions + constants
+  - [x]5.5 Update imports in all 6 dashboard consumer files (see Dev Notes — Dashboard Import Consumers)
+  - [x]5.6 Update imports in test files: `tests/unit/test_dashboard_app.py` and `tests/unit/test_dashboard_filters.py`
+  - [x]5.7 Run `pytest tests/unit/test_dashboard_app.py tests/unit/test_dashboard_filters.py` to verify
 
-- [ ] Task 6: Decompose `run_training()` God Function (AC: #12-14)
-  - [ ] 6.1 Extract `_setup_feature_server()` (lines 101-109): Initialize repo, data server, feature config, feature server
-  - [ ] 6.2 Extract `_build_season_features()` (lines 113-141): Loop seasons with progress, build feature frames
-  - [ ] 6.3 Extract `_prepare_training_data()` (lines 143-167): Combine frames, extract labels, check imbalance, compute feat_cols
-  - [ ] 6.4 Extract `_generate_tournament_predictions()` (lines 169-191): Filter tourney games, predict probs, build Prediction objects
-  - [ ] 6.5 Extract `_run_backtest_and_persist()` (lines 206-228): Walk-forward backtest, save metrics/folds
-  - [ ] 6.6 Extract `_persist_artifacts_and_summarize()` (lines 230-244): Save model, print summary table
-  - [ ] 6.7 Reduce `run_training()` to orchestrator calling the 6 helpers; remove all 3 `noqa` suppressions
-  - [ ] 6.8 Verify `ruff check src/ncaa_eval/cli/train.py` passes without any noqa
-  - [ ] 6.9 Run `pytest tests/` to verify no regressions
+- [x] Task 6: Decompose `run_training()` God Function (AC: #12-14)
+  - [x]6.1 Extract `_setup_feature_server()` (lines 101-109): Initialize repo, data server, feature config, feature server
+  - [x]6.2 Extract `_build_season_features()` (lines 113-141): Loop seasons with progress, build feature frames
+  - [x]6.3 Extract `_prepare_training_data()` (lines 143-167): Combine frames, extract labels, check imbalance, compute feat_cols
+  - [x]6.4 Extract `_generate_tournament_predictions()` (lines 169-191): Filter tourney games, predict probs, build Prediction objects
+  - [x]6.5 Extract `_run_backtest_and_persist()` (lines 206-228): Walk-forward backtest, save metrics/folds
+  - [x]6.6 Extract `_persist_artifacts_and_summarize()` (lines 230-244): Save model, print summary table
+  - [x]6.7 Reduce `run_training()` to orchestrator calling the 6 helpers; remove all 3 `noqa` suppressions
+  - [x]6.8 Verify `ruff check src/ncaa_eval/cli/train.py` passes without any noqa
+  - [x]6.9 Run `pytest tests/` to verify no regressions
 
-- [ ] Task 7: Final validation (AC: #15-18)
-  - [ ] 7.1 `ruff check .` — zero violations
-  - [ ] 7.2 `mypy --strict src/ncaa_eval tests` — zero errors
-  - [ ] 7.3 `pytest` — all tests pass
-  - [ ] 7.4 Verify no behavioral changes (pure refactoring)
+- [x] Task 7: Final validation (AC: #15-18)
+  - [x]7.1 `ruff check .` — zero violations
+  - [x]7.2 `mypy --strict src/ncaa_eval tests` — zero errors
+  - [x]7.3 `pytest` — all tests pass
+  - [x]7.4 Verify no behavioral changes (pure refactoring)
 
 ## Dev Notes
 
@@ -224,8 +224,53 @@ The `PLR0913` concern: the orchestrator can take the same 8 args but pass subset
 
 ### Agent Model Used
 
+Claude Opus 4.6
+
 ### Debug Log References
+
+- Pre-commit pytest-smoke hook failure: Poetry virtualenv missing matplotlib — fixed by installing matplotlib into the Poetry venv (`poetry run pip install matplotlib`). Pre-existing environment mismatch, not caused by this story.
+- Ruff ruff-format hook reformatted a trailing comma in `_prepare_and_train` call — auto-fixed on second commit attempt.
+- Mypy `--strict` flagged re-exports in `dashboard/lib/filters.py` as implicit — fixed by adding `__all__` list to explicitly declare all re-exported symbols.
 
 ### Completion Notes List
 
+- AC13 partial: Removed `C901` and `PLR0912` noqa suppressions from `run_training()`. Retained `PLR0913` on the public `run_training()` API (7 keyword args — cannot reduce without changing the public signature, which would be a behavioral change violating AC18). All private helpers pass Ruff without suppressions via `_TrainingContext` dataclass.
+- AC10 note: `filters.py` retains `score_chosen_bracket` and `build_custom_scoring` as specified. `_ROUND_OF_64_DAY_NUM` moved to `simulation_helpers.py` (where `run_bracket_simulation` uses it). `_ROUND_LABELS` moved to `export.py` (where `export_bracket_csv` uses it). Both re-exported from `filters.py` for backward compatibility.
+
+### Change Log
+
+| Commit | Description |
+|--------|-------------|
+| `f740c08` | refactor(evaluation): split simulation.py into bracket, scoring, providers modules |
+| `d73aed6` | refactor(dashboard): split filters.py into data_loaders, simulation_helpers, export |
+| `7035750` | refactor(cli): decompose run_training() God Function into focused helpers |
+
 ### File List
+
+**New Files Created:**
+
+| File | Purpose |
+|------|---------|
+| `src/ncaa_eval/evaluation/bracket.py` | Bracket data structures and construction (MatchupContext, BracketNode, BracketStructure, build_bracket, N_ROUNDS, N_GAMES) |
+| `src/ncaa_eval/evaluation/scoring.py` | Scoring protocols, implementations, registry (ScoringRule, StandardScoring, etc.) |
+| `src/ncaa_eval/evaluation/providers.py` | Probability provider protocols and implementations (ProbabilityProvider, MatrixProvider, EloProvider) |
+| `dashboard/lib/data_loaders.py` | Cached data-loading functions (get_data_dir, load_available_years, etc.) |
+| `dashboard/lib/simulation_helpers.py` | Bracket simulation orchestration (BracketSimulationResult, run_bracket_simulation) |
+| `dashboard/lib/export.py` | CSV export helpers (export_bracket_csv, _game_win_probability) |
+
+**Modified Files:**
+
+| File | Changes |
+|------|---------|
+| `src/ncaa_eval/evaluation/simulation.py` | Reduced from 1,291 to ~660 lines; imports from bracket, scoring, providers; re-exports all symbols |
+| `src/ncaa_eval/evaluation/__init__.py` | Updated imports to source from bracket, scoring, providers directly |
+| `src/ncaa_eval/cli/train.py` | Decomposed run_training() into 6 helpers + _TrainingContext; removed C901/PLR0912 noqa |
+| `dashboard/lib/filters.py` | Reduced to scoring orchestration + __all__ re-exports for backward compat |
+| `dashboard/app.py` | Import source updated: filters → data_loaders |
+| `dashboard/pages/home.py` | Import source updated: filters → data_loaders |
+| `dashboard/pages/1_Lab.py` | Import source updated: filters → data_loaders |
+| `dashboard/pages/2_Presentation.py` | Import source updated: filters → data_loaders + simulation_helpers |
+| `dashboard/pages/3_Model_Deep_Dive.py` | Import source updated: filters → data_loaders |
+| `dashboard/pages/4_Pool_Scorer.py` | Import source updated: filters → data_loaders + simulation_helpers + export |
+| `tests/unit/test_dashboard_filters.py` | @patch targets and imports updated to match new module locations |
+| `_bmad-output/implementation-artifacts/sprint-status.yaml` | Story status: ready-for-dev → in-progress → review |
