@@ -324,18 +324,16 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">cbbpy.mens_scraper</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ms</span>  <span class="c1"># type: ignore[import-untyped]</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>  <span class="c1"># type: ignore[import-untyped]</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">rapidfuzz</span><span class="w"> </span><span class="kn">import</span> <span class="n">fuzz</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tenacity</span><span class="w"> </span><span class="kn">import</span> <span class="n">retry</span><span class="p">,</span> <span class="n">retry_if_exception_type</span><span class="p">,</span> <span class="n">stop_after_attempt</span><span class="p">,</span> <span class="n">wait_exponential</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.ingest.connectors.base</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">Connector</span><span class="p">,</span>
     <span class="n">DataFormatError</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.ingest.fuzzy</span><span class="w"> </span><span class="kn">import</span> <span class="n">fuzzy_match_team</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.ingest.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">Game</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
-
-<span class="c1"># Minimum fuzzy-match score (0–100) for team name resolution.</span>
-<span class="n">_FUZZY_THRESHOLD</span> <span class="o">=</span> <span class="mi">80</span>
 
 <span class="c1"># Expected columns from cbbpy get_team_schedule() output.</span>
 <span class="n">_SCHEDULE_COLUMNS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;game_id&quot;</span><span class="p">,</span> <span class="s2">&quot;game_day&quot;</span><span class="p">,</span> <span class="s2">&quot;game_result&quot;</span><span class="p">,</span> <span class="s2">&quot;team&quot;</span><span class="p">,</span> <span class="s2">&quot;opponent&quot;</span><span class="p">}</span>
@@ -367,7 +365,8 @@
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Resolve an ESPN team name to a Kaggle team ID.</span>
 
-<span class="sd">    Tries exact match first, then falls back to fuzzy matching via rapidfuzz.</span>
+<span class="sd">    Tries exact match first, then falls back to fuzzy matching via</span>
+<span class="sd">    :func:`~ncaa_eval.ingest.fuzzy.fuzzy_match_team`.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        name: ESPN team name to resolve.</span>
@@ -379,18 +378,26 @@
     <span class="k">if</span> <span class="n">exact</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">exact</span>
 
-    <span class="c1"># Fuzzy match.</span>
-    <span class="n">best_score</span> <span class="o">=</span> <span class="mf">0.0</span>
-    <span class="n">best_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="k">for</span> <span class="n">known_name</span><span class="p">,</span> <span class="n">tid</span> <span class="ow">in</span> <span class="n">original_mapping</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="n">score</span> <span class="o">=</span> <span class="n">fuzz</span><span class="o">.</span><span class="n">token_set_ratio</span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">known_name</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
-        <span class="k">if</span> <span class="n">score</span> <span class="o">&gt;</span> <span class="n">best_score</span><span class="p">:</span>
-            <span class="n">best_score</span> <span class="o">=</span> <span class="n">score</span>
-            <span class="n">best_id</span> <span class="o">=</span> <span class="n">tid</span>
-    <span class="k">if</span> <span class="n">best_score</span> <span class="o">&gt;=</span> <span class="n">_FUZZY_THRESHOLD</span> <span class="ow">and</span> <span class="n">best_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">best_id</span>
+    <span class="c1"># Fuzzy fallback via centralized utility.</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">fuzzy_match_team</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">original_mapping</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">result</span>
 
-    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;espn: no team ID match for &#39;</span><span class="si">%s</span><span class="s2">&#39; (best score: </span><span class="si">%.0f</span><span class="s2">)&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">best_score</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;espn: no team ID match for &#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="nd">@retry</span><span class="p">(</span>
+    <span class="n">stop</span><span class="o">=</span><span class="n">stop_after_attempt</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span>
+    <span class="n">wait</span><span class="o">=</span><span class="n">wait_exponential</span><span class="p">(</span><span class="n">multiplier</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mi">30</span><span class="p">),</span>
+    <span class="n">retry</span><span class="o">=</span><span class="n">retry_if_exception_type</span><span class="p">(</span><span class="ne">Exception</span><span class="p">),</span>
+    <span class="n">reraise</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_fetch_single_team_schedule</span><span class="p">(</span><span class="n">team_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">season</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Fetch a single team&#39;s schedule with retry on transient failures.&quot;&quot;&quot;</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">ms</span><span class="o">.</span><span class="n">get_team_schedule</span><span class="p">(</span><span class="n">team_name</span><span class="p">,</span> <span class="n">season</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">df</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">df</span>
     <span class="k">return</span> <span class="kc">None</span>
 
 
@@ -447,20 +454,45 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">_fetch_per_team</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">season</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Fetch schedules for each team in the mapping and concatenate.&quot;&quot;&quot;</span>
         <span class="n">frames</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">total</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_team_name_to_id</span><span class="p">)</span>
+        <span class="n">failed_teams</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
         <span class="k">for</span> <span class="n">team_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_team_name_to_id</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">df</span> <span class="o">=</span> <span class="n">ms</span><span class="o">.</span><span class="n">get_team_schedule</span><span class="p">(</span><span class="n">team_name</span><span class="p">,</span> <span class="n">season</span><span class="p">)</span>
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">df</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+                <span class="n">df</span> <span class="o">=</span> <span class="n">_fetch_single_team_schedule</span><span class="p">(</span><span class="n">team_name</span><span class="p">,</span> <span class="n">season</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">df</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="n">frames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
-            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># noqa: BLE001  # Story 8.3: add logging/retry here</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;espn: get_team_schedule(&#39;</span><span class="si">%s</span><span class="s2">&#39;, </span><span class="si">%d</span><span class="s2">) failed&quot;</span><span class="p">,</span> <span class="n">team_name</span><span class="p">,</span> <span class="n">season</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># Empty schedule returned (no exception, but no data).</span>
+                    <span class="n">failed_teams</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">team_name</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># noqa: BLE001</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="s2">&quot;espn: get_team_schedule(&#39;</span><span class="si">%s</span><span class="s2">&#39;, </span><span class="si">%d</span><span class="s2">) failed after retries&quot;</span><span class="p">,</span>
+                    <span class="n">team_name</span><span class="p">,</span>
+                    <span class="n">season</span><span class="p">,</span>
+                    <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">failed_teams</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">team_name</span><span class="p">)</span>
                 <span class="k">continue</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">frames</span><span class="p">:</span>
+
+        <span class="n">success</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">frames</span><span class="p">)</span>
+        <span class="n">failed</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">failed_teams</span><span class="p">)</span>
+
+        <span class="c1"># AC #5-6: Summary reporting</span>
+        <span class="k">if</span> <span class="n">failed</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">first_five</span> <span class="o">=</span> <span class="n">failed_teams</span><span class="p">[:</span><span class="mi">5</span><span class="p">]</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                <span class="s2">&quot;espn: all </span><span class="si">%d</span><span class="s2"> per-team schedule fetches failed for season </span><span class="si">%d</span><span class="s2"> — no data available&quot;</span><span class="p">,</span>
-                <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_team_name_to_id</span><span class="p">),</span>
+                <span class="s2">&quot;espn: fetched </span><span class="si">%d</span><span class="s2">/</span><span class="si">%d</span><span class="s2"> teams for season </span><span class="si">%d</span><span class="s2"> (</span><span class="si">%d</span><span class="s2"> failed): </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">success</span><span class="p">,</span>
+                <span class="n">total</span><span class="p">,</span>
                 <span class="n">season</span><span class="p">,</span>
+                <span class="n">failed</span><span class="p">,</span>
+                <span class="n">first_five</span><span class="p">,</span>
             <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;espn: fetched </span><span class="si">%d</span><span class="s2">/</span><span class="si">%d</span><span class="s2"> teams for season </span><span class="si">%d</span><span class="s2"> (</span><span class="si">%d</span><span class="s2"> failed)&quot;</span><span class="p">,</span> <span class="n">success</span><span class="p">,</span> <span class="n">total</span><span class="p">,</span> <span class="n">season</span><span class="p">,</span> <span class="n">failed</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">frames</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
         <span class="n">combined</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">frames</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="c1"># Deduplicate by ESPN game_id (each game appears in both teams&#39; schedules).</span>
@@ -479,23 +511,23 @@
         <span class="n">games</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Game</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">seen_ids</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
 
-        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
-            <span class="n">espn_game_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;game_id&quot;</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">itertuples</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+            <span class="n">espn_game_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">game_id</span><span class="p">)</span>
             <span class="n">game_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;espn_</span><span class="si">{</span><span class="n">espn_game_id</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="k">if</span> <span class="n">game_id</span> <span class="ow">in</span> <span class="n">seen_ids</span><span class="p">:</span>
                 <span class="k">continue</span>
             <span class="n">seen_ids</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">game_id</span><span class="p">)</span>
 
             <span class="c1"># Parse scores from game_result.</span>
-            <span class="n">parsed</span> <span class="o">=</span> <span class="n">_parse_game_result</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;game_result&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)))</span>
+            <span class="n">parsed</span> <span class="o">=</span> <span class="n">_parse_game_result</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="s2">&quot;game_result&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)))</span>
             <span class="k">if</span> <span class="n">parsed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;espn: skipping game </span><span class="si">%s</span><span class="s2"> — unparseable result&quot;</span><span class="p">,</span> <span class="n">espn_game_id</span><span class="p">)</span>
                 <span class="k">continue</span>
             <span class="n">team_score</span><span class="p">,</span> <span class="n">opp_score</span> <span class="o">=</span> <span class="n">parsed</span>
 
             <span class="c1"># Resolve team IDs.</span>
-            <span class="n">team_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;team&quot;</span><span class="p">])</span>
-            <span class="n">opp_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;opponent&quot;</span><span class="p">])</span>
+            <span class="n">team_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">team</span><span class="p">)</span>
+            <span class="n">opp_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">opponent</span><span class="p">)</span>
             <span class="n">team_tid</span> <span class="o">=</span> <span class="n">_resolve_team_id</span><span class="p">(</span><span class="n">team_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lower_team_map</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_team_name_to_id</span><span class="p">)</span>
             <span class="n">opp_tid</span> <span class="o">=</span> <span class="n">_resolve_team_id</span><span class="p">(</span><span class="n">opp_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lower_team_map</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_team_name_to_id</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">team_tid</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">opp_tid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -518,7 +550,7 @@
                 <span class="k">continue</span>
 
             <span class="c1"># Parse date and compute day_num.</span>
-            <span class="n">game_date</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_date</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;game_day&quot;</span><span class="p">))</span>
+            <span class="n">game_date</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_date</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="s2">&quot;game_day&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
             <span class="n">day_num</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="k">if</span> <span class="n">game_date</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">day_zero</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">day_num</span> <span class="o">=</span> <span class="p">(</span><span class="n">game_date</span> <span class="o">-</span> <span class="n">day_zero</span><span class="p">)</span><span class="o">.</span><span class="n">days</span>
@@ -551,27 +583,30 @@
             <span class="k">if</span> <span class="n">pd</span><span class="o">.</span><span class="n">isna</span><span class="p">(</span><span class="n">ts</span><span class="p">):</span>
                 <span class="k">return</span> <span class="kc">None</span>
             <span class="k">return</span> <span class="n">cast</span><span class="p">(</span><span class="s2">&quot;datetime.date&quot;</span><span class="p">,</span> <span class="n">ts</span><span class="o">.</span><span class="n">date</span><span class="p">())</span>
-        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># noqa: BLE001  # Story 8.3: add logging/retry here</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># noqa: BLE001</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;espn: could not parse date value </span><span class="si">%r</span><span class="s2"> for game&quot;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">None</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_infer_loc</span><span class="p">(</span>
-        <span class="n">row</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">,</span>
+        <span class="n">row</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span>
         <span class="n">team_tid</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">w_team_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="s2">&quot;N&quot;</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Infer game location from available ESPN context.</span>
 
-<span class="sd">        Falls back to ``&quot;N&quot;`` (neutral) when location cannot be determined.</span>
+<span class="sd">        Accepts any row-like object (named tuple from ``itertuples`` or</span>
+<span class="sd">        ``pd.Series``).  Falls back to ``&quot;N&quot;`` (neutral) when location</span>
+<span class="sd">        cannot be determined.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Some DataFrames include a &#39;home_away&#39; or &#39;is_neutral&#39; column.</span>
-        <span class="k">if</span> <span class="s2">&quot;is_neutral&quot;</span> <span class="ow">in</span> <span class="n">row</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
-            <span class="n">val</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;is_neutral&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="s2">&quot;is_neutral&quot;</span><span class="p">):</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="s2">&quot;is_neutral&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">val</span> <span class="ow">is</span> <span class="kc">True</span> <span class="ow">or</span> <span class="nb">str</span><span class="p">(</span><span class="n">val</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;true&quot;</span><span class="p">,</span> <span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;yes&quot;</span><span class="p">):</span>
                 <span class="k">return</span> <span class="s2">&quot;N&quot;</span>
 
-        <span class="k">if</span> <span class="s2">&quot;home_away&quot;</span> <span class="ow">in</span> <span class="n">row</span><span class="o">.</span><span class="n">index</span><span class="p">:</span>
-            <span class="n">ha</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;home_away&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="s2">&quot;home_away&quot;</span><span class="p">):</span>
+            <span class="n">ha</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="s2">&quot;home_away&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">ha</span> <span class="o">==</span> <span class="s2">&quot;home&quot;</span><span class="p">:</span>
                 <span class="c1"># The row&#39;s team was home.</span>
                 <span class="k">return</span> <span class="s2">&quot;H&quot;</span> <span class="k">if</span> <span class="n">team_tid</span> <span class="o">==</span> <span class="n">w_team_id</span> <span class="k">else</span> <span class="s2">&quot;A&quot;</span>

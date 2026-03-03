@@ -321,17 +321,13 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>  <span class="c1"># type: ignore[import-untyped]</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">typer</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">rapidfuzz</span><span class="w"> </span><span class="kn">import</span> <span class="n">fuzz</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.ingest.connectors.espn</span><span class="w"> </span><span class="kn">import</span> <span class="n">EspnConnector</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.ingest.connectors.kaggle</span><span class="w"> </span><span class="kn">import</span> <span class="n">KaggleConnector</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.ingest.fuzzy</span><span class="w"> </span><span class="kn">import</span> <span class="n">fuzzy_match_team</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.ingest.repository</span><span class="w"> </span><span class="kn">import</span> <span class="n">Repository</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
-
-<span class="c1"># Minimum fuzzy-match score when resolving ESPN locations not found in spellings.</span>
-<span class="n">_FUZZY_THRESHOLD</span> <span class="o">=</span> <span class="mi">80</span>
 
 <span class="c1"># ESPN location names that aren&#39;t covered by MTeamSpellings.csv.  These are</span>
 <span class="c1"># persistent ESPN abbreviations/nicknames that no generic fuzzy algorithm</span>
@@ -393,15 +389,9 @@
             <span class="n">result</span><span class="p">[</span><span class="n">location</span><span class="p">]</span> <span class="o">=</span> <span class="n">kaggle_id</span>
             <span class="k">continue</span>
         <span class="c1"># Fuzzy fallback for locations not covered by the spellings file.</span>
-        <span class="n">best_score</span> <span class="o">=</span> <span class="mf">0.0</span>
-        <span class="n">best_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">for</span> <span class="n">spelling</span><span class="p">,</span> <span class="n">tid</span> <span class="ow">in</span> <span class="n">spellings</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">score</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">fuzz</span><span class="o">.</span><span class="n">token_set_ratio</span><span class="p">(</span><span class="n">location</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">spelling</span><span class="p">))</span>
-            <span class="k">if</span> <span class="n">score</span> <span class="o">&gt;</span> <span class="n">best_score</span><span class="p">:</span>
-                <span class="n">best_score</span> <span class="o">=</span> <span class="n">score</span>
-                <span class="n">best_id</span> <span class="o">=</span> <span class="n">tid</span>
-        <span class="k">if</span> <span class="n">best_score</span> <span class="o">&gt;=</span> <span class="n">_FUZZY_THRESHOLD</span> <span class="ow">and</span> <span class="n">best_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">result</span><span class="p">[</span><span class="n">location</span><span class="p">]</span> <span class="o">=</span> <span class="n">best_id</span>
+        <span class="n">fuzzy_id</span> <span class="o">=</span> <span class="n">fuzzy_match_team</span><span class="p">(</span><span class="n">location</span><span class="p">,</span> <span class="n">spellings</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">fuzzy_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">result</span><span class="p">[</span><span class="n">location</span><span class="p">]</span> <span class="o">=</span> <span class="n">fuzzy_id</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">unmatched</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">location</span><span class="p">)</span>
 
@@ -473,9 +463,9 @@
             <span class="n">teams</span> <span class="o">=</span> <span class="n">connector</span><span class="o">.</span><span class="n">fetch_teams</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_repo</span><span class="o">.</span><span class="n">save_teams</span><span class="p">(</span><span class="n">teams</span><span class="p">)</span>
             <span class="n">result</span><span class="o">.</span><span class="n">teams_written</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">teams</span><span class="p">)</span>
-            <span class="n">typer</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[kaggle] teams: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">teams</span><span class="p">)</span><span class="si">}</span><span class="s2"> written&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[kaggle] teams: </span><span class="si">%d</span><span class="s2"> written&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">teams</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">typer</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s2">&quot;[kaggle] teams: cache hit, skipped&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[kaggle] teams: cache hit, skipped&quot;</span><span class="p">)</span>
 
         <span class="c1"># Seasons: Parquet-level cache</span>
         <span class="n">seasons_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_dir</span> <span class="o">/</span> <span class="s2">&quot;seasons.parquet&quot;</span>
@@ -483,22 +473,22 @@
             <span class="n">seasons</span> <span class="o">=</span> <span class="n">connector</span><span class="o">.</span><span class="n">fetch_seasons</span><span class="p">()</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_repo</span><span class="o">.</span><span class="n">save_seasons</span><span class="p">(</span><span class="n">seasons</span><span class="p">)</span>
             <span class="n">result</span><span class="o">.</span><span class="n">seasons_written</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">seasons</span><span class="p">)</span>
-            <span class="n">typer</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[kaggle] seasons: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">seasons</span><span class="p">)</span><span class="si">}</span><span class="s2"> written&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[kaggle] seasons: </span><span class="si">%d</span><span class="s2"> written&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">seasons</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">seasons</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_repo</span><span class="o">.</span><span class="n">get_seasons</span><span class="p">()</span>
-            <span class="n">typer</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="s2">&quot;[kaggle] seasons: cache hit, skipped&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[kaggle] seasons: cache hit, skipped&quot;</span><span class="p">)</span>
 
         <span class="c1"># Games: per-season Parquet-level cache</span>
         <span class="k">for</span> <span class="n">season</span> <span class="ow">in</span> <span class="n">seasons</span><span class="p">:</span>
             <span class="n">game_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_dir</span> <span class="o">/</span> <span class="s2">&quot;games&quot;</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;season=</span><span class="si">{</span><span class="n">season</span><span class="o">.</span><span class="n">year</span><span class="si">}</span><span class="s2">&quot;</span> <span class="o">/</span> <span class="s2">&quot;data.parquet&quot;</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">force_refresh</span> <span class="ow">and</span> <span class="n">game_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
                 <span class="n">result</span><span class="o">.</span><span class="n">seasons_cached</span> <span class="o">+=</span> <span class="mi">1</span>
-                <span class="n">typer</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[kaggle] season </span><span class="si">{</span><span class="n">season</span><span class="o">.</span><span class="n">year</span><span class="si">}</span><span class="s2">: cache hit, skipped&quot;</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[kaggle] season </span><span class="si">%d</span><span class="s2">: cache hit, skipped&quot;</span><span class="p">,</span> <span class="n">season</span><span class="o">.</span><span class="n">year</span><span class="p">)</span>
                 <span class="k">continue</span>
             <span class="n">games</span> <span class="o">=</span> <span class="n">connector</span><span class="o">.</span><span class="n">fetch_games</span><span class="p">(</span><span class="n">season</span><span class="o">.</span><span class="n">year</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_repo</span><span class="o">.</span><span class="n">save_games</span><span class="p">(</span><span class="n">games</span><span class="p">)</span>
             <span class="n">result</span><span class="o">.</span><span class="n">games_written</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">games</span><span class="p">)</span>
-            <span class="n">typer</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[kaggle] season </span><span class="si">{</span><span class="n">season</span><span class="o">.</span><span class="n">year</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">games</span><span class="p">)</span><span class="si">}</span><span class="s2"> games written&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[kaggle] season </span><span class="si">%d</span><span class="s2">: </span><span class="si">%d</span><span class="s2"> games written&quot;</span><span class="p">,</span> <span class="n">season</span><span class="o">.</span><span class="n">year</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">games</span><span class="p">))</span>
 
         <span class="k">return</span> <span class="n">result</span></div>
 
@@ -550,7 +540,7 @@
         <span class="n">marker</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_espn_marker</span><span class="p">(</span><span class="n">year</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">force_refresh</span> <span class="ow">and</span> <span class="n">marker</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
             <span class="n">result</span><span class="o">.</span><span class="n">seasons_cached</span> <span class="o">+=</span> <span class="mi">1</span>
-            <span class="n">typer</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[espn] season </span><span class="si">{</span><span class="n">year</span><span class="si">}</span><span class="s2">: cache hit, skipped&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[espn] season </span><span class="si">%d</span><span class="s2">: cache hit, skipped&quot;</span><span class="p">,</span> <span class="n">year</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">result</span>
 
         <span class="k">if</span> <span class="n">force_refresh</span> <span class="ow">and</span> <span class="n">marker</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
@@ -567,7 +557,7 @@
         <span class="n">all_games</span> <span class="o">=</span> <span class="n">existing_games</span> <span class="o">+</span> <span class="n">espn_games</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_repo</span><span class="o">.</span><span class="n">save_games</span><span class="p">(</span><span class="n">all_games</span><span class="p">)</span>
         <span class="n">result</span><span class="o">.</span><span class="n">games_written</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">espn_games</span><span class="p">)</span>
-        <span class="n">typer</span><span class="o">.</span><span class="n">echo</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[espn] season </span><span class="si">{</span><span class="n">year</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">espn_games</span><span class="p">)</span><span class="si">}</span><span class="s2"> games written&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[espn] season </span><span class="si">%d</span><span class="s2">: </span><span class="si">%d</span><span class="s2"> games written&quot;</span><span class="p">,</span> <span class="n">year</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">espn_games</span><span class="p">))</span>
 
         <span class="c1"># Mark season as synced</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_data_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>

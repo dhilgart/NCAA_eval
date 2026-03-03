@@ -414,17 +414,18 @@
     <span class="k">return</span> <span class="n">fallback</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_deduplicate_2025</span><span class="p">(</span><span class="n">games</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Game</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Game</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Remove duplicate 2025 games, preferring ESPN records for loc and num_ot.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_deduplicate_espn_overlap</span><span class="p">(</span><span class="n">games</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Game</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Game</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Remove duplicate games when ESPN and Kaggle records overlap.</span>
 
-<span class="sd">    The 2025 season ingests 4,545 games twice — once from Kaggle (numeric</span>
-<span class="sd">    ``game_id``) and once from ESPN (``game_id`` prefixed with ``&quot;espn_&quot;``).</span>
+<span class="sd">    Seasons that include ESPN-sourced games (identified by ``game_id``</span>
+<span class="sd">    starting with ``&quot;espn_&quot;``) may contain duplicates — the same physical</span>
+<span class="sd">    game appears once from Kaggle (numeric ``game_id``) and once from ESPN.</span>
 <span class="sd">    The canonical deduplication key is ``(w_team_id, l_team_id, day_num)``.</span>
 <span class="sd">    When both records exist for the same physical game the ESPN record is kept</span>
 <span class="sd">    because it provides more accurate ``loc`` (H/A/N) and ``num_ot`` values.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        games: Raw game list for the 2025 season (may contain duplicates).</span>
+<span class="sd">        games: Raw game list for a season (may contain duplicates).</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        Deduplicated list with at most one record per canonical game triplet.</span>
@@ -501,8 +502,8 @@
 
         <span class="n">games</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_repo</span><span class="o">.</span><span class="n">get_games</span><span class="p">(</span><span class="n">year</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">year</span> <span class="o">==</span> <span class="mi">2025</span><span class="p">:</span>
-            <span class="n">games</span> <span class="o">=</span> <span class="n">_deduplicate_2025</span><span class="p">(</span><span class="n">games</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">game_id</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;espn_&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">games</span><span class="p">):</span>
+            <span class="n">games</span> <span class="o">=</span> <span class="n">_deduplicate_espn_overlap</span><span class="p">(</span><span class="n">games</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">cutoff_date</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">games</span> <span class="o">=</span> <span class="p">[</span><span class="n">g</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">games</span> <span class="k">if</span> <span class="n">_effective_date</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">year</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">cutoff_date</span><span class="p">]</span>

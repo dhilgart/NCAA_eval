@@ -320,12 +320,12 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">abc</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>  <span class="c1"># type: ignore[import-untyped]</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pyarrow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pa</span>  <span class="c1"># type: ignore[import-untyped]</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pyarrow.dataset</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ds</span>  <span class="c1"># type: ignore[import-untyped]</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pyarrow.parquet</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pq</span>  <span class="c1"># type: ignore[import-untyped]</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic_core</span><span class="w"> </span><span class="kn">import</span> <span class="n">PydanticUndefined</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.ingest.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">Game</span><span class="p">,</span> <span class="n">Season</span><span class="p">,</span> <span class="n">Team</span>
 
@@ -429,7 +429,7 @@
 <span class="sd">    model defaults so that ``model(**row)`` doesn&#39;t receive ``None`` for a</span>
 <span class="sd">    field that expects a concrete default value.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">sentinel</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># PydanticUndefined is represented as Ellipsis</span>
+    <span class="n">sentinel</span> <span class="o">=</span> <span class="n">PydanticUndefined</span>
     <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">field_info</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">model_fields</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="n">default</span> <span class="o">=</span> <span class="n">field_info</span><span class="o">.</span><span class="n">default</span>
         <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span> <span class="ow">and</span> <span class="n">default</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">sentinel</span> <span class="ow">and</span> <span class="n">default</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
