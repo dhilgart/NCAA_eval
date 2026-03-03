@@ -10,6 +10,7 @@ from __future__ import annotations
 import copy
 import subprocess
 import uuid
+from dataclasses import dataclass
 from pathlib import Path
 
 import pandas as pd  # type: ignore[import-untyped]
@@ -23,6 +24,20 @@ from ncaa_eval.model.base import Model, StatefulModel
 from ncaa_eval.model.tracking import ModelRun, Prediction, RunStore
 from ncaa_eval.transform.feature_serving import FeatureConfig, StatefulFeatureServer
 from ncaa_eval.transform.serving import ChronologicalDataServer
+
+
+@dataclass
+class _TrainingContext:
+    """Internal context passed between pipeline stages."""
+
+    model: Model
+    model_name: str
+    start_year: int
+    end_year: int
+    is_stateful: bool
+    console: Console
+    store: RunStore
+    server: StatefulFeatureServer
 
 
 def _get_git_hash() -> str:
@@ -70,7 +85,147 @@ def _build_fold_predictions(result: BacktestResult) -> pd.DataFrame | None:
     return pd.concat(fold_frames, ignore_index=True)
 
 
-def run_training(  # noqa: PLR0913, C901, PLR0912 — REFACTOR Story 8.1
+def _setup_feature_server(data_dir: Path) -> StatefulFeatureServer:
+    """Initialize the repository, data server, and feature server."""
+    repo = ParquetRepository(base_path=data_dir)
+    data_server = ChronologicalDataServer(repo)
+    feature_config = FeatureConfig(
+        graph_features_enabled=False,
+        batch_rating_types=(),
+        ordinal_composite=None,
+        calibration_method=None,
+    )
+    return StatefulFeatureServer(config=feature_config, data_server=data_server)
+
+
+def _build_season_features(ctx: _TrainingContext) -> list[pd.DataFrame]:
+    """Build feature matrices per season with a progress display."""
+    season_frames: list[pd.DataFrame] = []
+    with Progress() as progress:
+        task = progress.add_task(
+            "Building features...",
+            total=ctx.end_year - ctx.start_year + 1,
+        )
+        for year in range(ctx.start_year, ctx.end_year + 1):
+            mode = "stateful" if ctx.is_stateful else "batch"
+            df = ctx.server.serve_season_features(year, mode=mode)
+            if not df.empty:
+                season_frames.append(df)
+            progress.advance(task)
+    return season_frames
+
+
+def _prepare_and_train(ctx: _TrainingContext, combined: pd.DataFrame) -> list[str]:
+    """Extract labels, check balance, compute feature columns, and train.
+
+    Returns:
+        List of feature column names used for training.
+    """
+    y = combined["team_a_won"].astype(int)
+
+    label_mean = y.mean()
+    if label_mean > 0.95 or label_mean < 0.05:
+        ctx.console.print(
+            f"[yellow]Warning: labels are heavily imbalanced "
+            f"(mean={label_mean:.3f}). Consider randomising team assignment "
+            f"or adjusting scale_pos_weight.[/yellow]"
+        )
+
+    feat_cols = _feature_cols(combined)
+
+    ctx.console.print(
+        f"Training [bold]{ctx.model_name}[/bold] on seasons " f"{ctx.start_year}–{ctx.end_year}..."
+    )
+    if ctx.is_stateful:
+        ctx.model.fit(combined, y)
+    else:
+        ctx.model.fit(combined[feat_cols], y)
+
+    return feat_cols
+
+
+def _generate_tournament_predictions(
+    ctx: _TrainingContext,
+    combined: pd.DataFrame,
+    feat_cols: list[str],
+    run_id: str,
+) -> list[Prediction]:
+    """Generate predictions on tournament games."""
+    tourney = combined[combined["is_tournament"] == True].copy()  # noqa: E712
+    predictions: list[Prediction] = []
+
+    if not tourney.empty:
+        if ctx.is_stateful:
+            probs = ctx.model.predict_proba(tourney)
+        else:
+            probs = ctx.model.predict_proba(tourney[feat_cols])
+
+        for idx, prob in probs.items():
+            row = tourney.loc[idx]
+            predictions.append(
+                Prediction(
+                    run_id=run_id,
+                    game_id=str(row["game_id"]),
+                    season=int(row["season"]),
+                    team_a_id=int(row["team_a_id"]),
+                    team_b_id=int(row["team_b_id"]),
+                    pred_win_prob=float(min(max(prob, 0.0), 1.0)),
+                )
+            )
+
+    return predictions
+
+
+def _run_backtest_and_persist(ctx: _TrainingContext, run_id: str) -> None:
+    """Run walk-forward backtest and persist metrics and fold predictions."""
+    seasons = list(range(ctx.start_year, ctx.end_year + 1))
+    if len(seasons) >= 2:
+        ctx.console.print("Running walk-forward backtest...")
+        backtest_model = copy.deepcopy(ctx.model)
+        mode = "stateful" if ctx.is_stateful else "batch"
+        result = run_backtest(
+            backtest_model,
+            ctx.server,
+            seasons=seasons,
+            mode=mode,
+            n_jobs=1,
+            console=ctx.console,
+        )
+        ctx.store.save_metrics(run_id, result.summary)
+
+        fold_preds = _build_fold_predictions(result)
+        if fold_preds is not None:
+            ctx.store.save_fold_predictions(run_id, fold_preds)
+
+        ctx.console.print("[green]Backtest metrics persisted.[/green]")
+    else:
+        ctx.console.print("[yellow]Skipping backtest: need ≥ 2 seasons.[/yellow]")
+
+
+def _persist_artifacts_and_summarize(
+    ctx: _TrainingContext,
+    run: ModelRun,
+    feat_cols: list[str],
+    combined: pd.DataFrame,
+    predictions: list[Prediction],
+) -> None:
+    """Save the trained model and print a summary table."""
+    ctx.store.save_model(run.run_id, ctx.model, feature_names=feat_cols)
+    ctx.console.print("[green]Model artifacts persisted.[/green]")
+
+    table = Table(title="Training Results")
+    table.add_column("Field", style="cyan")
+    table.add_column("Value", style="green")
+    table.add_row("Run ID", run.run_id)
+    table.add_row("Model", ctx.model_name)
+    table.add_row("Seasons", f"{ctx.start_year}–{ctx.end_year}")
+    table.add_row("Games trained", str(len(combined)))
+    table.add_row("Tournament predictions", str(len(predictions)))
+    table.add_row("Git hash", run.git_hash)
+    ctx.console.print(table)
+
+
+def run_training(  # noqa: PLR0913
     model: Model,
     *,
     start_year: int,
@@ -97,32 +252,21 @@ def run_training(  # noqa: PLR0913, C901, PLR0912 — REFACTOR Story 8.1
         The persisted run metadata record.
     """
     _console = console or Console()
-
-    repo = ParquetRepository(base_path=data_dir)
-    data_server = ChronologicalDataServer(repo)
-    feature_config = FeatureConfig(
-        graph_features_enabled=False,
-        batch_rating_types=(),
-        ordinal_composite=None,
-        calibration_method=None,
+    server = _setup_feature_server(data_dir)
+    store = RunStore(base_path=output_dir)
+    ctx = _TrainingContext(
+        model=model,
+        model_name=model_name,
+        start_year=start_year,
+        end_year=end_year,
+        is_stateful=isinstance(model, StatefulModel),
+        console=_console,
+        store=store,
+        server=server,
     )
-    server = StatefulFeatureServer(config=feature_config, data_server=data_server)
 
-    is_stateful = isinstance(model, StatefulModel)
-
-    # -- Build feature matrices per season with progress display --
-    season_frames: list[pd.DataFrame] = []
-    with Progress() as progress:
-        task = progress.add_task(
-            "Building features...",
-            total=end_year - start_year + 1,
-        )
-        for year in range(start_year, end_year + 1):
-            mode = "stateful" if is_stateful else "batch"
-            df = server.serve_season_features(year, mode=mode)
-            if not df.empty:
-                season_frames.append(df)
-            progress.advance(task)
+    # Build feature matrices per season
+    season_frames = _build_season_features(ctx)
 
     if not season_frames:
         _console.print("[yellow]No game data found for the specified year range.[/yellow]")
@@ -136,61 +280,19 @@ def run_training(  # noqa: PLR0913, C901, PLR0912 — REFACTOR Story 8.1
             end_year=end_year,
             prediction_count=0,
         )
-        store = RunStore(base_path=output_dir)
         store.save_run(run, [])
         return run
 
     combined = pd.concat(season_frames, ignore_index=True)
 
-    # -- Label vector --
-    y = combined["team_a_won"].astype(int)
+    # Train model
+    feat_cols = _prepare_and_train(ctx, combined)
 
-    # -- Label balance warning --
-    label_mean = y.mean()
-    if label_mean > 0.95 or label_mean < 0.05:
-        _console.print(
-            f"[yellow]Warning: labels are heavily imbalanced "
-            f"(mean={label_mean:.3f}). Consider randomising team assignment "
-            f"or adjusting scale_pos_weight.[/yellow]"
-        )
-
-    # -- Compute feature columns once (reused for both training and prediction) --
-    feat_cols = _feature_cols(combined)
-
-    # -- Train --
-    _console.print(f"Training [bold]{model_name}[/bold] on seasons {start_year}–{end_year}...")
-    if is_stateful:
-        # Stateful models need full DataFrame (metadata + features)
-        model.fit(combined, y)
-    else:
-        # Stateless models need only feature columns
-        model.fit(combined[feat_cols], y)
-
-    # -- Generate predictions on tournament games --
-    tourney = combined[combined["is_tournament"] == True].copy()  # noqa: E712
-    predictions: list[Prediction] = []
+    # Generate predictions
     run_id = str(uuid.uuid4())
+    predictions = _generate_tournament_predictions(ctx, combined, feat_cols, run_id)
 
-    if not tourney.empty:
-        if is_stateful:
-            probs = model.predict_proba(tourney)
-        else:
-            probs = model.predict_proba(tourney[feat_cols])
-
-        for idx, prob in probs.items():
-            row = tourney.loc[idx]
-            predictions.append(
-                Prediction(
-                    run_id=run_id,
-                    game_id=str(row["game_id"]),
-                    season=int(row["season"]),
-                    team_a_id=int(row["team_a_id"]),
-                    team_b_id=int(row["team_b_id"]),
-                    pred_win_prob=float(min(max(prob, 0.0), 1.0)),
-                )
-            )
-
-    # -- Persist --
+    # Persist run
     run = ModelRun(
         run_id=run_id,
         model_type=model_name,
@@ -200,47 +302,12 @@ def run_training(  # noqa: PLR0913, C901, PLR0912 — REFACTOR Story 8.1
         end_year=end_year,
         prediction_count=len(predictions),
     )
-    store = RunStore(base_path=output_dir)
     store.save_run(run, predictions)
 
-    # -- Backtest and persist metrics --
-    seasons = list(range(start_year, end_year + 1))
-    if len(seasons) >= 2:
-        _console.print("Running walk-forward backtest...")
-        backtest_model = copy.deepcopy(model)
-        mode = "stateful" if is_stateful else "batch"
-        result = run_backtest(
-            backtest_model,
-            server,
-            seasons=seasons,
-            mode=mode,
-            n_jobs=1,
-            console=_console,
-        )
-        store.save_metrics(run.run_id, result.summary)
+    # Backtest
+    _run_backtest_and_persist(ctx, run.run_id)
 
-        fold_preds = _build_fold_predictions(result)
-        if fold_preds is not None:
-            store.save_fold_predictions(run.run_id, fold_preds)
-
-        _console.print("[green]Backtest metrics persisted.[/green]")
-    else:
-        _console.print("[yellow]Skipping backtest: need ≥ 2 seasons.[/yellow]")
-
-    # -- Persist trained model --
-    store.save_model(run.run_id, model, feature_names=feat_cols)
-    _console.print("[green]Model artifacts persisted.[/green]")
-
-    # -- Results summary --
-    table = Table(title="Training Results")
-    table.add_column("Field", style="cyan")
-    table.add_column("Value", style="green")
-    table.add_row("Run ID", run.run_id)
-    table.add_row("Model", model_name)
-    table.add_row("Seasons", f"{start_year}–{end_year}")
-    table.add_row("Games trained", str(len(combined)))
-    table.add_row("Tournament predictions", str(len(predictions)))
-    table.add_row("Git hash", run.git_hash)
-    _console.print(table)
+    # Save model and summarize
+    _persist_artifacts_and_summarize(ctx, run, feat_cols, combined, predictions)
 
     return run
