@@ -348,6 +348,9 @@ None — clean implementation with no blocking issues.
 | `EloModel._predict_one()` delegates to `self._engine.predict_matchup()` | Review fix: eliminated DRY violation — formula was duplicated in two places (M3) |
 | `data_loaders.py` removed `model_type != "xgboost"` early return | Review fix: public API `get_feature_importances()` now consulted for all model types (L3) |
 | `test_model_base.py` uses `set_state()` instead of direct `_ratings` assignment | Review fix: eliminated private attribute access in test fixture (M2) |
+| `test_elo.py` updated to use `set_ratings()`, `set_game_counts()`, `get_game_counts()`, `has_ratings()` | Code review fix (H1): test file for `EloFeatureEngine` was not updated to use the new public API methods added in this story |
+| `test_model_elo.py` stale section comment updated from `_predict_one` to `predict_matchup` | Code review fix (L2): comment referenced old private API name |
+| `test_dashboard_filters.py` added 2 legacy-fallback tests for `load_feature_importances` | Code review fix (M2): the `get_feature_importances() → None` legacy fallback path was untested |
 
 ### File List
 
@@ -369,5 +372,6 @@ None — clean implementation with no blocking issues.
 | `tests/unit/test_evaluation_simulation.py` | Modified — FakeElo uses `predict_matchup` |
 | `tests/unit/test_evaluation_splitter.py` | Modified — updated comment |
 | `tests/unit/test_model_base.py` | Modified (review fix) — use `set_state()` instead of direct `_ratings` assignment |
+| `tests/unit/test_elo.py` | Modified (code review fix) — replaced all `_ratings`/`_game_counts` direct assignments with `set_ratings()`/`set_game_counts()`/`get_game_counts()`/`has_ratings()` |
 | `_bmad-output/implementation-artifacts/8-2-expose-public-apis-eliminate-private-attribute-access.md` | Modified — story status/tasks |
 | `_bmad-output/implementation-artifacts/sprint-status.yaml` | Modified — status review → done |

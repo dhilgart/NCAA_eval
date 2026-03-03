@@ -111,7 +111,7 @@ class TestEloModelUpdate:
 
 
 # ---------------------------------------------------------------------------
-# Task 5.3: _predict_one returns correct probability
+# Task 5.3: predict_matchup returns correct probability (public API)
 # ---------------------------------------------------------------------------
 
 

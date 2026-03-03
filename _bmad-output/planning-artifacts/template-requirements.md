@@ -3149,3 +3149,88 @@ except Exception:  # noqa: BLE001  # Story 8.3: add logging/retry here
 ```
 
 **Applies to:** Any project with BLE001 not yet active but likely to be activated in a future story (e.g., Story 8.3 "ESPN connector resilience").
+
+### Persist All `fit()`-Computed State in `save()`/`load()` — Checklist Pattern (Discovered Story 8.2 Code Review, 2026-03-03)
+
+When a model's `fit()` method computes and stores derived state (e.g. `_feature_names`, `_feature_importances`, fitted scaler parameters), that state **must** be persisted by `save()` and restored by `load()`. Missing this causes silent failures where the loaded model has an empty or default value instead of the trained one.
+
+**Code review checklist:** For every attribute assigned in `fit()`, verify:
+1. It is written to disk in `save()` (or included in the serialized format)
+2. It is read back in `load()` (or reconstructed from the serialized format)
+3. Any post-`load()` public API that depends on it works correctly
+
+```python
+# ❌ Bug: _feature_names is set in fit() but NOT persisted in save()/load()
+def fit(self, X: pd.DataFrame, y: pd.Series) -> None:
+    self._feature_names = list(X.columns)
+    self._clf.fit(X_train, y_train, ...)
+
+def save(self, path: Path) -> None:
+    self._clf.save_model(str(path / "model.ubj"))
+    (path / "config.json").write_text(self._config.model_dump_json())
+    # MISSING: (path / "feature_names.json").write_text(json.dumps(self._feature_names))
+
+def get_feature_importances(self) -> list[tuple[str, float]] | None:
+    if not self._is_fitted or not self._feature_names:  # Always True post-load!
+        return None
+
+# ✅ Fix: persist and restore _feature_names
+def save(self, path: Path) -> None:
+    self._clf.save_model(str(path / "model.ubj"))
+    (path / "config.json").write_text(self._config.model_dump_json())
+    (path / "feature_names.json").write_text(json.dumps(self._feature_names))
+
+@classmethod
+def load(cls, path: Path) -> Self:
+    ...
+    feature_names_path = path / "feature_names.json"
+    if feature_names_path.exists():
+        instance._feature_names = json.loads(feature_names_path.read_text())
+    return instance
+```
+
+**Conditional load** (checking file existence) provides backward compatibility with saves from before the feature was added.
+
+**Applies to:** Any story that adds new fit-time state to an existing model class. Review all `fit()` assignments against `save()`/`load()` whenever adding new model attributes.
+
+### Public API Refactoring: Eliminate DRY Violations When Adding Delegation Wrappers (Discovered Story 8.2 Code Review, 2026-03-03)
+
+When adding a public method that wraps or delegates to an existing computation, ensure the **original implementation also delegates** to the new public method rather than duplicating the logic. Failing to do so creates a DRY violation where the same formula lives in two places.
+
+```python
+# ❌ DRY violation: EloModel._predict_one duplicates EloFeatureEngine.predict_matchup
+class EloFeatureEngine:
+    def predict_matchup(self, team_a_id: int, team_b_id: int) -> float:
+        r_a = self.get_rating(team_a_id)
+        r_b = self.get_rating(team_b_id)
+        return self.expected_score(r_a, r_b)
+
+class EloModel(StatefulModel):
+    def _predict_one(self, team_a_id: int, team_b_id: int) -> float:
+        r_a = self._engine.get_rating(team_a_id)  # DUPLICATE LOGIC
+        r_b = self._engine.get_rating(team_b_id)
+        return EloFeatureEngine.expected_score(r_a, r_b)
+
+# ✅ Fix: delegate to the engine's public method
+class EloModel(StatefulModel):
+    def _predict_one(self, team_a_id: int, team_b_id: int) -> float:
+        return self._engine.predict_matchup(team_a_id, team_b_id)
+```
+
+**Rule:** When Story X adds `engine.predict_matchup()` as a public wrapper, also update any existing code that duplicates the same computation to delegate through the new wrapper.
+
+**Applies to:** Any public API exposure story where existing code computes the same result independently of the new public method.
+
+---
+
+### Unit Tests for the Class Being Extended Must Also Be Updated ⭐ (Discovered Story 8.2 Code Review)
+
+When a story adds new public API methods to a class (e.g., `EloFeatureEngine.set_ratings()`, `has_ratings()`, `get_game_counts()`), stories commonly list only the *cross-module callers* in the File List (the files that were using private attributes). However, the **unit tests for the class itself** (e.g., `test_elo.py`) also contain private attribute accesses for setup and assertion that the story must update.
+
+**Pattern:** A public API story that adds `set_ratings()`/`get_game_counts()` to `FooEngine` must update:
+1. Cross-module callers that were accessing `_ratings`/`_game_counts` ✅ (usually caught)
+2. `tests/unit/test_foo_engine.py` — which also sets up state via direct assignment for testing ❌ (commonly missed)
+
+**Rule:** When building the story File List for a public API exposure story, explicitly search for test files that test the class being extended (not just the callers), and include them with `grep -r "_private_attr" tests/`.
+
+**Applies to:** Any story that adds public setter/getter methods to replace private attribute access.

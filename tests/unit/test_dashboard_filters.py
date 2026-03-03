@@ -8,6 +8,7 @@ from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pandas as pd  # type: ignore[import-untyped]
+import pytest
 
 from ncaa_eval.ingest.schema import Season, Team
 from ncaa_eval.model.tracking import ModelRun
@@ -369,6 +370,48 @@ class TestLoadFeatureImportances:
         from dashboard.lib.data_loaders import load_feature_importances
 
         result: list[dict[str, object]] = _unwrap(load_feature_importances)("/fake/data", "missing-run")
+        assert result == []
+
+    @patch("dashboard.lib.data_loaders.Path.exists", return_value=True)
+    @patch("dashboard.lib.data_loaders.RunStore")
+    def test_legacy_fallback_uses_clf_feature_importances(
+        self, mock_store_cls: MagicMock, mock_exists: MagicMock
+    ) -> None:
+        """Legacy path: get_feature_importances() returns None, fall back to _clf."""
+        mock_store = MagicMock()
+        mock_model = MagicMock()
+        mock_model.get_feature_importances.return_value = None
+        mock_clf = MagicMock()
+        mock_clf.feature_importances_ = np.array([0.6, 0.4])
+        mock_model._clf = mock_clf
+        mock_store.load_model.return_value = mock_model
+        mock_store.load_feature_names.return_value = ["seed_diff", "elo_delta"]
+        mock_store_cls.return_value = mock_store
+
+        from dashboard.lib.data_loaders import load_feature_importances
+
+        result: list[dict[str, object]] = _unwrap(load_feature_importances)("/fake/data", "run-1")
+        assert len(result) == 2
+        assert result[0]["feature"] == "seed_diff"
+        assert result[0]["importance"] == pytest.approx(0.6)
+
+    @patch("dashboard.lib.data_loaders.Path.exists", return_value=True)
+    @patch("dashboard.lib.data_loaders.RunStore")
+    def test_legacy_fallback_empty_when_feature_names_missing(
+        self, mock_store_cls: MagicMock, mock_exists: MagicMock
+    ) -> None:
+        """Legacy path: returns empty if no feature names stored (truly legacy run)."""
+        mock_store = MagicMock()
+        mock_model = MagicMock()
+        mock_model.get_feature_importances.return_value = None
+        mock_model._clf = None
+        mock_store.load_model.return_value = mock_model
+        mock_store.load_feature_names.return_value = None
+        mock_store_cls.return_value = mock_store
+
+        from dashboard.lib.data_loaders import load_feature_importances
+
+        result: list[dict[str, object]] = _unwrap(load_feature_importances)("/fake/data", "run-1")
         assert result == []
 
 
