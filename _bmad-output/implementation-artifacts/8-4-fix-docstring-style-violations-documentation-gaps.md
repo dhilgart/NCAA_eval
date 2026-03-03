@@ -79,9 +79,9 @@ so that the codebase is internally consistent, Sphinx API docs render correctly,
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Auto-fix trivial D-rule violations (AC: #8, #10)
-  - [ ] 1.1 Run `ruff check src/ --fix --select D416,D411` to auto-fix 27 violations
-  - [ ] 1.2 Verify fixes with `ruff check src/ --select D416,D411`
+- [x] Task 1: Auto-fix trivial D-rule violations (AC: #8, #10)
+  - [x] 1.1 Run `ruff check src/ --fix --select D416,D411` to auto-fix 27 violations
+  - [x] 1.2 Verify fixes with `ruff check src/ --select D416,D411`
 
 - [ ] Task 2: Convert NumPy-style docstrings to Google style (AC: #1-3)
   - [ ] 2.1 `src/ncaa_eval/evaluation/metrics.py` — convert all `Parameters`/`Returns`/`Raises` sections

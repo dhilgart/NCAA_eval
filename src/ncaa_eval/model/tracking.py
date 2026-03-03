@@ -113,7 +113,7 @@ class RunStore:
     def load_run(self, run_id: str) -> ModelRun:
         """Load run metadata from JSON.
 
-        Raises
+        Raises:
         ------
         FileNotFoundError
             If the run directory or ``run.json`` does not exist.
@@ -127,7 +127,7 @@ class RunStore:
     def load_predictions(self, run_id: str) -> pd.DataFrame:
         """Load predictions from Parquet as a DataFrame.
 
-        Raises
+        Raises:
         ------
         FileNotFoundError
             If the predictions Parquet file does not exist.

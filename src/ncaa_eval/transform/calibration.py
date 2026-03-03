@@ -100,12 +100,12 @@ class IsotonicCalibrator:
         y_prob
             Model-predicted probabilities to calibrate.
 
-        Returns
+        Returns:
         -------
         npt.NDArray[np.float64]
             Calibrated probabilities in [0, 1].
 
-        Raises
+        Raises:
         ------
         RuntimeError
             If ``fit()`` has not been called.
@@ -178,12 +178,12 @@ class SigmoidCalibrator:
         y_prob
             Model-predicted probabilities to calibrate.
 
-        Returns
+        Returns:
         -------
         npt.NDArray[np.float64]
             Calibrated probabilities in [0, 1].
 
-        Raises
+        Raises:
         ------
         RuntimeError
             If ``fit()`` has not been called.

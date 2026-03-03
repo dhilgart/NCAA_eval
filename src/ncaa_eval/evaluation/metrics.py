@@ -25,7 +25,7 @@ import numpy.typing as npt
 class ReliabilityData:
     """Structured return type for reliability diagram data.
 
-    Attributes
+    Attributes:
     ----------
     fraction_of_positives
         Observed fraction of positives per bin (from calibration_curve).
@@ -80,12 +80,12 @@ def log_loss(
     y_prob
         Predicted probabilities for the positive class.
 
-    Returns
+    Returns:
     -------
     float
         Log Loss value.
 
-    Raises
+    Raises:
     ------
     ValueError
         If inputs are empty, mismatched, or probabilities are outside [0, 1].
@@ -110,12 +110,12 @@ def brier_score(
     y_prob
         Predicted probabilities for the positive class.
 
-    Returns
+    Returns:
     -------
     float
         Brier Score value (lower is better).
 
-    Raises
+    Raises:
     ------
     ValueError
         If inputs are empty, mismatched, or probabilities are outside [0, 1].
@@ -140,12 +140,12 @@ def roc_auc(
     y_prob
         Predicted probabilities for the positive class.
 
-    Returns
+    Returns:
     -------
     float
         ROC-AUC value.
 
-    Raises
+    Raises:
     ------
     ValueError
         If inputs are empty, mismatched, probabilities are outside [0, 1],
@@ -183,12 +183,12 @@ def expected_calibration_error(
     n_bins
         Number of equal-width bins (default 10).
 
-    Returns
+    Returns:
     -------
     float
         ECE value in [0, 1] (lower is better).
 
-    Raises
+    Raises:
     ------
     ValueError
         If inputs are empty, mismatched, or probabilities are outside [0, 1].
@@ -243,13 +243,13 @@ def reliability_diagram_data(
     n_bins
         Number of bins (default 10).
 
-    Returns
+    Returns:
     -------
     ReliabilityData
         Structured data containing fraction of positives, mean predicted
         values, bin counts, bin edges, and requested number of bins.
 
-    Raises
+    Raises:
     ------
     ValueError
         If inputs are empty, mismatched, ``n_bins < 1``, or probabilities are

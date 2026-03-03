@@ -96,7 +96,7 @@ class XGBoostModel(Model):
         ``scale_pos_weight`` = ``count(y==0) / count(y==1)`` in the
         ``XGBoostModelConfig``.
 
-        Raises
+        Raises:
         ------
         ValueError
             If *X* is empty.
@@ -119,7 +119,7 @@ class XGBoostModel(Model):
     def predict_proba(self, X: pd.DataFrame) -> pd.Series:
         """Return P(team_a wins) for each row of *X*.
 
-        Raises
+        Raises:
         ------
         RuntimeError
             If called before :meth:`fit`.
@@ -138,7 +138,7 @@ class XGBoostModel(Model):
         - ``config.json`` — Pydantic-serialised hyperparameter config
         - ``feature_names.json`` — JSON array of feature column names
 
-        Raises
+        Raises:
         ------
         RuntimeError
             If called before :meth:`fit`.
@@ -155,7 +155,7 @@ class XGBoostModel(Model):
     def load(cls, path: Path) -> Self:
         """Load a previously-saved XGBoost model from *path*.
 
-        Raises
+        Raises:
         ------
         FileNotFoundError
             If either ``config.json`` or ``model.ubj`` is missing.

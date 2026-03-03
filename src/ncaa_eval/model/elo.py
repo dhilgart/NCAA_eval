@@ -88,7 +88,7 @@ class EloModel(StatefulModel):
             are coerced to ``int`` so that JSON-decoded dicts (where all keys
             are strings) work correctly without silent rating loss.
 
-        Raises
+        Raises:
         ------
         KeyError
             If ``"ratings"`` or ``"game_counts"`` keys are absent.
@@ -130,7 +130,7 @@ class EloModel(StatefulModel):
     def load(cls, path: Path) -> Self:
         """Reconstruct an EloModel from a saved directory.
 
-        Raises
+        Raises:
         ------
         FileNotFoundError
             If either ``config.json`` or ``state.json`` is missing.  A missing

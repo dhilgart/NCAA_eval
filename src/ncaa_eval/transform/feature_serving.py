@@ -195,7 +195,7 @@ class StatefulFeatureServer:
         mode
             ``"batch"`` or ``"stateful"``.
 
-        Returns
+        Returns:
         -------
         pd.DataFrame
             One row per game with metadata, feature deltas, and the target label.

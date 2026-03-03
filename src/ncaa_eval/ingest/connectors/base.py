@@ -57,6 +57,7 @@ class Connector(abc.ABC):
         """Fetch team data from the source.
 
         Optional capability — not all connectors provide team master data.
+
         Raises:
             NotImplementedError: If this connector does not support fetching teams.
         """
@@ -66,6 +67,7 @@ class Connector(abc.ABC):
         """Fetch available seasons from the source.
 
         Optional capability — not all connectors provide season master data.
+
         Raises:
             NotImplementedError: If this connector does not support fetching seasons.
         """

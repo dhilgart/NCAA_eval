@@ -262,7 +262,7 @@ class EloFeatureEngine:
         season
             Season year.
 
-        Returns
+        Returns:
         -------
         pd.DataFrame
             Columns: ``[game_id, elo_w_before, elo_l_before]``.
