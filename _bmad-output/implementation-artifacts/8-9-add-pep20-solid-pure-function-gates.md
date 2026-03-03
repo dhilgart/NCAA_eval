@@ -1,6 +1,6 @@
 # Story 8.9: Add PEP 20, SOLID & Pure Function Gates to PR Template + Codebase PEP 20 Review
 
-Status: ready-for-dev
+Status: in-progress
 
 ## Story
 
@@ -50,10 +50,10 @@ so that every future PR is reviewed against these design principles and existing
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Update PR Template (AC: #1-3)
-  - [ ] 1.1 Read current `.github/pull_request_template.md`
-  - [ ] 1.2 Add three new checkboxes to Code Quality section
-  - [ ] 1.3 Verify checkbox wording matches Style Guide Section 7 exactly
+- [x] Task 1: Update PR Template (AC: #1-3)
+  - [x] 1.1 Read current `.github/pull_request_template.md`
+  - [x] 1.2 Add three new checkboxes to Code Quality section
+  - [x] 1.3 Verify checkbox wording matches Style Guide Section 7 exactly
 
 - [ ] Task 2: Expand Style Guide Section 6 — PEP 20 Aphorisms (AC: #5-6)
   - [ ] 2.1 Read current `docs/STYLE_GUIDE.md` Section 6

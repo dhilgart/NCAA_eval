@@ -59,6 +59,9 @@ Steps to reproduce the behavior:
 - [ ] **Import ordering** — stdlib / third-party / local groups; `from __future__ import annotations` first
 - [ ] **No vectorization violations** — No `for` loops over DataFrames for metric calculations
 - [ ] **Line length** — Lines stay within 110 characters
+- [ ] **PEP 20 compliance** — Simple (complexity ≤ 10), explicit (no magic numbers), readable (full domain words), flat (nesting ≤ 3), consistent with project patterns
+- [ ] **SOLID principles** — Single responsibility, open for extension, Liskov substitution, interface segregation, dependency inversion
+- [ ] **Pure function design** — Business logic is pure, side effects at edges, no I/O mixed with calculations
 
 ## Architecture Compliance
 
