@@ -802,7 +802,7 @@ the philosophy behind this two-tier approach, see
 | Conventional commit messages | Commitizen | Pre-commit |
 | PEP 20 compliance | Manual review | PR review |
 | SOLID principles | Manual review | PR review |
-| Pure functions / functional design | Manual review | PR review |
+| Pure function design | Manual review | PR review |
 
 ### Review Criteria
 

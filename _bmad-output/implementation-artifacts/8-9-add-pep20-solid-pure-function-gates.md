@@ -73,9 +73,9 @@ so that every future PR is reviewed against these design principles and existing
   - [x] 3.5 Update ISP guidance — ABCs primary, Protocols complement
   - [x] 3.6 Add Lint Suppression Policy subsection
 
-- [ ] Task 4: Sync Section 7 PR Checklist (AC: #13)
-  - [ ] 4.1 Verify Style Guide Section 7 table matches updated PR template
-  - [ ] 4.2 Fix any mismatches between the two
+- [x] Task 4: Sync Section 7 PR Checklist (AC: #13)
+  - [x] 4.1 Verify Style Guide Section 7 table matches updated PR template
+  - [x] 4.2 Fix any mismatches between the two
 
 - [ ] Task 5: Codebase PEP 20 Compliance Review (AC: #14-16)
   - [ ] 5.1 Audit all `src/ncaa_eval/` files for PEP 20 #10 violations (silent exception swallowing)
