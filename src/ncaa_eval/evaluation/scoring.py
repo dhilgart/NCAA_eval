@@ -57,7 +57,7 @@ class ScoringRule(Protocol):
 
 _ST = TypeVar("_ST", bound="type[ScoringRule]")
 
-_SCORING_REGISTRY: dict[str, type] = {}
+_SCORING_REGISTRY: dict[str, type[ScoringRule]] = {}
 
 
 class ScoringNotFoundError(KeyError):

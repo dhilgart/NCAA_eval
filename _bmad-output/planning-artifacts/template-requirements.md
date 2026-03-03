@@ -3104,6 +3104,33 @@ except Exception:  # noqa: BLE001  # Story 8.3: add logging/retry here
 
 This makes the intent explicit, suppresses lint with a specific code, and serves as a searchable marker (`git grep "Story 8.3"`) for the fixing story to find all deferred items.
 
+### Context Dataclass Pattern for PLR0913-Compliant Helper Functions (Discovered Story 8.1, 2026-03-03)
+
+When decomposing a God Function into N private helpers that all share the same 4-6 "plumbing" arguments (model, console, data_dir, server, etc.), passing those args individually to each helper will trigger PLR0913 on every helper function.
+
+**Solution: Bundle shared context into an internal dataclass:**
+
+```python
+@dataclass
+class _TrainingContext:
+    """Internal context passed between pipeline stages."""
+    model: Model
+    model_name: str
+    start_year: int
+    end_year: int
+    is_stateful: bool
+    console: Console
+    store: RunStore
+    server: StatefulFeatureServer
+```
+
+Helpers then take `ctx: _TrainingContext` plus any stage-specific args. This:
+- Eliminates PLR0913 on all private helpers (1 context arg + stage-specific args)
+- The public orchestrator function may still need `# noqa: PLR0913` if its own parameter count exceeds the limit and the signature is part of the public API — that's acceptable and expected (see Story 8.1 AC13 discussion)
+- `@dataclass` (not frozen) since fields may need mutation during pipeline execution
+
+**Applies to:** Any refactoring story that decomposes a pipeline function with many shared parameters.
+
 ### Apply `# noqa` to Fixed Bare-Except Handlers Too, Not Just Deferred Ones (Discovered Story 8.9 Code Review Pass 2, 2026-03-03)
 
 When upgrading a silent exception handler (e.g., `logger.debug` → `logger.warning`), the `except Exception:` clause should also receive `# noqa: BLE001` even though it is now "fixed." Rationale: if BLE001 is ever added to Ruff's active rules, the handler will immediately flag — requiring an unplanned annotation fix that distracts from the actual story work.

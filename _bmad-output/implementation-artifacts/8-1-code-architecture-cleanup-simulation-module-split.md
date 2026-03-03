@@ -1,6 +1,6 @@
 # Story 8.1: Code Architecture Cleanup — Simulation Module Split & Kitchen Sink Refactors
 
-Status: review
+Status: done
 
 ## Story
 
@@ -90,6 +90,14 @@ so that the codebase is maintainable, testable, and aligned with SRP and the pro
   - [x]7.2 `mypy --strict src/ncaa_eval tests` — zero errors
   - [x]7.3 `pytest` — all tests pass
   - [x]7.4 Verify no behavioral changes (pure refactoring)
+
+### Review Follow-ups (AI)
+
+- [ ] [AI-Review][HIGH] AC13 partial: `run_training()` retains `# noqa: PLR0913` (7 keyword args — unchanged public API). Fix options: (a) bundle `start_year`, `end_year` into a `DateRange` dataclass, or (b) AC13 should be amended to exclude the public API signature from the suppression-removal requirement. Either way, the existing `_TrainingContext` approach already cleaned up all private helpers. [src/ncaa_eval/cli/train.py:228]
+- [ ] [AI-Review][MEDIUM] Task 6.3 name drift: implemented as `_prepare_and_train()` (merges prepare + train, returns `list[str]`), but story tasks and Dev Notes specified `_prepare_training_data()` returning `(DataFrame, Series, list[str])`. The simpler merged version is better design, but the story description is stale. Update Dev Notes in future if decomposition guide is used as a reference. [src/ncaa_eval/cli/train.py:118]
+- [ ] [AI-Review][MEDIUM] Task 6.1 signature drift: `_setup_feature_server(data_dir)` takes only `data_dir` (not `model`), returns `StatefulFeatureServer` (not `(StatefulFeatureServer, bool)`). `is_stateful` detection was correctly moved to `_TrainingContext` construction. Dev Notes Decomposition Guide is stale. [src/ncaa_eval/cli/train.py:88]
+- [ ] [AI-Review][MEDIUM] Task 6.5 signature drift: `_run_backtest_and_persist()` returns `None` (side-effects only), not `BacktestResult | None` as specified in Dev Notes. [src/ncaa_eval/cli/train.py:179]
+- [ ] [AI-Review][LOW] `EloProvider` still accesses `model._predict_one` (private API). Pre-existing pattern — not a regression from this story. Track under Story 8.2 which explicitly targets this. [src/ncaa_eval/evaluation/providers.py:129]
 
 ## Dev Notes
 
@@ -237,6 +245,18 @@ Claude Opus 4.6
 - AC13 partial: Removed `C901` and `PLR0912` noqa suppressions from `run_training()`. Retained `PLR0913` on the public `run_training()` API (7 keyword args — cannot reduce without changing the public signature, which would be a behavioral change violating AC18). All private helpers pass Ruff without suppressions via `_TrainingContext` dataclass.
 - AC10 note: `filters.py` retains `score_chosen_bracket` and `build_custom_scoring` as specified. `_ROUND_OF_64_DAY_NUM` moved to `simulation_helpers.py` (where `run_bracket_simulation` uses it). `_ROUND_LABELS` moved to `export.py` (where `export_bracket_csv` uses it). Both re-exported from `filters.py` for backward compatibility.
 
+### Senior Developer Review (AI)
+
+**Reviewer:** Claude Sonnet 4.6 — 2026-03-03
+**Outcome:** APPROVED with minor fixes applied (3 issues fixed, 5 action items created)
+
+**Fixes applied during review:**
+1. [L3] `dashboard/lib/filters.py` docstring corrected — was claiming "retains `_ROUND_LABELS`" when it actually re-exports it from `export.py`
+2. [L1] `tests/unit/test_dashboard_app.py` `TestFilterFunctionSignatures` imports updated from `filters` → `data_loaders` (completing Task 5.6)
+3. [L2] `src/ncaa_eval/evaluation/scoring.py` `_SCORING_REGISTRY` typed as `dict[str, type[ScoringRule]]` instead of bare `dict[str, type]`
+
+**Deferred to action items:** AC13 PLR0913 conflict (public API design constraint), helper function interface divergence from Dev Notes (all functional, notes just stale).
+
 ### Change Log
 
 | Commit | Description |
@@ -273,4 +293,5 @@ Claude Opus 4.6
 | `dashboard/pages/3_Model_Deep_Dive.py` | Import source updated: filters → data_loaders |
 | `dashboard/pages/4_Pool_Scorer.py` | Import source updated: filters → data_loaders + simulation_helpers + export |
 | `tests/unit/test_dashboard_filters.py` | @patch targets and imports updated to match new module locations |
-| `_bmad-output/implementation-artifacts/sprint-status.yaml` | Story status: ready-for-dev → in-progress → review |
+| `tests/unit/test_dashboard_app.py` | TestFilterFunctionSignatures imports updated: filters → data_loaders (code review fix) |
+| `_bmad-output/implementation-artifacts/sprint-status.yaml` | Story status: ready-for-dev → in-progress → review → done |

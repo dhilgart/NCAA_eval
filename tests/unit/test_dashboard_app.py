@@ -45,28 +45,28 @@ class TestFilterFunctionSignatures:
     """Verify filter functions are callable and decorated with cache_data."""
 
     def test_load_available_years_is_callable(self) -> None:
-        from dashboard.lib.filters import load_available_years
+        from dashboard.lib.data_loaders import load_available_years
 
         assert callable(load_available_years)
 
     def test_load_available_runs_is_callable(self) -> None:
-        from dashboard.lib.filters import load_available_runs
+        from dashboard.lib.data_loaders import load_available_runs
 
         assert callable(load_available_runs)
 
     def test_load_available_scorings_is_callable(self) -> None:
-        from dashboard.lib.filters import load_available_scorings
+        from dashboard.lib.data_loaders import load_available_scorings
 
         assert callable(load_available_scorings)
 
     def test_get_data_dir_is_callable(self) -> None:
-        from dashboard.lib.filters import get_data_dir
+        from dashboard.lib.data_loaders import get_data_dir
 
         assert callable(get_data_dir)
 
     def test_cached_functions_have_wrapped(self) -> None:
         """Streamlit's @cache_data stores the original via __wrapped__."""
-        from dashboard.lib.filters import (
+        from dashboard.lib.data_loaders import (
             load_available_runs,
             load_available_scorings,
             load_available_years,

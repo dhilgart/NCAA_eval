@@ -6,9 +6,10 @@ New code should import from the specific submodule:
 * :mod:`dashboard.lib.simulation_helpers` — bracket simulation orchestration
 * :mod:`dashboard.lib.export` — CSV export helpers
 
-This module retains ``score_chosen_bracket``, ``build_custom_scoring``, and
-the ``_ROUND_LABELS`` constant.  All other symbols are re-exported for
-backward compatibility.
+This module retains ``score_chosen_bracket`` and ``build_custom_scoring``.
+``_ROUND_LABELS`` lives in :mod:`dashboard.lib.export` and is re-exported
+here for backward compatibility.  All other symbols are re-exported from
+the new submodules for backward compatibility.
 """
 
 from __future__ import annotations
