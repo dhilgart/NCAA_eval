@@ -156,13 +156,11 @@ def load_fold_predictions(data_dir: str, run_id: str) -> list[dict[str, object]]
 
 @st.cache_data(ttl=300)
 def load_feature_importances(data_dir: str, run_id: str) -> list[dict[str, object]]:
-    """Load feature importances for a run (XGBoost only).
+    """Load feature importances for a run.
 
-    Guards on ``model_type == "xgboost"``, then loads the pickled model
-    and reads ``model._clf.feature_importances_`` (the underlying
-    ``XGBClassifier`` attribute).  Pairs feature names (from
-    ``RunStore.load_feature_names``) with importances, sorts descending,
-    and serialises to a list of dicts.
+    Uses the model's ``get_feature_importances()`` public API. Falls back
+    to ``RunStore.load_feature_names`` paired with the model importances
+    for legacy runs where ``get_feature_importances()`` returns ``None``.
 
     Args:
         data_dir: String path to the project data directory.
@@ -170,8 +168,8 @@ def load_feature_importances(data_dir: str, run_id: str) -> list[dict[str, objec
 
     Returns:
         List of dicts ``{"feature": name, "importance": value}`` sorted
-        descending by importance. Empty list for non-XGBoost models,
-        legacy runs, or errors.
+        descending by importance. Empty list for models without feature
+        importances, legacy runs, or errors.
     """
     path = Path(data_dir)
     if not path.exists():
@@ -184,17 +182,16 @@ def load_feature_importances(data_dir: str, run_id: str) -> list[dict[str, objec
         model = store.load_model(run_id)
         if model is None:
             return []
-        feature_names = store.load_feature_names(run_id) or []
-        # _clf is the underlying XGBClassifier wrapped by ncaa_eval's XGBoost model class.
-        clf = getattr(model, "_clf", None)
-        importances = getattr(clf, "feature_importances_", None)
-        if importances is None or not feature_names or len(feature_names) != len(importances):
-            return []
-        pairs = sorted(
-            zip(feature_names, importances.tolist()),
-            key=lambda p: p[1],
-            reverse=True,
-        )
+        raw = model.get_feature_importances()
+        if raw is None:
+            # Legacy fallback: model doesn't have feature names stored
+            feature_names = store.load_feature_names(run_id) or []
+            clf = getattr(model, "_clf", None)
+            importances = getattr(clf, "feature_importances_", None)
+            if importances is None or not feature_names or len(feature_names) != len(importances):
+                return []
+            raw = list(zip(feature_names, importances.tolist()))
+        pairs = sorted(raw, key=lambda p: p[1], reverse=True)
         return [{"feature": f, "importance": v} for f, v in pairs]
     except (OSError, KeyError):
         return []

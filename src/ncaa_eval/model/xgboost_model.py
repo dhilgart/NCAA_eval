@@ -63,6 +63,7 @@ class XGBoostModel(Model):
     def __init__(self, config: XGBoostModelConfig | None = None) -> None:
         self._config = config or XGBoostModelConfig()
         self._is_fitted = False
+        self._feature_names: list[str] = []
         kwargs: dict[str, object] = dict(
             n_estimators=self._config.n_estimators,
             max_depth=self._config.max_depth,
@@ -110,6 +111,7 @@ class XGBoostModel(Model):
             random_state=42,
             stratify=y,
         )
+        self._feature_names = list(X.columns)
         self._clf.fit(X_train, y_train, eval_set=[(X_val, y_val)], verbose=False)
         self._is_fitted = True
 
@@ -174,3 +176,10 @@ class XGBoostModel(Model):
     def get_config(self) -> XGBoostModelConfig:
         """Return the Pydantic-validated configuration for this model."""
         return self._config
+
+    def get_feature_importances(self) -> list[tuple[str, float]] | None:
+        """Return feature name/importance pairs from the fitted classifier."""
+        if not self._is_fitted or not self._feature_names:
+            return None
+        importances = self._clf.feature_importances_
+        return list(zip(self._feature_names, importances.tolist()))

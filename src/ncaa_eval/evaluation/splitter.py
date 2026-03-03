@@ -15,7 +15,7 @@ from collections.abc import Iterator, Sequence
 import pandas as pd  # type: ignore[import-untyped]
 
 from ncaa_eval.transform.feature_serving import StatefulFeatureServer
-from ncaa_eval.transform.serving import _NO_TOURNAMENT_SEASONS
+from ncaa_eval.transform.serving import NO_TOURNAMENT_SEASONS
 
 _VALID_MODES: frozenset[str] = frozenset({"batch", "stateful"})
 
@@ -79,7 +79,7 @@ def walk_forward_splits(
     # Walk-forward: iterate from second season onward as test candidates
     for i, test_year in enumerate(sorted_seasons[1:], start=1):
         # Skip no-tournament seasons (e.g., 2020 COVID cancellation)
-        if test_year in _NO_TOURNAMENT_SEASONS:
+        if test_year in NO_TOURNAMENT_SEASONS:
             continue
 
         # Accumulate training data from all prior seasons.

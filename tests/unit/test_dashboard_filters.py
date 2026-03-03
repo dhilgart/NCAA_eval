@@ -307,12 +307,8 @@ class TestLoadFeatureImportances:
     @patch("dashboard.lib.data_loaders.RunStore")
     def test_returns_sorted_importances(self, mock_store_cls: MagicMock, mock_exists: MagicMock) -> None:
         mock_store = MagicMock()
-        mock_store.load_feature_names.return_value = ["elo_delta", "seed_diff"]
         mock_model = MagicMock()
-        mock_model._clf = MagicMock()
-        import numpy as np
-
-        mock_model._clf.feature_importances_ = np.array([0.3, 0.7])
+        mock_model.get_feature_importances.return_value = [("elo_delta", 0.3), ("seed_diff", 0.7)]
         mock_store.load_model.return_value = mock_model
         mock_run = MagicMock()
         mock_run.model_type = "xgboost"
@@ -512,10 +508,12 @@ class TestBuildProviderFromFolds:
         result = _build_provider_from_folds(mock_store, "run-1", 2023, bracket)
 
         assert result is not None
-        # Verify the probability matrix was filled correctly
-        # P[0,1] should be 0.7 (team_a=100→idx=0 beats team_b=200→idx=1)
-        assert abs(result._P[0, 1] - 0.7) < 1e-6
-        assert abs(result._P[1, 0] - 0.3) < 1e-6
+        # Verify the probability matrix was filled correctly via public API
+        from ncaa_eval.evaluation.bracket import MatchupContext
+
+        ctx = MatchupContext(season=2023, day_num=136, is_neutral=True)
+        assert abs(result.matchup_probability(100, 200, ctx) - 0.7) < 1e-6
+        assert abs(result.matchup_probability(200, 100, ctx) - 0.3) < 1e-6
 
     def test_returns_none_when_no_fold_predictions(self) -> None:
         from dashboard.lib.simulation_helpers import _build_provider_from_folds
@@ -562,7 +560,10 @@ class TestBuildProviderFromFolds:
 
         assert result is not None
         # Only the valid row (100 vs 200) should be filled; 999/888 row ignored
-        assert abs(result._P[0, 1] - 0.7) < 1e-6
+        from ncaa_eval.evaluation.bracket import MatchupContext
+
+        ctx = MatchupContext(season=2023, day_num=136, is_neutral=True)
+        assert abs(result.matchup_probability(100, 200, ctx) - 0.7) < 1e-6
 
 
 class TestBuildTeamLabels:

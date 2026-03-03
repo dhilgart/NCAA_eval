@@ -223,9 +223,31 @@ class EloFeatureEngine:
 
     # ── Public: snapshot / bulk ───────────────────────────────────────────
 
+    def has_ratings(self) -> bool:
+        """Return ``True`` if at least one team has a rating."""
+        return bool(self._ratings)
+
+    def set_ratings(self, ratings: dict[int, float]) -> None:
+        """Replace all ratings with *ratings*."""
+        self._ratings = dict(ratings)
+
+    def set_game_counts(self, counts: dict[int, int]) -> None:
+        """Replace all game counts with *counts*."""
+        self._game_counts = dict(counts)
+
+    def get_game_counts(self) -> dict[int, int]:
+        """Return a copy of the current game-counts dict."""
+        return dict(self._game_counts)
+
     def get_all_ratings(self) -> dict[int, float]:
         """Return a copy of the current ratings dict."""
         return dict(self._ratings)
+
+    def predict_matchup(self, team_a_id: int, team_b_id: int) -> float:
+        """Return P(team_a wins) using the Elo expected-score formula."""
+        r_a = self.get_rating(team_a_id)
+        r_b = self.get_rating(team_b_id)
+        return self.expected_score(r_a, r_b)
 
     def process_season(self, games: list[Game], season: int) -> pd.DataFrame:
         """Process all games for a season, returning before-ratings per game.

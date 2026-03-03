@@ -75,7 +75,7 @@ class EloModel(StatefulModel):
         """Return ratings and game counts as a serialisable snapshot."""
         return {
             "ratings": self._engine.get_all_ratings(),
-            "game_counts": dict(self._engine._game_counts),
+            "game_counts": self._engine.get_game_counts(),
         }
 
     def set_state(self, state: dict[str, Any]) -> None:
@@ -109,11 +109,8 @@ class EloModel(StatefulModel):
         # Coerce string keys to int so JSON-decoded dicts (all keys are str)
         # work correctly — without coercion, get_rating(team_id_int) would
         # silently return initial_rating for every team.
-        # EloFeatureEngine has no public setter — direct attribute assignment is
-        # intentional here.  If the engine later adds validation, these lines
-        # should be replaced with the appropriate public API.
-        self._engine._ratings = {int(k): float(v) for k, v in ratings.items()}
-        self._engine._game_counts = {int(k): int(v) for k, v in game_counts.items()}
+        self._engine.set_ratings({int(k): float(v) for k, v in ratings.items()})
+        self._engine.set_game_counts({int(k): int(v) for k, v in game_counts.items()})
 
     # ------------------------------------------------------------------
     # Model ABC: persistence

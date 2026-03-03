@@ -61,6 +61,14 @@ class Model(abc.ABC):
         """Return the Pydantic-validated configuration for this model."""
         ...
 
+    def get_feature_importances(self) -> list[tuple[str, float]] | None:
+        """Return feature name/importance pairs, or ``None`` if unavailable.
+
+        The default returns ``None``.  Models that support feature importances
+        (e.g. XGBoost) should override this method.
+        """
+        return None
+
 
 # ---------------------------------------------------------------------------
 # Location encoding helpers
@@ -167,6 +175,17 @@ class StatefulModel(Model):
                 )
             )
         return games
+
+    # ------------------------------------------------------------------
+    # Public API for external consumers
+    # ------------------------------------------------------------------
+
+    def predict_matchup(self, team_a_id: int, team_b_id: int) -> float:
+        """Return P(team_a wins) for a single matchup.
+
+        Delegates to the ``_predict_one`` abstract hook.
+        """
+        return self._predict_one(team_a_id, team_b_id)
 
     # ------------------------------------------------------------------
     # Abstract hooks for subclasses
