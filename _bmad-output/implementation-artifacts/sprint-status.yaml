@@ -112,7 +112,11 @@ development_status:
   7-9-create-step-by-step-tutorials: done
   epic-7-retrospective: optional
 
-  # Epic 8: Template & Knowledge Transfer
+  # Epic 8: Codebase Improvements & Technical Debt Resolution
   epic-8: backlog
-  8-1-create-cookie-cutter-template: ready-for-dev
   epic-8-retrospective: optional
+
+  # Epic 9: Template & Knowledge Transfer
+  epic-9: backlog
+  9-1-create-cookie-cutter-template: ready-for-dev
+  epic-9-retrospective: optional

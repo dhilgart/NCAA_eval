@@ -1,4 +1,4 @@
-# Story 8.1: create-cookie-cutter-template
+# Story 9.1: create-cookie-cutter-template
 
 Status: ready-for-dev
 
@@ -350,7 +350,7 @@ Must run Tier 1 checks (< 10s total):
 
 ### Previous Story Intelligence
 
-**N/A** - This is the first story in Epic 8 (Project Templates & Maintenance).
+**N/A** - This is the first story in Epic 9 (Template & Knowledge Transfer).
 
 However, this story builds on ALL previous work in Epic 1 (stories 1-1 through 1-3):
 - **1-1:** Established Poetry, src layout, pyproject.toml structure
