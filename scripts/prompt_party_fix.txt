@@ -1,0 +1,14 @@
+/bmad-party-mode --yolo
+
+Do not stop tasks early; the context will be automatically compacted, allowing you to continue. Continue working systematically until the task is fully complete, regardless of the remaining context budget. However, also save current progress and state to memory frequently.
+
+I noticed a few things as I was reviewing the repo. I want to make sure these are incorporated in epic 8 (if they are not already):
+- the commands in the documentation all need to be covered with E2E integration tests to assure that they work properly. I got a bunch of errors when following the commands in the user guide.
+- Many functions do not abide by the STYLE_GUIDE, especially PEP20. Somehow PEP20 was not included in the PR checklist and so each PR allowed through code with poor quality. It needs to be added to the PR checklist and the entire code base needs to be reviewed for compliance.
+- Please do a thorough, line-by-line, review of everything in the following locations to flag what is potentially non-compliant (except where decisions have been intentionally made to diverge from the original) and add it to the audit report in the appropriate category:
+    - docs/STYLE_GUIDE.md
+    - docs/TESTING_STRATEGY.md
+    - docs/testing/*
+    - specs/0* (ignoring archive and research subfolders)
+    - .github/pull_request_template.md
+    - _bmad_output/planning-artifacts/epics.md
