@@ -199,8 +199,9 @@ class TestKaggleConnectorSeasons:
 
 
 def _mock_kaggle_modules() -> MagicMock:
-    """Pre-populate sys.modules with a fake kaggle package so that the
-    ``from kaggle.api.kaggle_api_extended import KaggleApi`` inside
+    """Pre-populate sys.modules with a fake kaggle package.
+
+    Ensures ``from kaggle.api.kaggle_api_extended import KaggleApi`` inside
     ``KaggleConnector.download()`` resolves to our mock instead of importing
     the real kaggle package (which calls ``api.authenticate()`` at import
     time and fails without credentials).

@@ -109,11 +109,11 @@ so that the codebase is internally consistent, Sphinx API docs render correctly,
   - [x] 6.2 For each function: read the implementation, then add a description paragraph explaining *how* it works
   - [x] 6.3 Focus on implementation approach, not restating the summary (e.g., "Iterates over games in date order, applies K-factor scaling, then updates both teams' ratings in-place" — not "Updates Elo ratings for a game")
 
-- [ ] Task 7: Update pyproject.toml D-rule enforcement (AC: #19-21)
-  - [ ] 7.1 Remove `"D1"` from the `ignore` list
-  - [ ] 7.2 Add `"D107"` to per-file-ignores for files where class docstrings already cover `__init__`
-  - [ ] 7.3 Keep `"D415"` in the ignore list
-  - [ ] 7.4 Run `ruff check src/ --select D` to verify zero violations
+- [x] Task 7: Update pyproject.toml D-rule enforcement (AC: #19-21)
+  - [x] 7.1 Remove `"D1"` from the `ignore` list
+  - [x] 7.2 Add `"D107"` to per-file-ignores for files where class docstrings already cover `__init__`
+  - [x] 7.3 Keep `"D415"` in the ignore list
+  - [x] 7.4 Run `ruff check src/ --select D` to verify zero violations
 
 - [ ] Task 8: Update tutorial expected output (AC: #12-13)
   - [ ] 8.1 Read `docs/tutorials/getting-started.md`
