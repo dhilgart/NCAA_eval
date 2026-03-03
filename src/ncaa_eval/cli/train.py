@@ -254,6 +254,17 @@ def run_training(  # noqa: PLR0913
 ) -> ModelRun:
     """Execute the full train → predict → persist pipeline.
 
+    Initialises a ``_TrainingContext`` by calling ``_setup_feature_server``
+    and wrapping all run-scoped state.  Calls ``_build_season_features`` to
+    produce per-season DataFrames; short-circuits with an empty ``ModelRun``
+    if no game data is found.  Concatenates frames, then calls
+    ``_prepare_and_train`` (label extraction, balance check, fit) to get
+    ``feat_cols``.  Generates tournament predictions via
+    ``_generate_tournament_predictions``, persists the ``ModelRun`` record,
+    runs the walk-forward backtest via ``_run_backtest_and_persist``
+    (skipped if fewer than 2 seasons), and finally saves model artifacts and
+    prints the summary table via ``_persist_artifacts_and_summarize``.
+
     Args:
         model: An instantiated model (stateful or stateless).
         start_year: First season year (inclusive) for training.
