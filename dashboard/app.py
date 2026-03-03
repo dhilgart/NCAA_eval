@@ -66,7 +66,7 @@ with st.sidebar:
         st.selectbox("Tournament Year", options=years, key="selected_year")
     else:
         st.session_state.setdefault("selected_year", None)
-        st.info("No data available — run `python sync.py` first")
+        st.info("No data available — run `python sync.py --source all --dest data/` first")
 
     # Model Run
     runs = load_available_runs(data_dir)

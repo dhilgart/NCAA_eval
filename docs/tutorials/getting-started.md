@@ -16,21 +16,18 @@ Download NCAA game data from Kaggle (historical seasons 1985–2025) and ESPN
 python sync.py --source all --dest data/
 ```
 
-Expected output (first run):
+Sample output (first run — exact counts vary by season):
 
 ```text
-Downloading Kaggle competition data...
-  ✓ MRegularSeasonCompactResults.csv (150,000+ games)
-  ✓ MNCAATourneyCompactResults.csv
-  ✓ MTeams.csv
+[kaggle] teams: 362 written
+[kaggle] seasons: 41 written
+[kaggle] season 1985: 2526 games written
+[kaggle] season 1986: 2614 games written
   ...
-Fetching ESPN current-season data...
-  ✓ 2025 regular season games
-Writing Parquet files to data/
-  ✓ data/games.parquet
-  ✓ data/teams.parquet
-  ✓ data/seeds.parquet
-Sync complete.
+[kaggle] season 2025: 4545 games written
+[espn] season 2025: 4581 games written
+
+Sync complete in 45.2s — teams: 362, seasons: 41, games: 150352, cache hits: 0
 ```
 
 ```{tip}
@@ -48,22 +45,26 @@ model to train:
 python -m ncaa_eval.cli train --model elo
 ```
 
-Expected output:
+The CLI shows a Rich progress bar while building features, then runs a
+walk-forward backtest and prints a summary table:
 
 ```text
-Training model: elo
-  Seasons: 2015–2025
-  Data dir: data/
-  ...
-Walk-forward backtest (10 folds):
-  2016: Log Loss=0.560, Brier=0.208, AUC=0.740, ECE=0.031
-  2017: Log Loss=0.548, Brier=0.204, AUC=0.753, ECE=0.028
-  ...
-Run artifacts saved to data/runs/<run_id>/
-  ✓ model/   (trained model files)
-  ✓ predictions.parquet
-  ✓ metrics.json
-  ✓ run_metadata.json
+Building features... ━━━━━━━━━━━━━━━━━━━━ 100% 0:00:12
+Training elo on seasons 2015–2025...
+Running walk-forward backtest...
+Backtest metrics persisted.
+Model artifacts persisted.
+       Training Results
+┌──────────────────────┬──────────┐
+│ Field                │ Value    │
+├──────────────────────┼──────────┤
+│ Run ID               │ <uuid>   │
+│ Model                │ elo      │
+│ Seasons              │ 2015–2025│
+│ Games trained        │ 55000    │
+│ Tournament preds     │ 630      │
+│ Git hash             │ abc1234  │
+└──────────────────────┴──────────┘
 ```
 
 The `--model` flag selects from registered model plugins.  To see all available
@@ -104,19 +105,9 @@ which features best predict game outcomes:
 python -m ncaa_eval.cli train --model xgboost
 ```
 
-Expected output:
-
-```text
-Training model: xgboost
-  Seasons: 2015–2025
-  Building feature matrix...
-  Features: 85 columns (sequential, graph, batch ratings, seeds)
-  Training with early stopping (50 rounds patience)...
-  Best iteration: 312/500
-Walk-forward backtest (10 folds):
-  2016: Log Loss=0.525, Brier=0.195, AUC=0.775, ECE=0.025
-  ...
-```
+The output follows the same format as the Elo training above (progress bar,
+training message, backtest, and summary table).  XGBoost typically produces
+lower Log Loss and higher AUC when strong features are available.
 
 XGBoost typically outperforms Elo when the feature engineering pipeline provides
 strong signal.  See the [User Guide — Stateless Models](../user-guide.md#stateless-models)
