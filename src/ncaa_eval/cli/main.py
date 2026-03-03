@@ -49,7 +49,12 @@ def train(  # noqa: PLR0913 — Typer CLI options dictate arg count
     output_dir: Path = typer.Option(Path("data/"), "--output-dir", help="Output directory for run artifacts"),
     config: Path | None = typer.Option(None, "--config", help="Path to JSON config override"),
 ) -> None:
-    """Train a model on NCAA basketball data and persist run artifacts."""
+    """Train a model on NCAA basketball data and persist run artifacts.
+
+    Validates the input year range, resolves the registered model class by
+    name, instantiates it with optional JSON config overrides (via Pydantic
+    validation), then delegates to ``run_training()`` with parsed CLI args.
+    """
     if start_year > end_year:
         console.print(f"[red]Error: --start-year ({start_year}) must be ≤ --end-year ({end_year})[/red]")
         raise typer.Exit(code=1)

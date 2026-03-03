@@ -104,10 +104,10 @@ so that the codebase is internally consistent, Sphinx API docs render correctly,
   - [x] 5.2 Add Google-style docstrings to each undocumented public method
   - [x] 5.3 Verify with `ruff check src/ --select D102`
 
-- [ ] Task 6: Add detailed descriptions to 28 noncompliant functions (AC: #5-6)
-  - [ ] 6.1 Read `_bmad-output/planning-artifacts/noncompliant-docstrings.md` for the full list
-  - [ ] 6.2 For each function: read the implementation, then add a description paragraph explaining *how* it works
-  - [ ] 6.3 Focus on implementation approach, not restating the summary (e.g., "Iterates over games in date order, applies K-factor scaling, then updates both teams' ratings in-place" — not "Updates Elo ratings for a game")
+- [x] Task 6: Add detailed descriptions to 28 noncompliant functions (AC: #5-6)
+  - [x] 6.1 Read `_bmad-output/planning-artifacts/noncompliant-docstrings.md` for the full list
+  - [x] 6.2 For each function: read the implementation, then add a description paragraph explaining *how* it works
+  - [x] 6.3 Focus on implementation approach, not restating the summary (e.g., "Iterates over games in date order, applies K-factor scaling, then updates both teams' ratings in-place" — not "Updates Elo ratings for a game")
 
 - [ ] Task 7: Update pyproject.toml D-rule enforcement (AC: #19-21)
   - [ ] 7.1 Remove `"D1"` from the `ignore` list

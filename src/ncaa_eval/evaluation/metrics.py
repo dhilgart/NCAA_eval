@@ -49,7 +49,12 @@ def _validate_inputs(
     y_true: npt.NDArray[np.float64],
     y_prob: npt.NDArray[np.float64],
 ) -> None:
-    """Validate metric inputs: non-empty, matching lengths, binary y_true, probs in [0, 1]."""
+    """Validate metric inputs: non-empty, matching lengths, binary y_true, probs in [0, 1].
+
+    Checks array non-emptiness, matching lengths, binary values in
+    ``y_true``, and probability bounds in [0, 1] using NumPy vectorized
+    comparisons, raising a descriptive ``ValueError`` for any violation.
+    """
     if len(y_true) == 0 or len(y_prob) == 0:
         msg = "y_true and y_prob must be non-empty arrays."
         raise ValueError(msg)

@@ -287,7 +287,12 @@ class EloFeatureEngine:
     # ── Private helpers ──────────────────────────────────────────────────
 
     def _effective_k(self, team_id: int, is_tournament: bool) -> float:
-        """Determine K-factor based on game count and tournament flag."""
+        """Determine K-factor based on game count and tournament flag.
+
+        Checks the tournament flag first (returning k_tournament), then falls
+        back to the early/regular K-factor threshold based on the team's game
+        count from the internal counter.
+        """
         if is_tournament:
             return self._config.k_tournament
         game_count = self._game_counts.get(team_id, 0)

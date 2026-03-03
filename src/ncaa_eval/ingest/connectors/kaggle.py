@@ -162,7 +162,11 @@ class KaggleConnector(Connector):
     # -- Connector interface ------------------------------------------------
 
     def fetch_teams(self) -> list[Team]:
-        """Parse ``MTeams.csv`` into Team models."""
+        """Parse ``MTeams.csv`` into Team models.
+
+        Reads MTeams.csv, validates required columns, then constructs Team
+        models from each row's TeamID and TeamName.
+        """
         df = self._read_csv("MTeams.csv")
         _validate_columns(df, _TEAMS_COLUMNS, "MTeams.csv")
         return [Team(team_id=int(row["TeamID"]), team_name=str(row["TeamName"])) for _, row in df.iterrows()]
@@ -196,7 +200,11 @@ class KaggleConnector(Connector):
         return games
 
     def fetch_seasons(self) -> list[Season]:
-        """Parse ``MSeasons.csv`` into Season models."""
+        """Parse ``MSeasons.csv`` into Season models.
+
+        Reads MSeasons.csv, validates required columns, then constructs
+        Season models from each row's season year.
+        """
         df = self._read_csv("MSeasons.csv")
         _validate_columns(df, _SEASONS_COLUMNS, "MSeasons.csv")
         return [Season(year=int(row["Season"])) for _, row in df.iterrows()]
@@ -211,7 +219,13 @@ class KaggleConnector(Connector):
         *,
         is_tournament: bool,
     ) -> list[Game]:
-        """Parse a single games CSV, filtering to *season*."""
+        """Parse a single games CSV, filtering to *season*.
+
+        Reads the CSV file (regular-season or tournament), filters by season,
+        iterates rows to extract team IDs and scores, computes game_date from
+        day_num and the season's day-zero, validates WLoc, then builds Game
+        models.
+        """
         df = self._read_csv(filename)
         _validate_columns(df, _REGULAR_SEASON_COLUMNS, filename)
         df = df[df["Season"] == season]

@@ -231,7 +231,13 @@ def compute_advancement_probs(
     adv_probs = np.zeros((n, n_rounds), dtype=np.float64)
 
     def _traverse(node: BracketNode) -> npt.NDArray[np.float64]:
-        """Post-order traversal returning WPV at this node."""
+        """Post-order traversal returning WPV at this node.
+
+        Performs post-order traversal of the bracket tree, computing Win
+        Probability Vectors (WPVs) at each internal node using the formula
+        R = V * (P^T * W) + W * (P^T * V), and accumulates per-round
+        advancement probabilities into the outer array.
+        """
         if node.is_leaf:
             wpv = np.zeros(n, dtype=np.float64)
             wpv[node.team_index] = 1.0
@@ -325,7 +331,13 @@ def compute_expected_points_seed_diff(
     bonus_ep = np.zeros(n, dtype=np.float64)
 
     def _traverse_bonus(node: BracketNode) -> npt.NDArray[np.float64]:
-        """Post-order traversal returning WPV and accumulating bonus EP."""
+        """Post-order traversal returning WPV and accumulating bonus EP.
+
+        Reuses the Phylourny WPV traversal while also accumulating
+        seed-difference upset bonuses via element-wise multiplication of the
+        probability matrix by a pre-built bonus matrix, with results
+        accumulated into the outer bonus_ep array.
+        """
         if node.is_leaf:
             wpv = np.zeros(n, dtype=np.float64)
             wpv[node.team_index] = 1.0
@@ -386,7 +398,13 @@ def compute_most_likely_bracket(
     round_counters: dict[int, int] = {}
 
     def _traverse(node: BracketNode) -> int:
-        """Return team index of the predicted winner at this node."""
+        """Return team index of the predicted winner at this node.
+
+        Greedy post-order traversal that picks the most likely winner at each
+        bracket node via argmax of the probability submatrix, recording game
+        results and log-likelihoods into outer-scope lists for round-major
+        ordering.
+        """
         nonlocal log_likelihood
         if node.is_leaf:
             return node.team_index

@@ -93,7 +93,12 @@ class StatefulModel(Model):
     # ------------------------------------------------------------------
 
     def fit(self, X: pd.DataFrame, y: pd.Series) -> None:
-        """Reconstruct games from *X*/*y* and update sequentially."""
+        """Reconstruct games from *X*/*y* and update sequentially.
+
+        Reconstructs Game objects from the feature matrix and labels, then
+        iterates chronologically, calling start_season() on season boundaries
+        and update() per game.
+        """
         games = self._to_games(X, y)
         current_season: int | None = None
         for game in games:

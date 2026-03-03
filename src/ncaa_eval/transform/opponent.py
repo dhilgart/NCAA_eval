@@ -161,7 +161,12 @@ def _build_team_index(
     npt.NDArray[np.intp],
     npt.NDArray[np.intp],
 ]:
-    """Build sorted team list, index mapping, and vectorized index arrays."""
+    """Build sorted team list, index mapping, and vectorized index arrays.
+
+    Extracts unique team IDs from winner and loser columns, sorts them,
+    builds a bidirectional index dict, then uses .map() to vectorize
+    team-ID-to-index lookups into NumPy arrays.
+    """
     teams: list[int] = sorted(set(games_df["w_team_id"].tolist()) | set(games_df["l_team_id"].tolist()))
     idx: dict[int, int] = {t: i for i, t in enumerate(teams)}
     w_idx: npt.NDArray[np.intp] = games_df["w_team_id"].map(idx).to_numpy(dtype=np.intp)
@@ -180,7 +185,13 @@ def _build_srs_matrices(
     npt.NDArray[np.float64],
     npt.NDArray[np.float64],
 ]:
-    """Build net_margin, n_games, avg_margin, and normalized adjacency matrix for SRS."""
+    """Build net_margin, n_games, avg_margin, and normalized adjacency matrix for SRS.
+
+    Uses np.add.at() to vectorize accumulation of net margins and game
+    counts per team, computes average margin with safe division, builds an
+    opponent co-occurrence matrix, then row-normalizes by each team's game
+    count.
+    """
     net_margin: npt.NDArray[np.float64] = np.zeros(n)
     n_games: npt.NDArray[np.int64] = np.zeros(n, dtype=np.int64)
     np.add.at(net_margin, w_idx, margins)
