@@ -9,7 +9,7 @@ from __future__ import annotations
 import pandas as pd  # type: ignore[import-untyped]
 import streamlit as st
 
-from dashboard.lib.filters import get_data_dir, load_available_runs, load_leaderboard_data
+from dashboard.lib.data_loaders import get_data_dir, load_available_runs, load_leaderboard_data
 
 _METRIC_COLS = ["log_loss", "brier_score", "roc_auc", "ece"]
 _DISPLAY_COLS = ["run_id", "model_type", "year", "log_loss", "brier_score", "roc_auc", "ece"]

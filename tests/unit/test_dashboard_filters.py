@@ -1,4 +1,4 @@
-"""Tests for dashboard data-loading functions with mocked dependencies."""
+"""Tests for dashboard data-loading, simulation, and export functions with mocked dependencies."""
 
 from __future__ import annotations
 
@@ -21,22 +21,22 @@ def _unwrap(fn: Any) -> Any:
 
 class TestGetDataDir:
     def test_returns_path(self) -> None:
-        from dashboard.lib.filters import get_data_dir
+        from dashboard.lib.data_loaders import get_data_dir
 
         result = get_data_dir()
         assert isinstance(result, Path)
         assert result.name == "data"
 
     def test_path_is_absolute(self) -> None:
-        from dashboard.lib.filters import get_data_dir
+        from dashboard.lib.data_loaders import get_data_dir
 
         result = get_data_dir()
         assert result.is_absolute()
 
 
 class TestLoadAvailableYears:
-    @patch("dashboard.lib.filters.Path.exists", return_value=True)
-    @patch("dashboard.lib.filters.ParquetRepository")
+    @patch("dashboard.lib.data_loaders.Path.exists", return_value=True)
+    @patch("dashboard.lib.data_loaders.ParquetRepository")
     def test_returns_sorted_years_descending(self, mock_repo_cls: MagicMock, mock_exists: MagicMock) -> None:
         mock_repo = MagicMock()
         mock_repo.get_seasons.return_value = [
@@ -46,57 +46,57 @@ class TestLoadAvailableYears:
         ]
         mock_repo_cls.return_value = mock_repo
 
-        from dashboard.lib.filters import load_available_years
+        from dashboard.lib.data_loaders import load_available_years
 
         result: list[int] = _unwrap(load_available_years)("/fake/data")
         assert result == [2023, 2020, 2018]
 
-    @patch("dashboard.lib.filters.Path.exists", return_value=True)
-    @patch("dashboard.lib.filters.ParquetRepository")
+    @patch("dashboard.lib.data_loaders.Path.exists", return_value=True)
+    @patch("dashboard.lib.data_loaders.ParquetRepository")
     def test_returns_empty_when_no_seasons(self, mock_repo_cls: MagicMock, mock_exists: MagicMock) -> None:
         mock_repo = MagicMock()
         mock_repo.get_seasons.return_value = []
         mock_repo_cls.return_value = mock_repo
 
-        from dashboard.lib.filters import load_available_years
+        from dashboard.lib.data_loaders import load_available_years
 
         result: list[int] = _unwrap(load_available_years)("/fake/data")
         assert result == []
 
-    @patch("dashboard.lib.filters.Path.exists", return_value=True)
-    @patch("dashboard.lib.filters.ParquetRepository")
+    @patch("dashboard.lib.data_loaders.Path.exists", return_value=True)
+    @patch("dashboard.lib.data_loaders.ParquetRepository")
     def test_passes_data_dir_as_path(self, mock_repo_cls: MagicMock, mock_exists: MagicMock) -> None:
         mock_repo = MagicMock()
         mock_repo.get_seasons.return_value = []
         mock_repo_cls.return_value = mock_repo
 
-        from dashboard.lib.filters import load_available_years
+        from dashboard.lib.data_loaders import load_available_years
 
         _unwrap(load_available_years)("/some/path")
         mock_repo_cls.assert_called_once_with(Path("/some/path"))
 
     def test_returns_empty_when_data_dir_missing(self) -> None:
-        from dashboard.lib.filters import load_available_years
+        from dashboard.lib.data_loaders import load_available_years
 
         result: list[int] = _unwrap(load_available_years)("/nonexistent/path/that/cannot/exist")
         assert result == []
 
-    @patch("dashboard.lib.filters.Path.exists", return_value=True)
-    @patch("dashboard.lib.filters.ParquetRepository")
+    @patch("dashboard.lib.data_loaders.Path.exists", return_value=True)
+    @patch("dashboard.lib.data_loaders.ParquetRepository")
     def test_returns_empty_on_repository_exception(
         self, mock_repo_cls: MagicMock, mock_exists: MagicMock
     ) -> None:
         mock_repo_cls.side_effect = OSError("disk error")
 
-        from dashboard.lib.filters import load_available_years
+        from dashboard.lib.data_loaders import load_available_years
 
         result: list[int] = _unwrap(load_available_years)("/fake/data")
         assert result == []
 
 
 class TestLoadAvailableRuns:
-    @patch("dashboard.lib.filters.Path.exists", return_value=True)
-    @patch("dashboard.lib.filters.RunStore")
+    @patch("dashboard.lib.data_loaders.Path.exists", return_value=True)
+    @patch("dashboard.lib.data_loaders.RunStore")
     def test_returns_serialised_runs(self, mock_store_cls: MagicMock, mock_exists: MagicMock) -> None:
         mock_store = MagicMock()
         run = ModelRun(
@@ -111,7 +111,7 @@ class TestLoadAvailableRuns:
         mock_store.list_runs.return_value = [run]
         mock_store_cls.return_value = mock_store
 
-        from dashboard.lib.filters import load_available_runs
+        from dashboard.lib.data_loaders import load_available_runs
 
         result: list[dict[str, object]] = _unwrap(load_available_runs)("/fake/data")
         assert len(result) == 1
@@ -119,40 +119,40 @@ class TestLoadAvailableRuns:
         assert result[0]["model_type"] == "elo"
         assert isinstance(result[0], dict)
 
-    @patch("dashboard.lib.filters.Path.exists", return_value=True)
-    @patch("dashboard.lib.filters.RunStore")
+    @patch("dashboard.lib.data_loaders.Path.exists", return_value=True)
+    @patch("dashboard.lib.data_loaders.RunStore")
     def test_returns_empty_when_no_runs(self, mock_store_cls: MagicMock, mock_exists: MagicMock) -> None:
         mock_store = MagicMock()
         mock_store.list_runs.return_value = []
         mock_store_cls.return_value = mock_store
 
-        from dashboard.lib.filters import load_available_runs
+        from dashboard.lib.data_loaders import load_available_runs
 
         result: list[dict[str, object]] = _unwrap(load_available_runs)("/fake/data")
         assert result == []
 
     def test_returns_empty_when_data_dir_missing(self) -> None:
-        from dashboard.lib.filters import load_available_runs
+        from dashboard.lib.data_loaders import load_available_runs
 
         result: list[dict[str, object]] = _unwrap(load_available_runs)("/nonexistent/path/that/cannot/exist")
         assert result == []
 
-    @patch("dashboard.lib.filters.Path.exists", return_value=True)
-    @patch("dashboard.lib.filters.RunStore")
+    @patch("dashboard.lib.data_loaders.Path.exists", return_value=True)
+    @patch("dashboard.lib.data_loaders.RunStore")
     def test_returns_empty_on_store_exception(
         self, mock_store_cls: MagicMock, mock_exists: MagicMock
     ) -> None:
         mock_store_cls.side_effect = OSError("disk error")
 
-        from dashboard.lib.filters import load_available_runs
+        from dashboard.lib.data_loaders import load_available_runs
 
         result: list[dict[str, object]] = _unwrap(load_available_runs)("/fake/data")
         assert result == []
 
 
 class TestLoadLeaderboardData:
-    @patch("dashboard.lib.filters.Path.exists", return_value=True)
-    @patch("dashboard.lib.filters.RunStore")
+    @patch("dashboard.lib.data_loaders.Path.exists", return_value=True)
+    @patch("dashboard.lib.data_loaders.RunStore")
     def test_returns_joined_data(self, mock_store_cls: MagicMock, mock_exists: MagicMock) -> None:
         mock_store = MagicMock()
         run = ModelRun(
@@ -179,7 +179,7 @@ class TestLoadLeaderboardData:
         mock_store.load_all_summaries.return_value = summary
         mock_store_cls.return_value = mock_store
 
-        from dashboard.lib.filters import load_leaderboard_data
+        from dashboard.lib.data_loaders import load_leaderboard_data
 
         result: list[dict[str, object]] = _unwrap(load_leaderboard_data)("/fake/data")
         assert len(result) == 2
@@ -188,8 +188,8 @@ class TestLoadLeaderboardData:
         assert result[0]["year"] == 2023
         assert result[0]["log_loss"] == 0.55
 
-    @patch("dashboard.lib.filters.Path.exists", return_value=True)
-    @patch("dashboard.lib.filters.RunStore")
+    @patch("dashboard.lib.data_loaders.Path.exists", return_value=True)
+    @patch("dashboard.lib.data_loaders.RunStore")
     def test_returns_empty_when_no_summaries(self, mock_store_cls: MagicMock, mock_exists: MagicMock) -> None:
         mock_store = MagicMock()
         mock_store.load_all_summaries.return_value = pd.DataFrame(
@@ -197,33 +197,33 @@ class TestLoadLeaderboardData:
         )
         mock_store_cls.return_value = mock_store
 
-        from dashboard.lib.filters import load_leaderboard_data
+        from dashboard.lib.data_loaders import load_leaderboard_data
 
         result: list[dict[str, object]] = _unwrap(load_leaderboard_data)("/fake/data")
         assert result == []
 
     def test_returns_empty_when_data_dir_missing(self) -> None:
-        from dashboard.lib.filters import load_leaderboard_data
+        from dashboard.lib.data_loaders import load_leaderboard_data
 
         result: list[dict[str, object]] = _unwrap(load_leaderboard_data)(
             "/nonexistent/path/that/cannot/exist"
         )
         assert result == []
 
-    @patch("dashboard.lib.filters.Path.exists", return_value=True)
-    @patch("dashboard.lib.filters.RunStore")
+    @patch("dashboard.lib.data_loaders.Path.exists", return_value=True)
+    @patch("dashboard.lib.data_loaders.RunStore")
     def test_returns_empty_on_store_exception(
         self, mock_store_cls: MagicMock, mock_exists: MagicMock
     ) -> None:
         mock_store_cls.side_effect = OSError("disk error")
 
-        from dashboard.lib.filters import load_leaderboard_data
+        from dashboard.lib.data_loaders import load_leaderboard_data
 
         result: list[dict[str, object]] = _unwrap(load_leaderboard_data)("/fake/data")
         assert result == []
 
-    @patch("dashboard.lib.filters.Path.exists", return_value=True)
-    @patch("dashboard.lib.filters.RunStore")
+    @patch("dashboard.lib.data_loaders.Path.exists", return_value=True)
+    @patch("dashboard.lib.data_loaders.RunStore")
     def test_returns_empty_when_summaries_present_but_runs_missing(
         self, mock_store_cls: MagicMock, mock_exists: MagicMock
     ) -> None:
@@ -243,15 +243,15 @@ class TestLoadLeaderboardData:
         )
         mock_store_cls.return_value = mock_store
 
-        from dashboard.lib.filters import load_leaderboard_data
+        from dashboard.lib.data_loaders import load_leaderboard_data
 
         result: list[dict[str, object]] = _unwrap(load_leaderboard_data)("/fake/data")
         assert result == []
 
 
 class TestLoadFoldPredictions:
-    @patch("dashboard.lib.filters.Path.exists", return_value=True)
-    @patch("dashboard.lib.filters.RunStore")
+    @patch("dashboard.lib.data_loaders.Path.exists", return_value=True)
+    @patch("dashboard.lib.data_loaders.RunStore")
     def test_returns_list_of_dicts(self, mock_store_cls: MagicMock, mock_exists: MagicMock) -> None:
         mock_store = MagicMock()
         mock_store.load_fold_predictions.return_value = pd.DataFrame(
@@ -266,45 +266,45 @@ class TestLoadFoldPredictions:
         )
         mock_store_cls.return_value = mock_store
 
-        from dashboard.lib.filters import load_fold_predictions
+        from dashboard.lib.data_loaders import load_fold_predictions
 
         result: list[dict[str, object]] = _unwrap(load_fold_predictions)("/fake/data", "run-1")
         assert len(result) == 2
         assert result[0]["year"] == 2023
         assert result[0]["pred_win_prob"] == 0.7
 
-    @patch("dashboard.lib.filters.Path.exists", return_value=True)
-    @patch("dashboard.lib.filters.RunStore")
+    @patch("dashboard.lib.data_loaders.Path.exists", return_value=True)
+    @patch("dashboard.lib.data_loaders.RunStore")
     def test_returns_empty_for_legacy_run(self, mock_store_cls: MagicMock, mock_exists: MagicMock) -> None:
         mock_store = MagicMock()
         mock_store.load_fold_predictions.return_value = None
         mock_store_cls.return_value = mock_store
 
-        from dashboard.lib.filters import load_fold_predictions
+        from dashboard.lib.data_loaders import load_fold_predictions
 
         result: list[dict[str, object]] = _unwrap(load_fold_predictions)("/fake/data", "run-1")
         assert result == []
 
     def test_returns_empty_on_missing_dir(self) -> None:
-        from dashboard.lib.filters import load_fold_predictions
+        from dashboard.lib.data_loaders import load_fold_predictions
 
         result: list[dict[str, object]] = _unwrap(load_fold_predictions)("/nonexistent", "run-1")
         assert result == []
 
-    @patch("dashboard.lib.filters.Path.exists", return_value=True)
-    @patch("dashboard.lib.filters.RunStore")
+    @patch("dashboard.lib.data_loaders.Path.exists", return_value=True)
+    @patch("dashboard.lib.data_loaders.RunStore")
     def test_returns_empty_on_oserror(self, mock_store_cls: MagicMock, mock_exists: MagicMock) -> None:
         mock_store_cls.side_effect = OSError("disk error")
 
-        from dashboard.lib.filters import load_fold_predictions
+        from dashboard.lib.data_loaders import load_fold_predictions
 
         result: list[dict[str, object]] = _unwrap(load_fold_predictions)("/fake/data", "run-1")
         assert result == []
 
 
 class TestLoadFeatureImportances:
-    @patch("dashboard.lib.filters.Path.exists", return_value=True)
-    @patch("dashboard.lib.filters.RunStore")
+    @patch("dashboard.lib.data_loaders.Path.exists", return_value=True)
+    @patch("dashboard.lib.data_loaders.RunStore")
     def test_returns_sorted_importances(self, mock_store_cls: MagicMock, mock_exists: MagicMock) -> None:
         mock_store = MagicMock()
         mock_store.load_feature_names.return_value = ["elo_delta", "seed_diff"]
@@ -319,15 +319,15 @@ class TestLoadFeatureImportances:
         mock_store.load_run.return_value = mock_run
         mock_store_cls.return_value = mock_store
 
-        from dashboard.lib.filters import load_feature_importances
+        from dashboard.lib.data_loaders import load_feature_importances
 
         result: list[dict[str, object]] = _unwrap(load_feature_importances)("/fake/data", "run-1")
         assert len(result) == 2
         assert result[0]["feature"] == "seed_diff"
         assert result[0]["importance"] == 0.7
 
-    @patch("dashboard.lib.filters.Path.exists", return_value=True)
-    @patch("dashboard.lib.filters.RunStore")
+    @patch("dashboard.lib.data_loaders.Path.exists", return_value=True)
+    @patch("dashboard.lib.data_loaders.RunStore")
     def test_returns_empty_for_elo_model(self, mock_store_cls: MagicMock, mock_exists: MagicMock) -> None:
         mock_store = MagicMock()
         mock_run = MagicMock()
@@ -335,13 +335,13 @@ class TestLoadFeatureImportances:
         mock_store.load_run.return_value = mock_run
         mock_store_cls.return_value = mock_store
 
-        from dashboard.lib.filters import load_feature_importances
+        from dashboard.lib.data_loaders import load_feature_importances
 
         result: list[dict[str, object]] = _unwrap(load_feature_importances)("/fake/data", "run-1")
         assert result == []
 
-    @patch("dashboard.lib.filters.Path.exists", return_value=True)
-    @patch("dashboard.lib.filters.RunStore")
+    @patch("dashboard.lib.data_loaders.Path.exists", return_value=True)
+    @patch("dashboard.lib.data_loaders.RunStore")
     def test_returns_empty_for_legacy_run(self, mock_store_cls: MagicMock, mock_exists: MagicMock) -> None:
         mock_store = MagicMock()
         mock_run = MagicMock()
@@ -350,19 +350,19 @@ class TestLoadFeatureImportances:
         mock_store.load_model.return_value = None
         mock_store_cls.return_value = mock_store
 
-        from dashboard.lib.filters import load_feature_importances
+        from dashboard.lib.data_loaders import load_feature_importances
 
         result: list[dict[str, object]] = _unwrap(load_feature_importances)("/fake/data", "run-1")
         assert result == []
 
     def test_returns_empty_on_missing_dir(self) -> None:
-        from dashboard.lib.filters import load_feature_importances
+        from dashboard.lib.data_loaders import load_feature_importances
 
         result: list[dict[str, object]] = _unwrap(load_feature_importances)("/nonexistent", "run-1")
         assert result == []
 
-    @patch("dashboard.lib.filters.Path.exists", return_value=True)
-    @patch("dashboard.lib.filters.RunStore")
+    @patch("dashboard.lib.data_loaders.Path.exists", return_value=True)
+    @patch("dashboard.lib.data_loaders.RunStore")
     def test_returns_empty_on_oserror_from_load_run(
         self, mock_store_cls: MagicMock, mock_exists: MagicMock
     ) -> None:
@@ -370,27 +370,27 @@ class TestLoadFeatureImportances:
         mock_store.load_run.side_effect = FileNotFoundError("no run.json")
         mock_store_cls.return_value = mock_store
 
-        from dashboard.lib.filters import load_feature_importances
+        from dashboard.lib.data_loaders import load_feature_importances
 
         result: list[dict[str, object]] = _unwrap(load_feature_importances)("/fake/data", "missing-run")
         assert result == []
 
 
 class TestLoadAvailableScorings:
-    @patch("dashboard.lib.filters.list_scorings")
+    @patch("dashboard.lib.data_loaders.list_scorings")
     def test_returns_scoring_names(self, mock_list: MagicMock) -> None:
         mock_list.return_value = ["fibonacci", "standard", "seed_diff_bonus"]
 
-        from dashboard.lib.filters import load_available_scorings
+        from dashboard.lib.data_loaders import load_available_scorings
 
         result: list[str] = _unwrap(load_available_scorings)()
         assert result == ["fibonacci", "standard", "seed_diff_bonus"]
 
-    @patch("dashboard.lib.filters.list_scorings")
+    @patch("dashboard.lib.data_loaders.list_scorings")
     def test_return_type_is_list_of_str(self, mock_list: MagicMock) -> None:
         mock_list.return_value = ["standard"]
 
-        from dashboard.lib.filters import load_available_scorings
+        from dashboard.lib.data_loaders import load_available_scorings
 
         result: list[str] = _unwrap(load_available_scorings)()
         assert all(isinstance(s, str) for s in result)
@@ -402,7 +402,7 @@ class TestLoadAvailableScorings:
 
 
 class TestLoadTourneySeeds:
-    @patch("dashboard.lib.filters.TourneySeedTable")
+    @patch("dashboard.lib.data_loaders.TourneySeedTable")
     def test_returns_serialised_seeds(self, mock_table_cls: MagicMock) -> None:
         mock_table = MagicMock()
         mock_table.all_seeds.return_value = [
@@ -411,10 +411,10 @@ class TestLoadTourneySeeds:
         ]
         mock_table_cls.from_csv.return_value = mock_table
 
-        from dashboard.lib.filters import load_tourney_seeds
+        from dashboard.lib.data_loaders import load_tourney_seeds
 
         # Need to create the CSV path to exist for the function to proceed
-        with patch("dashboard.lib.filters.Path.exists", return_value=True):
+        with patch("dashboard.lib.data_loaders.Path.exists", return_value=True):
             result = _unwrap(load_tourney_seeds)("/fake/data", 2023)
 
         assert len(result) == 2
@@ -423,28 +423,28 @@ class TestLoadTourneySeeds:
         assert result[0]["region"] == "W"
 
     def test_returns_empty_when_csv_missing(self) -> None:
-        from dashboard.lib.filters import load_tourney_seeds
+        from dashboard.lib.data_loaders import load_tourney_seeds
 
         result = _unwrap(load_tourney_seeds)("/nonexistent", 2023)
         assert result == []
 
-    @patch("dashboard.lib.filters.TourneySeedTable")
+    @patch("dashboard.lib.data_loaders.TourneySeedTable")
     def test_returns_empty_for_season_with_no_seeds(self, mock_table_cls: MagicMock) -> None:
         mock_table = MagicMock()
         mock_table.all_seeds.return_value = []
         mock_table_cls.from_csv.return_value = mock_table
 
-        from dashboard.lib.filters import load_tourney_seeds
+        from dashboard.lib.data_loaders import load_tourney_seeds
 
-        with patch("dashboard.lib.filters.Path.exists", return_value=True):
+        with patch("dashboard.lib.data_loaders.Path.exists", return_value=True):
             result = _unwrap(load_tourney_seeds)("/fake/data", 1900)
 
         assert result == []
 
 
 class TestLoadTeamNames:
-    @patch("dashboard.lib.filters.Path.exists", return_value=True)
-    @patch("dashboard.lib.filters.ParquetRepository")
+    @patch("dashboard.lib.data_loaders.Path.exists", return_value=True)
+    @patch("dashboard.lib.data_loaders.ParquetRepository")
     def test_returns_id_to_name_mapping(self, mock_repo_cls: MagicMock, mock_exists: MagicMock) -> None:
         mock_repo = MagicMock()
         mock_repo.get_teams.return_value = [
@@ -453,23 +453,23 @@ class TestLoadTeamNames:
         ]
         mock_repo_cls.return_value = mock_repo
 
-        from dashboard.lib.filters import load_team_names
+        from dashboard.lib.data_loaders import load_team_names
 
         result = _unwrap(load_team_names)("/fake/data")
         assert result == {100: "Duke", 200: "UNC"}
 
     def test_returns_empty_when_data_dir_missing(self) -> None:
-        from dashboard.lib.filters import load_team_names
+        from dashboard.lib.data_loaders import load_team_names
 
         result = _unwrap(load_team_names)("/nonexistent")
         assert result == {}
 
-    @patch("dashboard.lib.filters.Path.exists", return_value=True)
-    @patch("dashboard.lib.filters.ParquetRepository")
+    @patch("dashboard.lib.data_loaders.Path.exists", return_value=True)
+    @patch("dashboard.lib.data_loaders.ParquetRepository")
     def test_returns_empty_on_exception(self, mock_repo_cls: MagicMock, mock_exists: MagicMock) -> None:
         mock_repo_cls.side_effect = OSError("disk error")
 
-        from dashboard.lib.filters import load_team_names
+        from dashboard.lib.data_loaders import load_team_names
 
         result = _unwrap(load_team_names)("/fake/data")
         assert result == {}
@@ -494,7 +494,7 @@ def _make_mock_bracket(
 
 class TestBuildProviderFromFolds:
     def test_returns_matrix_provider_for_valid_preds(self) -> None:
-        from dashboard.lib.filters import _build_provider_from_folds
+        from dashboard.lib.simulation_helpers import _build_provider_from_folds
 
         team_ids = (100, 200, 300, 400)
         bracket = _make_mock_bracket(team_ids)
@@ -518,7 +518,7 @@ class TestBuildProviderFromFolds:
         assert abs(result._P[1, 0] - 0.3) < 1e-6
 
     def test_returns_none_when_no_fold_predictions(self) -> None:
-        from dashboard.lib.filters import _build_provider_from_folds
+        from dashboard.lib.simulation_helpers import _build_provider_from_folds
 
         bracket = _make_mock_bracket((100, 200))
         mock_store = MagicMock()
@@ -529,7 +529,7 @@ class TestBuildProviderFromFolds:
         assert result is None
 
     def test_returns_none_when_no_preds_for_season(self) -> None:
-        from dashboard.lib.filters import _build_provider_from_folds
+        from dashboard.lib.simulation_helpers import _build_provider_from_folds
 
         bracket = _make_mock_bracket((100, 200))
         fold_df = pd.DataFrame(
@@ -543,7 +543,7 @@ class TestBuildProviderFromFolds:
         assert result is None
 
     def test_ignores_teams_not_in_bracket(self) -> None:
-        from dashboard.lib.filters import _build_provider_from_folds
+        from dashboard.lib.simulation_helpers import _build_provider_from_folds
 
         team_ids = (100, 200)
         bracket = _make_mock_bracket(team_ids)
@@ -566,17 +566,11 @@ class TestBuildProviderFromFolds:
 
 
 class TestBuildTeamLabels:
-    @patch("dashboard.lib.filters.Path.exists", return_value=True)
-    @patch("dashboard.lib.filters.ParquetRepository")
-    def test_builds_seed_name_labels(self, mock_repo_cls: MagicMock, mock_exists: MagicMock) -> None:
-        from dashboard.lib.filters import _build_team_labels
+    @patch("dashboard.lib.simulation_helpers._load_team_names_uncached")
+    def test_builds_seed_name_labels(self, mock_names: MagicMock) -> None:
+        from dashboard.lib.simulation_helpers import _build_team_labels
 
-        mock_repo = MagicMock()
-        mock_repo.get_teams.return_value = [
-            Team(team_id=100, team_name="Duke"),
-            Team(team_id=200, team_name="Norfolk St"),
-        ]
-        mock_repo_cls.return_value = mock_repo
+        mock_names.return_value = {100: "Duke", 200: "Norfolk St"}
 
         bracket = _make_mock_bracket((100, 200), seed_map={100: 1, 200: 16})
         result = _build_team_labels("/fake/data", bracket)
@@ -584,16 +578,11 @@ class TestBuildTeamLabels:
         assert result[0] == "[1] Duke"
         assert result[1] == "[16] Norfolk St"
 
-    @patch("dashboard.lib.filters.Path.exists", return_value=True)
-    @patch("dashboard.lib.filters.ParquetRepository")
-    def test_falls_back_to_team_id_when_name_missing(
-        self, mock_repo_cls: MagicMock, mock_exists: MagicMock
-    ) -> None:
-        from dashboard.lib.filters import _build_team_labels
+    @patch("dashboard.lib.simulation_helpers._load_team_names_uncached")
+    def test_falls_back_to_team_id_when_name_missing(self, mock_names: MagicMock) -> None:
+        from dashboard.lib.simulation_helpers import _build_team_labels
 
-        mock_repo = MagicMock()
-        mock_repo.get_teams.return_value = []  # no team names available
-        mock_repo_cls.return_value = mock_repo
+        mock_names.return_value = {}  # no team names available
 
         bracket = _make_mock_bracket((100,), seed_map={100: 5})
         result = _build_team_labels("/fake/data", bracket)
@@ -602,15 +591,15 @@ class TestBuildTeamLabels:
 
 
 class TestRunBracketSimulation:
-    @patch("dashboard.lib.filters.Path.exists", return_value=True)
-    @patch("dashboard.lib.filters.TourneySeedTable")
-    @patch("dashboard.lib.filters.RunStore")
-    @patch("dashboard.lib.filters.build_bracket")
-    @patch("dashboard.lib.filters.build_probability_matrix")
-    @patch("dashboard.lib.filters.compute_most_likely_bracket")
-    @patch("dashboard.lib.filters.simulate_tournament")
-    @patch("dashboard.lib.filters.get_scoring")
-    @patch("dashboard.lib.filters._build_team_labels")
+    @patch("dashboard.lib.simulation_helpers.Path.exists", return_value=True)
+    @patch("dashboard.lib.simulation_helpers.TourneySeedTable")
+    @patch("dashboard.lib.simulation_helpers.RunStore")
+    @patch("dashboard.lib.simulation_helpers.build_bracket")
+    @patch("dashboard.lib.simulation_helpers.build_probability_matrix")
+    @patch("dashboard.lib.simulation_helpers.compute_most_likely_bracket")
+    @patch("dashboard.lib.simulation_helpers.simulate_tournament")
+    @patch("dashboard.lib.simulation_helpers.get_scoring")
+    @patch("dashboard.lib.simulation_helpers._build_team_labels")
     def test_returns_result_for_elo_model(  # noqa: PLR0913 — @patch mock injection
         self,
         mock_labels: MagicMock,
@@ -623,7 +612,7 @@ class TestRunBracketSimulation:
         mock_seed_table: MagicMock,
         mock_exists: MagicMock,
     ) -> None:
-        from dashboard.lib.filters import run_bracket_simulation
+        from dashboard.lib.simulation_helpers import run_bracket_simulation
 
         bracket = _make_mock_bracket((100, 200))
         mock_build_bracket.return_value = bracket
@@ -649,18 +638,18 @@ class TestRunBracketSimulation:
         assert result is not None
         assert result.team_labels == {0: "[1] Duke", 1: "[16] Norfolk St"}
 
-    @patch("dashboard.lib.filters.Path.exists", return_value=False)
+    @patch("dashboard.lib.simulation_helpers.Path.exists", return_value=False)
     def test_returns_none_when_seed_csv_missing(self, mock_exists: MagicMock) -> None:
-        from dashboard.lib.filters import run_bracket_simulation
+        from dashboard.lib.simulation_helpers import run_bracket_simulation
 
         result = _unwrap(run_bracket_simulation)("/fake/data", "run-1", 2023, "standard")
 
         assert result is None
 
-    @patch("dashboard.lib.filters.Path.exists", return_value=True)
-    @patch("dashboard.lib.filters.TourneySeedTable")
-    @patch("dashboard.lib.filters.RunStore")
-    @patch("dashboard.lib.filters.build_bracket")
+    @patch("dashboard.lib.simulation_helpers.Path.exists", return_value=True)
+    @patch("dashboard.lib.simulation_helpers.TourneySeedTable")
+    @patch("dashboard.lib.simulation_helpers.RunStore")
+    @patch("dashboard.lib.simulation_helpers.build_bracket")
     def test_returns_none_when_model_missing(
         self,
         mock_build_bracket: MagicMock,
@@ -668,7 +657,7 @@ class TestRunBracketSimulation:
         mock_seed_table: MagicMock,
         mock_exists: MagicMock,
     ) -> None:
-        from dashboard.lib.filters import run_bracket_simulation
+        from dashboard.lib.simulation_helpers import run_bracket_simulation
 
         bracket = _make_mock_bracket((100, 200))
         mock_build_bracket.return_value = bracket
@@ -686,16 +675,16 @@ class TestRunBracketSimulation:
 
         assert result is None
 
-    @patch("dashboard.lib.filters.Path.exists", return_value=True)
-    @patch("dashboard.lib.filters.TourneySeedTable")
-    @patch("dashboard.lib.filters.RunStore")
+    @patch("dashboard.lib.simulation_helpers.Path.exists", return_value=True)
+    @patch("dashboard.lib.simulation_helpers.TourneySeedTable")
+    @patch("dashboard.lib.simulation_helpers.RunStore")
     def test_returns_none_when_no_seeds_for_season(
         self,
         mock_run_store: MagicMock,
         mock_seed_table: MagicMock,
         mock_exists: MagicMock,
     ) -> None:
-        from dashboard.lib.filters import run_bracket_simulation
+        from dashboard.lib.simulation_helpers import run_bracket_simulation
 
         mock_table = MagicMock()
         mock_table.all_seeds.return_value = []  # empty seeds
@@ -705,11 +694,11 @@ class TestRunBracketSimulation:
 
         assert result is None
 
-    @patch("dashboard.lib.filters.Path.exists", return_value=True)
-    @patch("dashboard.lib.filters.TourneySeedTable")
-    @patch("dashboard.lib.filters.RunStore")
-    @patch("dashboard.lib.filters.build_bracket")
-    @patch("dashboard.lib.filters._build_provider_from_folds")
+    @patch("dashboard.lib.simulation_helpers.Path.exists", return_value=True)
+    @patch("dashboard.lib.simulation_helpers.TourneySeedTable")
+    @patch("dashboard.lib.simulation_helpers.RunStore")
+    @patch("dashboard.lib.simulation_helpers.build_bracket")
+    @patch("dashboard.lib.simulation_helpers._build_provider_from_folds")
     def test_returns_none_when_xgboost_fold_provider_fails(
         self,
         mock_build_provider: MagicMock,
@@ -718,7 +707,7 @@ class TestRunBracketSimulation:
         mock_seed_table: MagicMock,
         mock_exists: MagicMock,
     ) -> None:
-        from dashboard.lib.filters import run_bracket_simulation
+        from dashboard.lib.simulation_helpers import run_bracket_simulation
 
         bracket = _make_mock_bracket((100, 200))
         mock_build_bracket.return_value = bracket
@@ -807,7 +796,7 @@ class TestBuildCustomScoring:
 
 class TestExportBracketCsv:
     def test_csv_has_correct_structure(self) -> None:
-        from dashboard.lib.filters import export_bracket_csv
+        from dashboard.lib.export import export_bracket_csv
 
         # 4-team bracket: 3 games (2 R64 + 1 Championship equivalent)
         team_ids = (100, 200, 300, 400)
@@ -835,7 +824,7 @@ class TestExportBracketCsv:
         assert len(lines) == 4  # header + 3 games
 
     def test_csv_columns_match_spec(self) -> None:
-        from dashboard.lib.filters import export_bracket_csv
+        from dashboard.lib.export import export_bracket_csv
 
         team_ids = (100, 200, 300, 400)
         bracket = MagicMock()
@@ -858,7 +847,7 @@ class TestExportBracketCsv:
         assert header == ["game_number", "round", "team_id", "team_name", "seed", "win_probability"]
 
     def test_round_labels_present(self) -> None:
-        from dashboard.lib.filters import export_bracket_csv
+        from dashboard.lib.export import export_bracket_csv
 
         team_ids = (100, 200, 300, 400)
         bracket = MagicMock()

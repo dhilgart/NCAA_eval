@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import streamlit as st
 
-from dashboard.lib.filters import (
+from dashboard.lib.data_loaders import (
     get_data_dir,
     load_available_runs,
     load_available_scorings,

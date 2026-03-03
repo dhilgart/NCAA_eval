@@ -11,7 +11,7 @@ import pandas as pd  # type: ignore[import-untyped]
 import plotly.graph_objects as go  # type: ignore[import-untyped]
 import streamlit as st
 
-from dashboard.lib.filters import (
+from dashboard.lib.data_loaders import (
     get_data_dir,
     load_available_runs,
     load_feature_importances,

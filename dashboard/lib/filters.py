@@ -1,472 +1,83 @@
-"""Shared data-loading and filter helpers for the dashboard.
+"""Scoring orchestration and backward-compatible re-exports for the dashboard.
 
-All data access goes through ``ncaa_eval`` public APIs — no direct file IO.
-Most functions are decorated with ``@st.cache_data`` so repeated calls across
-page navigations hit the in-memory cache.  ``run_bracket_simulation`` uses
-``@st.cache_data`` as well, since its outputs are serializable dataclasses.
+New code should import from the specific submodule:
+
+* :mod:`dashboard.lib.data_loaders` — cached data-loading functions
+* :mod:`dashboard.lib.simulation_helpers` — bracket simulation orchestration
+* :mod:`dashboard.lib.export` — CSV export helpers
+
+This module retains ``score_chosen_bracket``, ``build_custom_scoring``, and
+the ``_ROUND_LABELS`` constant.  All other symbols are re-exported for
+backward compatibility.
 """
 
 from __future__ import annotations
 
-import inspect
-import io
-import logging
 from collections.abc import Sequence
-from dataclasses import dataclass
-from pathlib import Path
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 import numpy as np
-import numpy.typing as npt
-import pandas as pd  # type: ignore[import-untyped]
 import streamlit as st
 
-from ncaa_eval.evaluation import list_scorings
 from ncaa_eval.evaluation.simulation import (
-    BracketDistribution,
-    BracketStructure,
     DictScoring,
-    EloProvider,
-    MatchupContext,
-    MatrixProvider,
-    MostLikelyBracket,
-    SimulationResult,
-    build_bracket,
-    build_probability_matrix,
     compute_bracket_distribution,
-    compute_most_likely_bracket,
-    get_scoring,
     score_bracket_against_sims,
-    simulate_tournament,
 )
 
 if TYPE_CHECKING:
-    from ncaa_eval.evaluation.simulation import ScoringRule
-from ncaa_eval.ingest.repository import ParquetRepository
-from ncaa_eval.model.tracking import RunStore
-from ncaa_eval.transform.normalization import TourneySeedTable
-
-logger = logging.getLogger(__name__)
-
-# Kaggle day-number for the Round of 64 (first day of the NCAA tournament).
-# Used as the MatchupContext day_num when running bracket simulations.
-_ROUND_OF_64_DAY_NUM: int = 136
-
-
-def get_data_dir() -> Path:
-    """Resolve the project ``data/`` directory."""
-    return Path(__file__).resolve().parent.parent.parent / "data"
-
-
-@st.cache_data(ttl=300)
-def load_available_years(data_dir: str) -> list[int]:
-    """Return sorted list of available season years.
-
-    Args:
-        data_dir: String path to the project data directory.
-
-    Returns:
-        Descending-sorted list of season years, or empty list if the data
-        directory does not exist or cannot be read.
-    """
-    path = Path(data_dir)
-    if not path.exists():
-        return []
-    try:
-        repo = ParquetRepository(path)
-        seasons = repo.get_seasons()
-        return sorted((s.year for s in seasons), reverse=True)
-    except OSError:
-        return []
-
-
-@st.cache_data(ttl=300)
-def load_available_runs(data_dir: str) -> list[dict[str, object]]:
-    """Return serialised metadata for every saved model run.
-
-    Args:
-        data_dir: String path to the project data directory.
-
-    Returns:
-        List of dicts (one per run), serialised via ``ModelRun.model_dump()``,
-        or empty list if the data directory does not exist or cannot be read.
-    """
-    path = Path(data_dir)
-    if not path.exists():
-        return []
-    try:
-        store = RunStore(path)
-        return [run.model_dump() for run in store.list_runs()]
-    except OSError:
-        return []
-
-
-@st.cache_data(ttl=300)
-def load_leaderboard_data(data_dir: str) -> list[dict[str, object]]:
-    """Load leaderboard data: run metadata joined with metric summaries.
-
-    Args:
-        data_dir: String path to the project data directory.
-
-    Returns:
-        List of dicts (serializable for st.cache_data) with keys:
-        run_id, model_type, timestamp, start_year, end_year, year,
-        log_loss, brier_score, roc_auc, ece.
-    """
-    path = Path(data_dir)
-    if not path.exists():
-        return []
-    try:
-        store = RunStore(path)
-        runs = store.list_runs()
-        summaries = store.load_all_summaries()
-        if summaries.empty:
-            return []
-        runs_meta = pd.DataFrame(
-            [
-                {
-                    "run_id": r.run_id,
-                    "model_type": r.model_type,
-                    "timestamp": str(r.timestamp),
-                    "start_year": r.start_year,
-                    "end_year": r.end_year,
-                }
-                for r in runs
-            ]
-        )
-        if runs_meta.empty:
-            return []
-        _keep = [
-            "run_id",
-            "model_type",
-            "timestamp",
-            "start_year",
-            "end_year",
-            "year",
-            "log_loss",
-            "brier_score",
-            "roc_auc",
-            "ece",
-        ]
-        merged = summaries.merge(runs_meta, on="run_id", how="left")
-        return cast(list[dict[str, object]], merged[_keep].to_dict("records"))
-    except OSError:
-        return []
-
-
-@st.cache_data(ttl=300)
-def load_fold_predictions(data_dir: str, run_id: str) -> list[dict[str, object]]:
-    """Load fold-level CV predictions for a run.
-
-    Args:
-        data_dir: String path to the project data directory.
-        run_id: The model run identifier.
-
-    Returns:
-        List of dicts with keys [year, game_id, team_a_id, team_b_id,
-        pred_win_prob, team_a_won], or empty list if unavailable.
-    """
-    path = Path(data_dir)
-    if not path.exists():
-        return []
-    try:
-        store = RunStore(path)
-        df = store.load_fold_predictions(run_id)
-        if df is None:
-            return []
-        return cast(list[dict[str, object]], df.to_dict("records"))
-    except OSError:
-        return []
-
-
-@st.cache_data(ttl=300)
-def load_feature_importances(data_dir: str, run_id: str) -> list[dict[str, object]]:
-    """Load feature importances for a run (XGBoost only).
-
-    Args:
-        data_dir: String path to the project data directory.
-        run_id: The model run identifier.
-
-    Returns:
-        List of dicts ``{"feature": name, "importance": value}`` sorted
-        descending by importance. Empty list for non-XGBoost models,
-        legacy runs, or errors.
-    """
-    path = Path(data_dir)
-    if not path.exists():
-        return []
-    try:
-        store = RunStore(path)
-        run = store.load_run(run_id)
-        if run.model_type != "xgboost":
-            return []
-        model = store.load_model(run_id)
-        if model is None:
-            return []
-        feature_names = store.load_feature_names(run_id) or []
-        clf = getattr(model, "_clf", None)
-        importances = getattr(clf, "feature_importances_", None)
-        if importances is None or not feature_names or len(feature_names) != len(importances):
-            return []
-        pairs = sorted(
-            zip(feature_names, importances.tolist()),
-            key=lambda p: p[1],
-            reverse=True,
-        )
-        return [{"feature": f, "importance": v} for f, v in pairs]
-    except (OSError, KeyError):
-        return []
-
-
-@st.cache_data(ttl=None)
-def load_available_scorings() -> list[str]:
-    """Return registered scoring-rule names.
-
-    Returns:
-        Sorted list of scoring-format names (e.g. ``["fibonacci", "standard", …]``).
-    """
-    return list_scorings()
-
-
-# ---------------------------------------------------------------------------
-# Bracket Visualizer helpers (Story 7.5)
-# ---------------------------------------------------------------------------
-
-
-@st.cache_data(ttl=300)
-def load_tourney_seeds(data_dir: str, season: int) -> list[dict[str, object]]:
-    """Load tournament seeds for a season from the Kaggle CSV.
-
-    Args:
-        data_dir: String path to the project data directory.
-        season: Tournament season year.
-
-    Returns:
-        List of serialised seed dicts with keys: season, team_id, seed_str,
-        region, seed_num, is_play_in.  Empty list if unavailable.
-    """
-    csv_path = Path(data_dir) / "kaggle" / "MNCAATourneySeeds.csv"
-    if not csv_path.exists():
-        return []
-    try:
-        table = TourneySeedTable.from_csv(csv_path)
-        seeds = table.all_seeds(season)
-        return [
-            {
-                "season": s.season,
-                "team_id": s.team_id,
-                "seed_str": s.seed_str,
-                "region": s.region,
-                "seed_num": s.seed_num,
-                "is_play_in": s.is_play_in,
-            }
-            for s in seeds
-        ]
-    except (OSError, ValueError):
-        return []
-
-
-def _load_team_names_uncached(data_dir: str) -> dict[int, str]:
-    """Load team ID → team name mapping (uncached internal helper).
-
-    Args:
-        data_dir: String path to the project data directory.
-
-    Returns:
-        Mapping of team_id to team_name.  Empty dict if unavailable.
-    """
-    path = Path(data_dir)
-    if not path.exists():
-        return {}
-    try:
-        repo = ParquetRepository(path)
-        teams = repo.get_teams()
-        return {t.team_id: t.team_name for t in teams}
-    except OSError:
-        return {}
-
-
-@st.cache_data(ttl=300)
-def load_team_names(data_dir: str) -> dict[int, str]:
-    """Load team ID → team name mapping from the repository.
-
-    Args:
-        data_dir: String path to the project data directory.
-
-    Returns:
-        Mapping of team_id to team_name.  Empty dict if unavailable.
-    """
-    return _load_team_names_uncached(data_dir)
-
-
-@dataclass(frozen=True)
-class BracketSimulationResult:
-    """Container for bracket simulation outputs (cache-friendly).
-
-    Attributes:
-        sim_result: Full simulation result with advancement probs and EP.
-        bracket: The bracket structure with team ordering and seed map.
-        most_likely: Greedy most-likely bracket picks.
-        prob_matrix: Pairwise win probability matrix.
-        team_labels: Mapping of bracket index → display label.
-    """
-
-    sim_result: SimulationResult
-    bracket: BracketStructure
-    most_likely: MostLikelyBracket
-    prob_matrix: npt.NDArray[np.float64]
-    team_labels: dict[int, str]
-
-
-def _build_provider_from_folds(
-    store: RunStore,
-    run_id: str,
-    season: int,
-    bracket: BracketStructure,
-) -> MatrixProvider | None:
-    """Build a MatrixProvider from fold predictions for stateless models.
-
-    Returns ``None`` if fold predictions are missing or empty for the season.
-    """
-    fold_df = store.load_fold_predictions(run_id)
-    if fold_df is None or fold_df.empty:
-        logger.warning("No fold predictions for run %s", run_id)
-        return None
-
-    tourney_preds = fold_df[fold_df["year"] == season]
-    if tourney_preds.empty:
-        logger.warning("No predictions for season %d in run %s", season, run_id)
-        return None
-
-    n = len(bracket.team_ids)
-    P = np.full((n, n), 0.5, dtype=np.float64)
-
-    # Vectorized matrix fill: map team IDs to bracket indices, then assign
-    a_indices = tourney_preds["team_a_id"].map(bracket.team_index_map)
-    b_indices = tourney_preds["team_b_id"].map(bracket.team_index_map)
-    valid = a_indices.notna() & b_indices.notna()
-    a_valid = a_indices[valid].astype(int).to_numpy()
-    b_valid = b_indices[valid].astype(int).to_numpy()
-    probs = tourney_preds.loc[valid, "pred_win_prob"].to_numpy(dtype=np.float64)
-    P[a_valid, b_valid] = probs
-    P[b_valid, a_valid] = 1.0 - probs
-    return MatrixProvider(P, list(bracket.team_ids))
-
-
-def _build_team_labels(
-    data_dir: str,
-    bracket: BracketStructure,
-) -> dict[int, str]:
-    """Build bracket_index → ``"[seed] TeamName"`` label mapping."""
-    team_names = _load_team_names_uncached(data_dir)
-    labels: dict[int, str] = {}
-    for team_id, idx in bracket.team_index_map.items():
-        seed_num = bracket.seed_map.get(team_id, 0)
-        name = team_names.get(team_id, str(team_id))
-        labels[idx] = f"[{seed_num}] {name}"
-    return labels
-
-
-@st.cache_data(ttl=None)
-def run_bracket_simulation(  # noqa: PLR0913 — REFACTOR Story 8.1
-    data_dir: str,
-    run_id: str,
-    season: int,
-    scoring_name: str,
-    method: str = "analytical",
-    n_simulations: int = 10_000,
-) -> BracketSimulationResult | None:
-    """Orchestrate bracket construction, model loading, and simulation.
-
-    Builds a 64-team bracket from seeds, loads the trained model, computes
-    pairwise probabilities, and runs the tournament simulation.
-
-    Args:
-        data_dir: String path to the project data directory.
-        run_id: Model run identifier.
-        season: Tournament season year.
-        scoring_name: Scoring rule name (e.g. ``"standard"``).
-        method: ``"analytical"`` or ``"monte_carlo"``.
-        n_simulations: Number of MC simulations (ignored for analytical).
-
-    Returns:
-        :class:`BracketSimulationResult` or ``None`` on failure.
-    """
-    path = Path(data_dir)
-    csv_path = path / "kaggle" / "MNCAATourneySeeds.csv"
-    if not csv_path.exists():
-        logger.warning("Seed CSV not found: %s", csv_path)
-        return None
-
-    try:
-        # Load seeds and build bracket
-        seed_table = TourneySeedTable.from_csv(csv_path)
-        seeds = seed_table.all_seeds(season)
-        if not seeds:
-            logger.warning("No seeds found for season %d", season)
-            return None
-        bracket = build_bracket(seeds, season)
-
-        # Load model and create probability provider
-        store = RunStore(path)
-        run = store.load_run(run_id)
-        model = store.load_model(run_id)
-        if model is None:
-            logger.warning("No model found for run %s", run_id)
-            return None
-
-        provider: EloProvider | MatrixProvider
-        if run.model_type == "elo":
-            provider = EloProvider(model)
-        else:
-            mp = _build_provider_from_folds(store, run_id, season, bracket)
-            if mp is None:
-                return None
-            provider = mp
-
-        team_labels = _build_team_labels(data_dir, bracket)
-
-        # Get scoring rule — detect constructor needs via inspection to avoid
-        # hardcoded name checks when new scoring rules are added in future.
-        scoring_cls = get_scoring(scoring_name)
-        sig = inspect.signature(scoring_cls)
-        if "seed_map" in sig.parameters:
-            scoring_rule = scoring_cls(bracket.seed_map)
-        else:
-            scoring_rule = scoring_cls()
-
-        # Context for tournament games (neutral site, R64 tip-off day)
-        context = MatchupContext(season=season, day_num=_ROUND_OF_64_DAY_NUM, is_neutral=True)
-
-        sim_result = simulate_tournament(
-            bracket=bracket,
-            probability_provider=provider,
-            context=context,
-            scoring_rules=[scoring_rule],
-            method=method,
-            n_simulations=n_simulations,
-        )
-
-        prob_matrix = build_probability_matrix(provider, bracket.team_ids, context)
-        most_likely = compute_most_likely_bracket(bracket, prob_matrix)
-
-        return BracketSimulationResult(
-            sim_result=sim_result,
-            bracket=bracket,
-            most_likely=most_likely,
-            prob_matrix=prob_matrix,
-            team_labels=team_labels,
-        )
-    except (OSError, ValueError, KeyError, TypeError) as exc:
-        logger.exception("Bracket simulation failed: %s", exc)
-        return None
-
-
-# ---------------------------------------------------------------------------
-# Pool Scorer helpers (Story 7.6)
-# ---------------------------------------------------------------------------
-
-_ROUND_LABELS: tuple[str, ...] = ("R64", "R32", "S16", "E8", "F4", "Championship")
+    from dashboard.lib.simulation_helpers import BracketSimulationResult
+    from ncaa_eval.evaluation.simulation import BracketDistribution, ScoringRule
+
+__all__ = [
+    "BracketSimulationResult",
+    "_ROUND_LABELS",
+    "_ROUND_OF_64_DAY_NUM",
+    "_build_provider_from_folds",
+    "_build_team_labels",
+    "_game_win_probability",
+    "_load_team_names_uncached",
+    "build_custom_scoring",
+    "export_bracket_csv",
+    "get_data_dir",
+    "load_available_runs",
+    "load_available_scorings",
+    "load_available_years",
+    "load_feature_importances",
+    "load_fold_predictions",
+    "load_leaderboard_data",
+    "load_team_names",
+    "load_tourney_seeds",
+    "run_bracket_simulation",
+    "score_chosen_bracket",
+]
+
+# Re-exports for backward compatibility — consumers should migrate to
+# dashboard.lib.data_loaders, dashboard.lib.simulation_helpers, dashboard.lib.export.
+from dashboard.lib.data_loaders import (  # noqa: F401
+    _load_team_names_uncached,
+    get_data_dir,
+    load_available_runs,
+    load_available_scorings,
+    load_available_years,
+    load_feature_importances,
+    load_fold_predictions,
+    load_leaderboard_data,
+    load_team_names,
+    load_tourney_seeds,
+)
+from dashboard.lib.export import (  # noqa: F401
+    _ROUND_LABELS,
+    _game_win_probability,
+    export_bracket_csv,
+)
+from dashboard.lib.simulation_helpers import (  # noqa: F401
+    _ROUND_OF_64_DAY_NUM,
+    BracketSimulationResult as BracketSimulationResult,
+    _build_provider_from_folds,
+    _build_team_labels,
+    run_bracket_simulation,
+)
 
 
 @st.cache_data(ttl=None)
@@ -525,96 +136,3 @@ def build_custom_scoring(points_per_round: tuple[float, ...]) -> DictScoring:
     """
     points_dict = dict(enumerate(points_per_round))
     return DictScoring(points=points_dict, scoring_name="custom")
-
-
-def export_bracket_csv(
-    bracket: BracketStructure,
-    most_likely: MostLikelyBracket,
-    team_labels: dict[int, str],
-    prob_matrix: npt.NDArray[np.float64],
-) -> str:
-    """Build a CSV string of the most-likely bracket picks for download.
-
-    Returns one row per game (63 rows) in round-major order with columns:
-    ``game_number``, ``round``, ``team_id``, ``team_name``, ``seed``,
-    ``win_probability``.
-
-    Args:
-        bracket: Bracket structure with team ordering and seed map.
-        most_likely: Greedy most-likely bracket picks.
-        team_labels: Bracket index → display label mapping.
-        prob_matrix: Pairwise win probability matrix.
-
-    Returns:
-        CSV string suitable for ``st.download_button(data=…)``.
-    """
-    buf = io.StringIO()
-    buf.write("game_number,round,team_id,team_name,seed,win_probability\n")
-
-    n_games = len(most_likely.winners)
-    n_rounds = int(np.log2(n_games + 1))
-    game_offset = 0
-    games_in_round = n_games + 1  # 64 teams → 32 games first round
-
-    for r in range(n_rounds):
-        games_in_round = games_in_round // 2
-        round_label = _ROUND_LABELS[r] if r < len(_ROUND_LABELS) else f"R{r}"
-        for g in range(games_in_round):
-            game_idx = game_offset + g
-            winner_idx = most_likely.winners[game_idx]
-            team_id = bracket.team_ids[winner_idx]
-            seed = bracket.seed_map.get(team_id, 0)
-            label = team_labels.get(winner_idx, str(team_id))
-            # Strip seed prefix from label if present (e.g., "[1] Duke" → "Duke")
-            name = label.split("] ", 1)[1] if "] " in label else label
-
-            # Win probability: pairwise head-to-head probability between the
-            # two most-likely participants in this game (R64 uses direct
-            # pairwise probs; later rounds trace back to actual advancing teams).
-            win_prob = _game_win_probability(
-                r,
-                g,
-                game_offset,
-                most_likely.winners,
-                prob_matrix,
-                bracket,
-            )
-
-            buf.write(f"{game_idx + 1},{round_label},{team_id},{name},{seed},{win_prob:.3f}\n")
-        game_offset += games_in_round
-
-    return buf.getvalue()
-
-
-def _game_win_probability(  # noqa: PLR0913 — REFACTOR Story 8.1
-    round_idx: int,
-    game_in_round: int,
-    game_offset: int,
-    winners: tuple[int, ...],
-    prob_matrix: npt.NDArray[np.float64],
-    bracket: BracketStructure,
-) -> float:
-    """Compute the win probability for a specific game in the bracket.
-
-    For Round of 64, this is the direct pairwise probability.
-    For later rounds, it uses the pairwise probability between the two
-    teams that advanced from the previous round.
-    """
-    if round_idx == 0:
-        # R64: teams are seeded in bracket order, game g pits team 2g vs 2g+1
-        team_a_idx = game_in_round * 2
-        team_b_idx = game_in_round * 2 + 1
-    else:
-        # Later rounds: the two participants are the winners of the two
-        # feeder games from the previous round (games 2g and 2g+1 in round r-1)
-        prev_games_in_round = (len(winners) + 1) // (2**round_idx)
-        prev_offset = game_offset - prev_games_in_round
-        feeder_a = prev_offset + game_in_round * 2
-        feeder_b = prev_offset + game_in_round * 2 + 1
-        team_a_idx = winners[feeder_a]
-        team_b_idx = winners[feeder_b]
-
-    winner_idx = winners[game_offset + game_in_round]
-    if winner_idx == team_a_idx:
-        return float(prob_matrix[team_a_idx, team_b_idx])
-    return float(prob_matrix[team_b_idx, team_a_idx])
