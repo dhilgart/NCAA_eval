@@ -181,10 +181,13 @@ Claude Opus 4.6
 - 2026-03-03: Code review (adversarial) — fixed H1: converted `_run()` docstring from NumPy-style to Google-style (project convention = google); fixed L2: added `encoding="utf-8"` to `subprocess.run()` call; added L1 clarifying comment. Created 3 medium action items for CI timing fragility, `Path(__file__)` comment, and subprocess full-suite timeout adequacy.
 - 2026-03-03: Code review (adversarial, round 2) — fixed H1: `ruff format .` applied to 7 unformatted files (including `test_documented_commands.py` itself and 5 unit test files not previously in File List); fixed H2: added `import os` + `NO_COLOR=1` env in `_run()` to prevent Typer/Rich ANSI escape codes from breaking `--model` text assertion under GitHub Actions `FORCE_COLOR=1`; fixed M1: added `.edgetest/` to `.gitignore`; updated File List with 5 previously-undocumented ruff-format files and `.gitignore`; fixed PR body to follow template exactly.
 - 2026-03-03: ruff version alignment — pre-commit ruff updated from v0.8.4 → v0.15.1 to match CI's installed ruff; reformatted 7 files per ruff 0.15.1 conventions (pre-existing drift caught by new `test_ruff_format_check`). Added `.pre-commit-config.yaml` to File List.
+- 2026-03-04: CLI train E2E tests + stateless model training bug fixes — added `train_data_dir` fixture and 3 new E2E tests (`test_cli_train_elo`, `test_cli_train_xgboost`, `test_cli_train_logistic_regression`) for AC #14. Fixed 3 pre-existing production bugs: (1) `_setup_feature_server` now enables `batch_rating_types=("srs",)` so stateless models get non-NaN features; (2) `_randomize_team_assignment` added to `cli/train.py` and `evaluation/backtest.py` to balance `team_a_won` labels (was always True, breaking sklearn classifiers); (3) all-NaN feature columns dropped before fit in both `_prepare_and_train` and `_evaluate_fold`. All 3 new tests pass; all 15 E2E tests pass; 0 regressions.
 
 ### File List
 
-- tests/integration/test_documented_commands.py (new) — 12 E2E tests for documented toolchain commands
+- tests/integration/test_documented_commands.py (modified) — added `train_data_dir` fixture + 3 CLI train E2E tests (15 total); added `import datetime`
+- src/ncaa_eval/cli/train.py (modified) — enable SRS batch rating; add `_randomize_team_assignment`; balance labels + drop NaN cols in `_prepare_and_train`; ruff format
+- src/ncaa_eval/evaluation/backtest.py (modified) — add `_randomize_team_assignment`; balance labels + drop NaN cols in `_evaluate_fold`
 - docs/tutorials/getting-started.md (modified) — replaced non-existent `ncaa-eval sync` with `python sync.py`
 - pyproject.toml (modified) — added ruff `extend-exclude`, check-manifest ignore patterns
 - noxfile.py (modified) — added `*session.posargs` to tests session
@@ -193,7 +196,7 @@ Claude Opus 4.6
 - dashboard/pages/2_Presentation.py (modified) — ruff format
 - dashboard/pages/4_Pool_Scorer.py (modified) — ruff format
 - dashboard/pages/home.py (modified) — ruff format
-- src/ncaa_eval/cli/train.py (modified) — ruff format
+- src/ncaa_eval/cli/train.py (modified) — ruff format (see above)
 - src/ncaa_eval/evaluation/metrics.py (modified) — ruff format
 - src/ncaa_eval/evaluation/plotting.py (modified) — ruff format
 - src/ncaa_eval/model/elo.py (modified) — ruff format
