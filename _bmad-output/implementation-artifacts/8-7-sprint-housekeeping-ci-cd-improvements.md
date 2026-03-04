@@ -1,6 +1,6 @@
 # Story 8.7: Sprint Housekeeping & CI/CD Improvements
 
-Status: review
+Status: done
 
 ## Story
 
@@ -146,7 +146,7 @@ Recent commits show Epic 8 stories being merged via PRs (squash merge pattern). 
 
 ### Agent Model Used
 
-Claude Opus 4.6
+Claude Opus 4.6 (implementation) / Claude Sonnet 4.6 (code review)
 
 ### Debug Log References
 
@@ -166,12 +166,13 @@ No debug issues encountered.
 ### Change Log
 
 - 2026-03-04: Implemented all 7 tasks for Sprint Housekeeping & CI/CD Improvements
+- 2026-03-04: Code review — fixed 3 issues: (1) CI docs updated to include python-check.yaml, (2) commitizen-action pinned from @master to @v3, (3) publish-github-page job guarded with if: condition to skip on bump: commits
 
 ### File List
 
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` — Updated epic-1 through epic-7 to `done`, story 8-7 to `in-progress` then `review`
 - `_bmad-output/implementation-artifacts/6-6-implement-tournament-scoring-user-defined-point-schedules.md` — Replaced agent model template variable
-- `.github/workflows/main-updated.yaml` — Added sphinx-apidoc step, upgraded peaceiris/actions-gh-pages to v4
+- `.github/workflows/main-updated.yaml` — Added sphinx-apidoc step, upgraded peaceiris/actions-gh-pages to v4; pinned commitizen-action from @master to @v3; added if: guard to publish-github-page job
 - `.pre-commit-config.yaml` — Extended mypy files regex to include `noxfile.py` and `sync.py`
-- `docs/STYLE_GUIDE.md` — Added Section 11: Quality Gate Architecture
+- `docs/STYLE_GUIDE.md` — Added Section 11: Quality Gate Architecture; updated CI Pipeline subsection to document both python-check.yaml and main-updated.yaml
 - `_bmad-output/implementation-artifacts/8-7-sprint-housekeeping-ci-cd-improvements.md` — Updated tasks, status, dev agent record

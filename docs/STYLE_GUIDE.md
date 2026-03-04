@@ -1154,12 +1154,18 @@ used in CI.
 
 ### CI Pipeline
 
-CI (`.github/workflows/main-updated.yaml`) runs:
-1. **Commitizen** — version bump and changelog on main pushes
+Two CI workflows run in GitHub Actions:
+
+**`.github/workflows/python-check.yaml`** (runs on every pull request):
+1. **Pre-commit** — `pre-commit run --all-files` (all hooks: ruff, mypy, actionlint, etc.)
+2. **Full test suite** — `pytest --cov=src/ncaa_eval` with coverage reporting
+
+**`.github/workflows/main-updated.yaml`** (runs on every push to `main`):
+1. **Commitizen** — version bump and changelog (skipped for `bump:` commits)
 2. **Sphinx docs** — `sphinx-apidoc` + `sphinx-build` → GitHub Pages deployment
 
-Pre-commit hooks run as part of the commit/push process; CI relies on pre-commit
-having already enforced quality gates before code reaches main.
+Quality gates are enforced twice: by the developer's local pre-commit hooks on every
+commit/push, and again by `python-check.yaml` on every pull request before merge.
 
 ---
 
