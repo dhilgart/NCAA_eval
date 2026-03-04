@@ -11,7 +11,7 @@ import inspect
 
 import streamlit as st
 
-from dashboard.lib.data_loaders import get_data_dir, load_tourney_seeds
+from dashboard.lib.data_loaders import get_data_dir, load_scoring_display_names, load_tourney_seeds
 from dashboard.lib.export import export_bracket_csv
 from dashboard.lib.filters import build_custom_scoring, score_chosen_bracket
 from dashboard.lib.simulation_helpers import BracketSimulationResult, run_bracket_simulation
@@ -98,7 +98,8 @@ def _render_results(
 
     # Score distribution histogram (AC #3)
     st.subheader("Score Distribution")
-    _render_distribution_chart(dist, rule_name)
+    display_names = load_scoring_display_names()
+    _render_distribution_chart(dist, display_names.get(rule_name, rule_name))
 
     # CSV export (AC #5)
     csv_str = export_bracket_csv(

@@ -14,7 +14,7 @@ from typing import cast
 import pandas as pd  # type: ignore[import-untyped]
 import streamlit as st
 
-from ncaa_eval.evaluation import list_scorings
+from ncaa_eval.evaluation import list_scoring_display_names, list_scorings
 from ncaa_eval.ingest.repository import ParquetRepository
 from ncaa_eval.model.tracking import RunStore
 from ncaa_eval.transform.normalization import TourneySeedTable
@@ -202,6 +202,16 @@ def load_available_scorings() -> list[str]:
         Sorted list of scoring-format names (e.g. ``["fibonacci", "standard", …]``).
     """
     return list_scorings()
+
+
+@st.cache_data(ttl=None)
+def load_scoring_display_names() -> dict[str, str]:
+    """Return a mapping of scoring registry keys to display names.
+
+    Returns:
+        Dict mapping scoring name → display name (e.g. ``"fibonacci"`` → ``"Fibonacci (2-3-5-8-13-21)"``).
+    """
+    return list_scoring_display_names()
 
 
 @st.cache_data(ttl=300)

@@ -34,13 +34,13 @@ so that type-checkers catch invalid configuration values at development time and
   - [x] 2.4 Add `from ncaa_eval.transform.constants import DEFAULT_MARGIN_CAP` to both `graph.py` and `opponent.py`
   - [x] 2.5 Verify no other files import `DEFAULT_MARGIN_CAP` from the old locations
 
-- [ ] Task 3: Fibonacci scoring UI label with point values (AC: #3)
-  - [ ] 3.1 Add a `display_name` property to `ScoringRule` Protocol in `scoring.py` (default implementation returns `self.name`)
-  - [ ] 3.2 Override `display_name` on `FibonacciScoring` to return `"Fibonacci (2-3-5-8-13-21)"`
-  - [ ] 3.3 Override `display_name` on `StandardScoring` to return `"Standard (1-2-4-8-16-32)"`
-  - [ ] 3.4 Add `list_scoring_display_names()` → `dict[str, str]` mapping registry keys to display names
-  - [ ] 3.5 Update `dashboard/app.py` sidebar selectbox to show `display_name` values via `format_func` parameter
-  - [ ] 3.6 Update any other dashboard locations that display raw scoring names (`2_Presentation.py` subheaders, chart titles) to use display names
+- [x] Task 3: Fibonacci scoring UI label with point values (AC: #3)
+  - [x] 3.1 Add registry-level `display_name` parameter to `register_scoring()` (per Dev Notes anti-pattern guidance — avoids requiring Protocol property on all implementations)
+  - [x] 3.2 Register `FibonacciScoring` with `display_name="Fibonacci (2-3-5-8-13-21)"`
+  - [x] 3.3 Register `StandardScoring` with `display_name="Standard (1-2-4-8-16-32)"`
+  - [x] 3.4 Add `list_scoring_display_names()` → `dict[str, str]` mapping registry keys to display names
+  - [x] 3.5 Update `dashboard/app.py` sidebar selectbox to show `display_name` values via `format_func` parameter
+  - [x] 3.6 Update `2_Presentation.py` and `4_Pool_Scorer.py` subheaders/chart titles to use display names
 
 - [ ] Task 4: Run quality gates (AC: #4)
   - [ ] 4.1 Run `ruff check .` — fix any violations
@@ -152,11 +152,13 @@ Claude Opus 4.6
 
 - Task 1: Added 5 Literal type aliases (`BatchRatingType`, `OrdinalCompositeMethod`, `GenderScope`, `DatasetScope`, `CalibrationMethod`) to `feature_serving.py`. Updated all 5 `FeatureConfig` fields to use them. Re-exported from `transform/__init__.py`. All existing tests pass without modification — all callsites already used valid literal values. mypy --strict passes.
 - Task 2: Created `transform/constants.py` with `DEFAULT_MARGIN_CAP = 25`. Removed duplicate definitions from `graph.py` and `opponent.py`, replaced with imports from `constants.py`. Re-exported from `transform/__init__.py`. Used `constants.py` instead of `__init__.py` directly to avoid circular imports.
+- Task 3: Added registry-level `display_name` parameter to `register_scoring()` decorator. StandardScoring registered with "Standard (1-2-4-8-16-32)", FibonacciScoring with "Fibonacci (2-3-5-8-13-21)". Added `list_scoring_display_names()`. Updated dashboard sidebar selectbox via `format_func`, plus `2_Presentation.py` and `4_Pool_Scorer.py` to use display names in subheaders/chart titles. Added 6 unit tests.
 
 ### Change Log
 
 - 2026-03-04: Task 1 — Added Literal types to FeatureConfig fields
 - 2026-03-04: Task 2 — Centralized DEFAULT_MARGIN_CAP in transform/constants.py
+- 2026-03-04: Task 3 — Added scoring display names with point values
 
 ### File List
 
@@ -165,3 +167,10 @@ Claude Opus 4.6
 - `src/ncaa_eval/transform/constants.py` (new — centralized DEFAULT_MARGIN_CAP)
 - `src/ncaa_eval/transform/graph.py` (modified — imports DEFAULT_MARGIN_CAP from constants)
 - `src/ncaa_eval/transform/opponent.py` (modified — imports DEFAULT_MARGIN_CAP from constants)
+- `src/ncaa_eval/evaluation/scoring.py` (modified — added display_name to register_scoring + list_scoring_display_names)
+- `src/ncaa_eval/evaluation/__init__.py` (modified — re-exported list_scoring_display_names)
+- `dashboard/app.py` (modified — selectbox uses format_func for display names)
+- `dashboard/lib/data_loaders.py` (modified — added load_scoring_display_names)
+- `dashboard/pages/2_Presentation.py` (modified — subheaders/chart titles use display names)
+- `dashboard/pages/4_Pool_Scorer.py` (modified — chart title uses display names)
+- `tests/unit/test_evaluation_simulation.py` (modified — added TestScoringDisplayNames with 6 tests)

@@ -14,6 +14,7 @@ from dashboard.lib.data_loaders import (
     load_available_runs,
     load_available_scorings,
     load_available_years,
+    load_scoring_display_names,
 )
 from dashboard.lib.styles import MONOSPACE_CSS
 
@@ -82,10 +83,16 @@ with st.sidebar:
 
     # Scoring Format
     scorings = load_available_scorings()
+    display_names = load_scoring_display_names()
     if scorings:
         default_scoring = "standard" if "standard" in scorings else scorings[0]
         st.session_state.setdefault("selected_scoring", default_scoring)
-        st.selectbox("Scoring Format", options=scorings, key="selected_scoring")
+        st.selectbox(
+            "Scoring Format",
+            options=scorings,
+            key="selected_scoring",
+            format_func=lambda s: display_names.get(s, s),
+        )
     else:
         st.session_state.setdefault("selected_scoring", None)
         st.info("No scoring formats available")

@@ -12,7 +12,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 from dashboard.lib.bracket_renderer import render_bracket_html
-from dashboard.lib.data_loaders import get_data_dir, load_tourney_seeds
+from dashboard.lib.data_loaders import get_data_dir, load_scoring_display_names, load_tourney_seeds
 from dashboard.lib.simulation_helpers import BracketSimulationResult, run_bracket_simulation
 from ncaa_eval.evaluation.plotting import (
     plot_advancement_heatmap,
@@ -22,6 +22,8 @@ from ncaa_eval.evaluation.plotting import (
 
 def _render_results(sim_data: BracketSimulationResult, scoring: str) -> None:
     """Render all bracket visualisation sections from simulation results."""
+    display_names = load_scoring_display_names()
+    scoring_label = display_names.get(scoring, scoring)
     result = sim_data.sim_result
     bracket = sim_data.bracket
     most_likely = sim_data.most_likely
@@ -76,7 +78,7 @@ def _render_results(sim_data: BracketSimulationResult, scoring: str) -> None:
             )
 
     # Expected points table
-    st.subheader(f"Expected Points ({scoring})")
+    st.subheader(f"Expected Points ({scoring_label})")
     if scoring in result.expected_points:
         ep = result.expected_points[scoring]
         ep_data: list[dict[str, str | float]] = []
@@ -94,7 +96,7 @@ def _render_results(sim_data: BracketSimulationResult, scoring: str) -> None:
         st.subheader("Score Distribution (Monte Carlo)")
         if scoring in result.bracket_distributions:
             dist = result.bracket_distributions[scoring]
-            fig_dist = plot_score_distribution(dist, title=f"Bracket Score Distribution — {scoring}")
+            fig_dist = plot_score_distribution(dist, title=f"Bracket Score Distribution — {scoring_label}")
             st.plotly_chart(fig_dist, use_container_width=True)
         else:
             st.info(f"Score distribution not available for scoring rule '{scoring}'.")
