@@ -47,9 +47,9 @@ class TestWinnerProb:
         assert _winner_prob(1, 0, 1, P) == 0.3
 
 
-def _make_64_team_fixtures() -> (
-    tuple[tuple[int, ...], tuple[int, ...], dict[int, str], dict[int, int], np.ndarray]
-):
+def _make_64_team_fixtures() -> tuple[
+    tuple[int, ...], tuple[int, ...], dict[int, str], dict[int, int], np.ndarray
+]:
     """Create a minimal 64-team bracket for testing.
 
     Uses a deterministic probability matrix where lower-indexed teams

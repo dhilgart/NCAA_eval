@@ -186,9 +186,9 @@ class TestWalkForwardSplits:
 
         for fold in walk_forward_splits(seasons, server):
             if not fold.test.empty:
-                assert fold.test[
-                    "is_tournament"
-                ].all(), f"Test data for year {fold.year} contains non-tournament games"
+                assert fold.test["is_tournament"].all(), (
+                    f"Test data for year {fold.year} contains non-tournament games"
+                )
 
     def test_training_data_contains_all_games(self) -> None:
         """3.9: Training data contains all games (regular season + tournament) from prior years."""
@@ -341,6 +341,6 @@ class TestTemporalIntegrityProperty:
 
         for fold in walk_forward_splits(season_list, server):
             if not fold.test.empty:
-                assert fold.test[
-                    "is_tournament"
-                ].all(), f"Non-tournament game in test set for year {fold.year}"
+                assert fold.test["is_tournament"].all(), (
+                    f"Non-tournament game in test set for year {fold.year}"
+                )

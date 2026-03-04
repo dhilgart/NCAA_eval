@@ -442,9 +442,9 @@ class TestComputeAdvancementProbs:
 
         expected_sums = [32, 16, 8, 4, 2, 1]
         for r, expected in enumerate(expected_sums):
-            assert adv[:, r].sum() == pytest.approx(
-                expected, abs=1e-8
-            ), f"Round {r} sum: {adv[:, r].sum()} != {expected}"
+            assert adv[:, r].sum() == pytest.approx(expected, abs=1e-8), (
+                f"Round {r} sum: {adv[:, r].sum()} != {expected}"
+            )
 
     def test_all_probs_non_negative(self) -> None:
         bracket = _make_bracket()

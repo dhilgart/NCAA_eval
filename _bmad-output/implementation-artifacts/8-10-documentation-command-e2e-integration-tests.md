@@ -180,6 +180,7 @@ Claude Opus 4.6
 - 2026-03-03: Code review fixes — added wall-clock timing assertion to `test_pytest_smoke` (AC #2 requires < 10s, was only checking exit code); changed `--cov` path from absolute to relative `src/ncaa_eval` to match documented command; removed 5 phantom File List entries for unit test files with no git diff
 - 2026-03-03: Code review (adversarial) — fixed H1: converted `_run()` docstring from NumPy-style to Google-style (project convention = google); fixed L2: added `encoding="utf-8"` to `subprocess.run()` call; added L1 clarifying comment. Created 3 medium action items for CI timing fragility, `Path(__file__)` comment, and subprocess full-suite timeout adequacy.
 - 2026-03-03: Code review (adversarial, round 2) — fixed H1: `ruff format .` applied to 7 unformatted files (including `test_documented_commands.py` itself and 5 unit test files not previously in File List); fixed H2: added `import os` + `NO_COLOR=1` env in `_run()` to prevent Typer/Rich ANSI escape codes from breaking `--model` text assertion under GitHub Actions `FORCE_COLOR=1`; fixed M1: added `.edgetest/` to `.gitignore`; updated File List with 5 previously-undocumented ruff-format files and `.gitignore`; fixed PR body to follow template exactly.
+- 2026-03-03: ruff version alignment — pre-commit ruff updated from v0.8.4 → v0.15.1 to match CI's installed ruff; reformatted 7 files per ruff 0.15.1 conventions (pre-existing drift caught by new `test_ruff_format_check`). Added `.pre-commit-config.yaml` to File List.
 
 ### File List
 
@@ -188,6 +189,7 @@ Claude Opus 4.6
 - pyproject.toml (modified) — added ruff `extend-exclude`, check-manifest ignore patterns
 - noxfile.py (modified) — added `*session.posargs` to tests session
 - .gitignore (modified) — added `.edgetest/` ignore entry
+- .pre-commit-config.yaml (modified) — updated ruff from v0.8.4 to v0.15.1 to match CI
 - dashboard/pages/2_Presentation.py (modified) — ruff format
 - dashboard/pages/4_Pool_Scorer.py (modified) — ruff format
 - dashboard/pages/home.py (modified) — ruff format
