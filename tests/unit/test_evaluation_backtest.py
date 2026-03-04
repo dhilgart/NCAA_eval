@@ -538,7 +538,7 @@ class TestRunBacktest:
                 model,
                 server,
                 seasons=[2010, 2011],
-                mode="invalid",
+                mode="invalid",  # type: ignore[arg-type]
             )
 
     def test_too_few_seasons_raises(self) -> None:

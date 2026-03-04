@@ -10,9 +10,15 @@ import pandas as pd  # type: ignore[import-untyped]
 import pytest
 
 from ncaa_eval.ingest.schema import Game
+from ncaa_eval.transform.constants import DEFAULT_MARGIN_CAP
 from ncaa_eval.transform.feature_serving import (
+    BatchRatingType,
+    CalibrationMethod,
+    DatasetScope,
     FeatureBlock,
     FeatureConfig,
+    GenderScope,
+    OrdinalCompositeMethod,
     StatefulFeatureServer,
 )
 from ncaa_eval.transform.serving import ChronologicalDataServer, SeasonGames
@@ -112,6 +118,83 @@ class TestFeatureConfig:
         cfg = FeatureConfig(ordinal_composite=None)
         blocks = cfg.active_blocks()
         assert FeatureBlock.ORDINAL not in blocks
+
+
+# ── Literal type alias tests (Story 8.6) ────────────────────────────────────
+
+
+class TestFeatureConfigLiteralAliases:
+    """Verify that Literal type aliases are exported and resolve correctly.
+
+    Note: Literal types provide *static* enforcement only (mypy).
+    There is no runtime validation — invalid values are not rejected at
+    construction time.  These tests confirm the aliases are importable and
+    that the type-narrowed fields accept all documented valid values.
+    """
+
+    def test_aliases_are_importable(self) -> None:
+        assert BatchRatingType is not None
+        assert OrdinalCompositeMethod is not None
+        assert GenderScope is not None
+        assert DatasetScope is not None
+        assert CalibrationMethod is not None
+
+    def test_batch_rating_types_valid_values(self) -> None:
+        for val in ("srs", "ridge", "colley"):
+            cfg = FeatureConfig(batch_rating_types=(val,))
+            assert val in cfg.batch_rating_types
+
+    def test_ordinal_composite_valid_values(self) -> None:
+        for val in ("simple_average", "weighted", "pca"):
+            cfg = FeatureConfig(ordinal_composite=val)
+            assert cfg.ordinal_composite == val
+
+    def test_gender_scope_valid_values(self) -> None:
+        for val in ("M", "W"):
+            cfg = FeatureConfig(gender_scope=val)
+            assert cfg.gender_scope == val
+
+    def test_dataset_scope_valid_values(self) -> None:
+        for val in ("kaggle", "all"):
+            cfg = FeatureConfig(dataset_scope=val)
+            assert cfg.dataset_scope == val
+
+    def test_calibration_method_valid_values(self) -> None:
+        for val in ("isotonic", "sigmoid"):
+            cfg = FeatureConfig(calibration_method=val)
+            assert cfg.calibration_method == val
+
+
+# ── DEFAULT_MARGIN_CAP centralization tests (Story 8.6) ─────────────────────
+
+
+class TestDefaultMarginCap:
+    """Verify DEFAULT_MARGIN_CAP is centralized in constants.py (Story 8.6 Task 2)."""
+
+    def test_default_margin_cap_value(self) -> None:
+        assert DEFAULT_MARGIN_CAP == 25
+
+    def test_default_margin_cap_importable_from_transform(self) -> None:
+        from ncaa_eval.transform import DEFAULT_MARGIN_CAP as cap_from_transform
+
+        assert cap_from_transform == 25
+
+    def test_graph_uses_constants_margin_cap(self) -> None:
+        import inspect
+
+        from ncaa_eval.transform import graph as graph_module
+
+        # Verify graph's margin_cap default matches the centralized constant
+        src = inspect.getsource(graph_module)
+        assert "from ncaa_eval.transform.constants import DEFAULT_MARGIN_CAP" in src
+
+    def test_opponent_uses_constants_margin_cap(self) -> None:
+        import inspect
+
+        from ncaa_eval.transform import opponent as opponent_module
+
+        src = inspect.getsource(opponent_module)
+        assert "from ncaa_eval.transform.constants import DEFAULT_MARGIN_CAP" in src
 
 
 # ── Helpers / Fixtures ──────────────────────────────────────────────────────
@@ -320,7 +403,7 @@ class TestStatefulFeatureServerStatefulMode:
             data_server=ds,
         )
         with pytest.raises(ValueError, match="mode"):
-            server.serve_season_features(2023, mode="invalid")
+            server.serve_season_features(2023, mode="invalid")  # type: ignore[arg-type]
 
 
 # ── Task 3: Ordinal temporal slicing tests ──────────────────────────────────

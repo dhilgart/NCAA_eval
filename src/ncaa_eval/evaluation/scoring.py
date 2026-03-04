@@ -58,17 +58,20 @@ class ScoringRule(Protocol):
 _ST = TypeVar("_ST", bound="type[ScoringRule]")
 
 _SCORING_REGISTRY: dict[str, type[ScoringRule]] = {}
+_SCORING_DISPLAY_NAMES: dict[str, str] = {}
 
 
 class ScoringNotFoundError(KeyError):
     """Raised when a requested scoring name is not in the registry."""
 
 
-def register_scoring(name: str) -> Callable[[_ST], _ST]:
+def register_scoring(name: str, *, display_name: str | None = None) -> Callable[[_ST], _ST]:
     """Class decorator that registers a scoring rule class.
 
     Args:
         name: Registry key for the scoring rule.
+        display_name: Optional human-readable label for UI display.
+            Falls back to *name* if not provided.
 
     Returns:
         Decorator that registers the class and returns it unchanged.
@@ -82,6 +85,7 @@ def register_scoring(name: str) -> Callable[[_ST], _ST]:
             msg = f"Scoring name {name!r} is already registered to {_SCORING_REGISTRY[name].__name__}"
             raise ValueError(msg)
         _SCORING_REGISTRY[name] = cls
+        _SCORING_DISPLAY_NAMES[name] = display_name or name
         return cls
 
     return decorator
@@ -105,12 +109,21 @@ def list_scorings() -> list[str]:
     return sorted(_SCORING_REGISTRY)
 
 
+def list_scoring_display_names() -> dict[str, str]:
+    """Return a mapping of registry keys to display names.
+
+    Returns:
+        Dict mapping scoring name → human-readable display name.
+    """
+    return dict(sorted(_SCORING_DISPLAY_NAMES.items()))
+
+
 # ---------------------------------------------------------------------------
 # Scoring rule implementations
 # ---------------------------------------------------------------------------
 
 
-@register_scoring("standard")
+@register_scoring("standard", display_name="Standard (1-2-4-8-16-32)")
 class StandardScoring:
     """ESPN-style scoring: 1-2-4-8-16-32 (192 total for perfect bracket)."""
 
@@ -126,7 +139,7 @@ class StandardScoring:
         return self._POINTS[round_idx]
 
 
-@register_scoring("fibonacci")
+@register_scoring("fibonacci", display_name="Fibonacci (2-3-5-8-13-21)")
 class FibonacciScoring:
     """Fibonacci-style scoring: 2-3-5-8-13-21 (231 total for perfect bracket)."""
 

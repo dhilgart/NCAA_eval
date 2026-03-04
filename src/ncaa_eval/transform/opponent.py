@@ -9,9 +9,9 @@ import numpy.typing as npt
 import pandas as pd  # type: ignore[import-untyped]
 from sklearn.linear_model import Ridge  # type: ignore[import-untyped]
 
-logger = logging.getLogger(__name__)
+from ncaa_eval.transform.constants import DEFAULT_MARGIN_CAP
 
-DEFAULT_MARGIN_CAP: int = 25
+logger = logging.getLogger(__name__)
 DEFAULT_RIDGE_LAMBDA: float = 20.0
 DEFAULT_SRS_MAX_ITER: int = 10_000
 _SRS_CONVERGENCE_TOL: float = 1e-6

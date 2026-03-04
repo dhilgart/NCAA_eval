@@ -11,7 +11,7 @@ import inspect
 
 import streamlit as st
 
-from dashboard.lib.data_loaders import get_data_dir, load_tourney_seeds
+from dashboard.lib.data_loaders import get_data_dir, load_scoring_display_names, load_tourney_seeds
 from dashboard.lib.export import export_bracket_csv
 from dashboard.lib.filters import build_custom_scoring, score_chosen_bracket
 from dashboard.lib.simulation_helpers import BracketSimulationResult, run_bracket_simulation
@@ -62,7 +62,7 @@ def _render_distribution_chart(dist: BracketDistribution, scoring_label: str) ->
 
 def _render_results(
     sim_data: BracketSimulationResult,
-    scoring_label: str,
+    scoring_registry_key: str,
     use_custom: bool,
     custom_points: tuple[float, ...],
 ) -> None:
@@ -73,13 +73,13 @@ def _render_results(
         # Cache key encodes custom points so different schedules get different entries
         scoring_key = f"custom:{custom_points}"
     else:
-        scoring_cls = get_scoring(scoring_label)
+        scoring_cls = get_scoring(scoring_registry_key)
         sig = inspect.signature(scoring_cls)
         if "seed_map" in sig.parameters:
             scoring_rule = scoring_cls(sim_data.bracket.seed_map)
         else:
             scoring_rule = scoring_cls()
-        scoring_key = scoring_label
+        scoring_key = scoring_registry_key
 
     rule_name: str = scoring_rule.name
 
@@ -98,7 +98,8 @@ def _render_results(
 
     # Score distribution histogram (AC #3)
     st.subheader("Score Distribution")
-    _render_distribution_chart(dist, rule_name)
+    display_names = load_scoring_display_names()
+    _render_distribution_chart(dist, display_names.get(rule_name, rule_name))
 
     # CSV export (AC #5)
     csv_str = export_bracket_csv(

@@ -15,6 +15,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
+from ncaa_eval.evaluation.scoring import list_scoring_display_names
 from ncaa_eval.evaluation.simulation import (
     _SCORING_REGISTRY,
     BracketDistribution,
@@ -895,6 +896,37 @@ class TestScoringRegistry:
 
                 def points_per_round(self, round_idx: int) -> float:
                     return 0.0
+
+
+class TestScoringDisplayNames:
+    """Tests for scoring display name registry (Story 8.6 Task 3)."""
+
+    def test_list_scoring_display_names_returns_dict(self) -> None:
+        result = list_scoring_display_names()
+        assert isinstance(result, dict)
+
+    def test_display_names_contain_builtin_scorings(self) -> None:
+        result = list_scoring_display_names()
+        assert "standard" in result
+        assert "fibonacci" in result
+        assert "seed_diff_bonus" in result
+
+    def test_standard_display_name_shows_point_values(self) -> None:
+        result = list_scoring_display_names()
+        assert result["standard"] == "Standard (1-2-4-8-16-32)"
+
+    def test_fibonacci_display_name_shows_point_values(self) -> None:
+        result = list_scoring_display_names()
+        assert result["fibonacci"] == "Fibonacci (2-3-5-8-13-21)"
+
+    def test_seed_diff_bonus_falls_back_to_name(self) -> None:
+        """seed_diff_bonus has no explicit display_name, so it falls back to the key."""
+        result = list_scoring_display_names()
+        assert result["seed_diff_bonus"] == "seed_diff_bonus"
+
+    def test_display_names_sorted_by_key(self) -> None:
+        result = list_scoring_display_names()
+        assert list(result.keys()) == sorted(result.keys())
 
 
 class TestDictScoring:

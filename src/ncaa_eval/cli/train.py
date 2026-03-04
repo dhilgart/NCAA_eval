@@ -12,6 +12,7 @@ import subprocess
 import uuid
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Literal
 
 import pandas as pd  # type: ignore[import-untyped]
 from rich.console import Console
@@ -108,7 +109,7 @@ def _build_season_features(ctx: _TrainingContext) -> list[pd.DataFrame]:
             total=ctx.end_year - ctx.start_year + 1,
         )
         for year in range(ctx.start_year, ctx.end_year + 1):
-            mode = "stateful" if ctx.is_stateful else "batch"
+            mode: Literal["batch", "stateful"] = "stateful" if ctx.is_stateful else "batch"
             df = ctx.server.serve_season_features(year, mode=mode)
             if not df.empty:
                 season_frames.append(df)
@@ -207,7 +208,7 @@ def _run_backtest_and_persist(ctx: _TrainingContext, run_id: str) -> None:
         # Deep-copy to avoid mutating the trained model: run_backtest
         # calls model.fit() on each fold, which would overwrite ctx.model.
         backtest_model = copy.deepcopy(ctx.model)
-        mode = "stateful" if ctx.is_stateful else "batch"
+        mode: Literal["batch", "stateful"] = "stateful" if ctx.is_stateful else "batch"
         result = run_backtest(
             backtest_model,
             ctx.server,

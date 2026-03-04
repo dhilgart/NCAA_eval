@@ -160,7 +160,7 @@ class TestWalkForwardSplits:
         seasons = [2010, 2011]
         server = _make_feature_server({})
         with pytest.raises(ValueError, match="mode must be"):
-            list(walk_forward_splits(seasons, server, mode="invalid"))
+            list(walk_forward_splits(seasons, server, mode="invalid"))  # type: ignore[arg-type]
 
     def test_empty_season_still_yields(self) -> None:
         """3.7: Fold is still generated if repository returns data."""

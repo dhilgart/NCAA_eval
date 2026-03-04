@@ -11,13 +11,12 @@ from __future__ import annotations
 
 import dataclasses
 from collections.abc import Iterator, Sequence
+from typing import Literal
 
 import pandas as pd  # type: ignore[import-untyped]
 
 from ncaa_eval.transform.feature_serving import StatefulFeatureServer
 from ncaa_eval.transform.serving import NO_TOURNAMENT_SEASONS
-
-_VALID_MODES: frozenset[str] = frozenset({"batch", "stateful"})
 
 
 @dataclasses.dataclass(frozen=True)
@@ -39,7 +38,7 @@ def walk_forward_splits(
     seasons: Sequence[int],
     feature_server: StatefulFeatureServer,
     *,
-    mode: str = "batch",
+    mode: Literal["batch", "stateful"] = "batch",
 ) -> Iterator[CVFold]:
     """Generate walk-forward CV folds with Leave-One-Tournament-Out splits.
 
@@ -61,7 +60,9 @@ def walk_forward_splits(
         ValueError: If ``seasons`` has fewer than 2 elements, or if ``mode``
             is not ``"batch"`` or ``"stateful"``.
     """
-    if mode not in _VALID_MODES:
+    # Runtime guard: Literal["batch","stateful"] enforces at static-analysis
+    # time; this check also protects callers who bypass mypy (e.g. YAML config).
+    if mode not in ("batch", "stateful"):
         msg = f"mode must be 'batch' or 'stateful', got {mode!r}"
         raise ValueError(msg)
 
