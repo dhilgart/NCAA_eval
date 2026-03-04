@@ -1,6 +1,6 @@
 # Story 8.8: Dashboard UX Quick Fixes
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -47,11 +47,11 @@ so that the dashboard is immediately usable without squinting, confusion, or sta
   - [x] 5.4 In `dashboard/app.py`, display freshness info at the bottom of the sidebar: small caption showing "Data synced: {date}" and "Latest game: {date}"
   - [x] 5.5 If data dir doesn't exist, skip freshness display (the "no data" info message already covers this)
 
-- [ ] Task 6: Run quality gates
-  - [ ] 6.1 `ruff check .` passes
-  - [ ] 6.2 `ruff format --check .` passes
-  - [ ] 6.3 `mypy --strict src/ncaa_eval tests` passes (note: `dashboard/` is excluded from mypy — this is intentional per P2-6)
-  - [ ] 6.4 `pytest` passes (full suite)
+- [x] Task 6: Run quality gates
+  - [x] 6.1 `ruff check .` passes
+  - [x] 6.2 `ruff format --check .` passes
+  - [x] 6.3 `mypy --strict src/ncaa_eval tests` passes (note: `dashboard/` is excluded from mypy — this is intentional per P2-6)
+  - [x] 6.4 `pytest` passes (full suite — 922 passed, 1 skipped)
 
 ## Dev Notes
 
@@ -153,8 +153,29 @@ Claude Opus 4.6
 
 ### Debug Log References
 
+- Leaderboard page test regression: Adding breadcrumbs introduced a second `st.columns()` call that broke existing test mocks which assumed only one `st.columns()` call (for KPI cards). Fixed by updating mocks to use `side_effect` for sequential column calls.
+
 ### Completion Notes List
+
+- **AC #1**: Bracket font sizes increased — `.name` 10px→12px, `.prob` 9px→10px, `.seed` 10px→11px, `.team` min-height 18px→20px. Iframe height bumped 700px→750px.
+- **AC #2**: Home page shows `st.warning` banner with sync command when no data, `st.info` with train command when data exists but no models. Happy path preserves metrics + guidance.
+- **AC #3**: "Refresh Data" button added below sidebar filters with `st.divider()` separator. Clears `st.cache_data` and calls `st.rerun()`.
+- **AC #4**: Breadcrumbs added to `1_Lab.py` using identical pattern to other pages (`st.columns([1, 3])` + `st.page_link` + `st.caption`).
+- **AC #5**: `load_data_freshness()` added to `data_loaders.py` using Parquet mtime for sync date and `ParquetRepository` for latest game date. Displayed as caption in sidebar, only when data exists.
+- All quality gates pass: ruff check, ruff format, mypy --strict, pytest (922 passed).
 
 ### Change Log
 
+- 2026-03-04: Implemented all 5 UX quick fixes (AC #1-#5), all quality gates pass
+
 ### File List
+
+- `dashboard/lib/bracket_renderer.py` — Modified: CSS font sizes and min-height
+- `dashboard/pages/2_Presentation.py` — Modified: iframe height 700→750
+- `dashboard/pages/home.py` — Modified: empty state banners
+- `dashboard/app.py` — Modified: Refresh Data button, data freshness import + display
+- `dashboard/pages/1_Lab.py` — Modified: breadcrumb navigation
+- `dashboard/lib/data_loaders.py` — Modified: added `load_data_freshness()`, `datetime` import
+- `tests/unit/test_leaderboard_page.py` — Modified: fixed mock columns for breadcrumbs
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — Modified: status updated
+- `_bmad-output/implementation-artifacts/8-8-dashboard-ux-quick-fixes.md` — Modified: task tracking
