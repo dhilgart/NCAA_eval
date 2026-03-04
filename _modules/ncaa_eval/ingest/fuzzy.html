@@ -5,7 +5,7 @@
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../genindex.html"><link rel="search" title="Search" href="../../../search.html">
 
     <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
-        <title>ncaa_eval.evaluation.splitter - ncaa_eval 0.9.0 documentation</title>
+        <title>ncaa_eval.ingest.fuzzy - ncaa_eval 0.9.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=d111a655" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=7bdb33bb" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?v=8dab3a3b" />
@@ -308,122 +308,53 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <h1>Source code for ncaa_eval.evaluation.splitter</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Walk-forward cross-validation splitter with Leave-One-Tournament-Out folds.</span>
+          <h1>Source code for ncaa_eval.ingest.fuzzy</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Centralized fuzzy team-name matching utility.</span>
 
-<span class="sd">Provides :func:`walk_forward_splits`, which partitions historical game data into</span>
-<span class="sd">train/test folds where each fold uses one tournament year as the test set and all</span>
-<span class="sd">prior years as training data.  The 2020 COVID year is handled gracefully: its</span>
-<span class="sd">regular-season data is included in training but no test fold is yielded (the</span>
-<span class="sd">tournament was cancelled).</span>
+<span class="sd">Provides a single public function for resolving team names against a</span>
+<span class="sd">candidate mapping, used by both the ESPN connector and the sync engine.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">dataclasses</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Sequence</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span>
-
-<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>  <span class="c1"># type: ignore[import-untyped]</span>
-
-<span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.transform.feature_serving</span><span class="w"> </span><span class="kn">import</span> <span class="n">StatefulFeatureServer</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.transform.serving</span><span class="w"> </span><span class="kn">import</span> <span class="n">NO_TOURNAMENT_SEASONS</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">rapidfuzz</span><span class="w"> </span><span class="kn">import</span> <span class="n">fuzz</span>
 
 
-<div class="viewcode-block" id="CVFold">
-<a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.splitter.html#ncaa_eval.evaluation.CVFold">[docs]</a>
-<span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">CVFold</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A single cross-validation fold.</span>
+<div class="viewcode-block" id="fuzzy_match_team">
+<a class="viewcode-back" href="../../../api/ncaa_eval.ingest.fuzzy.html#ncaa_eval.ingest.fuzzy.fuzzy_match_team">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">fuzzy_match_team</span><span class="p">(</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">candidates</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span>
+    <span class="n">threshold</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">80</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Match a team name to a candidate mapping using fuzzy lookup.</span>
 
-<span class="sd">    Attributes:</span>
-<span class="sd">        train: All games from seasons strictly before the test year.</span>
-<span class="sd">        test: Tournament games only from the test year.</span>
-<span class="sd">        year: The test season year.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="n">train</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
-    <span class="n">test</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
-    <span class="n">year</span><span class="p">:</span> <span class="nb">int</span></div>
-
-
-
-<div class="viewcode-block" id="walk_forward_splits">
-<a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.splitter.html#ncaa_eval.evaluation.walk_forward_splits">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">walk_forward_splits</span><span class="p">(</span>
-    <span class="n">seasons</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
-    <span class="n">feature_server</span><span class="p">:</span> <span class="n">StatefulFeatureServer</span><span class="p">,</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">mode</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;batch&quot;</span><span class="p">,</span> <span class="s2">&quot;stateful&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;batch&quot;</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">CVFold</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate walk-forward CV folds with Leave-One-Tournament-Out splits.</span>
+<span class="sd">    Applies ``rapidfuzz.fuzz.token_set_ratio`` (case-insensitive) against all</span>
+<span class="sd">    *candidates* and returns the best match whose score meets the *threshold*.</span>
+<span class="sd">    Callers are responsible for attempting exact matches before calling this</span>
+<span class="sd">    function.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        seasons: Ordered sequence of season years to include</span>
-<span class="sd">            (e.g., ``range(2008, 2026)``). Must contain at least 2 seasons.</span>
-<span class="sd">        feature_server: Configured StatefulFeatureServer for building feature</span>
-<span class="sd">            matrices.</span>
-<span class="sd">        mode: Feature serving mode: ``&quot;batch&quot;`` (stateless models) or</span>
-<span class="sd">            ``&quot;stateful&quot;`` (sequential-update models like Elo).</span>
+<span class="sd">        name: Team name to match.</span>
+<span class="sd">        candidates: Mapping of known names to team IDs.</span>
+<span class="sd">        threshold: Minimum rapidfuzz token_set_ratio score (0-100).</span>
 
-<span class="sd">    Yields:</span>
-<span class="sd">        CVFold: For each eligible test year (skipping no-tournament years like</span>
-<span class="sd">        2020): ``train`` contains all games from seasons strictly before the</span>
-<span class="sd">        test year; ``test`` contains only tournament games from the test year;</span>
-<span class="sd">        ``year`` is the test season year.</span>
-
-<span class="sd">    Raises:</span>
-<span class="sd">        ValueError: If ``seasons`` has fewer than 2 elements, or if ``mode``</span>
-<span class="sd">            is not ``&quot;batch&quot;`` or ``&quot;stateful&quot;``.</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        Matched team ID, or ``None`` if no match meets the threshold.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># Runtime guard: Literal[&quot;batch&quot;,&quot;stateful&quot;] enforces at static-analysis</span>
-    <span class="c1"># time; this check also protects callers who bypass mypy (e.g. YAML config).</span>
-    <span class="k">if</span> <span class="n">mode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;batch&quot;</span><span class="p">,</span> <span class="s2">&quot;stateful&quot;</span><span class="p">):</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;mode must be &#39;batch&#39; or &#39;stateful&#39;, got </span><span class="si">{</span><span class="n">mode</span><span class="si">!r}</span><span class="s2">&quot;</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="n">lower_name</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="n">best_score</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">best_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">candidate_name</span><span class="p">,</span> <span class="n">tid</span> <span class="ow">in</span> <span class="n">candidates</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">score</span> <span class="o">=</span> <span class="n">fuzz</span><span class="o">.</span><span class="n">token_set_ratio</span><span class="p">(</span><span class="n">lower_name</span><span class="p">,</span> <span class="n">candidate_name</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+        <span class="k">if</span> <span class="n">score</span> <span class="o">&gt;</span> <span class="n">best_score</span><span class="p">:</span>
+            <span class="n">best_score</span> <span class="o">=</span> <span class="n">score</span>
+            <span class="n">best_id</span> <span class="o">=</span> <span class="n">tid</span>
 
-    <span class="n">sorted_seasons</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">seasons</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">best_score</span> <span class="o">&gt;=</span> <span class="n">threshold</span> <span class="ow">and</span> <span class="n">best_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">best_id</span>
 
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sorted_seasons</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;seasons must contain at least 2 seasons (need at least one training and one test season)&quot;</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-    <span class="c1"># Cache feature DataFrames — serve each season exactly once</span>
-    <span class="n">season_cache</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="n">year</span> <span class="ow">in</span> <span class="n">sorted_seasons</span><span class="p">:</span>
-        <span class="n">season_cache</span><span class="p">[</span><span class="n">year</span><span class="p">]</span> <span class="o">=</span> <span class="n">feature_server</span><span class="o">.</span><span class="n">serve_season_features</span><span class="p">(</span><span class="n">year</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">)</span>
-
-    <span class="c1"># Walk-forward: iterate from second season onward as test candidates</span>
-    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">test_year</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">sorted_seasons</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-        <span class="c1"># Skip no-tournament seasons (e.g., 2020 COVID cancellation)</span>
-        <span class="k">if</span> <span class="n">test_year</span> <span class="ow">in</span> <span class="n">NO_TOURNAMENT_SEASONS</span><span class="p">:</span>
-            <span class="k">continue</span>
-
-        <span class="c1"># Accumulate training data from all prior seasons.</span>
-        <span class="c1"># Empty seasons (e.g. feature server returned no games) are skipped —</span>
-        <span class="c1"># pd.concat of empty DataFrames produces a column-less frame that would</span>
-        <span class="c1"># confuse downstream consumers.  Including an empty frame in the list</span>
-        <span class="c1"># is harmless but produces dtype-mismatch warnings, so we filter them.</span>
-        <span class="n">train_frames</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">train_year</span> <span class="ow">in</span> <span class="n">sorted_seasons</span><span class="p">[:</span><span class="n">i</span><span class="p">]:</span>
-            <span class="n">df</span> <span class="o">=</span> <span class="n">season_cache</span><span class="p">[</span><span class="n">train_year</span><span class="p">]</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">df</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
-                <span class="n">train_frames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
-
-        <span class="c1"># If all prior seasons were empty, yield a column-less DataFrame so the</span>
-        <span class="c1"># fold is still produced; Story 6.3 callers should check train.empty.</span>
-        <span class="n">train_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">train_frames</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="k">if</span> <span class="n">train_frames</span> <span class="k">else</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
-
-        <span class="c1"># Test data: tournament games only from the test year</span>
-        <span class="n">test_season_df</span> <span class="o">=</span> <span class="n">season_cache</span><span class="p">[</span><span class="n">test_year</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">test_season_df</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
-            <span class="n">test_df</span> <span class="o">=</span> <span class="n">test_season_df</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">test_df</span> <span class="o">=</span> <span class="n">test_season_df</span><span class="p">[</span><span class="n">test_season_df</span><span class="p">[</span><span class="s2">&quot;is_tournament&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="kc">True</span><span class="p">]</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span>  <span class="c1"># noqa: E712</span>
-                <span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="p">)</span>
-
-        <span class="k">yield</span> <span class="n">CVFold</span><span class="p">(</span><span class="n">train</span><span class="o">=</span><span class="n">train_df</span><span class="p">,</span> <span class="n">test</span><span class="o">=</span><span class="n">test_df</span><span class="p">,</span> <span class="n">year</span><span class="o">=</span><span class="n">test_year</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="kc">None</span></div>
 
 </pre></div>
         </article>

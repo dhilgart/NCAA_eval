@@ -242,6 +242,7 @@
 <li class="toctree-l5"><a class="reference internal" href="api/ncaa_eval.ingest.connectors.kaggle.html">ncaa_eval.ingest.connectors.kaggle module</a></li>
 </ul>
 </li>
+<li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.ingest.fuzzy.html">ncaa_eval.ingest.fuzzy module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.ingest.repository.html">ncaa_eval.ingest.repository module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.ingest.schema.html">ncaa_eval.ingest.schema module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.ingest.sync.html">ncaa_eval.ingest.sync module</a></li>
@@ -258,6 +259,7 @@
 </li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="api/ncaa_eval.transform.html">ncaa_eval.transform package</a><input aria-label="Toggle navigation of ncaa_eval.transform package" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.transform.calibration.html">ncaa_eval.transform.calibration module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.transform.constants.html">ncaa_eval.transform.constants module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.transform.elo.html">ncaa_eval.transform.elo module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.transform.feature_serving.html">ncaa_eval.transform.feature_serving module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.transform.graph.html">ncaa_eval.transform.graph module</a></li>
@@ -1674,6 +1676,127 @@ satisfied by any class with a <code class="docutils literal notranslate"><span c
 </section>
 </section>
 <hr class="docutils" />
+<section id="quality-gate-architecture">
+<h2>11. Quality Gate Architecture<a class="headerlink" href="#quality-gate-architecture" title="Link to this heading">¶</a></h2>
+<p>This project has two complementary quality gate systems. <strong>Pre-commit is canonical;
+nox is the local convenience runner.</strong></p>
+<section id="pre-commit-canonical">
+<h3>Pre-commit (Canonical)<a class="headerlink" href="#pre-commit-canonical" title="Link to this heading">¶</a></h3>
+<p>Pre-commit hooks (<code class="docutils literal notranslate"><span class="pre">.pre-commit-config.yaml</span></code>) run automatically on every commit and
+are enforced in CI. They are the single source of truth for code quality enforcement.</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Hook</p></th>
+<th class="head"><p>Stage</p></th>
+<th class="head"><p>What It Does</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ruff-lint</span></code></p></td>
+<td><p>commit</p></td>
+<td><p>Ruff linting with <code class="docutils literal notranslate"><span class="pre">--fix</span></code> (auto-corrects violations)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ruff-format</span></code></p></td>
+<td><p>commit</p></td>
+<td><p>Ruff formatting (auto-formats code)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mypy-strict</span></code></p></td>
+<td><p>commit</p></td>
+<td><p>Mypy strict type checking (<code class="docutils literal notranslate"><span class="pre">src/</span></code>, <code class="docutils literal notranslate"><span class="pre">tests/</span></code>, <code class="docutils literal notranslate"><span class="pre">noxfile.py</span></code>, <code class="docutils literal notranslate"><span class="pre">sync.py</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">pytest-smoke</span></code></p></td>
+<td><p>commit</p></td>
+<td><p>Pytest smoke tests (<code class="docutils literal notranslate"><span class="pre">-m</span> <span class="pre">smoke</span></code>)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">commitizen</span></code></p></td>
+<td><p>commit-msg</p></td>
+<td><p>Conventional commit message enforcement</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">actionlint</span></code></p></td>
+<td><p>commit</p></td>
+<td><p>GitHub Actions workflow linting</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Pre-commit also includes housekeeping hooks: <code class="docutils literal notranslate"><span class="pre">end-of-file-fixer</span></code>,
+<code class="docutils literal notranslate"><span class="pre">trailing-whitespace</span></code>, <code class="docutils literal notranslate"><span class="pre">check-yaml</span></code>, <code class="docutils literal notranslate"><span class="pre">check-toml</span></code>, <code class="docutils literal notranslate"><span class="pre">detect-private-key</span></code>,
+<code class="docutils literal notranslate"><span class="pre">no-commit-to-branch</span></code>, <code class="docutils literal notranslate"><span class="pre">check-merge-conflict</span></code>, <code class="docutils literal notranslate"><span class="pre">debug-statements</span></code>.</p>
+</section>
+<section id="nox-local-convenience-runner">
+<h3>Nox (Local Convenience Runner)<a class="headerlink" href="#nox-local-convenience-runner" title="Link to this heading">¶</a></h3>
+<p>Nox (<code class="docutils literal notranslate"><span class="pre">noxfile.py</span></code>) provides a single command (<code class="docutils literal notranslate"><span class="pre">nox</span></code>) that runs the full quality
+pipeline locally. It is useful for manual full-suite runs before pushing but is NOT
+used in CI.</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Session</p></th>
+<th class="head"><p>What It Does</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">lint</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ruff</span> <span class="pre">check</span> <span class="pre">.</span> <span class="pre">--fix</span></code> + <code class="docutils literal notranslate"><span class="pre">ruff</span> <span class="pre">format</span> <span class="pre">--check</span> <span class="pre">.</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">typecheck</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">mypy</span> <span class="pre">--strict</span></code> on <code class="docutils literal notranslate"><span class="pre">src/ncaa_eval</span></code>, <code class="docutils literal notranslate"><span class="pre">tests</span></code>, <code class="docutils literal notranslate"><span class="pre">noxfile.py</span></code>, <code class="docutils literal notranslate"><span class="pre">sync.py</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tests</span></code></p></td>
+<td><p>Full <code class="docutils literal notranslate"><span class="pre">pytest</span></code> suite</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">docs</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">sphinx-apidoc</span></code> + <code class="docutils literal notranslate"><span class="pre">sphinx-build</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="known-divergences-intentional">
+<h3>Known Divergences (Intentional)<a class="headerlink" href="#known-divergences-intentional" title="Link to this heading">¶</a></h3>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Area</p></th>
+<th class="head"><p>Pre-commit</p></th>
+<th class="head"><p>Nox</p></th>
+<th class="head"><p>Rationale</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>ruff format</strong></p></td>
+<td><p>Auto-fix (rewrites files)</p></td>
+<td><p>Check-only (<code class="docutils literal notranslate"><span class="pre">--check</span></code>)</p></td>
+<td><p>Pre-commit should fix on commit; nox should only report for manual inspection</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>CI usage</strong></p></td>
+<td><p>Runs in CI (<code class="docutils literal notranslate"><span class="pre">.github/workflows/</span></code>)</p></td>
+<td><p>Not used in CI</p></td>
+<td><p>Pre-commit + standalone pytest covers lint + typecheck + full tests in CI</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="ci-pipeline">
+<h3>CI Pipeline<a class="headerlink" href="#ci-pipeline" title="Link to this heading">¶</a></h3>
+<p>Two CI workflows run in GitHub Actions:</p>
+<p><strong><code class="docutils literal notranslate"><span class="pre">.github/workflows/python-check.yaml</span></code></strong> (runs on every pull request):</p>
+<ol class="arabic simple">
+<li><p><strong>Pre-commit</strong> — <code class="docutils literal notranslate"><span class="pre">pre-commit</span> <span class="pre">run</span> <span class="pre">--all-files</span></code> (all hooks: ruff, mypy, actionlint, etc.)</p></li>
+<li><p><strong>Full test suite</strong> — <code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">--cov=src/ncaa_eval</span></code> with coverage reporting</p></li>
+</ol>
+<p><strong><code class="docutils literal notranslate"><span class="pre">.github/workflows/main-updated.yaml</span></code></strong> (runs on every push to <code class="docutils literal notranslate"><span class="pre">main</span></code>):</p>
+<ol class="arabic simple">
+<li><p><strong>Commitizen</strong> — version bump and changelog (skipped for <code class="docutils literal notranslate"><span class="pre">bump:</span></code> commits)</p></li>
+<li><p><strong>Sphinx docs</strong> — <code class="docutils literal notranslate"><span class="pre">sphinx-apidoc</span></code> + <code class="docutils literal notranslate"><span class="pre">sphinx-build</span></code> → GitHub Pages deployment</p></li>
+</ol>
+<p>Quality gates are enforced twice: by the developer’s local pre-commit hooks on every
+commit/push, and again by <code class="docutils literal notranslate"><span class="pre">python-check.yaml</span></code> on every pull request before merge.</p>
+</section>
+</section>
+<hr class="docutils" />
 <section id="references">
 <h2>References<a class="headerlink" href="#references" title="Link to this heading">¶</a></h2>
 <ul class="simple">
@@ -1818,6 +1941,13 @@ satisfied by any class with a <code class="docutils literal notranslate"><span c
 <li><a class="reference internal" href="#d-dependency-inversion-principle-dip">D - Dependency Inversion Principle (DIP)</a></li>
 <li><a class="reference internal" href="#solid-review-checklist">SOLID Review Checklist</a></li>
 <li><a class="reference internal" href="#summary-what-s-already-covered">Summary: What’s Already Covered</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#quality-gate-architecture">11. Quality Gate Architecture</a><ul>
+<li><a class="reference internal" href="#pre-commit-canonical">Pre-commit (Canonical)</a></li>
+<li><a class="reference internal" href="#nox-local-convenience-runner">Nox (Local Convenience Runner)</a></li>
+<li><a class="reference internal" href="#known-divergences-intentional">Known Divergences (Intentional)</a></li>
+<li><a class="reference internal" href="#ci-pipeline">CI Pipeline</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#references">References</a></li>

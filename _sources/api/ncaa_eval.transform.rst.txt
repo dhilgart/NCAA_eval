@@ -8,6 +8,7 @@ Submodules
    :maxdepth: 4
 
    ncaa_eval.transform.calibration
+   ncaa_eval.transform.constants
    ncaa_eval.transform.elo
    ncaa_eval.transform.feature_serving
    ncaa_eval.transform.graph
