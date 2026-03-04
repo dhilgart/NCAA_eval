@@ -40,12 +40,12 @@ so that the dashboard is immediately usable without squinting, confusion, or sta
   - [x] 4.1 In `dashboard/pages/1_Lab.py`, add breadcrumb block before the `st.header("Backtest Leaderboard")` call (around line 20)
   - [x] 4.2 Use the same pattern as other pages: `col_nav, col_bc = st.columns([1, 3])` with `st.page_link("pages/home.py", label="← Home")` and `st.caption("Home > Lab > Backtest Leaderboard")`
 
-- [ ] Task 5: Add data freshness indicator to sidebar (AC: #5)
-  - [ ] 5.1 In `dashboard/lib/data_loaders.py`, add a cached function `load_data_freshness(data_dir: str) -> dict[str, str | None]` that returns `{"last_sync_date": ..., "latest_game_date": ...}`
-  - [ ] 5.2 `last_sync_date`: Check modification time of the Parquet files in `data_dir` (e.g., `max(p.stat().st_mtime for p in Path(data_dir).rglob("*.parquet"))`) and format as date string
-  - [ ] 5.3 `latest_game_date`: Load the most recent season and find the max game date via `ParquetRepository`
-  - [ ] 5.4 In `dashboard/app.py`, display freshness info at the bottom of the sidebar: small caption showing "Data synced: {date}" and "Latest game: {date}"
-  - [ ] 5.5 If data dir doesn't exist, skip freshness display (the "no data" info message already covers this)
+- [x] Task 5: Add data freshness indicator to sidebar (AC: #5)
+  - [x] 5.1 In `dashboard/lib/data_loaders.py`, add a cached function `load_data_freshness(data_dir: str) -> dict[str, str | None]` that returns `{"last_sync_date": ..., "latest_game_date": ...}`
+  - [x] 5.2 `last_sync_date`: Check modification time of the Parquet files in `data_dir` (e.g., `max(p.stat().st_mtime for p in Path(data_dir).rglob("*.parquet"))`) and format as date string
+  - [x] 5.3 `latest_game_date`: Load the most recent season and find the max game date via `ParquetRepository`
+  - [x] 5.4 In `dashboard/app.py`, display freshness info at the bottom of the sidebar: small caption showing "Data synced: {date}" and "Latest game: {date}"
+  - [x] 5.5 If data dir doesn't exist, skip freshness display (the "no data" info message already covers this)
 
 - [ ] Task 6: Run quality gates
   - [ ] 6.1 `ruff check .` passes

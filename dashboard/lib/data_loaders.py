@@ -7,6 +7,7 @@ page navigations hit the in-memory cache.
 
 from __future__ import annotations
 
+import datetime
 import logging
 from pathlib import Path
 from typing import cast
@@ -245,6 +246,45 @@ def load_tourney_seeds(data_dir: str, season: int) -> list[dict[str, object]]:
         ]
     except (OSError, ValueError):
         return []
+
+
+@st.cache_data(ttl=300)
+def load_data_freshness(data_dir: str) -> dict[str, str | None]:
+    """Return data freshness indicators for the sidebar.
+
+    Args:
+        data_dir: String path to the project data directory.
+
+    Returns:
+        Dict with ``last_sync_date`` (latest Parquet mtime as date string)
+        and ``latest_game_date`` (max game date from the most recent season).
+        Values are ``None`` when data is unavailable.
+    """
+    result: dict[str, str | None] = {"last_sync_date": None, "latest_game_date": None}
+    path = Path(data_dir)
+    if not path.exists():
+        return result
+    try:
+        parquets = list(path.rglob("*.parquet"))
+        if parquets:
+            latest_mtime = max(p.stat().st_mtime for p in parquets)
+            result["last_sync_date"] = datetime.datetime.fromtimestamp(
+                latest_mtime, tz=datetime.timezone.utc
+            ).strftime("%Y-%m-%d")
+    except OSError:
+        pass
+    try:
+        repo = ParquetRepository(path)
+        seasons = repo.get_seasons()
+        if seasons:
+            max_year = max(s.year for s in seasons)
+            games = repo.get_games(max_year)
+            dates = [g.date for g in games if g.date is not None]
+            if dates:
+                result["latest_game_date"] = str(max(dates))
+    except OSError:
+        pass
+    return result
 
 
 def _load_team_names_uncached(data_dir: str) -> dict[int, str]:
