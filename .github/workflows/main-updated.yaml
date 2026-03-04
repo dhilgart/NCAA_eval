@@ -19,12 +19,14 @@ jobs:
           fetch-depth: 0
 
       - name: Create bump and changelog
-        uses: commitizen-tools/commitizen-action@master
+        uses: commitizen-tools/commitizen-action@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: main
 
   publish-github-page:
+    name: "Build and publish Sphinx docs to GitHub Pages"
+    if: "!startsWith(github.event.head_commit.message, 'bump:')"
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -45,11 +47,14 @@ jobs:
       - name: Install dependencies
         run: poetry install --with dev
 
+      - name: Generate API docs
+        run: poetry run sphinx-apidoc -f -e -o docs/api src/ncaa_eval
+
       - name: Build docs
         run: poetry run sphinx-build -b html docs docs/_build/html
 
       - name: Push documentation to Github Page
-        uses: peaceiris/actions-gh-pages@v3.8.0
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages

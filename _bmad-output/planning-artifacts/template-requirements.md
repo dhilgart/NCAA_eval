@@ -182,6 +182,15 @@ When migrating pre-commit hooks from one toolchain to another (e.g., Pipenv/invo
 
 **CI Python version MUST match pyproject.toml** — using Python 3.10 in CI when the project requires `>=3.12` causes subtle breakage (mypy strict mode, syntax errors, f-string features).
 
+#### Pin GitHub Actions to Specific Version Tags, Never `@master` ⭐ (Discovered Story 8.7 Code Review)
+
+Using a mutable branch ref like `@master` for a GitHub Action is a **supply chain security risk**: any push to the upstream action repo changes what runs in your CI without notice. Always pin to a specific version tag (e.g., `@v3`) or a commit SHA.
+
+- ❌ `uses: commitizen-tools/commitizen-action@master` — mutable, reproducibility and security risk
+- ✅ `uses: commitizen-tools/commitizen-action@v3` — pinned to major version tag
+
+**Also: Add `if:` guards symmetrically.** If one job in a workflow file has an `if:` condition (e.g., skip on `bump:` commits), audit all other jobs in the same file for the same guard — they often need it too to avoid wasteful double-runs.
+
 #### Ruff Rule Selection: Use Explicit Codes, Not Prefixes ⭐ (Discovered Story 1.4 Code Review Round 2)
 
 `extend-select = ["PLR09"]` in Ruff selects the ENTIRE PLR09xx family, including rules with Ruff defaults that were never configured or documented:
