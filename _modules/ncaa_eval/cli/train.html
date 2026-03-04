@@ -328,6 +328,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">rich.table</span><span class="w"> </span><span class="kn">import</span> <span class="n">Table</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.evaluation</span><span class="w"> </span><span class="kn">import</span> <span class="n">BacktestResult</span><span class="p">,</span> <span class="n">feature_cols</span> <span class="k">as</span> <span class="n">_feature_cols</span><span class="p">,</span> <span class="n">run_backtest</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.evaluation.backtest</span><span class="w"> </span><span class="kn">import</span> <span class="n">_randomize_team_assignment</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.ingest</span><span class="w"> </span><span class="kn">import</span> <span class="n">ParquetRepository</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.model.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">Model</span><span class="p">,</span> <span class="n">StatefulModel</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.model.tracking</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelRun</span><span class="p">,</span> <span class="n">Prediction</span><span class="p">,</span> <span class="n">RunStore</span>
@@ -400,7 +401,7 @@
     <span class="n">data_server</span> <span class="o">=</span> <span class="n">ChronologicalDataServer</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span>
     <span class="n">feature_config</span> <span class="o">=</span> <span class="n">FeatureConfig</span><span class="p">(</span>
         <span class="n">graph_features_enabled</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">batch_rating_types</span><span class="o">=</span><span class="p">(),</span>
+        <span class="n">batch_rating_types</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;srs&quot;</span><span class="p">,),</span>
         <span class="n">ordinal_composite</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">calibration_method</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span>
@@ -437,6 +438,11 @@
 <span class="sd">    Returns:</span>
 <span class="sd">        List of feature column names used for training.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Stateless classifiers require balanced labels; the feature server</span>
+    <span class="c1"># assigns team_a = winner for every game, making team_a_won always True.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">ctx</span><span class="o">.</span><span class="n">is_stateful</span><span class="p">:</span>
+        <span class="n">combined</span> <span class="o">=</span> <span class="n">_randomize_team_assignment</span><span class="p">(</span><span class="n">combined</span><span class="p">)</span>
+
     <span class="n">y</span> <span class="o">=</span> <span class="n">combined</span><span class="p">[</span><span class="s2">&quot;team_a_won&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
 
     <span class="n">label_mean</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
@@ -448,10 +454,12 @@
         <span class="p">)</span>
 
     <span class="n">feat_cols</span> <span class="o">=</span> <span class="n">_feature_cols</span><span class="p">(</span><span class="n">combined</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">ctx</span><span class="o">.</span><span class="n">is_stateful</span><span class="p">:</span>
+        <span class="c1"># Drop columns that are entirely NaN (e.g. seed features without a seed</span>
+        <span class="c1"># table) so sklearn classifiers that reject NaN inputs can still fit.</span>
+        <span class="n">feat_cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">feat_cols</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">combined</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">all</span><span class="p">()]</span>
 
-    <span class="n">ctx</span><span class="o">.</span><span class="n">console</span><span class="o">.</span><span class="n">print</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s2">&quot;Training [bold]</span><span class="si">{</span><span class="n">ctx</span><span class="o">.</span><span class="n">model_name</span><span class="si">}</span><span class="s2">[/bold] on seasons &quot;</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">ctx</span><span class="o">.</span><span class="n">start_year</span><span class="si">}</span><span class="s2">–</span><span class="si">{</span><span class="n">ctx</span><span class="o">.</span><span class="n">end_year</span><span class="si">}</span><span class="s2">...&quot;</span>
-    <span class="p">)</span>
+    <span class="n">ctx</span><span class="o">.</span><span class="n">console</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Training [bold]</span><span class="si">{</span><span class="n">ctx</span><span class="o">.</span><span class="n">model_name</span><span class="si">}</span><span class="s2">[/bold] on seasons </span><span class="si">{</span><span class="n">ctx</span><span class="o">.</span><span class="n">start_year</span><span class="si">}</span><span class="s2">–</span><span class="si">{</span><span class="n">ctx</span><span class="o">.</span><span class="n">end_year</span><span class="si">}</span><span class="s2">...&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">ctx</span><span class="o">.</span><span class="n">is_stateful</span><span class="p">:</span>
         <span class="n">ctx</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">combined</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>

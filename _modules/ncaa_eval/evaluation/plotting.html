@@ -413,9 +413,7 @@
             <span class="n">line</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="n">COLOR_GREEN</span><span class="p">},</span>
             <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Calibration&quot;</span><span class="p">,</span>
             <span class="n">text</span><span class="o">=</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">bin_counts</span><span class="p">],</span>
-            <span class="n">hovertemplate</span><span class="o">=</span><span class="p">(</span>
-                <span class="s2">&quot;Predicted: %</span><span class="si">{x:.3f}</span><span class="s2">&lt;br&gt;&quot;</span> <span class="s2">&quot;Observed: %</span><span class="si">{y:.3f}</span><span class="s2">&lt;br&gt;&quot;</span> <span class="s2">&quot;Count: %</span><span class="si">{text}</span><span class="s2">&lt;extra&gt;&lt;/extra&gt;&quot;</span>
-            <span class="p">),</span>
+            <span class="n">hovertemplate</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;Predicted: %</span><span class="si">{x:.3f}</span><span class="s2">&lt;br&gt;Observed: %</span><span class="si">{y:.3f}</span><span class="s2">&lt;br&gt;Count: %</span><span class="si">{text}</span><span class="s2">&lt;extra&gt;&lt;/extra&gt;&quot;</span><span class="p">),</span>
         <span class="p">)</span>
     <span class="p">)</span>
 
@@ -524,7 +522,7 @@
                 <span class="n">name</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
                 <span class="n">line</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="n">color</span><span class="p">},</span>
                 <span class="n">marker</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="n">color</span><span class="p">},</span>
-                <span class="n">hovertemplate</span><span class="o">=</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2">&lt;br&gt;&quot;</span> <span class="s2">&quot;Year: %</span><span class="si">{x}</span><span class="s2">&lt;br&gt;&quot;</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">metric</span><span class="si">}</span><span class="s2">: %</span><span class="se">{{</span><span class="s2">y:.4f</span><span class="se">}}</span><span class="s2">&lt;extra&gt;&lt;/extra&gt;&quot;</span><span class="p">),</span>
+                <span class="n">hovertemplate</span><span class="o">=</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2">&lt;br&gt;Year: %</span><span class="se">{{</span><span class="s2">x</span><span class="se">}}</span><span class="s2">&lt;br&gt;</span><span class="si">{</span><span class="n">metric</span><span class="si">}</span><span class="s2">: %</span><span class="se">{{</span><span class="s2">y:.4f</span><span class="se">}}</span><span class="s2">&lt;extra&gt;&lt;/extra&gt;&quot;</span><span class="p">),</span>
             <span class="p">)</span>
         <span class="p">)</span>
 
@@ -577,7 +575,7 @@
             <span class="n">colorscale</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="n">COLOR_RED</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">COLOR_GREEN</span><span class="p">]],</span>
             <span class="n">zmin</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
             <span class="n">zmax</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-            <span class="n">hovertemplate</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;Team: %</span><span class="si">{y}</span><span class="s2">&lt;br&gt;&quot;</span> <span class="s2">&quot;Round: %</span><span class="si">{x}</span><span class="s2">&lt;br&gt;&quot;</span> <span class="s2">&quot;P(advance): %</span><span class="si">{z:.3f}</span><span class="s2">&lt;extra&gt;&lt;/extra&gt;&quot;</span><span class="p">),</span>
+            <span class="n">hovertemplate</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;Team: %</span><span class="si">{y}</span><span class="s2">&lt;br&gt;Round: %</span><span class="si">{x}</span><span class="s2">&lt;br&gt;P(advance): %</span><span class="si">{z:.3f}</span><span class="s2">&lt;extra&gt;&lt;/extra&gt;&quot;</span><span class="p">),</span>
         <span class="p">)</span>
     <span class="p">)</span>
 

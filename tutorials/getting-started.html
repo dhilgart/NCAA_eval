@@ -324,13 +324,8 @@ setup instructions.</p>
 <h2>Step 1: Sync Data<a class="headerlink" href="#step-1-sync-data" title="Link to this heading">¶</a></h2>
 <p>Download NCAA game data from Kaggle (historical seasons 1985–2025) and ESPN
 (current-season scores):</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ncaa-eval<span class="w"> </span>sync<span class="w"> </span>--source<span class="w"> </span>all<span class="w"> </span>--dest<span class="w"> </span>data/
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>sync.py<span class="w"> </span>--source<span class="w"> </span>all<span class="w"> </span>--dest<span class="w"> </span>data/
 </pre></div>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The legacy <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">sync.py</span> <span class="pre">--source</span> <span class="pre">all</span> <span class="pre">--dest</span> <span class="pre">data/</span></code> invocation also works
-and accepts the same flags.  The <code class="docutils literal notranslate"><span class="pre">ncaa-eval</span> <span class="pre">sync</span></code> CLI is the canonical form.</p>
 </div>
 <p>Sample output (first run — exact counts vary by season):</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>[kaggle] teams: 362 written

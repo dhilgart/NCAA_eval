@@ -393,6 +393,56 @@
 
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_randomize_team_assignment</span><span class="p">(</span><span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">42</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Randomly swap team_a/team_b for ~50% of rows to balance binary labels.</span>
+
+<span class="sd">    The feature server assigns ``team_a = winner`` for every game, so</span>
+<span class="sd">    ``team_a_won`` is always ``True``.  Stateless classifiers require at least</span>
+<span class="sd">    two classes in the training labels; this function randomly re-assigns which</span>
+<span class="sd">    team is &quot;a&quot; so roughly half the rows become ``team_a_won = False``.</span>
+
+<span class="sd">    Paired ``_a`` / ``_b`` feature columns are swapped; ``delta_*`` and</span>
+<span class="sd">    ``seed_diff`` columns are negated; ``loc_encoding`` is negated.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        df: Feature DataFrame from ``StatefulFeatureServer.serve_season_features``.</span>
+<span class="sd">        seed: RNG seed for reproducibility.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Copy of ``df`` with team assignment randomly swapped for ~50% of rows.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">rng</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+    <span class="n">mask</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">rng</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mf">0.5</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">df</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="c1"># Swap team IDs</span>
+    <span class="n">tmp_id</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mask</span><span class="p">,</span> <span class="s2">&quot;team_a_id&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">result</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mask</span><span class="p">,</span> <span class="s2">&quot;team_a_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mask</span><span class="p">,</span> <span class="s2">&quot;team_b_id&quot;</span><span class="p">]</span>
+    <span class="n">result</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mask</span><span class="p">,</span> <span class="s2">&quot;team_b_id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tmp_id</span>
+
+    <span class="c1"># Flip label</span>
+    <span class="n">result</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mask</span><span class="p">,</span> <span class="s2">&quot;team_a_won&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="o">~</span><span class="n">result</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mask</span><span class="p">,</span> <span class="s2">&quot;team_a_won&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+
+    <span class="c1"># Negate direction-dependent scalar columns</span>
+    <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">col</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;delta_&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="n">col</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;seed_diff&quot;</span><span class="p">,</span> <span class="s2">&quot;loc_encoding&quot;</span><span class="p">):</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mask</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">result</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mask</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span>
+
+    <span class="c1"># Swap paired _a / _b feature columns (e.g. srs_a ↔ srs_b)</span>
+    <span class="n">checked</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">columns</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">col</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;_a&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">col</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;team_a_id&quot;</span><span class="p">,</span> <span class="s2">&quot;team_a_won&quot;</span><span class="p">):</span>
+            <span class="n">base</span> <span class="o">=</span> <span class="n">col</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">col_b</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">base</span><span class="si">}</span><span class="s2">_b&quot;</span>
+            <span class="k">if</span> <span class="n">col_b</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">columns</span> <span class="ow">and</span> <span class="n">base</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">checked</span><span class="p">:</span>
+                <span class="n">checked</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">base</span><span class="p">)</span>
+                <span class="n">tmp_a</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mask</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mask</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mask</span><span class="p">,</span> <span class="n">col_b</span><span class="p">]</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">mask</span><span class="p">,</span> <span class="n">col_b</span><span class="p">]</span> <span class="o">=</span> <span class="n">tmp_a</span>
+
+    <span class="k">return</span> <span class="n">result</span>
+
+
 <div class="viewcode-block" id="FoldResult">
 <a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.backtest.html#ncaa_eval.evaluation.FoldResult">[docs]</a>
 <span class="nd">@dataclasses</span><span class="o">.</span><span class="n">dataclass</span><span class="p">(</span><span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -478,32 +528,36 @@
             <span class="n">test_team_b_ids</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;int64&quot;</span><span class="p">),</span>
         <span class="p">)</span>
 
-    <span class="n">y_train</span> <span class="o">=</span> <span class="n">fold</span><span class="o">.</span><span class="n">train</span><span class="p">[</span><span class="s2">&quot;team_a_won&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
-    <span class="n">y_test</span> <span class="o">=</span> <span class="n">fold</span><span class="o">.</span><span class="n">test</span><span class="p">[</span><span class="s2">&quot;team_a_won&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="c1"># Randomize test-fold team assignment: feature server always assigns</span>
+    <span class="c1"># team_a = winner, so y_test would be all 1s without this, making</span>
+    <span class="c1"># roc_auc undefined.  Use a distinct seed from the train randomisation.</span>
+    <span class="n">test_data</span> <span class="o">=</span> <span class="n">_randomize_team_assignment</span><span class="p">(</span><span class="n">fold</span><span class="o">.</span><span class="n">test</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">43</span><span class="p">)</span>
+    <span class="n">y_test</span> <span class="o">=</span> <span class="n">test_data</span><span class="p">[</span><span class="s2">&quot;team_a_won&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
 
     <span class="n">is_stateful</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">StatefulModel</span><span class="p">)</span>
     <span class="n">feat_cols</span> <span class="o">=</span> <span class="n">feature_cols</span><span class="p">(</span><span class="n">fold</span><span class="o">.</span><span class="n">train</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">is_stateful</span><span class="p">:</span>
+        <span class="n">y_train</span> <span class="o">=</span> <span class="n">fold</span><span class="o">.</span><span class="n">train</span><span class="p">[</span><span class="s2">&quot;team_a_won&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
         <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">fold</span><span class="o">.</span><span class="n">train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">fold</span><span class="o">.</span><span class="n">train</span><span class="p">[</span><span class="n">feat_cols</span><span class="p">],</span> <span class="n">y_train</span><span class="p">)</span>
+        <span class="c1"># Balance labels: feature server assigns team_a = winner always,</span>
+        <span class="c1"># so team_a_won is always True.  Randomise assignment before fitting.</span>
+        <span class="n">train_data</span> <span class="o">=</span> <span class="n">_randomize_team_assignment</span><span class="p">(</span><span class="n">fold</span><span class="o">.</span><span class="n">train</span><span class="p">)</span>
+        <span class="n">y_train</span> <span class="o">=</span> <span class="n">train_data</span><span class="p">[</span><span class="s2">&quot;team_a_won&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="c1"># Drop all-NaN columns so sklearn estimators that reject NaN can fit.</span>
+        <span class="n">feat_cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">feat_cols</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">fold</span><span class="o">.</span><span class="n">train</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">all</span><span class="p">()]</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">train_data</span><span class="p">[</span><span class="n">feat_cols</span><span class="p">],</span> <span class="n">y_train</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">is_stateful</span><span class="p">:</span>
-        <span class="n">preds</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">fold</span><span class="o">.</span><span class="n">test</span><span class="p">)</span>
+        <span class="n">preds</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">test_data</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">preds</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">fold</span><span class="o">.</span><span class="n">test</span><span class="p">[</span><span class="n">feat_cols</span><span class="p">])</span>
+        <span class="n">preds</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">test_data</span><span class="p">[</span><span class="n">feat_cols</span><span class="p">])</span>
 
     <span class="n">y_true_np</span> <span class="o">=</span> <span class="n">y_test</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
     <span class="n">y_prob_np</span> <span class="o">=</span> <span class="n">preds</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
 
-    <span class="n">metrics</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">fn</span> <span class="ow">in</span> <span class="n">metric_fns</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">metrics</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">fn</span><span class="p">(</span><span class="n">y_true_np</span><span class="p">,</span> <span class="n">y_prob_np</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># noqa: BLE001</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Metric &#39;</span><span class="si">%s</span><span class="s2">&#39; computation failed; substituting NaN&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            <span class="n">metrics</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s2">&quot;nan&quot;</span><span class="p">)</span>
+    <span class="n">metrics</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">fn</span><span class="p">(</span><span class="n">y_true_np</span><span class="p">,</span> <span class="n">y_prob_np</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">fn</span> <span class="ow">in</span> <span class="n">metric_fns</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
 
     <span class="n">elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span>
     <span class="k">return</span> <span class="n">FoldResult</span><span class="p">(</span>
@@ -512,9 +566,9 @@
         <span class="n">actuals</span><span class="o">=</span><span class="n">y_test</span><span class="p">,</span>
         <span class="n">metrics</span><span class="o">=</span><span class="n">metrics</span><span class="p">,</span>
         <span class="n">elapsed_seconds</span><span class="o">=</span><span class="n">elapsed</span><span class="p">,</span>
-        <span class="n">test_game_ids</span><span class="o">=</span><span class="n">fold</span><span class="o">.</span><span class="n">test</span><span class="p">[</span><span class="s2">&quot;game_id&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-        <span class="n">test_team_a_ids</span><span class="o">=</span><span class="n">fold</span><span class="o">.</span><span class="n">test</span><span class="p">[</span><span class="s2">&quot;team_a_id&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-        <span class="n">test_team_b_ids</span><span class="o">=</span><span class="n">fold</span><span class="o">.</span><span class="n">test</span><span class="p">[</span><span class="s2">&quot;team_b_id&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="n">test_game_ids</span><span class="o">=</span><span class="n">test_data</span><span class="p">[</span><span class="s2">&quot;game_id&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="n">test_team_a_ids</span><span class="o">=</span><span class="n">test_data</span><span class="p">[</span><span class="s2">&quot;team_a_id&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="n">test_team_b_ids</span><span class="o">=</span><span class="n">test_data</span><span class="p">[</span><span class="s2">&quot;team_b_id&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
     <span class="p">)</span>
 
 
