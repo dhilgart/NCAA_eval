@@ -377,6 +377,29 @@ Tests are organized across four **orthogonal dimensions**:
 **Test Artifact Assertions (Discovered: Story 8.5 Code Review, 2026-03-03):**
 - When a test is designed to prove "the model took path X not path Y", assert the on-disk artifact specific to that path — not metadata fields that could come from config or the early-exit branch. Example: `(model_dir / "model.ubj").exists()` proves XGBoost path; `(model_dir / "feature_names.json").exists()` proves fit() completed. Metadata fields like `start_year` / `end_year` come from the config, not the execution path.
 
+### E2E Documentation Validation Tests ⭐ (Discovered Story 8.10, 2026-03-03)
+
+All documented toolchain commands should be covered by E2E integration tests to prevent documentation rot. Pattern:
+
+```python
+# tests/integration/test_documented_commands.py
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+_SELF_IGNORE = f"--ignore={PROJECT_ROOT / 'tests' / 'integration' / 'test_documented_commands.py'}"
+
+def _run(cmd: list[str], *, timeout: int = 120) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(cmd, cwd=PROJECT_ROOT, capture_output=True, text=True, timeout=timeout)
+```
+
+**Key lessons:**
+- Use `subprocess.run()` (true E2E) — NOT `typer.testing.CliRunner` (that's unit-level)
+- Use `--ignore=tests/integration/test_documented_commands.py` in subprocess pytest/nox calls to prevent infinite recursion
+- `nox -s tests` recursion: requires `*session.posargs` in the nox tests session so `-- --ignore=...` can be passed through
+- For timed assertions (e.g., "smoke tests complete in < 10s"), measure with `time.monotonic()` — `timeout=N` is only a kill ceiling, not an assertion
+- `--cov` path should be relative (`src/ncaa_eval`) when `cwd=PROJECT_ROOT` is set — matches the documented command and works on any machine
+- `ruff extend-exclude = ["notebooks"]` — EDA notebooks are exempt from strict linting; add to base template pyproject.toml
+- `check-manifest` in Poetry projects works via `[tool.check-manifest]` ignore list without a `MANIFEST.in` (0.51+)
+- Mark all E2E tests `@pytest.mark.integration` and `@pytest.mark.slow` — they spawn subprocesses
+
 ### Hub-and-Spoke Documentation Architecture ⭐
 Testing strategy uses 1 main document (TESTING_STRATEGY.md) + 7 focused guides:
 - test-scope-guide.md (Unit vs Integration)

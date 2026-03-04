@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 import pytest
@@ -63,10 +64,13 @@ def _run(
 @pytest.mark.slow
 def test_pytest_smoke() -> None:
     """``pytest -m smoke`` exits 0 and completes in under 10 s (AC #2)."""
+    start = time.monotonic()
     result = _run(["pytest", "-m", "smoke", _SELF_IGNORE], timeout=30)
+    elapsed = time.monotonic() - start
     assert (
         result.returncode == 0
     ), f"pytest -m smoke failed (rc={result.returncode}):\n{result.stdout}\n{result.stderr}"
+    assert elapsed < 10, f"pytest -m smoke took {elapsed:.1f}s — must complete in under 10s (AC #2)"
 
 
 @pytest.mark.integration
@@ -86,7 +90,7 @@ def test_pytest_coverage() -> None:
     result = _run(
         [
             "pytest",
-            f"--cov={PROJECT_ROOT / 'src' / 'ncaa_eval'}",
+            "--cov=src/ncaa_eval",
             "--cov-report=term-missing",
             _SELF_IGNORE,
         ],

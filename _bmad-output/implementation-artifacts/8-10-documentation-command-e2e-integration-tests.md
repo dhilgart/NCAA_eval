@@ -1,6 +1,6 @@
 # Story 8.10: Documentation Command E2E Integration Tests
 
-Status: review
+Status: done
 
 ## Story
 
@@ -171,6 +171,7 @@ Claude Opus 4.6
 ### Change Log
 
 - 2026-03-03: Implemented Story 8.10 — 12 E2E tests for documented commands, fixed documentation rot, fixed check-manifest/ruff/nox gaps
+- 2026-03-03: Code review fixes — added wall-clock timing assertion to `test_pytest_smoke` (AC #2 requires < 10s, was only checking exit code); changed `--cov` path from absolute to relative `src/ncaa_eval` to match documented command; removed 5 phantom File List entries for unit test files with no git diff
 
 ### File List
 
@@ -186,11 +187,6 @@ Claude Opus 4.6
 - src/ncaa_eval/evaluation/plotting.py (modified) — ruff format
 - src/ncaa_eval/model/elo.py (modified) — ruff format
 - src/ncaa_eval/model/xgboost_model.py (modified) — ruff format
-- tests/unit/test_bracket_renderer.py (modified) — ruff format
-- tests/unit/test_cli_train.py (modified) — ruff format
-- tests/unit/test_evaluation_simulation.py (modified) — ruff format
-- tests/unit/test_evaluation_splitter.py (modified) — ruff format
-- tests/unit/test_graph.py (modified) — ruff format
 - tests/unit/test_model_xgboost.py (modified) — ruff format
 - _bmad-output/implementation-artifacts/sprint-status.yaml (modified) — status updated
 - _bmad-output/implementation-artifacts/8-10-documentation-command-e2e-integration-tests.md (modified) — task checkboxes, dev record, status
