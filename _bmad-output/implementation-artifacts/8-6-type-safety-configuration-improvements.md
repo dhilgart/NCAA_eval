@@ -1,6 +1,6 @@
 # Story 8.6: Type Safety & Configuration Improvements
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -42,10 +42,10 @@ so that type-checkers catch invalid configuration values at development time and
   - [x] 3.5 Update `dashboard/app.py` sidebar selectbox to show `display_name` values via `format_func` parameter
   - [x] 3.6 Update `2_Presentation.py` and `4_Pool_Scorer.py` subheaders/chart titles to use display names
 
-- [ ] Task 4: Run quality gates (AC: #4)
-  - [ ] 4.1 Run `ruff check .` — fix any violations
-  - [ ] 4.2 Run `mypy --strict src/ncaa_eval tests` — fix any type errors
-  - [ ] 4.3 Run `pytest` — all tests pass, no regressions
+- [x] Task 4: Run quality gates (AC: #4)
+  - [x] 4.1 Run `ruff check .` — fix any violations
+  - [x] 4.2 Run `mypy --strict src/ncaa_eval tests` — fix any type errors
+  - [x] 4.3 Run `pytest` — all tests pass, no regressions
 
 ## Dev Notes
 
@@ -159,6 +159,7 @@ Claude Opus 4.6
 - 2026-03-04: Task 1 — Added Literal types to FeatureConfig fields
 - 2026-03-04: Task 2 — Centralized DEFAULT_MARGIN_CAP in transform/constants.py
 - 2026-03-04: Task 3 — Added scoring display names with point values
+- 2026-03-04: Task 4 — Quality gates passed (ruff, mypy --strict, pytest 912/912)
 
 ### File List
 
