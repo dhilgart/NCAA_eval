@@ -25,11 +25,11 @@ so that the dashboard is immediately usable without squinting, confusion, or sta
   - [x] 1.4 Adjust `.team` min-height from `18px` to `20px` if needed to accommodate larger text
   - [x] 1.5 Verify bracket still fits within the 700px-height iframe (`components.html(bracket_html, height=700)` in `2_Presentation.py:46`) — increase height if needed
 
-- [ ] Task 2: Add prominent "Setup needed" message on home page (AC: #2)
-  - [ ] 2.1 In `dashboard/pages/home.py`, check if `years` is empty (already computed on line 13)
-  - [ ] 2.2 If empty, display `st.warning()` or `st.error()` with large banner explaining: data directory not found, run `ncaa-eval sync --source all --dest data/` to download data
-  - [ ] 2.3 If years exist but runs is empty, display `st.info()` explaining: data exists but no models trained yet, run `ncaa-eval train --model elo --start-year 2015 --end-year 2025`
-  - [ ] 2.4 Preserve the existing summary metrics for the happy path (data + runs both present)
+- [x] Task 2: Add prominent "Setup needed" message on home page (AC: #2)
+  - [x] 2.1 In `dashboard/pages/home.py`, check if `years` is empty (already computed on line 13)
+  - [x] 2.2 If empty, display `st.warning()` or `st.error()` with large banner explaining: data directory not found, run `ncaa-eval sync --source all --dest data/` to download data
+  - [x] 2.3 If years exist but runs is empty, display `st.info()` explaining: data exists but no models trained yet, run `ncaa-eval train --model elo --start-year 2015 --end-year 2025`
+  - [x] 2.4 Preserve the existing summary metrics for the happy path (data + runs both present)
 
 - [ ] Task 3: Add "Refresh Data" button to sidebar (AC: #3)
   - [ ] 3.1 In `dashboard/app.py`, add a button at the bottom of the sidebar section (after the Scoring Format filter)
