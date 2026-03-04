@@ -34,16 +34,14 @@ def _run(
 ) -> subprocess.CompletedProcess[str]:
     """Run *cmd* as a subprocess from the project root and return the result.
 
-    Parameters
-    ----------
-    cmd:
-        Command tokens (e.g. ``["pytest", "-m", "smoke"]``).
-    timeout:
-        Maximum wall-clock seconds before the process is killed.
+    Non-zero exit codes are intentionally NOT raised — callers assert
+    ``result.returncode`` themselves to produce helpful failure messages.
+
+    Args:
+        cmd: Command tokens (e.g. ``["pytest", "-m", "smoke"]``).
+        timeout: Maximum wall-clock seconds before the process is killed.
 
     Returns:
-    -------
-    subprocess.CompletedProcess[str]
         Completed process with captured stdout/stderr.
     """
     return subprocess.run(
@@ -51,6 +49,7 @@ def _run(
         cwd=PROJECT_ROOT,
         capture_output=True,
         text=True,
+        encoding="utf-8",
         timeout=timeout,
     )
 

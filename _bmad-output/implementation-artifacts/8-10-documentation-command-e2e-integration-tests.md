@@ -59,6 +59,12 @@ so that documentation rot is caught automatically and users following the guides
   - [x] 6.2 `ruff check .`
   - [x] 6.3 `mypy --strict src/ncaa_eval tests`
 
+### Review Follow-ups (AI)
+
+- [ ] [AI-Review][MEDIUM] `test_pytest_smoke` 10s wall-clock assertion includes subprocess startup overhead (~0.5–1s); may cause spurious failures on slow CI — consider relaxing to `< 15s` or documenting the subprocess overhead inclusion [tests/integration/test_documented_commands.py:73]
+- [ ] [AI-Review][MEDIUM] `_SELF_IGNORE` absolute path is computed at module import via `Path(__file__)` — if test file is ever moved, the path silently becomes invalid (pytest treats missing `--ignore` targets as no-ops) — add a comment noting this is intentionally anchored to the project root [tests/integration/test_documented_commands.py:27]
+- [ ] [AI-Review][MEDIUM] `test_pytest_full_suite` and `test_pytest_coverage` run ALL integration tests in the subprocess invocation (not just unit tests) — verify 300s timeout is sufficient for the full integration suite on CI hardware, especially if integration tests require network/filesystem [tests/integration/test_documented_commands.py:80, 93]
+
 ## Dev Notes
 
 ### Critical: `ncaa-eval` CLI Entry Point Does Not Exist
@@ -172,6 +178,7 @@ Claude Opus 4.6
 
 - 2026-03-03: Implemented Story 8.10 — 12 E2E tests for documented commands, fixed documentation rot, fixed check-manifest/ruff/nox gaps
 - 2026-03-03: Code review fixes — added wall-clock timing assertion to `test_pytest_smoke` (AC #2 requires < 10s, was only checking exit code); changed `--cov` path from absolute to relative `src/ncaa_eval` to match documented command; removed 5 phantom File List entries for unit test files with no git diff
+- 2026-03-03: Code review (adversarial) — fixed H1: converted `_run()` docstring from NumPy-style to Google-style (project convention = google); fixed L2: added `encoding="utf-8"` to `subprocess.run()` call; added L1 clarifying comment. Created 3 medium action items for CI timing fragility, `Path(__file__)` comment, and subprocess full-suite timeout adequacy.
 
 ### File List
 

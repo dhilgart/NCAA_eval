@@ -387,7 +387,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 _SELF_IGNORE = f"--ignore={PROJECT_ROOT / 'tests' / 'integration' / 'test_documented_commands.py'}"
 
 def _run(cmd: list[str], *, timeout: int = 120) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(cmd, cwd=PROJECT_ROOT, capture_output=True, text=True, timeout=timeout)
+    return subprocess.run(cmd, cwd=PROJECT_ROOT, capture_output=True, text=True, encoding="utf-8", timeout=timeout)
 ```
 
 **Key lessons:**
@@ -399,6 +399,8 @@ def _run(cmd: list[str], *, timeout: int = 120) -> subprocess.CompletedProcess[s
 - `ruff extend-exclude = ["notebooks"]` — EDA notebooks are exempt from strict linting; add to base template pyproject.toml
 - `check-manifest` in Poetry projects works via `[tool.check-manifest]` ignore list without a `MANIFEST.in` (0.51+)
 - Mark all E2E tests `@pytest.mark.integration` and `@pytest.mark.slow` — they spawn subprocesses
+- Use `encoding="utf-8"` with `text=True` in `subprocess.run()` — `text=True` alone uses locale encoding, which may not be UTF-8 on Windows/CI (tools like ruff output Unicode `✓` characters)
+- Use Google-style docstrings for helper functions (the project sets `convention = "google"` in pyproject.toml) — NumPy-style (`Parameters\n----------`) is a violation even if ruff doesn't catch it in the `tests/` directory
 
 ### Hub-and-Spoke Documentation Architecture ⭐
 Testing strategy uses 1 main document (TESTING_STRATEGY.md) + 7 focused guides:
