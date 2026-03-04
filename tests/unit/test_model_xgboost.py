@@ -340,5 +340,5 @@ class TestEarlyStopping:
             "(eval_set not passed to fit, or XGBoost version mismatch)"
         )
         assert best_iteration < 500, (
-            f"Expected early stopping before 500 iterations, " f"got best_iteration={best_iteration}"
+            f"Expected early stopping before 500 iterations, got best_iteration={best_iteration}"
         )

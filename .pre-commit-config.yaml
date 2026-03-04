@@ -44,7 +44,7 @@ repos:
 
   # Code Quality: Ruff (linting + formatting)
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.8.4
+    rev: v0.15.1
     hooks:
       - id: ruff
         name: ruff-lint

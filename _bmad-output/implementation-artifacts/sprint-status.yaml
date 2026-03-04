@@ -123,7 +123,7 @@ development_status:
   8-7-sprint-housekeeping-ci-cd-improvements: backlog
   8-8-dashboard-ux-quick-fixes: backlog
   8-9-add-pep20-solid-pure-function-gates: done
-  8-10-documentation-command-e2e-integration-tests: backlog
+  8-10-documentation-command-e2e-integration-tests: done
   8-11-fix-testing-documentation-staleness-marker-gaps: backlog
   8-12-epics-backlog-grooming-track-all-deferred-items: backlog
   8-13-gather-po-direction-category-1-2-items: backlog

@@ -167,10 +167,7 @@ class XGBoostModel(Model):
         missing = [p for p in (config_path, model_path) if not p.exists()]
         if missing:
             missing_names = ", ".join(p.name for p in missing)
-            msg = (
-                f"Incomplete save at {path!r}: missing {missing_names}. "
-                "The save may have been interrupted."
-            )
+            msg = f"Incomplete save at {path!r}: missing {missing_names}. The save may have been interrupted."
             raise FileNotFoundError(msg)
         config = XGBoostModelConfig.model_validate_json(config_path.read_text())
         instance = cls(config)

@@ -19,6 +19,7 @@ from rich.progress import Progress
 from rich.table import Table
 
 from ncaa_eval.evaluation import BacktestResult, feature_cols as _feature_cols, run_backtest
+from ncaa_eval.evaluation.backtest import _randomize_team_assignment
 from ncaa_eval.ingest import ParquetRepository
 from ncaa_eval.model.base import Model, StatefulModel
 from ncaa_eval.model.tracking import ModelRun, Prediction, RunStore
@@ -91,7 +92,7 @@ def _setup_feature_server(data_dir: Path) -> StatefulFeatureServer:
     data_server = ChronologicalDataServer(repo)
     feature_config = FeatureConfig(
         graph_features_enabled=False,
-        batch_rating_types=(),
+        batch_rating_types=("srs",),
         ordinal_composite=None,
         calibration_method=None,
     )
@@ -128,6 +129,11 @@ def _prepare_and_train(ctx: _TrainingContext, combined: pd.DataFrame) -> list[st
     Returns:
         List of feature column names used for training.
     """
+    # Stateless classifiers require balanced labels; the feature server
+    # assigns team_a = winner for every game, making team_a_won always True.
+    if not ctx.is_stateful:
+        combined = _randomize_team_assignment(combined)
+
     y = combined["team_a_won"].astype(int)
 
     label_mean = y.mean()
@@ -139,10 +145,12 @@ def _prepare_and_train(ctx: _TrainingContext, combined: pd.DataFrame) -> list[st
         )
 
     feat_cols = _feature_cols(combined)
+    if not ctx.is_stateful:
+        # Drop columns that are entirely NaN (e.g. seed features without a seed
+        # table) so sklearn classifiers that reject NaN inputs can still fit.
+        feat_cols = [c for c in feat_cols if not combined[c].isna().all()]
 
-    ctx.console.print(
-        f"Training [bold]{ctx.model_name}[/bold] on seasons " f"{ctx.start_year}–{ctx.end_year}..."
-    )
+    ctx.console.print(f"Training [bold]{ctx.model_name}[/bold] on seasons {ctx.start_year}–{ctx.end_year}...")
     if ctx.is_stateful:
         ctx.model.fit(combined, y)
     else:

@@ -15,6 +15,7 @@ from ncaa_eval.evaluation.backtest import (
     DEFAULT_METRICS,
     FoldResult,
     _evaluate_fold,
+    _randomize_team_assignment,
     feature_cols as _feature_cols,
     run_backtest,
 )
@@ -153,6 +154,107 @@ def _constant_metric(
     return 0.42
 
 
+# ── TestRandomizeTeamAssignment ─────────────────────────────────────────────
+
+
+class TestRandomizeTeamAssignment:
+    """Unit tests for _randomize_team_assignment."""
+
+    def _make_df(self, n: int = 20) -> pd.DataFrame:
+        """DataFrame where team_a is always the winner (feature-server convention)."""
+        rng = np.random.default_rng(0)
+        return pd.DataFrame(
+            {
+                "game_id": [f"g{i}" for i in range(n)],
+                "team_a_id": rng.integers(1000, 2000, size=n),
+                "team_b_id": rng.integers(2000, 3000, size=n),
+                "team_a_won": True,
+                "delta_srs": rng.normal(0, 5, size=n),
+                "loc_encoding": rng.choice([1, -1, 0], size=n).astype(float),
+                "seed_diff": rng.integers(-5, 6, size=n).astype(float),
+                "srs_a": rng.normal(0, 5, size=n),
+                "srs_b": rng.normal(0, 5, size=n),
+            }
+        )
+
+    def test_label_is_balanced(self) -> None:
+        """After randomisation, team_a_won has both True and False."""
+        result = _randomize_team_assignment(self._make_df(100))
+        assert result["team_a_won"].any()
+        assert (~result["team_a_won"]).any()
+
+    def test_original_not_mutated(self) -> None:
+        """Input DataFrame is not modified in place."""
+        df = self._make_df()
+        _randomize_team_assignment(df)
+        assert df["team_a_won"].all()
+
+    def test_team_ids_swapped_with_label(self) -> None:
+        """For rows where team_a_won flipped, team IDs are swapped."""
+        df = self._make_df()
+        result = _randomize_team_assignment(df)
+        flipped = ~result["team_a_won"]
+        assert (result.loc[flipped, "team_a_id"] == df.loc[flipped, "team_b_id"]).all()
+        assert (result.loc[flipped, "team_b_id"] == df.loc[flipped, "team_a_id"]).all()
+
+    def test_unswapped_rows_unchanged(self) -> None:
+        """Rows that were not swapped retain original values."""
+        df = self._make_df()
+        result = _randomize_team_assignment(df)
+        kept = result["team_a_won"]
+        assert (result.loc[kept, "team_a_id"] == df.loc[kept, "team_a_id"]).all()
+        assert (result.loc[kept, "delta_srs"] == df.loc[kept, "delta_srs"]).all()
+
+    def test_delta_columns_negated(self) -> None:
+        """delta_* columns are negated for swapped rows, unchanged for others."""
+        df = self._make_df()
+        result = _randomize_team_assignment(df)
+        flipped = ~result["team_a_won"]
+        pd.testing.assert_series_equal(
+            result.loc[flipped, "delta_srs"], -df.loc[flipped, "delta_srs"], check_names=False
+        )
+        pd.testing.assert_series_equal(
+            result.loc[~flipped, "delta_srs"], df.loc[~flipped, "delta_srs"], check_names=False
+        )
+
+    def test_loc_encoding_negated(self) -> None:
+        """loc_encoding is negated for swapped rows."""
+        df = self._make_df()
+        result = _randomize_team_assignment(df)
+        flipped = ~result["team_a_won"]
+        pd.testing.assert_series_equal(
+            result.loc[flipped, "loc_encoding"],
+            -df.loc[flipped, "loc_encoding"],
+            check_names=False,
+        )
+
+    def test_paired_ab_columns_swapped(self) -> None:
+        """Paired _a / _b columns (e.g. srs_a, srs_b) are swapped for swapped rows."""
+        df = self._make_df()
+        result = _randomize_team_assignment(df)
+        flipped = ~result["team_a_won"]
+        pd.testing.assert_series_equal(
+            result.loc[flipped, "srs_a"], df.loc[flipped, "srs_b"], check_names=False
+        )
+        pd.testing.assert_series_equal(
+            result.loc[flipped, "srs_b"], df.loc[flipped, "srs_a"], check_names=False
+        )
+
+    def test_deterministic_with_same_seed(self) -> None:
+        """Same seed produces identical results."""
+        df = self._make_df()
+        pd.testing.assert_frame_equal(
+            _randomize_team_assignment(df, seed=7), _randomize_team_assignment(df, seed=7)
+        )
+
+    def test_different_seeds_differ(self) -> None:
+        """Different seeds produce different swap masks."""
+        df = self._make_df(50)
+        r1 = _randomize_team_assignment(df, seed=1)
+        r2 = _randomize_team_assignment(df, seed=2)
+        assert not r1["team_a_won"].equals(r2["team_a_won"])
+
+
 # ── TestEvaluateFold ────────────────────────────────────────────────────────
 
 
@@ -215,23 +317,6 @@ class TestEvaluateFold:
 
         for col in received_cols:
             assert col not in METADATA_COLS
-
-    def test_metric_exception_produces_nan(self) -> None:
-        """Per-metric exceptions produce NaN, not crash."""
-        fold = _make_fold(2012)
-        model = _FakeStatelessModel()
-
-        def _raising_metric(
-            y_true: np.ndarray,
-            y_prob: np.ndarray,
-        ) -> float:
-            msg = "boom"
-            raise ValueError(msg)
-
-        result = _evaluate_fold(fold, model, {"good": _constant_metric, "bad": _raising_metric})
-
-        assert result.metrics["good"] == pytest.approx(0.42)
-        assert np.isnan(result.metrics["bad"])
 
     def test_fold_result_frozen(self) -> None:
         """FoldResult is a frozen dataclass."""

@@ -377,6 +377,33 @@ Tests are organized across four **orthogonal dimensions**:
 **Test Artifact Assertions (Discovered: Story 8.5 Code Review, 2026-03-03):**
 - When a test is designed to prove "the model took path X not path Y", assert the on-disk artifact specific to that path — not metadata fields that could come from config or the early-exit branch. Example: `(model_dir / "model.ubj").exists()` proves XGBoost path; `(model_dir / "feature_names.json").exists()` proves fit() completed. Metadata fields like `start_year` / `end_year` come from the config, not the execution path.
 
+### E2E Documentation Validation Tests ⭐ (Discovered Story 8.10, 2026-03-03)
+
+All documented toolchain commands should be covered by E2E integration tests to prevent documentation rot. Pattern:
+
+```python
+# tests/integration/test_documented_commands.py
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+_SELF_IGNORE = f"--ignore={PROJECT_ROOT / 'tests' / 'integration' / 'test_documented_commands.py'}"
+
+def _run(cmd: list[str], *, timeout: int = 120) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(cmd, cwd=PROJECT_ROOT, capture_output=True, text=True, encoding="utf-8", timeout=timeout)
+```
+
+**Key lessons:**
+- Use `subprocess.run()` (true E2E) — NOT `typer.testing.CliRunner` (that's unit-level)
+- Use `--ignore=tests/integration/test_documented_commands.py` in subprocess pytest/nox calls to prevent infinite recursion
+- `nox -s tests` recursion: requires `*session.posargs` in the nox tests session so `-- --ignore=...` can be passed through
+- For timed assertions (e.g., "smoke tests complete in < 10s"), measure with `time.monotonic()` — `timeout=N` is only a kill ceiling, not an assertion
+- `--cov` path should be relative (`src/ncaa_eval`) when `cwd=PROJECT_ROOT` is set — matches the documented command and works on any machine
+- `ruff extend-exclude = ["notebooks"]` — EDA notebooks are exempt from strict linting; add to base template pyproject.toml
+- `check-manifest` in Poetry projects works via `[tool.check-manifest]` ignore list without a `MANIFEST.in` (0.51+)
+- Mark all E2E tests `@pytest.mark.integration` and `@pytest.mark.slow` — they spawn subprocesses
+- Use `encoding="utf-8"` with `text=True` in `subprocess.run()` — `text=True` alone uses locale encoding, which may not be UTF-8 on Windows/CI (tools like ruff output Unicode `✓` characters)
+- Use Google-style docstrings for helper functions (the project sets `convention = "google"` in pyproject.toml) — NumPy-style (`Parameters\n----------`) is a violation even if ruff doesn't catch it in the `tests/` directory
+- **ANSI escape codes in subprocess output (Story 8.10 code review):** GitHub Actions sets `FORCE_COLOR=1`, causing Typer/Rich to emit ANSI escape sequences even when stdout is captured via pipe. This splits option names like `--model` across escape codes (`\x1b[1;36m-\x1b[0m\x1b[1;36m-model\x1b[0m`), making `"--model" in result.stdout` evaluate to `False`. **`NO_COLOR=1` alone is NOT sufficient** — Rich honors `FORCE_COLOR` over `NO_COLOR`. **Belt-and-suspenders fix:** (1) Remove `FORCE_COLOR`/`FORCE_COLORS` from the subprocess env, (2) set `NO_COLOR=1`, AND (3) strip any remaining ANSI via regex after the call: `_ANSI_ESCAPE = re.compile(r"\x1b\[[0-9;]*[a-zA-Z]")` then `_ANSI_ESCAPE.sub("", result.stdout)` before text assertions.
+- **ruff version alignment (Story 8.10 code review):** When using `ruff = "*"` in pyproject.toml (installs latest), the pre-commit ruff hook MUST be pinned to the same major/minor version. Mismatched versions produce different formatting (e.g., assertion parenthesization), causing `test_ruff_format_check` to fail on CI even though the pre-commit hook passes locally. **Fix:** Pin ruff in both places — in `pyproject.toml` use `ruff = "^0.15"` (or specific version), and set `rev: v0.15.1` (matching) in `.pre-commit-config.yaml`. When upgrading ruff, update both simultaneously.
+
 ### Hub-and-Spoke Documentation Architecture ⭐
 Testing strategy uses 1 main document (TESTING_STRATEGY.md) + 7 focused guides:
 - test-scope-guide.md (Unit vs Integration)

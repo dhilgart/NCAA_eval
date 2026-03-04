@@ -150,6 +150,9 @@ cython_debug/
 data/*
 !data/.gitkeep
 
+# edgetest — dependency boundary testing artifacts
+.edgetest/
+
 # Ruff
 .ruff_cache/
 

@@ -493,9 +493,9 @@ def test_graph_transformer_compute_features_consistent(triangle_games: pd.DataFr
     one_step = one_step.sort_values("team_id").reset_index(drop=True)
     for col in two_step.columns:
         for i in range(len(two_step)):
-            assert two_step[col].iloc[i] == pytest.approx(
-                one_step[col].iloc[i]
-            ), f"Mismatch in column '{col}' row {i}"
+            assert two_step[col].iloc[i] == pytest.approx(one_step[col].iloc[i]), (
+                f"Mismatch in column '{col}' row {i}"
+            )
 
 
 # ---------------------------------------------------------------------------

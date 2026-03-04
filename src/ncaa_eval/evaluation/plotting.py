@@ -102,9 +102,7 @@ def plot_reliability_diagram(
             line={"color": COLOR_GREEN},
             name="Calibration",
             text=[str(c) for c in data.bin_counts],
-            hovertemplate=(
-                "Predicted: %{x:.3f}<br>" "Observed: %{y:.3f}<br>" "Count: %{text}<extra></extra>"
-            ),
+            hovertemplate=("Predicted: %{x:.3f}<br>Observed: %{y:.3f}<br>Count: %{text}<extra></extra>"),
         )
     )
 
@@ -207,7 +205,7 @@ def plot_metric_comparison(
                 name=model_name,
                 line={"color": color},
                 marker={"color": color},
-                hovertemplate=(f"{model_name}<br>" "Year: %{x}<br>" f"{metric}: %{{y:.4f}}<extra></extra>"),
+                hovertemplate=(f"{model_name}<br>Year: %{{x}}<br>{metric}: %{{y:.4f}}<extra></extra>"),
             )
         )
 
@@ -257,7 +255,7 @@ def plot_advancement_heatmap(
             colorscale=[[0, COLOR_RED], [1, COLOR_GREEN]],
             zmin=0.0,
             zmax=1.0,
-            hovertemplate=("Team: %{y}<br>" "Round: %{x}<br>" "P(advance): %{z:.3f}<extra></extra>"),
+            hovertemplate=("Team: %{y}<br>Round: %{x}<br>P(advance): %{z:.3f}<extra></extra>"),
         )
     )
 

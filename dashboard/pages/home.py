@@ -7,7 +7,7 @@ import streamlit as st
 from dashboard.lib.data_loaders import get_data_dir, load_available_runs, load_available_years
 
 st.title("NCAA Eval Dashboard")
-st.markdown("Explore model backtests, tournament simulations, and bracket predictions " "for March Madness.")
+st.markdown("Explore model backtests, tournament simulations, and bracket predictions for March Madness.")
 
 data_dir = str(get_data_dir())
 years = load_available_years(data_dir)

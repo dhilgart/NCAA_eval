@@ -63,6 +63,7 @@ warn_required_dynamic_aliases = true
 
 [tool.ruff]
 line-length = 110
+extend-exclude = ["notebooks"]
 
 [tool.ruff.lint]
 extend-select = [
@@ -219,6 +220,17 @@ ignore = [
     "data/**",
     # Data pipeline CLI (not part of the installed package)
     "sync.py",
+    # Streamlit config
+    ".streamlit/**",
+    # Project-level markdown not in distribution
+    "CLAUDE.md",
+    # Notebooks and scripts (not part of the installed package)
+    "notebooks/**",
+    "scripts/**",
+    # Template directory (cookiecutter)
+    "template/**",
+    # Mutants directory (mutmut)
+    "mutants/**",
 ]
 
 [tool.mutmut]

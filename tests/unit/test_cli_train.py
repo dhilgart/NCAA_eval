@@ -142,9 +142,9 @@ class TestCLITrain:
         run_dir = output_dir / "runs" / run.run_id
         assert (run_dir / "run.json").exists()
         assert (run_dir / "predictions.parquet").exists()
-        assert (
-            run_dir / "summary.parquet"
-        ).exists(), "summary.parquet must be created alongside run artifacts"
+        assert (run_dir / "summary.parquet").exists(), (
+            "summary.parquet must be created alongside run artifacts"
+        )
 
     # -----------------------------------------------------------------------
     # Task 7.3: CLI persists backtest summary.parquet via save_metrics
@@ -186,9 +186,9 @@ class TestCLITrain:
         summary = store.load_metrics(runs[0].run_id)
         assert summary is not None, "save_metrics must persist summary.parquet"
         expected_cols = {"log_loss", "brier_score", "roc_auc", "ece"}
-        assert expected_cols.issubset(
-            set(summary.columns)
-        ), f"Missing metric columns: {expected_cols - set(summary.columns)}"
+        assert expected_cols.issubset(set(summary.columns)), (
+            f"Missing metric columns: {expected_cols - set(summary.columns)}"
+        )
 
     # -----------------------------------------------------------------------
     # Task 6.3: Invalid model name prints error with available models
@@ -242,9 +242,9 @@ class TestCLITrain:
         fold_preds = store.load_fold_predictions(runs[0].run_id)
         assert fold_preds is not None, "fold_predictions.parquet must be created for ≥2 seasons"
         expected_cols = {"year", "game_id", "team_a_id", "team_b_id", "pred_win_prob", "team_a_won"}
-        assert expected_cols.issubset(
-            set(fold_preds.columns)
-        ), f"Missing fold_predictions columns: {expected_cols - set(fold_preds.columns)}"
+        assert expected_cols.issubset(set(fold_preds.columns)), (
+            f"Missing fold_predictions columns: {expected_cols - set(fold_preds.columns)}"
+        )
 
     @patch(
         "ncaa_eval.cli.train.StatefulFeatureServer.serve_season_features",
