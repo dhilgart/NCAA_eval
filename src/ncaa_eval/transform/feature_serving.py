@@ -183,7 +183,7 @@ class StatefulFeatureServer:
     def serve_season_features(
         self,
         year: int,
-        mode: str = "batch",
+        mode: Literal["batch", "stateful"] = "batch",
     ) -> pd.DataFrame:
         """Build the feature matrix for a full season.
 

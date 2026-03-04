@@ -16,6 +16,7 @@ import math
 import time
 import types
 from collections.abc import Callable, Mapping, Sequence
+from typing import Literal
 
 import joblib  # type: ignore[import-untyped]
 import numpy as np
@@ -259,7 +260,7 @@ def run_backtest(  # noqa: PLR0913 — REFACTOR Story 8.1
     feature_server: StatefulFeatureServer,
     *,
     seasons: Sequence[int],
-    mode: str = "batch",
+    mode: Literal["batch", "stateful"] = "batch",
     n_jobs: int = -1,
     metric_fns: Mapping[
         str,
@@ -291,7 +292,7 @@ def run_backtest(  # noqa: PLR0913 — REFACTOR Story 8.1
             ``seasons`` contains fewer than 2 elements (propagated from
             :func:`walk_forward_splits`).
     """
-    if mode not in _VALID_MODES:
+    if mode not in ("batch", "stateful"):
         msg = f"mode must be 'batch' or 'stateful', got {mode!r}"
         raise ValueError(msg)
 
