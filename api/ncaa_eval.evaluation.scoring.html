@@ -525,6 +525,17 @@ a dedicated <code class="docutils literal notranslate"><span class="pre">compute
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="ncaa_eval.evaluation.scoring.list_scoring_display_names">
+<span class="sig-prename descclassname"><span class="pre">ncaa_eval.evaluation.scoring.</span></span><span class="sig-name descname"><span class="pre">list_scoring_display_names</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/evaluation/scoring.html#list_scoring_display_names"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.evaluation.scoring.list_scoring_display_names" title="Link to this definition">¶</a></dt>
+<dd><p>Return a mapping of registry keys to display names.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dict mapping scoring name → human-readable display name.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="ncaa_eval.evaluation.scoring.list_scorings">
 <span class="sig-prename descclassname"><span class="pre">ncaa_eval.evaluation.scoring.</span></span><span class="sig-name descname"><span class="pre">list_scorings</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/evaluation/scoring.html#list_scorings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.evaluation.scoring.list_scorings" title="Link to this definition">¶</a></dt>
 <dd><p>Return all registered scoring names (sorted).</p>
@@ -532,11 +543,15 @@ a dedicated <code class="docutils literal notranslate"><span class="pre">compute
 
 <dl class="py function">
 <dt class="sig sig-object py" id="ncaa_eval.evaluation.scoring.register_scoring">
-<span class="sig-prename descclassname"><span class="pre">ncaa_eval.evaluation.scoring.</span></span><span class="sig-name descname"><span class="pre">register_scoring</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">_ST</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">_ST</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/evaluation/scoring.html#register_scoring"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.evaluation.scoring.register_scoring" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">ncaa_eval.evaluation.scoring.</span></span><span class="sig-name descname"><span class="pre">register_scoring</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">display_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">_ST</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">_ST</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/evaluation/scoring.html#register_scoring"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.evaluation.scoring.register_scoring" title="Link to this definition">¶</a></dt>
 <dd><p>Class decorator that registers a scoring rule class.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>name</strong> – Registry key for the scoring rule.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> – Registry key for the scoring rule.</p></li>
+<li><p><strong>display_name</strong> – Optional human-readable label for UI display.
+Falls back to <em>name</em> if not provided.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Decorator that registers the class and returns it unchanged.</p>
@@ -664,6 +679,7 @@ a dedicated <code class="docutils literal notranslate"><span class="pre">compute
 </ul>
 </li>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.scoring.get_scoring"><code class="docutils literal notranslate"><span class="pre">get_scoring()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.evaluation.scoring.list_scoring_display_names"><code class="docutils literal notranslate"><span class="pre">list_scoring_display_names()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.scoring.list_scorings"><code class="docutils literal notranslate"><span class="pre">list_scorings()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.scoring.register_scoring"><code class="docutils literal notranslate"><span class="pre">register_scoring()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.scoring.scoring_from_config"><code class="docutils literal notranslate"><span class="pre">scoring_from_config()</span></code></a></li>

@@ -373,6 +373,7 @@
 <span class="n">_ST</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;_ST&quot;</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="s2">&quot;type[ScoringRule]&quot;</span><span class="p">)</span>
 
 <span class="n">_SCORING_REGISTRY</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">type</span><span class="p">[</span><span class="n">ScoringRule</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">_SCORING_DISPLAY_NAMES</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 
 
 <div class="viewcode-block" id="ScoringNotFoundError">
@@ -384,11 +385,13 @@
 
 <div class="viewcode-block" id="register_scoring">
 <a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.register_scoring">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">register_scoring</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">_ST</span><span class="p">],</span> <span class="n">_ST</span><span class="p">]:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">register_scoring</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">display_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">_ST</span><span class="p">],</span> <span class="n">_ST</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Class decorator that registers a scoring rule class.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        name: Registry key for the scoring rule.</span>
+<span class="sd">        display_name: Optional human-readable label for UI display.</span>
+<span class="sd">            Falls back to *name* if not provided.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        Decorator that registers the class and returns it unchanged.</span>
@@ -402,6 +405,7 @@
             <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Scoring name </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> is already registered to </span><span class="si">{</span><span class="n">_SCORING_REGISTRY</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="n">_SCORING_REGISTRY</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">cls</span>
+        <span class="n">_SCORING_DISPLAY_NAMES</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">display_name</span> <span class="ow">or</span> <span class="n">name</span>
         <span class="k">return</span> <span class="bp">cls</span>
 
     <span class="k">return</span> <span class="n">decorator</span></div>
@@ -432,6 +436,18 @@
 
 
 
+<div class="viewcode-block" id="list_scoring_display_names">
+<a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.scoring.html#ncaa_eval.evaluation.list_scoring_display_names">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">list_scoring_display_names</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a mapping of registry keys to display names.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Dict mapping scoring name → human-readable display name.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">_SCORING_DISPLAY_NAMES</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span></div>
+
+
+
 <span class="c1"># ---------------------------------------------------------------------------</span>
 <span class="c1"># Scoring rule implementations</span>
 <span class="c1"># ---------------------------------------------------------------------------</span>
@@ -439,7 +455,7 @@
 
 <div class="viewcode-block" id="StandardScoring">
 <a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.StandardScoring">[docs]</a>
-<span class="nd">@register_scoring</span><span class="p">(</span><span class="s2">&quot;standard&quot;</span><span class="p">)</span>
+<span class="nd">@register_scoring</span><span class="p">(</span><span class="s2">&quot;standard&quot;</span><span class="p">,</span> <span class="n">display_name</span><span class="o">=</span><span class="s2">&quot;Standard (1-2-4-8-16-32)&quot;</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">StandardScoring</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;ESPN-style scoring: 1-2-4-8-16-32 (192 total for perfect bracket).&quot;&quot;&quot;</span>
 
@@ -461,7 +477,7 @@
 
 <div class="viewcode-block" id="FibonacciScoring">
 <a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.FibonacciScoring">[docs]</a>
-<span class="nd">@register_scoring</span><span class="p">(</span><span class="s2">&quot;fibonacci&quot;</span><span class="p">)</span>
+<span class="nd">@register_scoring</span><span class="p">(</span><span class="s2">&quot;fibonacci&quot;</span><span class="p">,</span> <span class="n">display_name</span><span class="o">=</span><span class="s2">&quot;Fibonacci (2-3-5-8-13-21)&quot;</span><span class="p">)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">FibonacciScoring</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Fibonacci-style scoring: 2-3-5-8-13-21 (231 total for perfect bracket).&quot;&quot;&quot;</span>
 

@@ -320,13 +320,12 @@
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">dataclasses</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterator</span><span class="p">,</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>  <span class="c1"># type: ignore[import-untyped]</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.transform.feature_serving</span><span class="w"> </span><span class="kn">import</span> <span class="n">StatefulFeatureServer</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.transform.serving</span><span class="w"> </span><span class="kn">import</span> <span class="n">NO_TOURNAMENT_SEASONS</span>
-
-<span class="n">_VALID_MODES</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">({</span><span class="s2">&quot;batch&quot;</span><span class="p">,</span> <span class="s2">&quot;stateful&quot;</span><span class="p">})</span>
 
 
 <div class="viewcode-block" id="CVFold">
@@ -353,7 +352,7 @@
     <span class="n">seasons</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
     <span class="n">feature_server</span><span class="p">:</span> <span class="n">StatefulFeatureServer</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
-    <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;batch&quot;</span><span class="p">,</span>
+    <span class="n">mode</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;batch&quot;</span><span class="p">,</span> <span class="s2">&quot;stateful&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;batch&quot;</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterator</span><span class="p">[</span><span class="n">CVFold</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate walk-forward CV folds with Leave-One-Tournament-Out splits.</span>
 
@@ -375,7 +374,9 @@
 <span class="sd">        ValueError: If ``seasons`` has fewer than 2 elements, or if ``mode``</span>
 <span class="sd">            is not ``&quot;batch&quot;`` or ``&quot;stateful&quot;``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">mode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_VALID_MODES</span><span class="p">:</span>
+    <span class="c1"># Runtime guard: Literal[&quot;batch&quot;,&quot;stateful&quot;] enforces at static-analysis</span>
+    <span class="c1"># time; this check also protects callers who bypass mypy (e.g. YAML config).</span>
+    <span class="k">if</span> <span class="n">mode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;batch&quot;</span><span class="p">,</span> <span class="s2">&quot;stateful&quot;</span><span class="p">):</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;mode must be &#39;batch&#39; or &#39;stateful&#39;, got </span><span class="si">{</span><span class="n">mode</span><span class="si">!r}</span><span class="s2">&quot;</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
