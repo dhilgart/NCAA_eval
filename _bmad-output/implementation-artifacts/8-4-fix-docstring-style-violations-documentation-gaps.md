@@ -286,6 +286,7 @@ claude-sonnet-4-6
 
 - Code review (claude-sonnet-4-6) found and fixed: unconverted NumPy-style docstrings in `calibration.py` (4 methods), `xgboost_model.py` (4 `Raises:` sections), and `feature_serving.py` (3 class/method docstrings). Also fixed `dashboard/app.py:69` CLI reference that was marked `[x]` complete but not changed.
 - Code review pass 2 (claude-sonnet-4-6) found and fixed: `update_game()` missing formal `Returns:` section (`transform/elo.py`); `_to_games()` missing `Returns:` section and detailed description paragraph (`model/base.py`); `"D"` not explicit in `extend-select` (AC10 implicit-only enablement via pydocstyle convention — made explicit); tutorial `getting-started.md` still using `python sync.py` instead of canonical `ncaa-eval sync`; `apply_season_mean_reversion()` missing detailed description paragraph (`transform/elo.py`).
+- PR ruff-lint fix (claude-sonnet-4-6): pre-commit ruff-lint hook failed on `docs/conf.py` and all `tasks/*.py` files — D100/D104 missing module/package docstrings. Enabling `"D"` in `extend-select` (AC10) caused ruff to enforce D100/D104 on ALL Python files processed by pre-commit, not just `src/`. Added module docstrings to all 10 files. Also fixed one pre-existing D403 violation in `tasks/git.py`.
 
 ### File List
 
@@ -314,3 +315,13 @@ claude-sonnet-4-6
 - `tests/integration/test_elo_integration.py`
 - `tests/unit/test_evaluation_metrics.py`
 - `tests/unit/test_kaggle_connector.py`
+- `docs/conf.py`
+- `tasks/__init__.py`
+- `tasks/build.py`
+- `tasks/common.py`
+- `tasks/doc.py`
+- `tasks/env.py`
+- `tasks/git.py`
+- `tasks/secure.py`
+- `tasks/style.py`
+- `tasks/test.py`
