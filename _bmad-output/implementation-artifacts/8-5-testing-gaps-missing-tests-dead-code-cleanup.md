@@ -1,6 +1,6 @@
 # Story 8.5: Testing Gaps — Missing Tests & Dead Code Cleanup
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -20,46 +20,46 @@ so that the test suite provides comprehensive coverage of production code paths 
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Verify `scoring_from_config` coverage (AC: #1)
-  - [ ] Read `tests/unit/test_evaluation_simulation.py` and confirm all 5 branches of `scoring_from_config` are tested
-  - [ ] If any branch is missing, add parameterized test covering it
-  - [ ] Confirm unknown-type error path is tested
-  - [ ] **Expected result:** AC #1 may already be satisfied — Story 8.4 agent reported 11 tests covering all 5 branches. Verify and document.
+- [x] Task 1: Verify `scoring_from_config` coverage (AC: #1)
+  - [x] Read `tests/unit/test_evaluation_simulation.py` and confirm all 5 branches of `scoring_from_config` are tested
+  - [x] If any branch is missing, add parameterized test covering it
+  - [x] Confirm unknown-type error path is tested
+  - [x] **Expected result:** AC #1 may already be satisfied — Story 8.4 agent reported 11 tests covering all 5 branches. Verify and document.
 
-- [ ] Task 2: Add CLI training tests for XGBoost model (AC: #2)
-  - [ ] Read `tests/unit/test_cli_train.py` to understand existing test patterns
-  - [ ] Read `src/ncaa_eval/cli/train.py` to understand model dispatch logic
-  - [ ] Add `test_train_xgboost()` using the same `_mock_serve_season_features` helper
-  - [ ] Ensure the test exercises the stateless model path (XGBoost uses `Model.fit()` directly)
-  - [ ] Use `@pytest.mark.smoke` if test runs in <1s, otherwise `@pytest.mark.unit`
+- [x] Task 2: Add CLI training tests for XGBoost model (AC: #2)
+  - [x] Read `tests/unit/test_cli_train.py` to understand existing test patterns
+  - [x] Read `src/ncaa_eval/cli/train.py` to understand model dispatch logic
+  - [x] Add `test_train_xgboost()` using the same `_mock_serve_season_features` helper
+  - [x] Ensure the test exercises the stateless model path (XGBoost uses `Model.fit()` directly)
+  - [x] Use `@pytest.mark.smoke` if test runs in <1s, otherwise `@pytest.mark.unit`
 
-- [ ] Task 3: Add CLI training tests for Elo model (AC: #3)
-  - [ ] Add `test_train_elo()` exercising the stateful model path
-  - [ ] Elo's `fit()` is inherited from `StatefulModel` — it reconstructs `Game` objects from X and calls `update()` per game
-  - [ ] The mock feature data must include columns that `StatefulModel.fit()` expects for Game reconstruction
-  - [ ] Read `src/ncaa_eval/model/base.py` `StatefulModel.fit()` to understand required columns
-  - [ ] Use `@pytest.mark.smoke` if test runs in <1s, otherwise `@pytest.mark.unit`
+- [x] Task 3: Add CLI training tests for Elo model (AC: #3)
+  - [x] Add `test_train_elo()` exercising the stateful model path
+  - [x] Elo's `fit()` is inherited from `StatefulModel` — it reconstructs `Game` objects from X and calls `update()` per game
+  - [x] The mock feature data must include columns that `StatefulModel.fit()` expects for Game reconstruction
+  - [x] Read `src/ncaa_eval/model/base.py` `StatefulModel.fit()` to understand required columns
+  - [x] Use `@pytest.mark.smoke` if test runs in <1s, otherwise `@pytest.mark.unit`
 
-- [ ] Task 4: Remove dead `sample_game_records` fixture (AC: #4)
-  - [ ] Open `tests/conftest.py`, locate `sample_game_records` fixture (lines ~34-75)
-  - [ ] Verify it is truly unused: grep all test files for `sample_game_records`
-  - [ ] Remove the fixture
-  - [ ] Ensure no imports break
+- [x] Task 4: Remove dead `sample_game_records` fixture (AC: #4)
+  - [x] Open `tests/conftest.py`, locate `sample_game_records` fixture (lines ~34-75)
+  - [x] Verify it is truly unused: grep all test files for `sample_game_records`
+  - [x] Remove the fixture
+  - [x] Ensure no imports break
 
-- [ ] Task 5: Remove empty `tests/test_ncaa_eval.py` (AC: #5)
-  - [ ] Delete `tests/test_ncaa_eval.py` (confirmed empty — 0 lines)
-  - [ ] Verify no other file imports from it
+- [x] Task 5: Remove empty `tests/test_ncaa_eval.py` (AC: #5)
+  - [x] Delete `tests/test_ncaa_eval.py` (confirmed empty — 0 lines)
+  - [x] Verify no other file imports from it
 
-- [ ] Task 6: Add Fibonacci scoring point-value test (AC: #6)
-  - [ ] Read `src/ncaa_eval/evaluation/scoring.py` to find `FibonacciScoringRule` and its actual point values
-  - [ ] Add `test_fibonacci_scoring_point_values()` in `tests/unit/test_evaluation_simulation.py`
-  - [ ] Assert each round's exact points match the implemented values
-  - [ ] Note: The Fibonacci values may be (1,1,2,3,5,8) or (2,3,5,8,13,21) — PO decision pending in Story 8.13. Test whatever the code currently implements.
+- [x] Task 6: Add Fibonacci scoring point-value test (AC: #6)
+  - [x] Read `src/ncaa_eval/evaluation/scoring.py` to find `FibonacciScoringRule` and its actual point values
+  - [x] Add `test_fibonacci_scoring_point_values()` in `tests/unit/test_evaluation_simulation.py`
+  - [x] Assert each round's exact points match the implemented values
+  - [x] Note: The Fibonacci values may be (1,1,2,3,5,8) or (2,3,5,8,13,21) — PO decision pending in Story 8.13. Test whatever the code currently implements.
 
-- [ ] Task 7: Run quality gates (AC: #7)
-  - [ ] Run `pytest` — all tests pass
-  - [ ] Run `ruff check .` — no violations
-  - [ ] Run `mypy --strict src/ncaa_eval tests` — no type errors
+- [x] Task 7: Run quality gates (AC: #7)
+  - [x] Run `pytest` — all tests pass
+  - [x] Run `ruff check .` — no violations
+  - [x] Run `mypy --strict src/ncaa_eval tests` — no type errors
 
 ## Dev Notes
 
@@ -125,10 +125,28 @@ so that the test suite provides comprehensive coverage of production code paths 
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+- Elo CLI test initially failed due to `_make_synthetic_season` generating `w_score <= l_score` which violates the `Game` Pydantic validator. Fixed by adjusting score ranges: `w_score` starts at 75 (min 75), `l_score` caps at 69 (55+14).
+
 ### Completion Notes List
 
+- **AC #1 (scoring_from_config):** Verified — 10 existing tests in `TestDictScoring` already cover all 5 dispatch branches (standard, fibonacci, seed_diff_bonus, dict, custom) plus error paths (unknown type, missing type key, missing seed_map, missing points, missing callable). No new tests needed.
+- **AC #2 (XGBoost CLI test):** Added `test_train_xgboost()` — exercises stateless model path with minimal config (`n_estimators=2, max_depth=1, early_stopping_rounds=1`) for fast execution. Verifies `model_type == "xgboost"` in persisted run.
+- **AC #3 (Elo CLI test):** Added `test_train_elo()` — exercises stateful model path through `StatefulModel.fit()` which reconstructs `Game` objects. Fixed `_make_synthetic_season` to guarantee `w_score > l_score`. Verifies `model_type == "elo"` in persisted run.
+- **AC #4 (dead fixture):** Removed `sample_game_records` fixture from `tests/conftest.py` — grep confirmed zero usages across all test files.
+- **AC #5 (empty test file):** Deleted `tests/test_ncaa_eval.py` — was empty (0 lines), no imports from it.
+- **AC #6 (Fibonacci point values):** Verified — existing `test_fibonacci_scoring_values` already asserts exact point values (2.0, 3.0, 5.0, 8.0, 13.0, 21.0) for all 6 rounds. `test_fibonacci_perfect_bracket` confirms total of 231.
+- **AC #7 (quality gates):** All pass — 886 tests passed (1 skipped), Ruff clean, mypy --strict clean.
+
+### Change Log
+
+- 2026-03-03: Story 8.5 implementation complete — added XGBoost + Elo CLI tests, removed dead fixture + empty test file, verified existing coverage for scoring_from_config and Fibonacci point values.
+
 ### File List
+
+- `tests/unit/test_cli_train.py` — modified (added `test_train_xgboost`, `test_train_elo`; fixed `w_score`/`l_score` ranges in `_make_synthetic_season`)
+- `tests/conftest.py` — modified (removed dead `sample_game_records` fixture)
+- `tests/test_ncaa_eval.py` — deleted (was empty)
