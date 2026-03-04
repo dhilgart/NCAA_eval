@@ -13,6 +13,7 @@ tests run ``pytest`` itself), the subprocess calls use
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 import time
@@ -44,6 +45,10 @@ def _run(
     Returns:
         Completed process with captured stdout/stderr.
     """
+    # NO_COLOR suppresses ANSI escape sequences (e.g. from Typer/Rich) so
+    # text-content assertions work correctly regardless of FORCE_COLOR env var
+    # set by CI runners (GitHub Actions sets FORCE_COLOR=1).
+    env = {**os.environ, "NO_COLOR": "1"}
     return subprocess.run(
         cmd,
         cwd=PROJECT_ROOT,
@@ -51,6 +56,7 @@ def _run(
         text=True,
         encoding="utf-8",
         timeout=timeout,
+        env=env,
     )
 
 

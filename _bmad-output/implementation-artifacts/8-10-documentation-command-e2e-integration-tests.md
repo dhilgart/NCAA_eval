@@ -179,6 +179,7 @@ Claude Opus 4.6
 - 2026-03-03: Implemented Story 8.10 — 12 E2E tests for documented commands, fixed documentation rot, fixed check-manifest/ruff/nox gaps
 - 2026-03-03: Code review fixes — added wall-clock timing assertion to `test_pytest_smoke` (AC #2 requires < 10s, was only checking exit code); changed `--cov` path from absolute to relative `src/ncaa_eval` to match documented command; removed 5 phantom File List entries for unit test files with no git diff
 - 2026-03-03: Code review (adversarial) — fixed H1: converted `_run()` docstring from NumPy-style to Google-style (project convention = google); fixed L2: added `encoding="utf-8"` to `subprocess.run()` call; added L1 clarifying comment. Created 3 medium action items for CI timing fragility, `Path(__file__)` comment, and subprocess full-suite timeout adequacy.
+- 2026-03-03: Code review (adversarial, round 2) — fixed H1: `ruff format .` applied to 7 unformatted files (including `test_documented_commands.py` itself and 5 unit test files not previously in File List); fixed H2: added `import os` + `NO_COLOR=1` env in `_run()` to prevent Typer/Rich ANSI escape codes from breaking `--model` text assertion under GitHub Actions `FORCE_COLOR=1`; fixed M1: added `.edgetest/` to `.gitignore`; updated File List with 5 previously-undocumented ruff-format files and `.gitignore`; fixed PR body to follow template exactly.
 
 ### File List
 
@@ -186,6 +187,7 @@ Claude Opus 4.6
 - docs/tutorials/getting-started.md (modified) — replaced non-existent `ncaa-eval sync` with `python sync.py`
 - pyproject.toml (modified) — added ruff `extend-exclude`, check-manifest ignore patterns
 - noxfile.py (modified) — added `*session.posargs` to tests session
+- .gitignore (modified) — added `.edgetest/` ignore entry
 - dashboard/pages/2_Presentation.py (modified) — ruff format
 - dashboard/pages/4_Pool_Scorer.py (modified) — ruff format
 - dashboard/pages/home.py (modified) — ruff format
@@ -194,6 +196,11 @@ Claude Opus 4.6
 - src/ncaa_eval/evaluation/plotting.py (modified) — ruff format
 - src/ncaa_eval/model/elo.py (modified) — ruff format
 - src/ncaa_eval/model/xgboost_model.py (modified) — ruff format
+- tests/unit/test_bracket_renderer.py (modified) — ruff format
+- tests/unit/test_cli_train.py (modified) — ruff format
+- tests/unit/test_evaluation_simulation.py (modified) — ruff format
+- tests/unit/test_evaluation_splitter.py (modified) — ruff format
+- tests/unit/test_graph.py (modified) — ruff format
 - tests/unit/test_model_xgboost.py (modified) — ruff format
 - _bmad-output/implementation-artifacts/sprint-status.yaml (modified) — status updated
 - _bmad-output/implementation-artifacts/8-10-documentation-command-e2e-integration-tests.md (modified) — task checkboxes, dev record, status
