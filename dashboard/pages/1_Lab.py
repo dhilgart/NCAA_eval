@@ -17,6 +17,13 @@ _DISPLAY_COLS = ["run_id", "model_type", "year", "log_loss", "brier_score", "roc
 
 def _render_leaderboard() -> None:
     """Render the backtest leaderboard page."""
+    # Breadcrumbs
+    col_nav, col_bc = st.columns([1, 3])
+    with col_nav:
+        st.page_link("pages/home.py", label="\u2190 Home")
+    with col_bc:
+        st.caption("Home > Lab > Backtest Leaderboard")
+
     st.header("Backtest Leaderboard")
 
     data_dir = str(get_data_dir())

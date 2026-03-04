@@ -36,9 +36,9 @@ so that the dashboard is immediately usable without squinting, confusion, or sta
   - [x] 3.2 On click, call `st.cache_data.clear()` followed by `st.rerun()`
   - [x] 3.3 Use a subtle button style — this is a utility action, not a primary CTA (consider `st.button("🔄 Refresh Data", use_container_width=True)`)
 
-- [ ] Task 4: Add breadcrumbs to Leaderboard page (AC: #4)
-  - [ ] 4.1 In `dashboard/pages/1_Lab.py`, add breadcrumb block before the `st.header("Backtest Leaderboard")` call (around line 20)
-  - [ ] 4.2 Use the same pattern as other pages: `col_nav, col_bc = st.columns([1, 3])` with `st.page_link("pages/home.py", label="← Home")` and `st.caption("Home > Lab > Backtest Leaderboard")`
+- [x] Task 4: Add breadcrumbs to Leaderboard page (AC: #4)
+  - [x] 4.1 In `dashboard/pages/1_Lab.py`, add breadcrumb block before the `st.header("Backtest Leaderboard")` call (around line 20)
+  - [x] 4.2 Use the same pattern as other pages: `col_nav, col_bc = st.columns([1, 3])` with `st.page_link("pages/home.py", label="← Home")` and `st.caption("Home > Lab > Backtest Leaderboard")`
 
 - [ ] Task 5: Add data freshness indicator to sidebar (AC: #5)
   - [ ] 5.1 In `dashboard/lib/data_loaders.py`, add a cached function `load_data_freshness(data_dir: str) -> dict[str, str | None]` that returns `{"last_sync_date": ..., "latest_game_date": ...}`
