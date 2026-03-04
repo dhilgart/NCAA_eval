@@ -17,15 +17,15 @@ so that type-checkers catch invalid configuration values at development time and
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add `Literal` types to `FeatureConfig` fields (AC: #1, #4)
-  - [ ] 1.1 Define type aliases for the Literal unions near the top of `feature_serving.py`
-  - [ ] 1.2 Change `batch_rating_types: tuple[str, ...]` → `tuple[BatchRatingType, ...]` where `BatchRatingType = Literal["srs", "ridge", "colley"]`
-  - [ ] 1.3 Change `ordinal_composite: str | None` → `Literal["simple_average", "weighted", "pca"] | None`
-  - [ ] 1.4 Change `gender_scope: str` → `Literal["M", "W"]`
-  - [ ] 1.5 Change `calibration_method: str | None` → `Literal["isotonic", "sigmoid"] | None`
-  - [ ] 1.6 Also change `dataset_scope: str` → `Literal["kaggle", "all"]` (same pattern, same docstring-documented values)
-  - [ ] 1.7 Update all test files that construct `FeatureConfig` to satisfy the new types
-  - [ ] 1.8 Run `mypy --strict src/ncaa_eval tests` — fix any type errors
+- [x] Task 1: Add `Literal` types to `FeatureConfig` fields (AC: #1, #4)
+  - [x] 1.1 Define type aliases for the Literal unions near the top of `feature_serving.py`
+  - [x] 1.2 Change `batch_rating_types: tuple[str, ...]` → `tuple[BatchRatingType, ...]` where `BatchRatingType = Literal["srs", "ridge", "colley"]`
+  - [x] 1.3 Change `ordinal_composite: str | None` → `Literal["simple_average", "weighted", "pca"] | None`
+  - [x] 1.4 Change `gender_scope: str` → `Literal["M", "W"]`
+  - [x] 1.5 Change `calibration_method: str | None` → `Literal["isotonic", "sigmoid"] | None`
+  - [x] 1.6 Also change `dataset_scope: str` → `Literal["kaggle", "all"]` (same pattern, same docstring-documented values)
+  - [x] 1.7 Update all test files that construct `FeatureConfig` to satisfy the new types
+  - [x] 1.8 Run `mypy --strict src/ncaa_eval tests` — fix any type errors
 
 - [ ] Task 2: Centralize `DEFAULT_MARGIN_CAP` (AC: #2)
   - [ ] 2.1 Add `DEFAULT_MARGIN_CAP: int = 25` to `src/ncaa_eval/transform/__init__.py` (or a new `constants.py` in transform — prefer `__init__.py` if it already re-exports transform symbols)
@@ -144,12 +144,19 @@ Then `list_scoring_display_names() -> dict[str, str]` reads from this dict. This
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
 ### Completion Notes List
 
+- Task 1: Added 5 Literal type aliases (`BatchRatingType`, `OrdinalCompositeMethod`, `GenderScope`, `DatasetScope`, `CalibrationMethod`) to `feature_serving.py`. Updated all 5 `FeatureConfig` fields to use them. Re-exported from `transform/__init__.py`. All existing tests pass without modification — all callsites already used valid literal values. mypy --strict passes.
+
 ### Change Log
 
+- 2026-03-04: Task 1 — Added Literal types to FeatureConfig fields
+
 ### File List
+
+- `src/ncaa_eval/transform/feature_serving.py` (modified — added Literal type aliases + updated FeatureConfig fields)
+- `src/ncaa_eval/transform/__init__.py` (modified — re-exported new type aliases)

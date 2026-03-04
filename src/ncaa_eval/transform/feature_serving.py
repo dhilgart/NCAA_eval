@@ -9,7 +9,7 @@ from __future__ import annotations
 import enum
 import logging
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
 import pandas as pd  # type: ignore[import-untyped]
@@ -28,6 +28,15 @@ logger = logging.getLogger(__name__)
 
 # Location encoding: H→+1, A→-1, N→0 (from team_a / winner perspective)
 _LOC_ENCODING: dict[str, int] = {"H": 1, "A": -1, "N": 0}
+
+
+# ── Literal type aliases for FeatureConfig ────────────────────────────────────
+
+BatchRatingType = Literal["srs", "ridge", "colley"]
+OrdinalCompositeMethod = Literal["simple_average", "weighted", "pca"]
+GenderScope = Literal["M", "W"]
+DatasetScope = Literal["kaggle", "all"]
+CalibrationMethod = Literal["isotonic", "sigmoid"]
 
 
 # ── Feature Block Enum ───────────────────────────────────────────────────────
@@ -68,13 +77,13 @@ class FeatureConfig:
     sequential_windows: tuple[int, ...] = (5, 10, 20)
     ewma_alphas: tuple[float, ...] = (0.15, 0.20)
     graph_features_enabled: bool = True
-    batch_rating_types: tuple[str, ...] = ("srs", "ridge", "colley")
+    batch_rating_types: tuple[BatchRatingType, ...] = ("srs", "ridge", "colley")
     ordinal_systems: tuple[str, ...] | None = None
-    ordinal_composite: str | None = "simple_average"
+    ordinal_composite: OrdinalCompositeMethod | None = "simple_average"
     matchup_deltas: bool = True
-    gender_scope: str = field(default="M")
-    dataset_scope: str = field(default="kaggle")
-    calibration_method: str | None = "isotonic"
+    gender_scope: GenderScope = field(default="M")
+    dataset_scope: DatasetScope = field(default="kaggle")
+    calibration_method: CalibrationMethod | None = "isotonic"
     elo_enabled: bool = False
     elo_config: EloConfig | None = field(default=None)
 

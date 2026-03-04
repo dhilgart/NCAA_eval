@@ -12,8 +12,13 @@ from ncaa_eval.transform.elo import (
     EloFeatureEngine,
 )
 from ncaa_eval.transform.feature_serving import (
+    BatchRatingType,
+    CalibrationMethod,
+    DatasetScope,
     FeatureBlock,
     FeatureConfig,
+    GenderScope,
+    OrdinalCompositeMethod,
     StatefulFeatureServer,
 )
 from ncaa_eval.transform.graph import (
@@ -60,20 +65,25 @@ from ncaa_eval.transform.serving import (
 )
 
 __all__ = [
+    "BatchRatingType",
     "BatchRatingSolver",
+    "CalibrationMethod",
     "Calibrator",
     "ChronologicalDataServer",
     "ConferenceLookup",
     "CoverageGateResult",
+    "DatasetScope",
     "DetailedResultsLoader",
     "EloConfig",
     "EloFeatureEngine",
     "FeatureBlock",
     "FeatureConfig",
+    "GenderScope",
     "GraphTransformer",
     "IsotonicCalibrator",
     "MasseyOrdinalsStore",
     "NO_TOURNAMENT_SEASONS",
+    "OrdinalCompositeMethod",
     "SeasonGames",
     "SequentialTransformer",
     "SigmoidCalibrator",
