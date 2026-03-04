@@ -7,6 +7,7 @@ from ncaa_eval.transform.calibration import (
     IsotonicCalibrator,
     SigmoidCalibrator,
 )
+from ncaa_eval.transform.constants import DEFAULT_MARGIN_CAP
 from ncaa_eval.transform.elo import (
     EloConfig,
     EloFeatureEngine,
@@ -72,6 +73,7 @@ __all__ = [
     "ChronologicalDataServer",
     "ConferenceLookup",
     "CoverageGateResult",
+    "DEFAULT_MARGIN_CAP",
     "DatasetScope",
     "DetailedResultsLoader",
     "EloConfig",

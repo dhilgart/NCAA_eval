@@ -27,12 +27,12 @@ so that type-checkers catch invalid configuration values at development time and
   - [x] 1.7 Update all test files that construct `FeatureConfig` to satisfy the new types
   - [x] 1.8 Run `mypy --strict src/ncaa_eval tests` — fix any type errors
 
-- [ ] Task 2: Centralize `DEFAULT_MARGIN_CAP` (AC: #2)
-  - [ ] 2.1 Add `DEFAULT_MARGIN_CAP: int = 25` to `src/ncaa_eval/transform/__init__.py` (or a new `constants.py` in transform — prefer `__init__.py` if it already re-exports transform symbols)
-  - [ ] 2.2 Remove `DEFAULT_MARGIN_CAP` definition from `src/ncaa_eval/transform/graph.py:34`
-  - [ ] 2.3 Remove `DEFAULT_MARGIN_CAP` definition from `src/ncaa_eval/transform/opponent.py:14`
-  - [ ] 2.4 Add `from ncaa_eval.transform import DEFAULT_MARGIN_CAP` (or `from .constants import ...`) to both `graph.py` and `opponent.py`
-  - [ ] 2.5 Verify no other files import `DEFAULT_MARGIN_CAP` from the old locations
+- [x] Task 2: Centralize `DEFAULT_MARGIN_CAP` (AC: #2)
+  - [x] 2.1 Add `DEFAULT_MARGIN_CAP: int = 25` to `src/ncaa_eval/transform/constants.py` (new file — `__init__.py` would cause circular imports)
+  - [x] 2.2 Remove `DEFAULT_MARGIN_CAP` definition from `src/ncaa_eval/transform/graph.py:34`
+  - [x] 2.3 Remove `DEFAULT_MARGIN_CAP` definition from `src/ncaa_eval/transform/opponent.py:14`
+  - [x] 2.4 Add `from ncaa_eval.transform.constants import DEFAULT_MARGIN_CAP` to both `graph.py` and `opponent.py`
+  - [x] 2.5 Verify no other files import `DEFAULT_MARGIN_CAP` from the old locations
 
 - [ ] Task 3: Fibonacci scoring UI label with point values (AC: #3)
   - [ ] 3.1 Add a `display_name` property to `ScoringRule` Protocol in `scoring.py` (default implementation returns `self.name`)
@@ -151,12 +151,17 @@ Claude Opus 4.6
 ### Completion Notes List
 
 - Task 1: Added 5 Literal type aliases (`BatchRatingType`, `OrdinalCompositeMethod`, `GenderScope`, `DatasetScope`, `CalibrationMethod`) to `feature_serving.py`. Updated all 5 `FeatureConfig` fields to use them. Re-exported from `transform/__init__.py`. All existing tests pass without modification — all callsites already used valid literal values. mypy --strict passes.
+- Task 2: Created `transform/constants.py` with `DEFAULT_MARGIN_CAP = 25`. Removed duplicate definitions from `graph.py` and `opponent.py`, replaced with imports from `constants.py`. Re-exported from `transform/__init__.py`. Used `constants.py` instead of `__init__.py` directly to avoid circular imports.
 
 ### Change Log
 
 - 2026-03-04: Task 1 — Added Literal types to FeatureConfig fields
+- 2026-03-04: Task 2 — Centralized DEFAULT_MARGIN_CAP in transform/constants.py
 
 ### File List
 
 - `src/ncaa_eval/transform/feature_serving.py` (modified — added Literal type aliases + updated FeatureConfig fields)
-- `src/ncaa_eval/transform/__init__.py` (modified — re-exported new type aliases)
+- `src/ncaa_eval/transform/__init__.py` (modified — re-exported new type aliases + DEFAULT_MARGIN_CAP)
+- `src/ncaa_eval/transform/constants.py` (new — centralized DEFAULT_MARGIN_CAP)
+- `src/ncaa_eval/transform/graph.py` (modified — imports DEFAULT_MARGIN_CAP from constants)
+- `src/ncaa_eval/transform/opponent.py` (modified — imports DEFAULT_MARGIN_CAP from constants)

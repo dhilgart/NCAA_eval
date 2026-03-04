@@ -28,10 +28,11 @@ import logging
 import networkx as nx  # type: ignore[import-untyped]
 import pandas as pd  # type: ignore[import-untyped]
 
+from ncaa_eval.transform.constants import DEFAULT_MARGIN_CAP
+
 logger = logging.getLogger(__name__)
 
 # Module-level constants
-DEFAULT_MARGIN_CAP: int = 25
 DEFAULT_RECENCY_WINDOW_DAYS: int = 20
 DEFAULT_RECENCY_MULTIPLIER: float = 1.5
 PAGERANK_ALPHA: float = 0.85
