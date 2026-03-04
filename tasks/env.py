@@ -1,3 +1,5 @@
+"""Environment setup and dependency management tasks."""
+
 from __future__ import annotations
 
 from invoke.context import Context

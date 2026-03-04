@@ -105,5 +105,9 @@ Full documentation is available at **[dhilgart.github.io/NCAA_eval](https://dhil
 ## Contributing
 See [Contributing](CONTRIBUTING.md)
 
+## License
+
+This project is licensed under the [GNU General Public License v3.0](LICENSE).
+
 ## Authors
 Dan Hilgart <dhilgart@gmail.com>

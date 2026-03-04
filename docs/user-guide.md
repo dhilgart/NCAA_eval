@@ -263,7 +263,7 @@ probabilities against observed win rates:
 | Points on the diagonal | Well-calibrated | No action needed |
 | Points **above** the diagonal | Under-confident — actual win rates exceed predictions | Model could be sharper |
 | Points **below** the diagonal | Over-confident — predictions overstate win likelihood | Model needs calibration |
-| S-shaped curve | Probabilities are too extreme on both ends | Retrain with calibration regularization; temperature scaling via Game Theory Sliders (planned feature) |
+| S-shaped curve | Probabilities are too extreme on both ends | Retrain with calibration regularization; temperature scaling via Game Theory Sliders (not yet implemented) |
 | Flat line near 0.5 | Model lacks discrimination | Improve features or model architecture |
 
 ```{tip}
@@ -526,10 +526,10 @@ to understand your expected point distribution.
 
 ### Game Theory Sliders
 
-```{note}
-Game Theory Sliders are a planned feature based on research from Story 7.7.
-They are not yet implemented in the dashboard.  This section describes the
-intended design.
+```{warning}
+**NOT YET IMPLEMENTED** — Game Theory Sliders are a planned feature based on
+research from Story 7.7.  They are not yet available in the dashboard.  The
+section below describes the *intended* design for future implementation.
 ```
 
 Two sliders will allow you to adjust the bracket strategy without retraining:
@@ -573,3 +573,82 @@ In a **small pool** (< 10 people), pick chalk — you want the most likely
 bracket.  In a **large pool** (50+ people), increase Upset Aggression to
 differentiate your bracket from the crowd.
 ```
+
+
+## Troubleshooting
+
+### Kaggle Authentication
+
+**Symptom:** `AuthenticationError: credentials not found` when running `python sync.py`.
+
+**Fix:**
+
+1. Ensure you have a Kaggle API token saved at `~/.kaggle/access_token` (not
+   the legacy `kaggle.json` format).  The token starts with `KGAT_`.
+2. Set permissions: `chmod 600 ~/.kaggle/access_token`.
+3. Verify your Kaggle account has **phone verification** completed and you have
+   **accepted the competition rules** for March Machine Learning Mania.
+
+See the [README — Kaggle API Authentication](../README.md#kaggle-api-authentication) for
+step-by-step setup.
+
+
+### ESPN Rate Limits and Transient Failures
+
+**Symptom:** `NetworkError` or warnings about failed team fetches during ESPN sync.
+
+**Fix:**
+
+The ESPN connector automatically retries transient failures with exponential
+backoff (up to 3 attempts per request).  If failures persist:
+
+- Check your internet connection.
+- ESPN's public API occasionally rate-limits aggressive requests.  Wait a few
+  minutes and re-run with `python sync.py --source espn --dest data/`.
+- The sync engine logs warnings for teams that fail after all retries but
+  continues processing the remaining teams.  A small number of failures is
+  normal and does not invalidate the dataset.
+
+
+### Parquet Version Mismatches
+
+**Symptom:** `ArrowInvalid` or `ArrowIOError` when reading cached Parquet files.
+
+**Fix:**
+
+This can happen when Parquet files were written by a different version of
+PyArrow than the one currently installed.  Delete the cached files and re-sync:
+
+```bash
+rm -rf data/*.parquet
+python sync.py --source all --dest data/
+```
+
+If the error persists, ensure your environment has a consistent PyArrow version:
+
+```bash
+pip install --upgrade pyarrow
+```
+
+
+### Conda / Poetry Environment Issues
+
+**Symptom:** `ModuleNotFoundError: No module named 'ncaa_eval'` or Poetry
+commands fail.
+
+**Fix:**
+
+1. Ensure the conda environment is activated: `conda activate ncaa_eval`.
+2. Install dependencies into the conda env (not a Poetry virtualenv):
+
+   ```bash
+   POETRY_VIRTUALENVS_CREATE=false poetry install
+   ```
+
+3. If `poetry` is not found, install it inside the conda env:
+
+   ```bash
+   pip install poetry
+   ```
+
+4. Verify the package is importable: `python -c "import ncaa_eval; print('OK')"`.

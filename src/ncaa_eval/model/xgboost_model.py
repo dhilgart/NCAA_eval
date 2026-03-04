@@ -62,6 +62,16 @@ class XGBoostModel(Model):
     """
 
     def __init__(self, config: XGBoostModelConfig | None = None) -> None:
+        """Initialize XGBoost model with optional configuration.
+
+        Builds an :class:`XGBClassifier` from config hyperparameters, setting
+        ``objective="binary:logistic"`` and ``scale_pos_weight`` only when
+        explicitly provided.
+
+        Args:
+            config: Pydantic config; defaults to
+                :class:`XGBoostModelConfig` when ``None``.
+        """
         self._config = config or XGBoostModelConfig()
         self._is_fitted = False
         self._feature_names: list[str] = []
@@ -96,10 +106,8 @@ class XGBoostModel(Model):
         ``scale_pos_weight`` = ``count(y==0) / count(y==1)`` in the
         ``XGBoostModelConfig``.
 
-        Raises
-        ------
-        ValueError
-            If *X* is empty.
+        Raises:
+            ValueError: If *X* is empty.
         """
         if X.empty:
             msg = "Cannot fit on an empty DataFrame"
@@ -119,10 +127,8 @@ class XGBoostModel(Model):
     def predict_proba(self, X: pd.DataFrame) -> pd.Series:
         """Return P(team_a wins) for each row of *X*.
 
-        Raises
-        ------
-        RuntimeError
-            If called before :meth:`fit`.
+        Raises:
+            RuntimeError: If called before :meth:`fit`.
         """
         if not self._is_fitted:
             msg = "Model must be fitted before calling predict_proba"
@@ -138,10 +144,8 @@ class XGBoostModel(Model):
         - ``config.json`` — Pydantic-serialised hyperparameter config
         - ``feature_names.json`` — JSON array of feature column names
 
-        Raises
-        ------
-        RuntimeError
-            If called before :meth:`fit`.
+        Raises:
+            RuntimeError: If called before :meth:`fit`.
         """
         if not self._is_fitted:
             msg = "Model must be fitted before saving"
@@ -155,10 +159,8 @@ class XGBoostModel(Model):
     def load(cls, path: Path) -> Self:
         """Load a previously-saved XGBoost model from *path*.
 
-        Raises
-        ------
-        FileNotFoundError
-            If either ``config.json`` or ``model.ubj`` is missing.
+        Raises:
+            FileNotFoundError: If either ``config.json`` or ``model.ubj`` is missing.
         """
         config_path = path / "config.json"
         model_path = path / "model.ubj"

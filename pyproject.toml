@@ -71,20 +71,38 @@ extend-select = [
     "PT",     # flake8-pytest-style rules
     "TID25",  # flake8-tidy-imports rules
     "C90",    # McCabe complexity
+    "D",      # Docstring enforcement (Google convention via pydocstyle)
     "PLR0911",  # Too many return statements (configured: max-returns = 6)
     "PLR0912",  # Too many branches (configured: max-branches = 12)
     "PLR0913",  # Too many arguments (configured: max-args = 5)
 ]
 ignore = [
     "E501",      # Line too long (handled by formatter)
-    "D1",        # Missing docstrings (not yet enforced)
-    "D415",      # First line punctuation (not yet enforced)
+    "D415",      # First line punctuation (stylistic choice)
     "PLR2004",   # Magic value comparison (too aggressive for data science)
 ]
 
 [tool.ruff.lint.per-file-ignores]
 # EDA notebooks — not subject to lint enforcement per project convention
 "notebooks/**" = ["PLR0911", "PLR0912", "PLR0913", "C901"]
+# Tests: docstring presence not enforced (test names are self-documenting)
+"tests/**" = ["D100", "D101", "D102", "D103", "D104", "D107"]
+# D107: __init__ docstrings suppressed where class docstring covers the contract
+"src/ncaa_eval/evaluation/providers.py" = ["D107"]
+"src/ncaa_eval/evaluation/scoring.py" = ["D107"]
+"src/ncaa_eval/ingest/connectors/espn.py" = ["D107"]
+"src/ncaa_eval/ingest/connectors/kaggle.py" = ["D107"]
+"src/ncaa_eval/ingest/repository.py" = ["D107"]
+"src/ncaa_eval/ingest/sync.py" = ["D107"]
+"src/ncaa_eval/model/tracking.py" = ["D107"]
+"src/ncaa_eval/transform/calibration.py" = ["D107"]
+"src/ncaa_eval/transform/elo.py" = ["D107"]
+"src/ncaa_eval/transform/feature_serving.py" = ["D107"]
+"src/ncaa_eval/transform/graph.py" = ["D107"]
+"src/ncaa_eval/transform/normalization.py" = ["D107"]
+"src/ncaa_eval/transform/opponent.py" = ["D107"]
+"src/ncaa_eval/transform/sequential.py" = ["D107"]
+"src/ncaa_eval/transform/serving.py" = ["D107"]
 
 [tool.ruff.lint.isort]
 required-imports = ["from __future__ import annotations"]

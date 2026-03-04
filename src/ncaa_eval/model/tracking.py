@@ -86,7 +86,12 @@ class RunStore:
         self._runs_dir = base_path / "runs"
 
     def save_run(self, run: ModelRun, predictions: list[Prediction]) -> None:
-        """Write run metadata (JSON) and predictions (Parquet)."""
+        """Write run metadata (JSON) and predictions (Parquet).
+
+        Creates the run directory, JSON-writes the ModelRun metadata, and
+        Parquet-writes prediction records using a pre-defined PyArrow schema,
+        handling empty prediction lists by constructing typed empty arrays.
+        """
         run_dir = self._runs_dir / run.run_id
         run_dir.mkdir(parents=True, exist_ok=True)
 
@@ -113,10 +118,9 @@ class RunStore:
     def load_run(self, run_id: str) -> ModelRun:
         """Load run metadata from JSON.
 
-        Raises
-        ------
-        FileNotFoundError
-            If the run directory or ``run.json`` does not exist.
+        Raises:
+            FileNotFoundError: If the run directory or ``run.json`` does not
+                exist.
         """
         run_json = self._runs_dir / run_id / "run.json"
         if not run_json.exists():
@@ -127,10 +131,8 @@ class RunStore:
     def load_predictions(self, run_id: str) -> pd.DataFrame:
         """Load predictions from Parquet as a DataFrame.
 
-        Raises
-        ------
-        FileNotFoundError
-            If the predictions Parquet file does not exist.
+        Raises:
+            FileNotFoundError: If the predictions Parquet file does not exist.
         """
         pq_path = self._runs_dir / run_id / "predictions.parquet"
         if not pq_path.exists():
@@ -280,7 +282,12 @@ class RunStore:
         return pd.concat(frames, ignore_index=True)
 
     def list_runs(self) -> list[ModelRun]:
-        """Scan the runs directory and return all saved ModelRun records."""
+        """Scan the runs directory and return all saved ModelRun records.
+
+        Scans the runs directory in sorted order, deserializes each run.json
+        file via Pydantic, and returns a list of ModelRun objects (empty list
+        if directory does not exist).
+        """
         if not self._runs_dir.exists():
             return []
         runs: list[ModelRun] = []

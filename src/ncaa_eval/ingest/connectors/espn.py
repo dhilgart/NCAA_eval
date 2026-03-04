@@ -63,6 +63,9 @@ def _resolve_team_id(
         name: ESPN team name to resolve.
         lower_map: Pre-computed lowercase-keyed mapping (avoids per-call rebuild).
         original_mapping: Original mapping with original-case keys (used for fuzzy).
+
+    Returns:
+        Kaggle team ID if resolved, or ``None`` if no match was found.
     """
     # Exact match (case-insensitive).
     exact = lower_map.get(name.lower())
@@ -138,7 +141,13 @@ class EspnConnector(Connector):
         return self._fetch_per_team(season)
 
     def _fetch_per_team(self, season: int) -> pd.DataFrame | None:
-        """Fetch schedules for each team in the mapping and concatenate."""
+        """Fetch schedules for each team in the mapping and concatenate.
+
+        Iterates through each team in the mapping, calls
+        _fetch_single_team_schedule() with retry logic, collects successful
+        DataFrames, concatenates them, and deduplicates by ESPN game_id to
+        eliminate cross-team overlap.
+        """
         frames: list[pd.DataFrame] = []
         total = len(self._team_name_to_id)
         failed_teams: list[str] = []
@@ -187,7 +196,13 @@ class EspnConnector(Connector):
         return combined
 
     def _parse_schedule_df(self, df: pd.DataFrame, season: int) -> list[Game]:
-        """Convert a cbbpy schedule DataFrame into Game models."""
+        """Convert a cbbpy schedule DataFrame into Game models.
+
+        Iterates schedule rows, parses game results to extract scores,
+        resolves both team names to Kaggle IDs via exact then fuzzy matching,
+        determines winner/loser ordering, infers location, computes day_num
+        from game date and day-zero, then constructs Game models.
+        """
         missing = _SCHEDULE_COLUMNS - set(df.columns)
         if missing:
             msg = f"espn: schedule DataFrame missing columns: {sorted(missing)}"

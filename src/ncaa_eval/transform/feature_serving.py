@@ -51,28 +51,18 @@ class FeatureBlock(enum.Enum):
 class FeatureConfig:
     """Declarative specification of which feature blocks and parameters to use.
 
-    Parameters
-    ----------
-    sequential_windows
-        Rolling window sizes for sequential features (e.g., ``(5, 10, 20)``).
-    ewma_alphas
-        EWMA smoothing factors for sequential features (e.g., ``(0.15, 0.20)``).
-    graph_features_enabled
-        Whether to compute graph centrality features (PageRank, etc.).
-    batch_rating_types
-        Which batch rating systems to include (``"srs"``, ``"ridge"``, ``"colley"``).
-    ordinal_systems
-        Massey ordinal systems to use; ``None`` means use coverage-gate defaults.
-    ordinal_composite
-        Composite method: ``"simple_average"``, ``"weighted"``, ``"pca"``, or ``None`` to disable.
-    matchup_deltas
-        Whether to compute team_A − team_B deltas for matchup features.
-    gender_scope
-        ``"M"`` for men's, ``"W"`` for women's.
-    dataset_scope
-        ``"kaggle"`` for Kaggle-only games, ``"all"`` for Kaggle + ESPN enrichment.
-    calibration_method
-        ``"isotonic"``, ``"sigmoid"``, or ``None`` to skip calibration.
+    Attributes:
+        sequential_windows: Rolling window sizes for sequential features (e.g., ``(5, 10, 20)``).
+        ewma_alphas: EWMA smoothing factors for sequential features (e.g., ``(0.15, 0.20)``).
+        graph_features_enabled: Whether to compute graph centrality features (PageRank, etc.).
+        batch_rating_types: Which batch rating systems to include (``"srs"``, ``"ridge"``, ``"colley"``).
+        ordinal_systems: Massey ordinal systems to use; ``None`` means use coverage-gate defaults.
+        ordinal_composite: Composite method: ``"simple_average"``, ``"weighted"``, ``"pca"``, or
+            ``None`` to disable.
+        matchup_deltas: Whether to compute team_A − team_B deltas for matchup features.
+        gender_scope: ``"M"`` for men's, ``"W"`` for women's.
+        dataset_scope: ``"kaggle"`` for Kaggle-only games, ``"all"`` for Kaggle + ESPN enrichment.
+        calibration_method: ``"isotonic"``, ``"sigmoid"``, or ``None`` to skip calibration.
     """
 
     sequential_windows: tuple[int, ...] = (5, 10, 20)
@@ -89,7 +79,13 @@ class FeatureConfig:
     elo_config: EloConfig | None = field(default=None)
 
     def active_blocks(self) -> frozenset[FeatureBlock]:
-        """Return the set of feature blocks that are currently enabled."""
+        """Return the set of feature blocks that are currently enabled.
+
+        Checks each configuration flag (sequential windows, graph enabled,
+        batch rating types, ordinal composite, Elo enabled) and adds the
+        corresponding FeatureBlock enum value to a set, with SEED always
+        included.
+        """
         blocks: set[FeatureBlock] = set()
 
         if self.sequential_windows:
@@ -150,18 +146,12 @@ class StatefulFeatureServer:
     * **stateful** — iterate game-by-game, accumulating state incrementally
       (suitable for Elo-style models; placeholder until Story 4.8).
 
-    Parameters
-    ----------
-    config
-        Declarative specification of which feature blocks to activate.
-    data_server
-        Chronological data serving layer wrapping the Repository.
-    seed_table
-        Tournament seed lookup table (optional; needed for seed features).
-    ordinals_store
-        Massey ordinals store (optional; needed for ordinal features).
-    elo_engine
-        Elo feature engine (optional; needed when ``elo_enabled=True``).
+    Args:
+        config: Declarative specification of which feature blocks to activate.
+        data_server: Chronological data serving layer wrapping the Repository.
+        seed_table: Tournament seed lookup table (optional; needed for seed features).
+        ordinals_store: Massey ordinals store (optional; needed for ordinal features).
+        elo_engine: Elo feature engine (optional; needed when ``elo_enabled=True``).
     """
 
     def __init__(
@@ -188,16 +178,11 @@ class StatefulFeatureServer:
     ) -> pd.DataFrame:
         """Build the feature matrix for a full season.
 
-        Parameters
-        ----------
-        year
-            Season year (e.g. 2023 for the 2022-23 season).
-        mode
-            ``"batch"`` or ``"stateful"``.
+        Args:
+            year: Season year (e.g. 2023 for the 2022-23 season).
+            mode: ``"batch"`` or ``"stateful"``.
 
-        Returns
-        -------
-        pd.DataFrame
+        Returns:
             One row per game with metadata, feature deltas, and the target label.
         """
         if mode not in ("batch", "stateful"):
@@ -217,7 +202,13 @@ class StatefulFeatureServer:
     # ── Internal: batch mode ─────────────────────────────────────────────
 
     def _serve_batch(self, year: int, games: list[Game]) -> pd.DataFrame:
-        """Compute features for all games at once (batch mode)."""
+        """Compute features for all games at once (batch mode).
+
+        Builds game metadata, pre-computes batch ratings (SRS/Ridge/Colley)
+        indexed by team_id, appends per-game feature columns (ordinals,
+        seeds, batch ratings) in parallel loops, then computes matchup
+        deltas and Elo features.
+        """
         df = pd.DataFrame(self._build_game_metadata(games))
         active = self.config.active_blocks()
 
@@ -248,7 +239,12 @@ class StatefulFeatureServer:
         batch_indexed: dict[str, pd.Series],
         ordinal_systems: list[str],
     ) -> pd.DataFrame:
-        """Collect per-game feature values and assign as DataFrame columns."""
+        """Collect per-game feature values and assign as DataFrame columns.
+
+        Iterates games once, accumulating per-team feature values into
+        parallel lists for each active block (ordinals, seeds, batch
+        ratings), then assigns these lists as DataFrame columns in bulk.
+        """
         ordinal_vals_a: list[float] = []
         ordinal_vals_b: list[float] = []
         seed_vals_a: list[float] = []
@@ -334,7 +330,12 @@ class StatefulFeatureServer:
         batch_indexed: dict[str, pd.Series],
         ordinal_systems: list[str],
     ) -> dict[str, object]:
-        """Build a single game row dict for stateful mode."""
+        """Build a single game row dict for stateful mode.
+
+        Converts a Game to a metadata dict, then optionally adds ordinals,
+        seeds, and batch-rating values looked up by team_id from pre-indexed
+        Series for each active feature block.
+        """
         row = self._game_to_metadata_dict(game)
         if FeatureBlock.ORDINAL in active:
             ord_a, ord_b = self._get_ordinal_values_with_systems(game, ordinal_systems)
@@ -375,7 +376,12 @@ class StatefulFeatureServer:
         return (float(val_a), float(val_b))
 
     def _resolve_ordinal_systems(self) -> list[str]:
-        """Determine which ordinal systems to use."""
+        """Determine which ordinal systems to use.
+
+        Returns the configured ordinal systems if explicitly set, otherwise
+        queries the ordinals store's coverage gate for recommended systems
+        (empty list if no store available).
+        """
         if self.config.ordinal_systems is not None:
             return list(self.config.ordinal_systems)
         # Use coverage-gate recommended systems
@@ -387,7 +393,12 @@ class StatefulFeatureServer:
     # ── Internal: seed features (Task 4) ─────────────────────────────────
 
     def _get_seed_nums(self, game: Game) -> tuple[float, float]:
-        """Get seed numbers for both teams. NaN if not in tournament or unseeded."""
+        """Get seed numbers for both teams. NaN if not in tournament or unseeded.
+
+        Looks up seed entries for both teams via the seed table, returning
+        their seed numbers (or NaN if unseeded, no table is available, or
+        the game is not a tournament game).
+        """
         if self._seed_table is None:
             return (np.nan, np.nan)
         seed_a = self._seed_table.get(game.season, game.w_team_id)
@@ -400,7 +411,13 @@ class StatefulFeatureServer:
     # ── Internal: batch ratings ──────────────────────────────────────────
 
     def _compute_batch_ratings(self, games: list[Game]) -> dict[str, pd.DataFrame]:
-        """Compute batch ratings from regular-season games only."""
+        """Compute batch ratings from regular-season games only.
+
+        Filters to regular-season games, converts to a DataFrame with the
+        required columns, then calls each active batch solver
+        (SRS, Ridge, Colley) on the filtered game set, returning a dict of
+        solver-type to DataFrame.
+        """
         from ncaa_eval.transform.opponent import (
             compute_colley_ratings,
             compute_ridge_ratings,
@@ -477,7 +494,12 @@ class StatefulFeatureServer:
     # ── Internal: matchup deltas (Task 4) ────────────────────────────────
 
     def _compute_matchup_deltas(self, df: pd.DataFrame, active: frozenset[FeatureBlock]) -> pd.DataFrame:
-        """Compute team_A − team_B deltas for all active features."""
+        """Compute team_A minus team_B deltas for all active features.
+
+        Computes team_A minus team_B deltas for all active feature columns
+        (seed, ordinals, batch ratings, Elo) by vectorized subtraction,
+        adding NaN columns for missing features.
+        """
         # Seed differential
         if FeatureBlock.SEED in active and "seed_num_a" in df.columns:
             df["seed_diff"] = df["seed_num_a"] - df["seed_num_b"]

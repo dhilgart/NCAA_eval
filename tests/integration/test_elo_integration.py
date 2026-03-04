@@ -318,8 +318,11 @@ class TestEloDoubleReversionGuard:
     """
 
     def test_stateful_mode_two_seasons_no_double_reversion(self) -> None:
-        """serve_season_features() in stateful mode across two seasons applies
-        mean-reversion exactly once at the start of season 2."""
+        """Verify stateful mode applies mean-reversion exactly once.
+
+        serve_season_features() in stateful mode across two seasons applies
+        mean-reversion exactly once at the start of season 2.
+        """
         s1_games = [
             _make_game(
                 game_id="1", season=2023, day_num=10, w_team_id=101, l_team_id=102, w_score=85, l_score=60

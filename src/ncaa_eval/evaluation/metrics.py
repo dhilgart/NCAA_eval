@@ -25,20 +25,17 @@ import numpy.typing as npt
 class ReliabilityData:
     """Structured return type for reliability diagram data.
 
-    Attributes
-    ----------
-    fraction_of_positives
-        Observed fraction of positives per bin (from calibration_curve).
-    mean_predicted_value
-        Mean predicted probability per bin (from calibration_curve).
-    bin_counts
-        Number of samples in each non-empty bin.
-    bin_edges
-        Full bin edge array of shape ``(n_bins + 1,)``, i.e.
-        ``np.linspace(0.0, 1.0, n_bins + 1)``.  Includes both the lower (0.0)
-        and upper (1.0) boundaries so callers do not need to recompute them.
-    n_bins
-        Requested number of bins.
+    Attributes:
+        fraction_of_positives: Observed fraction of positives per bin
+            (from calibration_curve).
+        mean_predicted_value: Mean predicted probability per bin
+            (from calibration_curve).
+        bin_counts: Number of samples in each non-empty bin.
+        bin_edges: Full bin edge array of shape ``(n_bins + 1,)``, i.e.
+            ``np.linspace(0.0, 1.0, n_bins + 1)``.  Includes both the lower
+            (0.0) and upper (1.0) boundaries so callers do not need to
+            recompute them.
+        n_bins: Requested number of bins.
     """
 
     fraction_of_positives: npt.NDArray[np.float64]
@@ -52,7 +49,12 @@ def _validate_inputs(
     y_true: npt.NDArray[np.float64],
     y_prob: npt.NDArray[np.float64],
 ) -> None:
-    """Validate metric inputs: non-empty, matching lengths, binary y_true, probs in [0, 1]."""
+    """Validate metric inputs: non-empty, matching lengths, binary y_true, probs in [0, 1].
+
+    Checks array non-emptiness, matching lengths, binary values in
+    ``y_true``, and probability bounds in [0, 1] using NumPy vectorized
+    comparisons, raising a descriptive ``ValueError`` for any violation.
+    """
     if len(y_true) == 0 or len(y_prob) == 0:
         msg = "y_true and y_prob must be non-empty arrays."
         raise ValueError(msg)
@@ -73,22 +75,16 @@ def log_loss(
 ) -> float:
     """Compute Log Loss (cross-entropy loss) for binary predictions.
 
-    Parameters
-    ----------
-    y_true
-        Binary labels (0 or 1).
-    y_prob
-        Predicted probabilities for the positive class.
+    Args:
+        y_true: Binary labels (0 or 1).
+        y_prob: Predicted probabilities for the positive class.
 
-    Returns
-    -------
-    float
+    Returns:
         Log Loss value.
 
-    Raises
-    ------
-    ValueError
-        If inputs are empty, mismatched, or probabilities are outside [0, 1].
+    Raises:
+        ValueError: If inputs are empty, mismatched, or probabilities are
+            outside [0, 1].
     """
     from sklearn.metrics import log_loss as sklearn_log_loss  # type: ignore[import-untyped]
 
@@ -103,22 +99,16 @@ def brier_score(
 ) -> float:
     """Compute Brier Score for binary predictions.
 
-    Parameters
-    ----------
-    y_true
-        Binary labels (0 or 1).
-    y_prob
-        Predicted probabilities for the positive class.
+    Args:
+        y_true: Binary labels (0 or 1).
+        y_prob: Predicted probabilities for the positive class.
 
-    Returns
-    -------
-    float
+    Returns:
         Brier Score value (lower is better).
 
-    Raises
-    ------
-    ValueError
-        If inputs are empty, mismatched, or probabilities are outside [0, 1].
+    Raises:
+        ValueError: If inputs are empty, mismatched, or probabilities are
+            outside [0, 1].
     """
     from sklearn.metrics import brier_score_loss
 
@@ -133,23 +123,17 @@ def roc_auc(
 ) -> float:
     """Compute ROC-AUC for binary predictions.
 
-    Parameters
-    ----------
-    y_true
-        Binary labels (0 or 1).
-    y_prob
-        Predicted probabilities for the positive class.
+    Args:
+        y_true: Binary labels (0 or 1).
+        y_prob: Predicted probabilities for the positive class.
 
-    Returns
-    -------
-    float
+    Returns:
         ROC-AUC value.
 
-    Raises
-    ------
-    ValueError
-        If inputs are empty, mismatched, probabilities are outside [0, 1],
-        or ``y_true`` contains only one class (AUC is undefined).
+    Raises:
+        ValueError: If inputs are empty, mismatched, probabilities are
+            outside [0, 1], or ``y_true`` contains only one class (AUC is
+            undefined).
     """
     from sklearn.metrics import roc_auc_score
 
@@ -174,24 +158,17 @@ def expected_calibration_error(
     Predictions are binned into ``n_bins`` equal-width bins on [0, 1], and
     ECE is the weighted average of per-bin |accuracy - confidence| gaps.
 
-    Parameters
-    ----------
-    y_true
-        Binary labels (0 or 1).
-    y_prob
-        Predicted probabilities for the positive class.
-    n_bins
-        Number of equal-width bins (default 10).
+    Args:
+        y_true: Binary labels (0 or 1).
+        y_prob: Predicted probabilities for the positive class.
+        n_bins: Number of equal-width bins (default 10).
 
-    Returns
-    -------
-    float
+    Returns:
         ECE value in [0, 1] (lower is better).
 
-    Raises
-    ------
-    ValueError
-        If inputs are empty, mismatched, or probabilities are outside [0, 1].
+    Raises:
+        ValueError: If inputs are empty, mismatched, or probabilities are
+            outside [0, 1].
     """
     if n_bins < 1:
         msg = f"n_bins must be >= 1, got {n_bins}."
@@ -234,26 +211,18 @@ def reliability_diagram_data(
     Uses ``sklearn.calibration.calibration_curve`` for bin statistics and
     augments with per-bin sample counts.
 
-    Parameters
-    ----------
-    y_true
-        Binary labels (0 or 1).
-    y_prob
-        Predicted probabilities for the positive class.
-    n_bins
-        Number of bins (default 10).
+    Args:
+        y_true: Binary labels (0 or 1).
+        y_prob: Predicted probabilities for the positive class.
+        n_bins: Number of bins (default 10).
 
-    Returns
-    -------
-    ReliabilityData
+    Returns:
         Structured data containing fraction of positives, mean predicted
         values, bin counts, bin edges, and requested number of bins.
 
-    Raises
-    ------
-    ValueError
-        If inputs are empty, mismatched, ``n_bins < 1``, or probabilities are
-        outside [0, 1].
+    Raises:
+        ValueError: If inputs are empty, mismatched, ``n_bins < 1``, or
+            probabilities are outside [0, 1].
     """
     from sklearn.calibration import calibration_curve  # type: ignore[import-untyped]
 

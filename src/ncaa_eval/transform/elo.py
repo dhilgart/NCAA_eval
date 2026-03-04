@@ -61,13 +61,11 @@ class EloConfig:
 class EloFeatureEngine:
     """Game-by-game Elo rating engine.
 
-    Parameters
-    ----------
-    config
-        Frozen Elo configuration.
-    conference_lookup
-        Optional conference lookup for season mean-reversion.  When ``None``,
-        mean-reversion falls back to global mean.
+    Args:
+        config: Frozen Elo configuration.
+        conference_lookup: Optional conference lookup for season
+            mean-reversion.  When ``None``, mean-reversion falls back to
+            global mean.
     """
 
     def __init__(
@@ -108,21 +106,25 @@ class EloFeatureEngine:
     ) -> tuple[float, float]:
         """Process one game and update ratings.
 
-        Returns ``(elo_w_before, elo_l_before)`` — the ratings *before* this
-        game's update — suitable for use as feature values.
+        Snapshots before-ratings for feature use, applies home-court
+        effective-rating adjustment to expected-score computation, computes
+        the margin-of-victory multiplier and variable K-factor, then mutates
+        internal rating state for both teams.
 
-        Parameters
-        ----------
-        w_team_id, l_team_id
-            Winner and loser team IDs.
-        w_score, l_score
-            Final scores (raw).
-        loc
-            ``"H"`` (winner home), ``"A"`` (winner away), ``"N"`` (neutral).
-        is_tournament
-            Whether this is a tournament game.
-        num_ot
-            Number of overtime periods (used for margin rescaling).
+        Args:
+            w_team_id: Winner team ID.
+            l_team_id: Loser team ID.
+            w_score: Winner final score (raw).
+            l_score: Loser final score (raw).
+            loc: ``"H"`` (winner home), ``"A"`` (winner away), ``"N"``
+                (neutral).
+            is_tournament: Whether this is a tournament game.
+            num_ot: Number of overtime periods (used for margin rescaling).
+
+        Returns:
+            Tuple of ``(elo_w_before, elo_l_before)`` — the winner's and
+            loser's ratings *before* this game's update, suitable for use
+            as walk-forward feature values.
         """
         r_w = self.get_rating(w_team_id)
         r_l = self.get_rating(l_team_id)
@@ -172,8 +174,12 @@ class EloFeatureEngine:
     def apply_season_mean_reversion(self, season: int) -> None:
         """Regress each team toward its conference mean (or global mean).
 
-        No-op when no prior ratings exist or no ``ConferenceLookup`` was
-        provided (falls back to global mean for all teams).
+        Groups all rated teams by conference via ``ConferenceLookup``,
+        computes each conference's mean rating, then shifts every team's
+        rating a fraction ``mean_reversion_fraction`` of the way toward its
+        conference mean.  Teams with no conference entry fall back to the
+        global mean; when no ``ConferenceLookup`` is provided all teams
+        use the global mean.  Is a no-op when no prior ratings exist.
         """
         if not self._ratings:
             return
@@ -255,17 +261,12 @@ class EloFeatureEngine:
         Calls ``start_new_season(season)`` if prior ratings exist (i.e., this
         is not the very first season).
 
-        Parameters
-        ----------
-        games
-            Games sorted in chronological order.
-        season
-            Season year.
+        Args:
+            games: Games sorted in chronological order.
+            season: Season year.
 
-        Returns
-        -------
-        pd.DataFrame
-            Columns: ``[game_id, elo_w_before, elo_l_before]``.
+        Returns:
+            DataFrame with columns ``[game_id, elo_w_before, elo_l_before]``.
         """
         if not games:
             return pd.DataFrame(columns=["game_id", "elo_w_before", "elo_l_before"])
@@ -297,7 +298,12 @@ class EloFeatureEngine:
     # ── Private helpers ──────────────────────────────────────────────────
 
     def _effective_k(self, team_id: int, is_tournament: bool) -> float:
-        """Determine K-factor based on game count and tournament flag."""
+        """Determine K-factor based on game count and tournament flag.
+
+        Checks the tournament flag first (returning k_tournament), then falls
+        back to the early/regular K-factor threshold based on the team's game
+        count from the internal counter.
+        """
         if is_tournament:
             return self._config.k_tournament
         game_count = self._game_counts.get(team_id, 0)

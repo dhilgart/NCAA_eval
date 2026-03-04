@@ -2280,9 +2280,13 @@ When a shared validation helper (`_validate_inputs`) covers N metrics, edge-case
 
 Dev agents default to **NumPy docstring style** (`Parameters\n----------`, `Returns\n-------`, `Raises\n------`) when writing docstrings for data-science-oriented code. This project mandates **Google style** (`Args:`, `Returns:`, `Raises:`) per STYLE_GUIDE Section 1 and `pyproject.toml` pydocstyle convention.
 
-**Drift is invisible to Ruff** — the Google convention in `[tool.ruff.lint.pydocstyle]` only activates when `D` rules are added to `extend-select`. Until then, NumPy-style docstrings pass all linters silently.
+**Drift is invisible to Ruff** — the Google convention in `[tool.ruff.lint.pydocstyle]` implicitly activates certain D-rules, but `"D"` should be **explicitly added to `extend-select`** for auditable, self-documenting enforcement. Until that is done, NumPy-style docstrings still pass all linters silently (D-rules only verify *presence* and section *names*, not format style).
 
 **Template requirement:** Code review must explicitly verify all new docstrings in `src/` use Google style. Flag NumPy-style docs as a MEDIUM finding. Add a reminder to Dev Agent story notes: *"Use Google docstring style (Args:, Returns:, Raises:), NOT NumPy style (Parameters\n----------)"*.
+
+**Story 8.4 addendum (2026-03-03):** Even after enabling D-rules in pyproject.toml, `calibration.py`, `xgboost_model.py`, and `feature_serving.py` retained NumPy-style docstrings — because Ruff D-rules only verify *presence* of docstrings and basic section *naming*, NOT whether the format is NumPy vs. Google. Hybrid violations (e.g., `Returns:\n-------` — Google section name with NumPy underline) also slip through. **Code review must grep for `Parameters\n` and `------` underlines explicitly** — automated tooling does not catch these.
+
+**Story 8.4 PR fix (2026-03-03) — D-rule scope is ALL Python files, not just `src/`:** When `"D"` is added to `extend-select` in pyproject.toml, the pre-commit ruff-lint hook applies D100/D104 (missing module/package docstrings) to **every Python file it processes** — including `docs/conf.py` and `tasks/*.py`. The PR ruff-lint check failed because these files had no module docstrings. **Template requirement:** When enabling D-rules for a project, immediately add module docstrings to `docs/conf.py`, all `tasks/*.py`, and any other top-level Python modules that aren't in `src/`. Exclude them from D-rule checks in pyproject.toml per-file-ignores (`D100`, `D104`) OR add the docstrings — the docstring approach is preferable.
 
 ### `mode: str` Public APIs Must Validate at Entry Point (Discovered Story 6.2 Code Review, 2026-02-23)
 

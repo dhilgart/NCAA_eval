@@ -42,6 +42,12 @@ class EloModel(StatefulModel):
     """Elo rating model wrapping :class:`EloFeatureEngine`."""
 
     def __init__(self, config: EloModelConfig | None = None) -> None:
+        """Initialize Elo model with optional configuration.
+
+        Args:
+            config: Pydantic config; defaults to :class:`EloModelConfig`
+                with standard hyperparameters when ``None``.
+        """
         self._config = config or EloModelConfig()
         self._engine = EloFeatureEngine(self._to_elo_config(self._config))
 
@@ -66,7 +72,12 @@ class EloModel(StatefulModel):
         self._engine.start_new_season(season)
 
     def _predict_one(self, team_a_id: int, team_b_id: int) -> float:
-        """Return P(team_a wins) using the Elo expected-score formula."""
+        """Return P(team_a wins) using the Elo expected-score formula.
+
+        Delegates to the underlying EloFeatureEngine.predict_matchup(), which
+        retrieves both teams' current ratings and applies the logistic
+        expected-score formula.
+        """
         return self._engine.predict_matchup(team_a_id, team_b_id)
 
     def get_state(self) -> dict[str, Any]:
@@ -79,21 +90,17 @@ class EloModel(StatefulModel):
     def set_state(self, state: dict[str, Any]) -> None:
         """Restore ratings and game counts from a snapshot.
 
-        Parameters
-        ----------
-        state
-            Must contain ``"ratings"`` (``dict[int, float]``) and
-            ``"game_counts"`` (``dict[int, int]``) keys, as returned by
-            :meth:`get_state`.  Keys may be ``int`` or ``str``; string keys
-            are coerced to ``int`` so that JSON-decoded dicts (where all keys
-            are strings) work correctly without silent rating loss.
+        Args:
+            state: Must contain ``"ratings"`` (``dict[int, float]``) and
+                ``"game_counts"`` (``dict[int, int]``) keys, as returned by
+                :meth:`get_state`.  Keys may be ``int`` or ``str``; string
+                keys are coerced to ``int`` so that JSON-decoded dicts (where
+                all keys are strings) work correctly without silent rating
+                loss.
 
-        Raises
-        ------
-        KeyError
-            If ``"ratings"`` or ``"game_counts"`` keys are absent.
-        TypeError
-            If either value is not a ``dict``.
+        Raises:
+            KeyError: If ``"ratings"`` or ``"game_counts"`` keys are absent.
+            TypeError: If either value is not a ``dict``.
         """
         if "ratings" not in state or "game_counts" not in state:
             missing = {"ratings", "game_counts"} - state.keys()
@@ -115,7 +122,12 @@ class EloModel(StatefulModel):
     # ------------------------------------------------------------------
 
     def save(self, path: Path) -> None:
-        """JSON-dump config and state to *path* directory."""
+        """JSON-dump config and state to *path* directory.
+
+        Creates the output directory, JSON-dumps the Pydantic config, then
+        JSON-dumps the state dict (ratings and game counts) after coercing
+        numeric keys to strings for JSON compatibility.
+        """
         path.mkdir(parents=True, exist_ok=True)
         (path / "config.json").write_text(self._config.model_dump_json())
         state = self.get_state()
@@ -130,11 +142,10 @@ class EloModel(StatefulModel):
     def load(cls, path: Path) -> Self:
         """Reconstruct an EloModel from a saved directory.
 
-        Raises
-        ------
-        FileNotFoundError
-            If either ``config.json`` or ``state.json`` is missing.  A missing
-            file indicates an incomplete :meth:`save` (e.g., interrupted write).
+        Raises:
+            FileNotFoundError: If either ``config.json`` or ``state.json`` is
+                missing.  A missing file indicates an incomplete :meth:`save`
+                (e.g., interrupted write).
         """
         config_path = path / "config.json"
         state_path = path / "state.json"

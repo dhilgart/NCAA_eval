@@ -86,7 +86,12 @@ class MatrixProvider:
         team_b_id: int,
         context: MatchupContext,
     ) -> float:
-        """Return P(team_a beats team_b) from the stored matrix."""
+        """Return P(team_a beats team_b) from the stored matrix.
+
+        Indexes into the pre-built probability matrix using the team-to-index
+        mapping, returning P(team_i beats team_j) directly from the stored
+        array.
+        """
         i = self._index[team_a_id]
         j = self._index[team_b_id]
         return float(self._P[i, j])
@@ -97,7 +102,11 @@ class MatrixProvider:
         team_b_ids: Sequence[int],
         context: MatchupContext,
     ) -> npt.NDArray[np.float64]:
-        """Return batch probabilities from the stored matrix."""
+        """Return batch probabilities from the stored matrix.
+
+        Extracts row/column indices from the team pairs, vectorizes lookups
+        into the probability matrix, and returns a list of win probabilities.
+        """
         rows = np.array([self._index[a] for a in team_a_ids])
         cols = np.array([self._index[b] for b in team_b_ids])
         result: npt.NDArray[np.float64] = self._P[rows, cols].astype(np.float64)
@@ -125,7 +134,12 @@ class EloProvider:
         team_b_id: int,
         context: MatchupContext,
     ) -> float:
-        """Return P(team_a beats team_b) via the model's ``predict_matchup``."""
+        """Return P(team_a beats team_b) via the model's ``predict_matchup``.
+
+        Delegates to the model's predict_matchup method, which retrieves both
+        teams' current ratings and applies the Elo logistic expected-score
+        formula.
+        """
         result: float = self._model.predict_matchup(team_a_id, team_b_id)
         return result
 
@@ -136,6 +150,9 @@ class EloProvider:
         context: MatchupContext,
     ) -> npt.NDArray[np.float64]:
         """Return batch probabilities by looping ``predict_matchup``.
+
+        Iterates team pairs, calling predict_matchup per matchup, and collects
+        results into a list.
 
         Elo is O(1) per pair so looping is acceptable.
         """

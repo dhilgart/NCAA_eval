@@ -241,8 +241,11 @@ class TestReliabilityDiagramData:
         assert int(np.sum(result.bin_counts)) == 200
 
     def test_arrays_same_length(self) -> None:
-        """fraction_of_positives, mean_predicted_value, and bin_counts
-        should all have the same length (number of non-empty bins)."""
+        """Verify output arrays have the same length.
+
+        fraction_of_positives, mean_predicted_value, and bin_counts
+        should all have the same length (number of non-empty bins).
+        """
         rng = np.random.default_rng(42)
         y_true = rng.integers(0, 2, size=100).astype(np.float64)
         y_prob = rng.uniform(0, 1, size=100)
