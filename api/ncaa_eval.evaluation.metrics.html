@@ -335,7 +335,8 @@ scalars or structured data (<a class="reference internal" href="#ncaa_eval.evalu
 <dl class="py attribute">
 <dt class="sig sig-object py" id="ncaa_eval.evaluation.metrics.ReliabilityData.fraction_of_positives">
 <span class="sig-name descname"><span class="pre">fraction_of_positives</span></span><a class="headerlink" href="#ncaa_eval.evaluation.metrics.ReliabilityData.fraction_of_positives" title="Link to this definition">¶</a></dt>
-<dd><p>Observed fraction of positives per bin (from calibration_curve).</p>
+<dd><p>Observed fraction of positives per bin
+(from calibration_curve).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>numpy.ndarray[tuple[Any, …], numpy.dtype[numpy.float64]]</p>
@@ -346,7 +347,8 @@ scalars or structured data (<a class="reference internal" href="#ncaa_eval.evalu
 <dl class="py attribute">
 <dt class="sig sig-object py" id="ncaa_eval.evaluation.metrics.ReliabilityData.mean_predicted_value">
 <span class="sig-name descname"><span class="pre">mean_predicted_value</span></span><a class="headerlink" href="#ncaa_eval.evaluation.metrics.ReliabilityData.mean_predicted_value" title="Link to this definition">¶</a></dt>
-<dd><p>Mean predicted probability per bin (from calibration_curve).</p>
+<dd><p>Mean predicted probability per bin
+(from calibration_curve).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>numpy.ndarray[tuple[Any, …], numpy.dtype[numpy.float64]]</p>
@@ -369,8 +371,9 @@ scalars or structured data (<a class="reference internal" href="#ncaa_eval.evalu
 <dt class="sig sig-object py" id="ncaa_eval.evaluation.metrics.ReliabilityData.bin_edges">
 <span class="sig-name descname"><span class="pre">bin_edges</span></span><a class="headerlink" href="#ncaa_eval.evaluation.metrics.ReliabilityData.bin_edges" title="Link to this definition">¶</a></dt>
 <dd><p>Full bin edge array of shape <code class="docutils literal notranslate"><span class="pre">(n_bins</span> <span class="pre">+</span> <span class="pre">1,)</span></code>, i.e.
-<code class="docutils literal notranslate"><span class="pre">np.linspace(0.0,</span> <span class="pre">1.0,</span> <span class="pre">n_bins</span> <span class="pre">+</span> <span class="pre">1)</span></code>.  Includes both the lower (0.0)
-and upper (1.0) boundaries so callers do not need to recompute them.</p>
+<code class="docutils literal notranslate"><span class="pre">np.linspace(0.0,</span> <span class="pre">1.0,</span> <span class="pre">n_bins</span> <span class="pre">+</span> <span class="pre">1)</span></code>.  Includes both the lower
+(0.0) and upper (1.0) boundaries so callers do not need to
+recompute them.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>numpy.ndarray[tuple[Any, …], numpy.dtype[numpy.float64]]</p>
@@ -430,11 +433,9 @@ and upper (1.0) boundaries so callers do not need to recompute them.</p>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Brier Score value (lower is better).</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float</p>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – If inputs are empty, mismatched, or probabilities are outside [0, 1].</p>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If inputs are empty, mismatched, or probabilities are
+    outside [0, 1].</p>
 </dd>
 </dl>
 </dd></dl>
@@ -457,11 +458,9 @@ ECE is the weighted average of per-bin <a href="#id5"><span class="problematic" 
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>ECE value in [0, 1] (lower is better).</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float</p>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – If inputs are empty, mismatched, or probabilities are outside [0, 1].</p>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If inputs are empty, mismatched, or probabilities are
+    outside [0, 1].</p>
 </dd>
 </dl>
 </dd></dl>
@@ -480,11 +479,9 @@ ECE is the weighted average of per-bin <a href="#id5"><span class="problematic" 
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Log Loss value.</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float</p>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – If inputs are empty, mismatched, or probabilities are outside [0, 1].</p>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If inputs are empty, mismatched, or probabilities are
+    outside [0, 1].</p>
 </dd>
 </dl>
 </dd></dl>
@@ -507,12 +504,9 @@ augments with per-bin sample counts.</p>
 <dd class="field-even"><p>Structured data containing fraction of positives, mean predicted
 values, bin counts, bin edges, and requested number of bins.</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="#ncaa_eval.evaluation.metrics.ReliabilityData" title="ncaa_eval.evaluation.metrics.ReliabilityData">ReliabilityData</a></p>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – If inputs are empty, mismatched, <code class="docutils literal notranslate"><span class="pre">n_bins</span> <span class="pre">&lt;</span> <span class="pre">1</span></code>, or probabilities are
-    outside [0, 1].</p>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If inputs are empty, mismatched, <code class="docutils literal notranslate"><span class="pre">n_bins</span> <span class="pre">&lt;</span> <span class="pre">1</span></code>, or
+    probabilities are outside [0, 1].</p>
 </dd>
 </dl>
 </dd></dl>
@@ -531,12 +525,10 @@ values, bin counts, bin edges, and requested number of bins.</p>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>ROC-AUC value.</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float</p>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – If inputs are empty, mismatched, probabilities are outside [0, 1],
-    or <code class="docutils literal notranslate"><span class="pre">y_true</span></code> contains only one class (AUC is undefined).</p>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If inputs are empty, mismatched, probabilities are
+    outside [0, 1], or <code class="docutils literal notranslate"><span class="pre">y_true</span></code> contains only one class (AUC is
+    undefined).</p>
 </dd>
 </dl>
 </dd></dl>

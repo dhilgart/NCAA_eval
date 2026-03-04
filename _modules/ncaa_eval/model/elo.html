@@ -356,6 +356,12 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Elo rating model wrapping :class:`EloFeatureEngine`.&quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">EloModelConfig</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize Elo model with optional configuration.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            config: Pydantic config; defaults to :class:`EloModelConfig`</span>
+<span class="sd">                with standard hyperparameters when ``None``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_config</span> <span class="o">=</span> <span class="n">config</span> <span class="ow">or</span> <span class="n">EloModelConfig</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_engine</span> <span class="o">=</span> <span class="n">EloFeatureEngine</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_to_elo_config</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">))</span>
 
@@ -386,7 +392,12 @@
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_predict_one</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">team_a_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">team_b_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return P(team_a wins) using the Elo expected-score formula.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return P(team_a wins) using the Elo expected-score formula.</span>
+
+<span class="sd">        Delegates to the underlying EloFeatureEngine.predict_matchup(), which</span>
+<span class="sd">        retrieves both teams&#39; current ratings and applies the logistic</span>
+<span class="sd">        expected-score formula.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_engine</span><span class="o">.</span><span class="n">predict_matchup</span><span class="p">(</span><span class="n">team_a_id</span><span class="p">,</span> <span class="n">team_b_id</span><span class="p">)</span>
 
 <div class="viewcode-block" id="EloModel.get_state">
@@ -404,21 +415,17 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">set_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Restore ratings and game counts from a snapshot.</span>
 
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        state</span>
-<span class="sd">            Must contain ``&quot;ratings&quot;`` (``dict[int, float]``) and</span>
-<span class="sd">            ``&quot;game_counts&quot;`` (``dict[int, int]``) keys, as returned by</span>
-<span class="sd">            :meth:`get_state`.  Keys may be ``int`` or ``str``; string keys</span>
-<span class="sd">            are coerced to ``int`` so that JSON-decoded dicts (where all keys</span>
-<span class="sd">            are strings) work correctly without silent rating loss.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            state: Must contain ``&quot;ratings&quot;`` (``dict[int, float]``) and</span>
+<span class="sd">                ``&quot;game_counts&quot;`` (``dict[int, int]``) keys, as returned by</span>
+<span class="sd">                :meth:`get_state`.  Keys may be ``int`` or ``str``; string</span>
+<span class="sd">                keys are coerced to ``int`` so that JSON-decoded dicts (where</span>
+<span class="sd">                all keys are strings) work correctly without silent rating</span>
+<span class="sd">                loss.</span>
 
-<span class="sd">        Raises</span>
-<span class="sd">        ------</span>
-<span class="sd">        KeyError</span>
-<span class="sd">            If ``&quot;ratings&quot;`` or ``&quot;game_counts&quot;`` keys are absent.</span>
-<span class="sd">        TypeError</span>
-<span class="sd">            If either value is not a ``dict``.</span>
+<span class="sd">        Raises:</span>
+<span class="sd">            KeyError: If ``&quot;ratings&quot;`` or ``&quot;game_counts&quot;`` keys are absent.</span>
+<span class="sd">            TypeError: If either value is not a ``dict``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="s2">&quot;ratings&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">state</span> <span class="ow">or</span> <span class="s2">&quot;game_counts&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">state</span><span class="p">:</span>
             <span class="n">missing</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;ratings&quot;</span><span class="p">,</span> <span class="s2">&quot;game_counts&quot;</span><span class="p">}</span> <span class="o">-</span> <span class="n">state</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
@@ -443,7 +450,12 @@
 <div class="viewcode-block" id="EloModel.save">
 <a class="viewcode-back" href="../../../api/ncaa_eval.model.elo.html#ncaa_eval.model.elo.EloModel.save">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;JSON-dump config and state to *path* directory.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;JSON-dump config and state to *path* directory.</span>
+
+<span class="sd">        Creates the output directory, JSON-dumps the Pydantic config, then</span>
+<span class="sd">        JSON-dumps the state dict (ratings and game counts) after coercing</span>
+<span class="sd">        numeric keys to strings for JSON compatibility.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">path</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="p">(</span><span class="n">path</span> <span class="o">/</span> <span class="s2">&quot;config.json&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">model_dump_json</span><span class="p">())</span>
         <span class="n">state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_state</span><span class="p">()</span>
@@ -461,11 +473,10 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">load</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Reconstruct an EloModel from a saved directory.</span>
 
-<span class="sd">        Raises</span>
-<span class="sd">        ------</span>
-<span class="sd">        FileNotFoundError</span>
-<span class="sd">            If either ``config.json`` or ``state.json`` is missing.  A missing</span>
-<span class="sd">            file indicates an incomplete :meth:`save` (e.g., interrupted write).</span>
+<span class="sd">        Raises:</span>
+<span class="sd">            FileNotFoundError: If either ``config.json`` or ``state.json`` is</span>
+<span class="sd">                missing.  A missing file indicates an incomplete :meth:`save`</span>
+<span class="sd">                (e.g., interrupted write).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">config_path</span> <span class="o">=</span> <span class="n">path</span> <span class="o">/</span> <span class="s2">&quot;config.json&quot;</span>
         <span class="n">state_path</span> <span class="o">=</span> <span class="n">path</span> <span class="o">/</span> <span class="s2">&quot;state.json&quot;</span>

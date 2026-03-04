@@ -405,7 +405,12 @@
 <div class="viewcode-block" id="RunStore.save_run">
 <a class="viewcode-back" href="../../../api/ncaa_eval.model.tracking.html#ncaa_eval.model.tracking.RunStore.save_run">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">save_run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run</span><span class="p">:</span> <span class="n">ModelRun</span><span class="p">,</span> <span class="n">predictions</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Prediction</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write run metadata (JSON) and predictions (Parquet).&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write run metadata (JSON) and predictions (Parquet).</span>
+
+<span class="sd">        Creates the run directory, JSON-writes the ModelRun metadata, and</span>
+<span class="sd">        Parquet-writes prediction records using a pre-defined PyArrow schema,</span>
+<span class="sd">        handling empty prediction lists by constructing typed empty arrays.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">run_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_runs_dir</span> <span class="o">/</span> <span class="n">run</span><span class="o">.</span><span class="n">run_id</span>
         <span class="n">run_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
@@ -435,10 +440,9 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">load_run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ModelRun</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load run metadata from JSON.</span>
 
-<span class="sd">        Raises</span>
-<span class="sd">        ------</span>
-<span class="sd">        FileNotFoundError</span>
-<span class="sd">            If the run directory or ``run.json`` does not exist.</span>
+<span class="sd">        Raises:</span>
+<span class="sd">            FileNotFoundError: If the run directory or ``run.json`` does not</span>
+<span class="sd">                exist.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">run_json</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_runs_dir</span> <span class="o">/</span> <span class="n">run_id</span> <span class="o">/</span> <span class="s2">&quot;run.json&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">run_json</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
@@ -452,10 +456,8 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">load_predictions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load predictions from Parquet as a DataFrame.</span>
 
-<span class="sd">        Raises</span>
-<span class="sd">        ------</span>
-<span class="sd">        FileNotFoundError</span>
-<span class="sd">            If the predictions Parquet file does not exist.</span>
+<span class="sd">        Raises:</span>
+<span class="sd">            FileNotFoundError: If the predictions Parquet file does not exist.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">pq_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_runs_dir</span> <span class="o">/</span> <span class="n">run_id</span> <span class="o">/</span> <span class="s2">&quot;predictions.parquet&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">pq_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
@@ -632,7 +634,12 @@
 <div class="viewcode-block" id="RunStore.list_runs">
 <a class="viewcode-back" href="../../../api/ncaa_eval.model.tracking.html#ncaa_eval.model.tracking.RunStore.list_runs">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">list_runs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">ModelRun</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Scan the runs directory and return all saved ModelRun records.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Scan the runs directory and return all saved ModelRun records.</span>
+
+<span class="sd">        Scans the runs directory in sorted order, deserializes each run.json</span>
+<span class="sd">        file via Pydantic, and returns a list of ModelRun objects (empty list</span>
+<span class="sd">        if directory does not exist).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_runs_dir</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
             <span class="k">return</span> <span class="p">[]</span>
         <span class="n">runs</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">ModelRun</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>

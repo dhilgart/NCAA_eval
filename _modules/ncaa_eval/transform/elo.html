@@ -375,13 +375,11 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">EloFeatureEngine</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Game-by-game Elo rating engine.</span>
 
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    config</span>
-<span class="sd">        Frozen Elo configuration.</span>
-<span class="sd">    conference_lookup</span>
-<span class="sd">        Optional conference lookup for season mean-reversion.  When ``None``,</span>
-<span class="sd">        mean-reversion falls back to global mean.</span>
+<span class="sd">    Args:</span>
+<span class="sd">        config: Frozen Elo configuration.</span>
+<span class="sd">        conference_lookup: Optional conference lookup for season</span>
+<span class="sd">            mean-reversion.  When ``None``, mean-reversion falls back to</span>
+<span class="sd">            global mean.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
@@ -430,21 +428,25 @@
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Process one game and update ratings.</span>
 
-<span class="sd">        Returns ``(elo_w_before, elo_l_before)`` — the ratings *before* this</span>
-<span class="sd">        game&#39;s update — suitable for use as feature values.</span>
+<span class="sd">        Snapshots before-ratings for feature use, applies home-court</span>
+<span class="sd">        effective-rating adjustment to expected-score computation, computes</span>
+<span class="sd">        the margin-of-victory multiplier and variable K-factor, then mutates</span>
+<span class="sd">        internal rating state for both teams.</span>
 
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        w_team_id, l_team_id</span>
-<span class="sd">            Winner and loser team IDs.</span>
-<span class="sd">        w_score, l_score</span>
-<span class="sd">            Final scores (raw).</span>
-<span class="sd">        loc</span>
-<span class="sd">            ``&quot;H&quot;`` (winner home), ``&quot;A&quot;`` (winner away), ``&quot;N&quot;`` (neutral).</span>
-<span class="sd">        is_tournament</span>
-<span class="sd">            Whether this is a tournament game.</span>
-<span class="sd">        num_ot</span>
-<span class="sd">            Number of overtime periods (used for margin rescaling).</span>
+<span class="sd">        Args:</span>
+<span class="sd">            w_team_id: Winner team ID.</span>
+<span class="sd">            l_team_id: Loser team ID.</span>
+<span class="sd">            w_score: Winner final score (raw).</span>
+<span class="sd">            l_score: Loser final score (raw).</span>
+<span class="sd">            loc: ``&quot;H&quot;`` (winner home), ``&quot;A&quot;`` (winner away), ``&quot;N&quot;``</span>
+<span class="sd">                (neutral).</span>
+<span class="sd">            is_tournament: Whether this is a tournament game.</span>
+<span class="sd">            num_ot: Number of overtime periods (used for margin rescaling).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Tuple of ``(elo_w_before, elo_l_before)`` — the winner&#39;s and</span>
+<span class="sd">            loser&#39;s ratings *before* this game&#39;s update, suitable for use</span>
+<span class="sd">            as walk-forward feature values.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">r_w</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_rating</span><span class="p">(</span><span class="n">w_team_id</span><span class="p">)</span>
         <span class="n">r_l</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_rating</span><span class="p">(</span><span class="n">l_team_id</span><span class="p">)</span>
@@ -497,8 +499,12 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">apply_season_mean_reversion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">season</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Regress each team toward its conference mean (or global mean).</span>
 
-<span class="sd">        No-op when no prior ratings exist or no ``ConferenceLookup`` was</span>
-<span class="sd">        provided (falls back to global mean for all teams).</span>
+<span class="sd">        Groups all rated teams by conference via ``ConferenceLookup``,</span>
+<span class="sd">        computes each conference&#39;s mean rating, then shifts every team&#39;s</span>
+<span class="sd">        rating a fraction ``mean_reversion_fraction`` of the way toward its</span>
+<span class="sd">        conference mean.  Teams with no conference entry fall back to the</span>
+<span class="sd">        global mean; when no ``ConferenceLookup`` is provided all teams</span>
+<span class="sd">        use the global mean.  Is a no-op when no prior ratings exist.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ratings</span><span class="p">:</span>
             <span class="k">return</span>
@@ -607,17 +613,12 @@
 <span class="sd">        Calls ``start_new_season(season)`` if prior ratings exist (i.e., this</span>
 <span class="sd">        is not the very first season).</span>
 
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        games</span>
-<span class="sd">            Games sorted in chronological order.</span>
-<span class="sd">        season</span>
-<span class="sd">            Season year.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            games: Games sorted in chronological order.</span>
+<span class="sd">            season: Season year.</span>
 
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        pd.DataFrame</span>
-<span class="sd">            Columns: ``[game_id, elo_w_before, elo_l_before]``.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            DataFrame with columns ``[game_id, elo_w_before, elo_l_before]``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">games</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;game_id&quot;</span><span class="p">,</span> <span class="s2">&quot;elo_w_before&quot;</span><span class="p">,</span> <span class="s2">&quot;elo_l_before&quot;</span><span class="p">])</span>
@@ -650,7 +651,12 @@
     <span class="c1"># ── Private helpers ──────────────────────────────────────────────────</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_effective_k</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">team_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">is_tournament</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Determine K-factor based on game count and tournament flag.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Determine K-factor based on game count and tournament flag.</span>
+
+<span class="sd">        Checks the tournament flag first (returning k_tournament), then falls</span>
+<span class="sd">        back to the early/regular K-factor threshold based on the team&#39;s game</span>
+<span class="sd">        count from the internal counter.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">is_tournament</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">k_tournament</span>
         <span class="n">game_count</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_game_counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">team_id</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>

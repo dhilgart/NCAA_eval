@@ -385,16 +385,24 @@ probe optional capabilities before calling them.</p>
 <dt class="sig sig-object py" id="ncaa_eval.ingest.connectors.Connector.fetch_seasons">
 <span class="sig-name descname"><span class="pre">fetch_seasons</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Season" title="ncaa_eval.ingest.schema.Season"><span class="pre">Season</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/connectors/base.html#Connector.fetch_seasons"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.connectors.Connector.fetch_seasons" title="Link to this definition">¶</a></dt>
 <dd><p>Fetch available seasons from the source.</p>
-<p>Optional capability — not all connectors provide season master data.
-:raises NotImplementedError: If this connector does not support fetching seasons.</p>
+<p>Optional capability — not all connectors provide season master data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>NotImplementedError</strong> – If this connector does not support fetching seasons.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="ncaa_eval.ingest.connectors.Connector.fetch_teams">
 <span class="sig-name descname"><span class="pre">fetch_teams</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Team" title="ncaa_eval.ingest.schema.Team"><span class="pre">Team</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/connectors/base.html#Connector.fetch_teams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.connectors.Connector.fetch_teams" title="Link to this definition">¶</a></dt>
 <dd><p>Fetch team data from the source.</p>
-<p>Optional capability — not all connectors provide team master data.
-:raises NotImplementedError: If this connector does not support fetching teams.</p>
+<p>Optional capability — not all connectors provide team master data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>NotImplementedError</strong> – If this connector does not support fetching teams.</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -479,6 +487,8 @@ have <code class="docutils literal notranslate"><span class="pre">is_tournament=
 <dt class="sig sig-object py" id="ncaa_eval.ingest.connectors.KaggleConnector.fetch_seasons">
 <span class="sig-name descname"><span class="pre">fetch_seasons</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Season" title="ncaa_eval.ingest.schema.Season"><span class="pre">Season</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/connectors/kaggle.html#KaggleConnector.fetch_seasons"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.connectors.KaggleConnector.fetch_seasons" title="Link to this definition">¶</a></dt>
 <dd><p>Parse <code class="docutils literal notranslate"><span class="pre">MSeasons.csv</span></code> into Season models.</p>
+<p>Reads MSeasons.csv, validates required columns, then constructs
+Season models from each row’s season year.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -494,6 +504,8 @@ when resolving ESPN team name strings to Kaggle IDs.</p>
 <dt class="sig sig-object py" id="ncaa_eval.ingest.connectors.KaggleConnector.fetch_teams">
 <span class="sig-name descname"><span class="pre">fetch_teams</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Team" title="ncaa_eval.ingest.schema.Team"><span class="pre">Team</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/connectors/kaggle.html#KaggleConnector.fetch_teams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.connectors.KaggleConnector.fetch_teams" title="Link to this definition">¶</a></dt>
 <dd><p>Parse <code class="docutils literal notranslate"><span class="pre">MTeams.csv</span></code> into Team models.</p>
+<p>Reads MTeams.csv, validates required columns, then constructs Team
+models from each row’s TeamID and TeamName.</p>
 </dd></dl>
 
 <dl class="py method">

@@ -430,7 +430,12 @@
 <div class="viewcode-block" id="StatefulModel.fit">
 <a class="viewcode-back" href="../../../api/ncaa_eval.model.base.html#ncaa_eval.model.StatefulModel.fit">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Reconstruct games from *X*/*y* and update sequentially.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Reconstruct games from *X*/*y* and update sequentially.</span>
+
+<span class="sd">        Reconstructs Game objects from the feature matrix and labels, then</span>
+<span class="sd">        iterates chronologically, calling start_season() on season boundaries</span>
+<span class="sd">        and update() per game.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">games</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_to_games</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
         <span class="n">current_season</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">for</span> <span class="n">game</span> <span class="ow">in</span> <span class="n">games</span><span class="p">:</span>
@@ -456,15 +461,23 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">_to_games</span><span class="p">(</span><span class="n">X</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Game</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Reconstruct :class:`Game` objects from the feature DataFrame.</span>
 
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        X : pd.DataFrame</span>
-<span class="sd">            Feature matrix with columns: ``team_a_id``, ``team_b_id``,</span>
-<span class="sd">            ``season``, ``day_num``, ``date``, ``loc_encoding``,</span>
-<span class="sd">            ``game_id``, ``is_tournament``.  Optionally ``w_score``,</span>
-<span class="sd">            ``l_score``, ``num_ot``.</span>
-<span class="sd">        y : pd.Series</span>
-<span class="sd">            Binary label — ``1`` (or ``True``) means team_a won.</span>
+<span class="sd">        Hoists optional-column checks outside the row loop to avoid O(n)</span>
+<span class="sd">        column-existence tests, decodes ``loc_encoding`` via a lookup dict,</span>
+<span class="sd">        resolves winner/loser ordering from the binary label, and coerces</span>
+<span class="sd">        date values using ``pd.isna`` to handle ``None``, float ``NaN``,</span>
+<span class="sd">        and ``pd.NaT`` uniformly.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            X: Feature matrix with columns: ``team_a_id``, ``team_b_id``,</span>
+<span class="sd">                ``season``, ``day_num``, ``date``, ``loc_encoding``,</span>
+<span class="sd">                ``game_id``, ``is_tournament``.  Optionally ``w_score``,</span>
+<span class="sd">                ``l_score``, ``num_ot``.</span>
+<span class="sd">            y: Binary label — ``1`` (or ``True``) means team_a won.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Chronologically-ordered list of :class:`Game` objects ready for</span>
+<span class="sd">            sequential model processing via :meth:`update` and</span>
+<span class="sd">            :meth:`start_season`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Hoist column-existence checks outside the loop (O(1) each, not O(n))</span>
         <span class="n">has_scores</span> <span class="o">=</span> <span class="s2">&quot;w_score&quot;</span> <span class="ow">in</span> <span class="n">X</span><span class="o">.</span><span class="n">columns</span> <span class="ow">and</span> <span class="s2">&quot;l_score&quot;</span> <span class="ow">in</span> <span class="n">X</span><span class="o">.</span><span class="n">columns</span>

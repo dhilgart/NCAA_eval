@@ -376,6 +376,16 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">XGBoostModelConfig</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize XGBoost model with optional configuration.</span>
+
+<span class="sd">        Builds an :class:`XGBClassifier` from config hyperparameters, setting</span>
+<span class="sd">        ``objective=&quot;binary:logistic&quot;`` and ``scale_pos_weight`` only when</span>
+<span class="sd">        explicitly provided.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            config: Pydantic config; defaults to</span>
+<span class="sd">                :class:`XGBoostModelConfig` when ``None``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_config</span> <span class="o">=</span> <span class="n">config</span> <span class="ow">or</span> <span class="n">XGBoostModelConfig</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_is_fitted</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_feature_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
@@ -412,10 +422,8 @@
 <span class="sd">        ``scale_pos_weight`` = ``count(y==0) / count(y==1)`` in the</span>
 <span class="sd">        ``XGBoostModelConfig``.</span>
 
-<span class="sd">        Raises</span>
-<span class="sd">        ------</span>
-<span class="sd">        ValueError</span>
-<span class="sd">            If *X* is empty.</span>
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If *X* is empty.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">X</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Cannot fit on an empty DataFrame&quot;</span>
@@ -438,10 +446,8 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">predict_proba</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return P(team_a wins) for each row of *X*.</span>
 
-<span class="sd">        Raises</span>
-<span class="sd">        ------</span>
-<span class="sd">        RuntimeError</span>
-<span class="sd">            If called before :meth:`fit`.</span>
+<span class="sd">        Raises:</span>
+<span class="sd">            RuntimeError: If called before :meth:`fit`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_fitted</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Model must be fitted before calling predict_proba&quot;</span>
@@ -460,10 +466,8 @@
 <span class="sd">        - ``config.json`` — Pydantic-serialised hyperparameter config</span>
 <span class="sd">        - ``feature_names.json`` — JSON array of feature column names</span>
 
-<span class="sd">        Raises</span>
-<span class="sd">        ------</span>
-<span class="sd">        RuntimeError</span>
-<span class="sd">            If called before :meth:`fit`.</span>
+<span class="sd">        Raises:</span>
+<span class="sd">            RuntimeError: If called before :meth:`fit`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_fitted</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Model must be fitted before saving&quot;</span>
@@ -480,10 +484,8 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">load</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Self</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load a previously-saved XGBoost model from *path*.</span>
 
-<span class="sd">        Raises</span>
-<span class="sd">        ------</span>
-<span class="sd">        FileNotFoundError</span>
-<span class="sd">            If either ``config.json`` or ``model.ubj`` is missing.</span>
+<span class="sd">        Raises:</span>
+<span class="sd">            FileNotFoundError: If either ``config.json`` or ``model.ubj`` is missing.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">config_path</span> <span class="o">=</span> <span class="n">path</span> <span class="o">/</span> <span class="s2">&quot;config.json&quot;</span>
         <span class="n">model_path</span> <span class="o">=</span> <span class="n">path</span> <span class="o">/</span> <span class="s2">&quot;model.ubj&quot;</span>

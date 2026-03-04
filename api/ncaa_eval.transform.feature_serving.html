@@ -360,41 +360,140 @@ building blocks into a temporally-safe, matchup-level feature matrix.</p>
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ncaa_eval.transform.feature_serving.</span></span><span class="sig-name descname"><span class="pre">FeatureConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sequential_windows</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">(5,</span> <span class="pre">10,</span> <span class="pre">20)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ewma_alphas</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">(0.15,</span> <span class="pre">0.2)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">graph_features_enabled</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_rating_types</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">('srs',</span> <span class="pre">'ridge',</span> <span class="pre">'colley')</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ordinal_systems</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ordinal_composite</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'simple_average'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matchup_deltas</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gender_scope</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'M'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset_scope</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'kaggle'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'isotonic'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elo_enabled</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elo_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="ncaa_eval.transform.html#ncaa_eval.transform.EloConfig" title="ncaa_eval.transform.EloConfig"><span class="pre">EloConfig</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ncaa_eval/transform/feature_serving.html#FeatureConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.transform.feature_serving.FeatureConfig" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Declarative specification of which feature blocks and parameters to use.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.transform.feature_serving.FeatureConfig.sequential_windows">
+<span class="sig-name descname"><span class="pre">sequential_windows</span></span><a class="headerlink" href="#ncaa_eval.transform.feature_serving.FeatureConfig.sequential_windows" title="Link to this definition">¶</a></dt>
+<dd><p>Rolling window sizes for sequential features (e.g., <code class="docutils literal notranslate"><span class="pre">(5,</span> <span class="pre">10,</span> <span class="pre">20)</span></code>).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>sequential_windows</strong> (<em>tuple</em><em>[</em><em>int</em><em>, </em><em>...</em><em>]</em>) – Rolling window sizes for sequential features (e.g., <code class="docutils literal notranslate"><span class="pre">(5,</span> <span class="pre">10,</span> <span class="pre">20)</span></code>).</p></li>
-<li><p><strong>ewma_alphas</strong> (<em>tuple</em><em>[</em><em>float</em><em>, </em><em>...</em><em>]</em>) – EWMA smoothing factors for sequential features (e.g., <code class="docutils literal notranslate"><span class="pre">(0.15,</span> <span class="pre">0.20)</span></code>).</p></li>
-<li><p><strong>graph_features_enabled</strong> (<em>bool</em>) – Whether to compute graph centrality features (PageRank, etc.).</p></li>
-<li><p><strong>batch_rating_types</strong> (<em>tuple</em><em>[</em><em>str</em><em>, </em><em>...</em><em>]</em>) – Which batch rating systems to include (<code class="docutils literal notranslate"><span class="pre">&quot;srs&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;ridge&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;colley&quot;</span></code>).</p></li>
-<li><p><strong>ordinal_systems</strong> (<em>tuple</em><em>[</em><em>str</em><em>, </em><em>...</em><em>] </em><em>| </em><em>None</em>) – Massey ordinal systems to use; <code class="docutils literal notranslate"><span class="pre">None</span></code> means use coverage-gate defaults.</p></li>
-<li><p><strong>ordinal_composite</strong> (<em>str</em><em> | </em><em>None</em>) – Composite method: <code class="docutils literal notranslate"><span class="pre">&quot;simple_average&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;weighted&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;pca&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">None</span></code> to disable.</p></li>
-<li><p><strong>matchup_deltas</strong> (<em>bool</em>) – Whether to compute team_A − team_B deltas for matchup features.</p></li>
-<li><p><strong>gender_scope</strong> (<em>str</em>) – <code class="docutils literal notranslate"><span class="pre">&quot;M&quot;</span></code> for men’s, <code class="docutils literal notranslate"><span class="pre">&quot;W&quot;</span></code> for women’s.</p></li>
-<li><p><strong>dataset_scope</strong> (<em>str</em>) – <code class="docutils literal notranslate"><span class="pre">&quot;kaggle&quot;</span></code> for Kaggle-only games, <code class="docutils literal notranslate"><span class="pre">&quot;all&quot;</span></code> for Kaggle + ESPN enrichment.</p></li>
-<li><p><strong>calibration_method</strong> (<em>str</em><em> | </em><em>None</em>) – <code class="docutils literal notranslate"><span class="pre">&quot;isotonic&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;sigmoid&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">None</span></code> to skip calibration.</p></li>
-</ul>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[int, …]</p>
 </dd>
 </dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="ncaa_eval.transform.feature_serving.FeatureConfig.active_blocks">
-<span class="sig-name descname"><span class="pre">active_blocks</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">frozenset</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#ncaa_eval.transform.feature_serving.FeatureBlock" title="ncaa_eval.transform.feature_serving.FeatureBlock"><span class="pre">FeatureBlock</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/transform/feature_serving.html#FeatureConfig.active_blocks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.transform.feature_serving.FeatureConfig.active_blocks" title="Link to this definition">¶</a></dt>
-<dd><p>Return the set of feature blocks that are currently enabled.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.transform.feature_serving.FeatureConfig.ewma_alphas">
+<span class="sig-name descname"><span class="pre">ewma_alphas</span></span><a class="headerlink" href="#ncaa_eval.transform.feature_serving.FeatureConfig.ewma_alphas" title="Link to this definition">¶</a></dt>
+<dd><p>EWMA smoothing factors for sequential features (e.g., <code class="docutils literal notranslate"><span class="pre">(0.15,</span> <span class="pre">0.20)</span></code>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[float, …]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.transform.feature_serving.FeatureConfig.graph_features_enabled">
+<span class="sig-name descname"><span class="pre">graph_features_enabled</span></span><a class="headerlink" href="#ncaa_eval.transform.feature_serving.FeatureConfig.graph_features_enabled" title="Link to this definition">¶</a></dt>
+<dd><p>Whether to compute graph centrality features (PageRank, etc.).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="ncaa_eval.transform.feature_serving.FeatureConfig.batch_rating_types">
-<span class="sig-name descname"><span class="pre">batch_rating_types</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('srs',</span> <span class="pre">'ridge',</span> <span class="pre">'colley')</span></span><a class="headerlink" href="#ncaa_eval.transform.feature_serving.FeatureConfig.batch_rating_types" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
+<span class="sig-name descname"><span class="pre">batch_rating_types</span></span><a class="headerlink" href="#ncaa_eval.transform.feature_serving.FeatureConfig.batch_rating_types" title="Link to this definition">¶</a></dt>
+<dd><p>Which batch rating systems to include (<code class="docutils literal notranslate"><span class="pre">&quot;srs&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;ridge&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;colley&quot;</span></code>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[str, …]</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="ncaa_eval.transform.feature_serving.FeatureConfig.calibration_method">
-<span class="sig-name descname"><span class="pre">calibration_method</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'isotonic'</span></span><a class="headerlink" href="#ncaa_eval.transform.feature_serving.FeatureConfig.calibration_method" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt class="sig sig-object py" id="ncaa_eval.transform.feature_serving.FeatureConfig.ordinal_systems">
+<span class="sig-name descname"><span class="pre">ordinal_systems</span></span><a class="headerlink" href="#ncaa_eval.transform.feature_serving.FeatureConfig.ordinal_systems" title="Link to this definition">¶</a></dt>
+<dd><p>Massey ordinal systems to use; <code class="docutils literal notranslate"><span class="pre">None</span></code> means use coverage-gate defaults.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple[str, …] | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.transform.feature_serving.FeatureConfig.ordinal_composite">
+<span class="sig-name descname"><span class="pre">ordinal_composite</span></span><a class="headerlink" href="#ncaa_eval.transform.feature_serving.FeatureConfig.ordinal_composite" title="Link to this definition">¶</a></dt>
+<dd><p>Composite method: <code class="docutils literal notranslate"><span class="pre">&quot;simple_average&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;weighted&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;pca&quot;</span></code>, or
+<code class="docutils literal notranslate"><span class="pre">None</span></code> to disable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.transform.feature_serving.FeatureConfig.matchup_deltas">
+<span class="sig-name descname"><span class="pre">matchup_deltas</span></span><a class="headerlink" href="#ncaa_eval.transform.feature_serving.FeatureConfig.matchup_deltas" title="Link to this definition">¶</a></dt>
+<dd><p>Whether to compute team_A − team_B deltas for matchup features.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.transform.feature_serving.FeatureConfig.gender_scope">
+<span class="sig-name descname"><span class="pre">gender_scope</span></span><a class="headerlink" href="#ncaa_eval.transform.feature_serving.FeatureConfig.gender_scope" title="Link to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">&quot;M&quot;</span></code> for men’s, <code class="docutils literal notranslate"><span class="pre">&quot;W&quot;</span></code> for women’s.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="ncaa_eval.transform.feature_serving.FeatureConfig.dataset_scope">
-<span class="sig-name descname"><span class="pre">dataset_scope</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'kaggle'</span></span><a class="headerlink" href="#ncaa_eval.transform.feature_serving.FeatureConfig.dataset_scope" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">dataset_scope</span></span><a class="headerlink" href="#ncaa_eval.transform.feature_serving.FeatureConfig.dataset_scope" title="Link to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">&quot;kaggle&quot;</span></code> for Kaggle-only games, <code class="docutils literal notranslate"><span class="pre">&quot;all&quot;</span></code> for Kaggle + ESPN enrichment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.transform.feature_serving.FeatureConfig.calibration_method">
+<span class="sig-name descname"><span class="pre">calibration_method</span></span><a class="headerlink" href="#ncaa_eval.transform.feature_serving.FeatureConfig.calibration_method" title="Link to this definition">¶</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">&quot;isotonic&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;sigmoid&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">None</span></code> to skip calibration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.transform.feature_serving.FeatureConfig.active_blocks">
+<span class="sig-name descname"><span class="pre">active_blocks</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">frozenset</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#ncaa_eval.transform.feature_serving.FeatureBlock" title="ncaa_eval.transform.feature_serving.FeatureBlock"><span class="pre">FeatureBlock</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/transform/feature_serving.html#FeatureConfig.active_blocks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.transform.feature_serving.FeatureConfig.active_blocks" title="Link to this definition">¶</a></dt>
+<dd><p>Return the set of feature blocks that are currently enabled.</p>
+<p>Checks each configuration flag (sequential windows, graph enabled,
+batch rating types, ordinal composite, Elo enabled) and adds the
+corresponding FeatureBlock enum value to a set, with SEED always
+included.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">batch_rating_types</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('srs',</span> <span class="pre">'ridge',</span> <span class="pre">'colley')</span></span><a class="headerlink" href="#id0" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">calibration_method</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'isotonic'</span></span><a class="headerlink" href="#id1" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id2">
+<span class="sig-name descname"><span class="pre">dataset_scope</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'kaggle'</span></span><a class="headerlink" href="#id2" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -408,38 +507,38 @@ building blocks into a temporally-safe, matchup-level feature matrix.</p>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="ncaa_eval.transform.feature_serving.FeatureConfig.ewma_alphas">
-<span class="sig-name descname"><span class="pre">ewma_alphas</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">(0.15,</span> <span class="pre">0.2)</span></span><a class="headerlink" href="#ncaa_eval.transform.feature_serving.FeatureConfig.ewma_alphas" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id3">
+<span class="sig-name descname"><span class="pre">ewma_alphas</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">(0.15,</span> <span class="pre">0.2)</span></span><a class="headerlink" href="#id3" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="ncaa_eval.transform.feature_serving.FeatureConfig.gender_scope">
-<span class="sig-name descname"><span class="pre">gender_scope</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'M'</span></span><a class="headerlink" href="#ncaa_eval.transform.feature_serving.FeatureConfig.gender_scope" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id4">
+<span class="sig-name descname"><span class="pre">gender_scope</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'M'</span></span><a class="headerlink" href="#id4" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="ncaa_eval.transform.feature_serving.FeatureConfig.graph_features_enabled">
-<span class="sig-name descname"><span class="pre">graph_features_enabled</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></span><a class="headerlink" href="#ncaa_eval.transform.feature_serving.FeatureConfig.graph_features_enabled" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id5">
+<span class="sig-name descname"><span class="pre">graph_features_enabled</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></span><a class="headerlink" href="#id5" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="ncaa_eval.transform.feature_serving.FeatureConfig.matchup_deltas">
-<span class="sig-name descname"><span class="pre">matchup_deltas</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></span><a class="headerlink" href="#ncaa_eval.transform.feature_serving.FeatureConfig.matchup_deltas" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id6">
+<span class="sig-name descname"><span class="pre">matchup_deltas</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></span><a class="headerlink" href="#id6" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="ncaa_eval.transform.feature_serving.FeatureConfig.ordinal_composite">
-<span class="sig-name descname"><span class="pre">ordinal_composite</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'simple_average'</span></span><a class="headerlink" href="#ncaa_eval.transform.feature_serving.FeatureConfig.ordinal_composite" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id7">
+<span class="sig-name descname"><span class="pre">ordinal_composite</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'simple_average'</span></span><a class="headerlink" href="#id7" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="ncaa_eval.transform.feature_serving.FeatureConfig.ordinal_systems">
-<span class="sig-name descname"><span class="pre">ordinal_systems</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#ncaa_eval.transform.feature_serving.FeatureConfig.ordinal_systems" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id8">
+<span class="sig-name descname"><span class="pre">ordinal_systems</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#id8" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="ncaa_eval.transform.feature_serving.FeatureConfig.sequential_windows">
-<span class="sig-name descname"><span class="pre">sequential_windows</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">(5,</span> <span class="pre">10,</span> <span class="pre">20)</span></span><a class="headerlink" href="#ncaa_eval.transform.feature_serving.FeatureConfig.sequential_windows" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id9">
+<span class="sig-name descname"><span class="pre">sequential_windows</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">(5,</span> <span class="pre">10,</span> <span class="pre">20)</span></span><a class="headerlink" href="#id9" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -480,9 +579,6 @@ building blocks into a temporally-safe, matchup-level feature matrix.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>One row per game with metadata, feature deltas, and the target label.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>pd.DataFrame</p>
 </dd>
 </dl>
 </dd></dl>
@@ -557,19 +653,29 @@ building blocks into a temporally-safe, matchup-level feature matrix.</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#ncaa_eval.transform.feature_serving.FeatureConfig"><code class="docutils literal notranslate"><span class="pre">FeatureConfig</span></code></a><ul>
-<li><a class="reference internal" href="#ncaa_eval.transform.feature_serving.FeatureConfig.active_blocks"><code class="docutils literal notranslate"><span class="pre">FeatureConfig.active_blocks()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.transform.feature_serving.FeatureConfig.sequential_windows"><code class="docutils literal notranslate"><span class="pre">FeatureConfig.sequential_windows</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.transform.feature_serving.FeatureConfig.ewma_alphas"><code class="docutils literal notranslate"><span class="pre">FeatureConfig.ewma_alphas</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.transform.feature_serving.FeatureConfig.graph_features_enabled"><code class="docutils literal notranslate"><span class="pre">FeatureConfig.graph_features_enabled</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.transform.feature_serving.FeatureConfig.batch_rating_types"><code class="docutils literal notranslate"><span class="pre">FeatureConfig.batch_rating_types</span></code></a></li>
-<li><a class="reference internal" href="#ncaa_eval.transform.feature_serving.FeatureConfig.calibration_method"><code class="docutils literal notranslate"><span class="pre">FeatureConfig.calibration_method</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.transform.feature_serving.FeatureConfig.ordinal_systems"><code class="docutils literal notranslate"><span class="pre">FeatureConfig.ordinal_systems</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.transform.feature_serving.FeatureConfig.ordinal_composite"><code class="docutils literal notranslate"><span class="pre">FeatureConfig.ordinal_composite</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.transform.feature_serving.FeatureConfig.matchup_deltas"><code class="docutils literal notranslate"><span class="pre">FeatureConfig.matchup_deltas</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.transform.feature_serving.FeatureConfig.gender_scope"><code class="docutils literal notranslate"><span class="pre">FeatureConfig.gender_scope</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.transform.feature_serving.FeatureConfig.dataset_scope"><code class="docutils literal notranslate"><span class="pre">FeatureConfig.dataset_scope</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.transform.feature_serving.FeatureConfig.calibration_method"><code class="docutils literal notranslate"><span class="pre">FeatureConfig.calibration_method</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.transform.feature_serving.FeatureConfig.active_blocks"><code class="docutils literal notranslate"><span class="pre">FeatureConfig.active_blocks()</span></code></a></li>
+<li><a class="reference internal" href="#id0"><code class="docutils literal notranslate"><span class="pre">FeatureConfig.batch_rating_types</span></code></a></li>
+<li><a class="reference internal" href="#id1"><code class="docutils literal notranslate"><span class="pre">FeatureConfig.calibration_method</span></code></a></li>
+<li><a class="reference internal" href="#id2"><code class="docutils literal notranslate"><span class="pre">FeatureConfig.dataset_scope</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.transform.feature_serving.FeatureConfig.elo_config"><code class="docutils literal notranslate"><span class="pre">FeatureConfig.elo_config</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.transform.feature_serving.FeatureConfig.elo_enabled"><code class="docutils literal notranslate"><span class="pre">FeatureConfig.elo_enabled</span></code></a></li>
-<li><a class="reference internal" href="#ncaa_eval.transform.feature_serving.FeatureConfig.ewma_alphas"><code class="docutils literal notranslate"><span class="pre">FeatureConfig.ewma_alphas</span></code></a></li>
-<li><a class="reference internal" href="#ncaa_eval.transform.feature_serving.FeatureConfig.gender_scope"><code class="docutils literal notranslate"><span class="pre">FeatureConfig.gender_scope</span></code></a></li>
-<li><a class="reference internal" href="#ncaa_eval.transform.feature_serving.FeatureConfig.graph_features_enabled"><code class="docutils literal notranslate"><span class="pre">FeatureConfig.graph_features_enabled</span></code></a></li>
-<li><a class="reference internal" href="#ncaa_eval.transform.feature_serving.FeatureConfig.matchup_deltas"><code class="docutils literal notranslate"><span class="pre">FeatureConfig.matchup_deltas</span></code></a></li>
-<li><a class="reference internal" href="#ncaa_eval.transform.feature_serving.FeatureConfig.ordinal_composite"><code class="docutils literal notranslate"><span class="pre">FeatureConfig.ordinal_composite</span></code></a></li>
-<li><a class="reference internal" href="#ncaa_eval.transform.feature_serving.FeatureConfig.ordinal_systems"><code class="docutils literal notranslate"><span class="pre">FeatureConfig.ordinal_systems</span></code></a></li>
-<li><a class="reference internal" href="#ncaa_eval.transform.feature_serving.FeatureConfig.sequential_windows"><code class="docutils literal notranslate"><span class="pre">FeatureConfig.sequential_windows</span></code></a></li>
+<li><a class="reference internal" href="#id3"><code class="docutils literal notranslate"><span class="pre">FeatureConfig.ewma_alphas</span></code></a></li>
+<li><a class="reference internal" href="#id4"><code class="docutils literal notranslate"><span class="pre">FeatureConfig.gender_scope</span></code></a></li>
+<li><a class="reference internal" href="#id5"><code class="docutils literal notranslate"><span class="pre">FeatureConfig.graph_features_enabled</span></code></a></li>
+<li><a class="reference internal" href="#id6"><code class="docutils literal notranslate"><span class="pre">FeatureConfig.matchup_deltas</span></code></a></li>
+<li><a class="reference internal" href="#id7"><code class="docutils literal notranslate"><span class="pre">FeatureConfig.ordinal_composite</span></code></a></li>
+<li><a class="reference internal" href="#id8"><code class="docutils literal notranslate"><span class="pre">FeatureConfig.ordinal_systems</span></code></a></li>
+<li><a class="reference internal" href="#id9"><code class="docutils literal notranslate"><span class="pre">FeatureConfig.sequential_windows</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#ncaa_eval.transform.feature_serving.StatefulFeatureServer"><code class="docutils literal notranslate"><span class="pre">StatefulFeatureServer</span></code></a><ul>

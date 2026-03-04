@@ -481,7 +481,11 @@
 <div class="viewcode-block" id="KaggleConnector.fetch_teams">
 <a class="viewcode-back" href="../../../../api/ncaa_eval.ingest.connectors.kaggle.html#ncaa_eval.ingest.KaggleConnector.fetch_teams">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">fetch_teams</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Team</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse ``MTeams.csv`` into Team models.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse ``MTeams.csv`` into Team models.</span>
+
+<span class="sd">        Reads MTeams.csv, validates required columns, then constructs Team</span>
+<span class="sd">        models from each row&#39;s TeamID and TeamName.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_csv</span><span class="p">(</span><span class="s2">&quot;MTeams.csv&quot;</span><span class="p">)</span>
         <span class="n">_validate_columns</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">_TEAMS_COLUMNS</span><span class="p">,</span> <span class="s2">&quot;MTeams.csv&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">Team</span><span class="p">(</span><span class="n">team_id</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;TeamID&quot;</span><span class="p">]),</span> <span class="n">team_name</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;TeamName&quot;</span><span class="p">]))</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">iterrows</span><span class="p">()]</span></div>
@@ -524,7 +528,11 @@
 <div class="viewcode-block" id="KaggleConnector.fetch_seasons">
 <a class="viewcode-back" href="../../../../api/ncaa_eval.ingest.connectors.kaggle.html#ncaa_eval.ingest.KaggleConnector.fetch_seasons">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">fetch_seasons</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Season</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse ``MSeasons.csv`` into Season models.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse ``MSeasons.csv`` into Season models.</span>
+
+<span class="sd">        Reads MSeasons.csv, validates required columns, then constructs</span>
+<span class="sd">        Season models from each row&#39;s season year.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_csv</span><span class="p">(</span><span class="s2">&quot;MSeasons.csv&quot;</span><span class="p">)</span>
         <span class="n">_validate_columns</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">_SEASONS_COLUMNS</span><span class="p">,</span> <span class="s2">&quot;MSeasons.csv&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">Season</span><span class="p">(</span><span class="n">year</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;Season&quot;</span><span class="p">]))</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">iterrows</span><span class="p">()]</span></div>
@@ -540,7 +548,13 @@
         <span class="o">*</span><span class="p">,</span>
         <span class="n">is_tournament</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Game</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse a single games CSV, filtering to *season*.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse a single games CSV, filtering to *season*.</span>
+
+<span class="sd">        Reads the CSV file (regular-season or tournament), filters by season,</span>
+<span class="sd">        iterates rows to extract team IDs and scores, computes game_date from</span>
+<span class="sd">        day_num and the season&#39;s day-zero, validates WLoc, then builds Game</span>
+<span class="sd">        models.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_csv</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
         <span class="n">_validate_columns</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">_REGULAR_SEASON_COLUMNS</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
         <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;Season&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">season</span><span class="p">]</span>

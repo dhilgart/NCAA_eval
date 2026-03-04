@@ -338,37 +338,37 @@ business logic.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="ncaa_eval.ingest.repository.ParquetRepository.get_games">
 <span class="sig-name descname"><span class="pre">get_games</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">season</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Game" title="ncaa_eval.ingest.schema.Game"><span class="pre">Game</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/repository.html#ParquetRepository.get_games"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.repository.ParquetRepository.get_games" title="Link to this definition">¶</a></dt>
-<dd><p>Return all games for a given <em>season</em> year.</p>
+<dd><p>Load games for a single season from hive-partitioned Parquet.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="ncaa_eval.ingest.repository.ParquetRepository.get_seasons">
 <span class="sig-name descname"><span class="pre">get_seasons</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Season" title="ncaa_eval.ingest.schema.Season"><span class="pre">Season</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/repository.html#ParquetRepository.get_seasons"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.repository.ParquetRepository.get_seasons" title="Link to this definition">¶</a></dt>
-<dd><p>Return all stored seasons.</p>
+<dd><p>Load all season records from the seasons Parquet file.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="ncaa_eval.ingest.repository.ParquetRepository.get_teams">
 <span class="sig-name descname"><span class="pre">get_teams</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Team" title="ncaa_eval.ingest.schema.Team"><span class="pre">Team</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/repository.html#ParquetRepository.get_teams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.repository.ParquetRepository.get_teams" title="Link to this definition">¶</a></dt>
-<dd><p>Return all stored teams.</p>
+<dd><p>Load all teams from the teams Parquet file.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="ncaa_eval.ingest.repository.ParquetRepository.save_games">
 <span class="sig-name descname"><span class="pre">save_games</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">games</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Game" title="ncaa_eval.ingest.schema.Game"><span class="pre">Game</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/repository.html#ParquetRepository.save_games"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.repository.ParquetRepository.save_games" title="Link to this definition">¶</a></dt>
-<dd><p>Persist a collection of games (overwrite per season partition).</p>
+<dd><p>Persist game records to hive-partitioned Parquet by season.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="ncaa_eval.ingest.repository.ParquetRepository.save_seasons">
 <span class="sig-name descname"><span class="pre">save_seasons</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seasons</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Season" title="ncaa_eval.ingest.schema.Season"><span class="pre">Season</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/repository.html#ParquetRepository.save_seasons"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.repository.ParquetRepository.save_seasons" title="Link to this definition">¶</a></dt>
-<dd><p>Persist a collection of seasons (overwrite).</p>
+<dd><p>Persist season records to a Parquet file.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="ncaa_eval.ingest.repository.ParquetRepository.save_teams">
 <span class="sig-name descname"><span class="pre">save_teams</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">teams</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Team" title="ncaa_eval.ingest.schema.Team"><span class="pre">Team</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/repository.html#ParquetRepository.save_teams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.repository.ParquetRepository.save_teams" title="Link to this definition">¶</a></dt>
-<dd><p>Persist a collection of teams (overwrite).</p>
+<dd><p>Persist team records to a Parquet file.</p>
 </dd></dl>
 
 </dd></dl>

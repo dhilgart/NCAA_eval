@@ -408,7 +408,12 @@
         <span class="n">team_b_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">context</span><span class="p">:</span> <span class="n">MatchupContext</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return P(team_a beats team_b) from the stored matrix.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return P(team_a beats team_b) from the stored matrix.</span>
+
+<span class="sd">        Indexes into the pre-built probability matrix using the team-to-index</span>
+<span class="sd">        mapping, returning P(team_i beats team_j) directly from the stored</span>
+<span class="sd">        array.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_index</span><span class="p">[</span><span class="n">team_a_id</span><span class="p">]</span>
         <span class="n">j</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_index</span><span class="p">[</span><span class="n">team_b_id</span><span class="p">]</span>
         <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_P</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">])</span></div>
@@ -422,7 +427,11 @@
         <span class="n">team_b_ids</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
         <span class="n">context</span><span class="p">:</span> <span class="n">MatchupContext</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return batch probabilities from the stored matrix.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return batch probabilities from the stored matrix.</span>
+
+<span class="sd">        Extracts row/column indices from the team pairs, vectorizes lookups</span>
+<span class="sd">        into the probability matrix, and returns a list of win probabilities.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">rows</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_index</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">team_a_ids</span><span class="p">])</span>
         <span class="n">cols</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">_index</span><span class="p">[</span><span class="n">b</span><span class="p">]</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">team_b_ids</span><span class="p">])</span>
         <span class="n">result</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_P</span><span class="p">[</span><span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
@@ -456,7 +465,12 @@
         <span class="n">team_b_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">context</span><span class="p">:</span> <span class="n">MatchupContext</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return P(team_a beats team_b) via the model&#39;s ``predict_matchup``.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return P(team_a beats team_b) via the model&#39;s ``predict_matchup``.</span>
+
+<span class="sd">        Delegates to the model&#39;s predict_matchup method, which retrieves both</span>
+<span class="sd">        teams&#39; current ratings and applies the Elo logistic expected-score</span>
+<span class="sd">        formula.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">result</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">predict_matchup</span><span class="p">(</span><span class="n">team_a_id</span><span class="p">,</span> <span class="n">team_b_id</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">result</span></div>
 
@@ -470,6 +484,9 @@
         <span class="n">context</span><span class="p">:</span> <span class="n">MatchupContext</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Return batch probabilities by looping ``predict_matchup``.</span>
+
+<span class="sd">        Iterates team pairs, calling predict_matchup per matchup, and collects</span>
+<span class="sd">        results into a list.</span>
 
 <span class="sd">        Elo is O(1) per pair so looping is acceptable.</span>
 <span class="sd">        &quot;&quot;&quot;</span>

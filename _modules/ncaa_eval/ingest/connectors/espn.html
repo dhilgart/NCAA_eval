@@ -372,6 +372,9 @@
 <span class="sd">        name: ESPN team name to resolve.</span>
 <span class="sd">        lower_map: Pre-computed lowercase-keyed mapping (avoids per-call rebuild).</span>
 <span class="sd">        original_mapping: Original mapping with original-case keys (used for fuzzy).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Kaggle team ID if resolved, or ``None`` if no match was found.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Exact match (case-insensitive).</span>
     <span class="n">exact</span> <span class="o">=</span> <span class="n">lower_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
@@ -452,7 +455,13 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_per_team</span><span class="p">(</span><span class="n">season</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_fetch_per_team</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">season</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Fetch schedules for each team in the mapping and concatenate.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Fetch schedules for each team in the mapping and concatenate.</span>
+
+<span class="sd">        Iterates through each team in the mapping, calls</span>
+<span class="sd">        _fetch_single_team_schedule() with retry logic, collects successful</span>
+<span class="sd">        DataFrames, concatenates them, and deduplicates by ESPN game_id to</span>
+<span class="sd">        eliminate cross-team overlap.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">frames</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">total</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_team_name_to_id</span><span class="p">)</span>
         <span class="n">failed_teams</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
@@ -501,7 +510,13 @@
         <span class="k">return</span> <span class="n">combined</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_parse_schedule_df</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">season</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Game</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert a cbbpy schedule DataFrame into Game models.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert a cbbpy schedule DataFrame into Game models.</span>
+
+<span class="sd">        Iterates schedule rows, parses game results to extract scores,</span>
+<span class="sd">        resolves both team names to Kaggle IDs via exact then fuzzy matching,</span>
+<span class="sd">        determines winner/loser ordering, infers location, computes day_num</span>
+<span class="sd">        from game date and day-zero, then constructs Game models.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">missing</span> <span class="o">=</span> <span class="n">_SCHEDULE_COLUMNS</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;espn: schedule DataFrame missing columns: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">missing</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>

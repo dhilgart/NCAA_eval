@@ -365,28 +365,18 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">FeatureConfig</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Declarative specification of which feature blocks and parameters to use.</span>
 
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    sequential_windows</span>
-<span class="sd">        Rolling window sizes for sequential features (e.g., ``(5, 10, 20)``).</span>
-<span class="sd">    ewma_alphas</span>
-<span class="sd">        EWMA smoothing factors for sequential features (e.g., ``(0.15, 0.20)``).</span>
-<span class="sd">    graph_features_enabled</span>
-<span class="sd">        Whether to compute graph centrality features (PageRank, etc.).</span>
-<span class="sd">    batch_rating_types</span>
-<span class="sd">        Which batch rating systems to include (``&quot;srs&quot;``, ``&quot;ridge&quot;``, ``&quot;colley&quot;``).</span>
-<span class="sd">    ordinal_systems</span>
-<span class="sd">        Massey ordinal systems to use; ``None`` means use coverage-gate defaults.</span>
-<span class="sd">    ordinal_composite</span>
-<span class="sd">        Composite method: ``&quot;simple_average&quot;``, ``&quot;weighted&quot;``, ``&quot;pca&quot;``, or ``None`` to disable.</span>
-<span class="sd">    matchup_deltas</span>
-<span class="sd">        Whether to compute team_A − team_B deltas for matchup features.</span>
-<span class="sd">    gender_scope</span>
-<span class="sd">        ``&quot;M&quot;`` for men&#39;s, ``&quot;W&quot;`` for women&#39;s.</span>
-<span class="sd">    dataset_scope</span>
-<span class="sd">        ``&quot;kaggle&quot;`` for Kaggle-only games, ``&quot;all&quot;`` for Kaggle + ESPN enrichment.</span>
-<span class="sd">    calibration_method</span>
-<span class="sd">        ``&quot;isotonic&quot;``, ``&quot;sigmoid&quot;``, or ``None`` to skip calibration.</span>
+<span class="sd">    Attributes:</span>
+<span class="sd">        sequential_windows: Rolling window sizes for sequential features (e.g., ``(5, 10, 20)``).</span>
+<span class="sd">        ewma_alphas: EWMA smoothing factors for sequential features (e.g., ``(0.15, 0.20)``).</span>
+<span class="sd">        graph_features_enabled: Whether to compute graph centrality features (PageRank, etc.).</span>
+<span class="sd">        batch_rating_types: Which batch rating systems to include (``&quot;srs&quot;``, ``&quot;ridge&quot;``, ``&quot;colley&quot;``).</span>
+<span class="sd">        ordinal_systems: Massey ordinal systems to use; ``None`` means use coverage-gate defaults.</span>
+<span class="sd">        ordinal_composite: Composite method: ``&quot;simple_average&quot;``, ``&quot;weighted&quot;``, ``&quot;pca&quot;``, or</span>
+<span class="sd">            ``None`` to disable.</span>
+<span class="sd">        matchup_deltas: Whether to compute team_A − team_B deltas for matchup features.</span>
+<span class="sd">        gender_scope: ``&quot;M&quot;`` for men&#39;s, ``&quot;W&quot;`` for women&#39;s.</span>
+<span class="sd">        dataset_scope: ``&quot;kaggle&quot;`` for Kaggle-only games, ``&quot;all&quot;`` for Kaggle + ESPN enrichment.</span>
+<span class="sd">        calibration_method: ``&quot;isotonic&quot;``, ``&quot;sigmoid&quot;``, or ``None`` to skip calibration.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">sequential_windows</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
@@ -405,7 +395,13 @@
 <div class="viewcode-block" id="FeatureConfig.active_blocks">
 <a class="viewcode-back" href="../../../api/ncaa_eval.transform.feature_serving.html#ncaa_eval.transform.FeatureConfig.active_blocks">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">active_blocks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">frozenset</span><span class="p">[</span><span class="n">FeatureBlock</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the set of feature blocks that are currently enabled.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the set of feature blocks that are currently enabled.</span>
+
+<span class="sd">        Checks each configuration flag (sequential windows, graph enabled,</span>
+<span class="sd">        batch rating types, ordinal composite, Elo enabled) and adds the</span>
+<span class="sd">        corresponding FeatureBlock enum value to a set, with SEED always</span>
+<span class="sd">        included.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">blocks</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="n">FeatureBlock</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sequential_windows</span><span class="p">:</span>
@@ -470,18 +466,12 @@
 <span class="sd">    * **stateful** — iterate game-by-game, accumulating state incrementally</span>
 <span class="sd">      (suitable for Elo-style models; placeholder until Story 4.8).</span>
 
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    config</span>
-<span class="sd">        Declarative specification of which feature blocks to activate.</span>
-<span class="sd">    data_server</span>
-<span class="sd">        Chronological data serving layer wrapping the Repository.</span>
-<span class="sd">    seed_table</span>
-<span class="sd">        Tournament seed lookup table (optional; needed for seed features).</span>
-<span class="sd">    ordinals_store</span>
-<span class="sd">        Massey ordinals store (optional; needed for ordinal features).</span>
-<span class="sd">    elo_engine</span>
-<span class="sd">        Elo feature engine (optional; needed when ``elo_enabled=True``).</span>
+<span class="sd">    Args:</span>
+<span class="sd">        config: Declarative specification of which feature blocks to activate.</span>
+<span class="sd">        data_server: Chronological data serving layer wrapping the Repository.</span>
+<span class="sd">        seed_table: Tournament seed lookup table (optional; needed for seed features).</span>
+<span class="sd">        ordinals_store: Massey ordinals store (optional; needed for ordinal features).</span>
+<span class="sd">        elo_engine: Elo feature engine (optional; needed when ``elo_enabled=True``).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
@@ -510,16 +500,11 @@
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Build the feature matrix for a full season.</span>
 
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        year</span>
-<span class="sd">            Season year (e.g. 2023 for the 2022-23 season).</span>
-<span class="sd">        mode</span>
-<span class="sd">            ``&quot;batch&quot;`` or ``&quot;stateful&quot;``.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            year: Season year (e.g. 2023 for the 2022-23 season).</span>
+<span class="sd">            mode: ``&quot;batch&quot;`` or ``&quot;stateful&quot;``.</span>
 
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        pd.DataFrame</span>
+<span class="sd">        Returns:</span>
 <span class="sd">            One row per game with metadata, feature deltas, and the target label.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">mode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;batch&quot;</span><span class="p">,</span> <span class="s2">&quot;stateful&quot;</span><span class="p">):</span>
@@ -540,7 +525,13 @@
     <span class="c1"># ── Internal: batch mode ─────────────────────────────────────────────</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_serve_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">year</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">games</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Game</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute features for all games at once (batch mode).&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute features for all games at once (batch mode).</span>
+
+<span class="sd">        Builds game metadata, pre-computes batch ratings (SRS/Ridge/Colley)</span>
+<span class="sd">        indexed by team_id, appends per-game feature columns (ordinals,</span>
+<span class="sd">        seeds, batch ratings) in parallel loops, then computes matchup</span>
+<span class="sd">        deltas and Elo features.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_build_game_metadata</span><span class="p">(</span><span class="n">games</span><span class="p">))</span>
         <span class="n">active</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">active_blocks</span><span class="p">()</span>
 
@@ -571,7 +562,12 @@
         <span class="n">batch_indexed</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">],</span>
         <span class="n">ordinal_systems</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Collect per-game feature values and assign as DataFrame columns.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Collect per-game feature values and assign as DataFrame columns.</span>
+
+<span class="sd">        Iterates games once, accumulating per-team feature values into</span>
+<span class="sd">        parallel lists for each active block (ordinals, seeds, batch</span>
+<span class="sd">        ratings), then assigns these lists as DataFrame columns in bulk.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">ordinal_vals_a</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">ordinal_vals_b</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">seed_vals_a</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
@@ -657,7 +653,12 @@
         <span class="n">batch_indexed</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">],</span>
         <span class="n">ordinal_systems</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build a single game row dict for stateful mode.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Build a single game row dict for stateful mode.</span>
+
+<span class="sd">        Converts a Game to a metadata dict, then optionally adds ordinals,</span>
+<span class="sd">        seeds, and batch-rating values looked up by team_id from pre-indexed</span>
+<span class="sd">        Series for each active feature block.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">row</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_game_to_metadata_dict</span><span class="p">(</span><span class="n">game</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">FeatureBlock</span><span class="o">.</span><span class="n">ORDINAL</span> <span class="ow">in</span> <span class="n">active</span><span class="p">:</span>
             <span class="n">ord_a</span><span class="p">,</span> <span class="n">ord_b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_ordinal_values_with_systems</span><span class="p">(</span><span class="n">game</span><span class="p">,</span> <span class="n">ordinal_systems</span><span class="p">)</span>
@@ -698,7 +699,12 @@
         <span class="k">return</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">val_a</span><span class="p">),</span> <span class="nb">float</span><span class="p">(</span><span class="n">val_b</span><span class="p">))</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_resolve_ordinal_systems</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Determine which ordinal systems to use.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Determine which ordinal systems to use.</span>
+
+<span class="sd">        Returns the configured ordinal systems if explicitly set, otherwise</span>
+<span class="sd">        queries the ordinals store&#39;s coverage gate for recommended systems</span>
+<span class="sd">        (empty list if no store available).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ordinal_systems</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">ordinal_systems</span><span class="p">)</span>
         <span class="c1"># Use coverage-gate recommended systems</span>
@@ -710,7 +716,12 @@
     <span class="c1"># ── Internal: seed features (Task 4) ─────────────────────────────────</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_seed_nums</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">game</span><span class="p">:</span> <span class="n">Game</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get seed numbers for both teams. NaN if not in tournament or unseeded.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get seed numbers for both teams. NaN if not in tournament or unseeded.</span>
+
+<span class="sd">        Looks up seed entries for both teams via the seed table, returning</span>
+<span class="sd">        their seed numbers (or NaN if unseeded, no table is available, or</span>
+<span class="sd">        the game is not a tournament game).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_seed_table</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
         <span class="n">seed_a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_seed_table</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">game</span><span class="o">.</span><span class="n">season</span><span class="p">,</span> <span class="n">game</span><span class="o">.</span><span class="n">w_team_id</span><span class="p">)</span>
@@ -723,7 +734,13 @@
     <span class="c1"># ── Internal: batch ratings ──────────────────────────────────────────</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_compute_batch_ratings</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">games</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Game</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute batch ratings from regular-season games only.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute batch ratings from regular-season games only.</span>
+
+<span class="sd">        Filters to regular-season games, converts to a DataFrame with the</span>
+<span class="sd">        required columns, then calls each active batch solver</span>
+<span class="sd">        (SRS, Ridge, Colley) on the filtered game set, returning a dict of</span>
+<span class="sd">        solver-type to DataFrame.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.transform.opponent</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
             <span class="n">compute_colley_ratings</span><span class="p">,</span>
             <span class="n">compute_ridge_ratings</span><span class="p">,</span>
@@ -800,7 +817,12 @@
     <span class="c1"># ── Internal: matchup deltas (Task 4) ────────────────────────────────</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_compute_matchup_deltas</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">active</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="n">FeatureBlock</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute team_A − team_B deltas for all active features.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute team_A minus team_B deltas for all active features.</span>
+
+<span class="sd">        Computes team_A minus team_B deltas for all active feature columns</span>
+<span class="sd">        (seed, ordinals, batch ratings, Elo) by vectorized subtraction,</span>
+<span class="sd">        adding NaN columns for missing features.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Seed differential</span>
         <span class="k">if</span> <span class="n">FeatureBlock</span><span class="o">.</span><span class="n">SEED</span> <span class="ow">in</span> <span class="n">active</span> <span class="ow">and</span> <span class="s2">&quot;seed_num_a&quot;</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
             <span class="n">df</span><span class="p">[</span><span class="s2">&quot;seed_diff&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;seed_num_a&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;seed_num_b&quot;</span><span class="p">]</span>

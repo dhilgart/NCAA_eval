@@ -700,7 +700,7 @@ those games should be wins</p></li>
 </tr>
 <tr class="row-odd"><td><p>S-shaped curve</p></td>
 <td><p>Probabilities are too extreme on both ends</p></td>
-<td><p>Retrain with calibration regularization; temperature scaling via Game Theory Sliders (planned feature)</p></td>
+<td><p>Retrain with calibration regularization; temperature scaling via Game Theory Sliders (not yet implemented)</p></td>
 </tr>
 <tr class="row-even"><td><p>Flat line near 0.5</p></td>
 <td><p>Model lacks discrimination</p></td>
@@ -1085,11 +1085,11 @@ score across all simulated outcomes</p></li>
 </section>
 <section id="game-theory-sliders">
 <h3>Game Theory Sliders<a class="headerlink" href="#game-theory-sliders" title="Link to this heading">¶</a></h3>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Game Theory Sliders are a planned feature based on research from Story 7.7.
-They are not yet implemented in the dashboard.  This section describes the
-intended design.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p><strong>NOT YET IMPLEMENTED</strong> — Game Theory Sliders are a planned feature based on
+research from Story 7.7.  They are not yet available in the dashboard.  The
+section below describes the <em>intended</em> design for future implementation.</p>
 </div>
 <p>Two sliders will allow you to adjust the bracket strategy without retraining:</p>
 <p><strong>Upset Aggression</strong> (range: −5 to +5, default: 0)</p>
@@ -1164,6 +1164,73 @@ significantly from historical seed performance.</p>
 bracket.  In a <strong>large pool</strong> (50+ people), increase Upset Aggression to
 differentiate your bracket from the crowd.</p>
 </div>
+</section>
+</section>
+<section id="troubleshooting">
+<h2>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading">¶</a></h2>
+<section id="kaggle-authentication">
+<h3>Kaggle Authentication<a class="headerlink" href="#kaggle-authentication" title="Link to this heading">¶</a></h3>
+<p><strong>Symptom:</strong> <code class="docutils literal notranslate"><span class="pre">AuthenticationError:</span> <span class="pre">credentials</span> <span class="pre">not</span> <span class="pre">found</span></code> when running <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">sync.py</span></code>.</p>
+<p><strong>Fix:</strong></p>
+<ol class="arabic simple">
+<li><p>Ensure you have a Kaggle API token saved at <code class="docutils literal notranslate"><span class="pre">~/.kaggle/access_token</span></code> (not
+the legacy <code class="docutils literal notranslate"><span class="pre">kaggle.json</span></code> format).  The token starts with <code class="docutils literal notranslate"><span class="pre">KGAT_</span></code>.</p></li>
+<li><p>Set permissions: <code class="docutils literal notranslate"><span class="pre">chmod</span> <span class="pre">600</span> <span class="pre">~/.kaggle/access_token</span></code>.</p></li>
+<li><p>Verify your Kaggle account has <strong>phone verification</strong> completed and you have
+<strong>accepted the competition rules</strong> for March Machine Learning Mania.</p></li>
+</ol>
+<p>See the <span class="xref myst">README — Kaggle API Authentication</span> for
+step-by-step setup.</p>
+</section>
+<section id="espn-rate-limits-and-transient-failures">
+<h3>ESPN Rate Limits and Transient Failures<a class="headerlink" href="#espn-rate-limits-and-transient-failures" title="Link to this heading">¶</a></h3>
+<p><strong>Symptom:</strong> <code class="docutils literal notranslate"><span class="pre">NetworkError</span></code> or warnings about failed team fetches during ESPN sync.</p>
+<p><strong>Fix:</strong></p>
+<p>The ESPN connector automatically retries transient failures with exponential
+backoff (up to 3 attempts per request).  If failures persist:</p>
+<ul class="simple">
+<li><p>Check your internet connection.</p></li>
+<li><p>ESPN’s public API occasionally rate-limits aggressive requests.  Wait a few
+minutes and re-run with <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">sync.py</span> <span class="pre">--source</span> <span class="pre">espn</span> <span class="pre">--dest</span> <span class="pre">data/</span></code>.</p></li>
+<li><p>The sync engine logs warnings for teams that fail after all retries but
+continues processing the remaining teams.  A small number of failures is
+normal and does not invalidate the dataset.</p></li>
+</ul>
+</section>
+<section id="parquet-version-mismatches">
+<h3>Parquet Version Mismatches<a class="headerlink" href="#parquet-version-mismatches" title="Link to this heading">¶</a></h3>
+<p><strong>Symptom:</strong> <code class="docutils literal notranslate"><span class="pre">ArrowInvalid</span></code> or <code class="docutils literal notranslate"><span class="pre">ArrowIOError</span></code> when reading cached Parquet files.</p>
+<p><strong>Fix:</strong></p>
+<p>This can happen when Parquet files were written by a different version of
+PyArrow than the one currently installed.  Delete the cached files and re-sync:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>rm<span class="w"> </span>-rf<span class="w"> </span>data/*.parquet
+python<span class="w"> </span>sync.py<span class="w"> </span>--source<span class="w"> </span>all<span class="w"> </span>--dest<span class="w"> </span>data/
+</pre></div>
+</div>
+<p>If the error persists, ensure your environment has a consistent PyArrow version:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>--upgrade<span class="w"> </span>pyarrow
+</pre></div>
+</div>
+</section>
+<section id="conda-poetry-environment-issues">
+<h3>Conda / Poetry Environment Issues<a class="headerlink" href="#conda-poetry-environment-issues" title="Link to this heading">¶</a></h3>
+<p><strong>Symptom:</strong> <code class="docutils literal notranslate"><span class="pre">ModuleNotFoundError:</span> <span class="pre">No</span> <span class="pre">module</span> <span class="pre">named</span> <span class="pre">'ncaa_eval'</span></code> or Poetry
+commands fail.</p>
+<p><strong>Fix:</strong></p>
+<ol class="arabic">
+<li><p>Ensure the conda environment is activated: <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">activate</span> <span class="pre">ncaa_eval</span></code>.</p></li>
+<li><p>Install dependencies into the conda env (not a Poetry virtualenv):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">POETRY_VIRTUALENVS_CREATE</span><span class="o">=</span><span class="nb">false</span><span class="w"> </span>poetry<span class="w"> </span>install
+</pre></div>
+</div>
+</li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">poetry</span></code> is not found, install it inside the conda env:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>poetry
+</pre></div>
+</div>
+</li>
+<li><p>Verify the package is importable: <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-c</span> <span class="pre">&quot;import</span> <span class="pre">ncaa_eval;</span> <span class="pre">print('OK')&quot;</span></code>.</p></li>
+</ol>
 </section>
 </section>
 </section>
@@ -1263,6 +1330,13 @@ differentiate your bracket from the crowd.</p>
 <li><a class="reference internal" href="#presentation-bracket-visualizer">Presentation: Bracket Visualizer</a></li>
 <li><a class="reference internal" href="#presentation-pool-scorer">Presentation: Pool Scorer</a></li>
 <li><a class="reference internal" href="#game-theory-sliders">Game Theory Sliders</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#troubleshooting">Troubleshooting</a><ul>
+<li><a class="reference internal" href="#kaggle-authentication">Kaggle Authentication</a></li>
+<li><a class="reference internal" href="#espn-rate-limits-and-transient-failures">ESPN Rate Limits and Transient Failures</a></li>
+<li><a class="reference internal" href="#parquet-version-mismatches">Parquet Version Mismatches</a></li>
+<li><a class="reference internal" href="#conda-poetry-environment-issues">Conda / Poetry Environment Issues</a></li>
 </ul>
 </li>
 </ul>

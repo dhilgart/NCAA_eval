@@ -336,20 +336,17 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">ReliabilityData</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Structured return type for reliability diagram data.</span>
 
-<span class="sd">    Attributes</span>
-<span class="sd">    ----------</span>
-<span class="sd">    fraction_of_positives</span>
-<span class="sd">        Observed fraction of positives per bin (from calibration_curve).</span>
-<span class="sd">    mean_predicted_value</span>
-<span class="sd">        Mean predicted probability per bin (from calibration_curve).</span>
-<span class="sd">    bin_counts</span>
-<span class="sd">        Number of samples in each non-empty bin.</span>
-<span class="sd">    bin_edges</span>
-<span class="sd">        Full bin edge array of shape ``(n_bins + 1,)``, i.e.</span>
-<span class="sd">        ``np.linspace(0.0, 1.0, n_bins + 1)``.  Includes both the lower (0.0)</span>
-<span class="sd">        and upper (1.0) boundaries so callers do not need to recompute them.</span>
-<span class="sd">    n_bins</span>
-<span class="sd">        Requested number of bins.</span>
+<span class="sd">    Attributes:</span>
+<span class="sd">        fraction_of_positives: Observed fraction of positives per bin</span>
+<span class="sd">            (from calibration_curve).</span>
+<span class="sd">        mean_predicted_value: Mean predicted probability per bin</span>
+<span class="sd">            (from calibration_curve).</span>
+<span class="sd">        bin_counts: Number of samples in each non-empty bin.</span>
+<span class="sd">        bin_edges: Full bin edge array of shape ``(n_bins + 1,)``, i.e.</span>
+<span class="sd">            ``np.linspace(0.0, 1.0, n_bins + 1)``.  Includes both the lower</span>
+<span class="sd">            (0.0) and upper (1.0) boundaries so callers do not need to</span>
+<span class="sd">            recompute them.</span>
+<span class="sd">        n_bins: Requested number of bins.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">fraction_of_positives</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]</span>
@@ -364,7 +361,12 @@
     <span class="n">y_true</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
     <span class="n">y_prob</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate metric inputs: non-empty, matching lengths, binary y_true, probs in [0, 1].&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate metric inputs: non-empty, matching lengths, binary y_true, probs in [0, 1].</span>
+
+<span class="sd">    Checks array non-emptiness, matching lengths, binary values in</span>
+<span class="sd">    ``y_true``, and probability bounds in [0, 1] using NumPy vectorized</span>
+<span class="sd">    comparisons, raising a descriptive ``ValueError`` for any violation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_true</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_prob</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;y_true and y_prob must be non-empty arrays.&quot;</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
@@ -387,22 +389,16 @@
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute Log Loss (cross-entropy loss) for binary predictions.</span>
 
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    y_true</span>
-<span class="sd">        Binary labels (0 or 1).</span>
-<span class="sd">    y_prob</span>
-<span class="sd">        Predicted probabilities for the positive class.</span>
+<span class="sd">    Args:</span>
+<span class="sd">        y_true: Binary labels (0 or 1).</span>
+<span class="sd">        y_prob: Predicted probabilities for the positive class.</span>
 
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    float</span>
+<span class="sd">    Returns:</span>
 <span class="sd">        Log Loss value.</span>
 
-<span class="sd">    Raises</span>
-<span class="sd">    ------</span>
-<span class="sd">    ValueError</span>
-<span class="sd">        If inputs are empty, mismatched, or probabilities are outside [0, 1].</span>
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If inputs are empty, mismatched, or probabilities are</span>
+<span class="sd">            outside [0, 1].</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">log_loss</span> <span class="k">as</span> <span class="n">sklearn_log_loss</span>  <span class="c1"># type: ignore[import-untyped]</span>
 
@@ -420,22 +416,16 @@
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute Brier Score for binary predictions.</span>
 
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    y_true</span>
-<span class="sd">        Binary labels (0 or 1).</span>
-<span class="sd">    y_prob</span>
-<span class="sd">        Predicted probabilities for the positive class.</span>
+<span class="sd">    Args:</span>
+<span class="sd">        y_true: Binary labels (0 or 1).</span>
+<span class="sd">        y_prob: Predicted probabilities for the positive class.</span>
 
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    float</span>
+<span class="sd">    Returns:</span>
 <span class="sd">        Brier Score value (lower is better).</span>
 
-<span class="sd">    Raises</span>
-<span class="sd">    ------</span>
-<span class="sd">    ValueError</span>
-<span class="sd">        If inputs are empty, mismatched, or probabilities are outside [0, 1].</span>
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If inputs are empty, mismatched, or probabilities are</span>
+<span class="sd">            outside [0, 1].</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">brier_score_loss</span>
 
@@ -453,23 +443,17 @@
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute ROC-AUC for binary predictions.</span>
 
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    y_true</span>
-<span class="sd">        Binary labels (0 or 1).</span>
-<span class="sd">    y_prob</span>
-<span class="sd">        Predicted probabilities for the positive class.</span>
+<span class="sd">    Args:</span>
+<span class="sd">        y_true: Binary labels (0 or 1).</span>
+<span class="sd">        y_prob: Predicted probabilities for the positive class.</span>
 
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    float</span>
+<span class="sd">    Returns:</span>
 <span class="sd">        ROC-AUC value.</span>
 
-<span class="sd">    Raises</span>
-<span class="sd">    ------</span>
-<span class="sd">    ValueError</span>
-<span class="sd">        If inputs are empty, mismatched, probabilities are outside [0, 1],</span>
-<span class="sd">        or ``y_true`` contains only one class (AUC is undefined).</span>
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If inputs are empty, mismatched, probabilities are</span>
+<span class="sd">            outside [0, 1], or ``y_true`` contains only one class (AUC is</span>
+<span class="sd">            undefined).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">roc_auc_score</span>
 
@@ -497,24 +481,17 @@
 <span class="sd">    Predictions are binned into ``n_bins`` equal-width bins on [0, 1], and</span>
 <span class="sd">    ECE is the weighted average of per-bin |accuracy - confidence| gaps.</span>
 
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    y_true</span>
-<span class="sd">        Binary labels (0 or 1).</span>
-<span class="sd">    y_prob</span>
-<span class="sd">        Predicted probabilities for the positive class.</span>
-<span class="sd">    n_bins</span>
-<span class="sd">        Number of equal-width bins (default 10).</span>
+<span class="sd">    Args:</span>
+<span class="sd">        y_true: Binary labels (0 or 1).</span>
+<span class="sd">        y_prob: Predicted probabilities for the positive class.</span>
+<span class="sd">        n_bins: Number of equal-width bins (default 10).</span>
 
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    float</span>
+<span class="sd">    Returns:</span>
 <span class="sd">        ECE value in [0, 1] (lower is better).</span>
 
-<span class="sd">    Raises</span>
-<span class="sd">    ------</span>
-<span class="sd">    ValueError</span>
-<span class="sd">        If inputs are empty, mismatched, or probabilities are outside [0, 1].</span>
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If inputs are empty, mismatched, or probabilities are</span>
+<span class="sd">            outside [0, 1].</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">n_bins</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;n_bins must be &gt;= 1, got </span><span class="si">{</span><span class="n">n_bins</span><span class="si">}</span><span class="s2">.&quot;</span>
@@ -560,26 +537,18 @@
 <span class="sd">    Uses ``sklearn.calibration.calibration_curve`` for bin statistics and</span>
 <span class="sd">    augments with per-bin sample counts.</span>
 
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    y_true</span>
-<span class="sd">        Binary labels (0 or 1).</span>
-<span class="sd">    y_prob</span>
-<span class="sd">        Predicted probabilities for the positive class.</span>
-<span class="sd">    n_bins</span>
-<span class="sd">        Number of bins (default 10).</span>
+<span class="sd">    Args:</span>
+<span class="sd">        y_true: Binary labels (0 or 1).</span>
+<span class="sd">        y_prob: Predicted probabilities for the positive class.</span>
+<span class="sd">        n_bins: Number of bins (default 10).</span>
 
-<span class="sd">    Returns</span>
-<span class="sd">    -------</span>
-<span class="sd">    ReliabilityData</span>
+<span class="sd">    Returns:</span>
 <span class="sd">        Structured data containing fraction of positives, mean predicted</span>
 <span class="sd">        values, bin counts, bin edges, and requested number of bins.</span>
 
-<span class="sd">    Raises</span>
-<span class="sd">    ------</span>
-<span class="sd">    ValueError</span>
-<span class="sd">        If inputs are empty, mismatched, ``n_bins &lt; 1``, or probabilities are</span>
-<span class="sd">        outside [0, 1].</span>
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If inputs are empty, mismatched, ``n_bins &lt; 1``, or</span>
+<span class="sd">            probabilities are outside [0, 1].</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.calibration</span><span class="w"> </span><span class="kn">import</span> <span class="n">calibration_curve</span>  <span class="c1"># type: ignore[import-untyped]</span>
 

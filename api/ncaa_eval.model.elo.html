@@ -343,8 +343,9 @@ registration.</p>
 <dd><p>Reconstruct an EloModel from a saved directory.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>FileNotFoundError</strong> – If either <code class="docutils literal notranslate"><span class="pre">config.json</span></code> or <code class="docutils literal notranslate"><span class="pre">state.json</span></code> is missing.  A missing
-    file indicates an incomplete <a class="reference internal" href="#ncaa_eval.model.elo.EloModel.save" title="ncaa_eval.model.elo.EloModel.save"><code class="xref py py-meth docutils literal notranslate"><span class="pre">save()</span></code></a> (e.g., interrupted write).</p>
+<dd class="field-odd"><p><strong>FileNotFoundError</strong> – If either <code class="docutils literal notranslate"><span class="pre">config.json</span></code> or <code class="docutils literal notranslate"><span class="pre">state.json</span></code> is
+    missing.  A missing file indicates an incomplete <a class="reference internal" href="#ncaa_eval.model.elo.EloModel.save" title="ncaa_eval.model.elo.EloModel.save"><code class="xref py py-meth docutils literal notranslate"><span class="pre">save()</span></code></a>
+    (e.g., interrupted write).</p>
 </dd>
 </dl>
 </dd></dl>
@@ -353,6 +354,9 @@ registration.</p>
 <dt class="sig sig-object py" id="ncaa_eval.model.elo.EloModel.save">
 <span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/model/elo.html#EloModel.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.model.elo.EloModel.save" title="Link to this definition">¶</a></dt>
 <dd><p>JSON-dump config and state to <em>path</em> directory.</p>
+<p>Creates the output directory, JSON-dumps the Pydantic config, then
+JSON-dumps the state dict (ratings and game counts) after coercing
+numeric keys to strings for JSON compatibility.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -363,9 +367,10 @@ registration.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>state</strong> – Must contain <code class="docutils literal notranslate"><span class="pre">&quot;ratings&quot;</span></code> (<code class="docutils literal notranslate"><span class="pre">dict[int,</span> <span class="pre">float]</span></code>) and
 <code class="docutils literal notranslate"><span class="pre">&quot;game_counts&quot;</span></code> (<code class="docutils literal notranslate"><span class="pre">dict[int,</span> <span class="pre">int]</span></code>) keys, as returned by
-<a class="reference internal" href="#ncaa_eval.model.elo.EloModel.get_state" title="ncaa_eval.model.elo.EloModel.get_state"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_state()</span></code></a>.  Keys may be <code class="docutils literal notranslate"><span class="pre">int</span></code> or <code class="docutils literal notranslate"><span class="pre">str</span></code>; string keys
-are coerced to <code class="docutils literal notranslate"><span class="pre">int</span></code> so that JSON-decoded dicts (where all keys
-are strings) work correctly without silent rating loss.</p>
+<a class="reference internal" href="#ncaa_eval.model.elo.EloModel.get_state" title="ncaa_eval.model.elo.EloModel.get_state"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_state()</span></code></a>.  Keys may be <code class="docutils literal notranslate"><span class="pre">int</span></code> or <code class="docutils literal notranslate"><span class="pre">str</span></code>; string
+keys are coerced to <code class="docutils literal notranslate"><span class="pre">int</span></code> so that JSON-decoded dicts (where
+all keys are strings) work correctly without silent rating
+loss.</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">

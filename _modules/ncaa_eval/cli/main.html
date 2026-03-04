@@ -360,7 +360,12 @@
     <span class="n">output_dir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">typer</span><span class="o">.</span><span class="n">Option</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="s2">&quot;data/&quot;</span><span class="p">),</span> <span class="s2">&quot;--output-dir&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Output directory for run artifacts&quot;</span><span class="p">),</span>
     <span class="n">config</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">typer</span><span class="o">.</span><span class="n">Option</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;--config&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to JSON config override&quot;</span><span class="p">),</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Train a model on NCAA basketball data and persist run artifacts.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Train a model on NCAA basketball data and persist run artifacts.</span>
+
+<span class="sd">    Validates the input year range, resolves the registered model class by</span>
+<span class="sd">    name, instantiates it with optional JSON config overrides (via Pydantic</span>
+<span class="sd">    validation), then delegates to ``run_training()`` with parsed CLI args.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">start_year</span> <span class="o">&gt;</span> <span class="n">end_year</span><span class="p">:</span>
         <span class="n">console</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[red]Error: --start-year (</span><span class="si">{</span><span class="n">start_year</span><span class="si">}</span><span class="s2">) must be ≤ --end-year (</span><span class="si">{</span><span class="n">end_year</span><span class="si">}</span><span class="s2">)[/red]&quot;</span><span class="p">)</span>
         <span class="k">raise</span> <span class="n">typer</span><span class="o">.</span><span class="n">Exit</span><span class="p">(</span><span class="n">code</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>

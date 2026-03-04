@@ -1075,6 +1075,8 @@ nodes.  <code class="docutils literal notranslate"><span class="pre">-1</span></
 <dt class="sig sig-object py" id="ncaa_eval.evaluation.EloProvider.batch_matchup_probabilities">
 <span class="sig-name descname"><span class="pre">batch_matchup_probabilities</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">team_a_ids</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">team_b_ids</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="ncaa_eval.evaluation.bracket.html#ncaa_eval.evaluation.bracket.MatchupContext" title="ncaa_eval.evaluation.bracket.MatchupContext"><span class="pre">MatchupContext</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/evaluation/providers.html#EloProvider.batch_matchup_probabilities"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.evaluation.EloProvider.batch_matchup_probabilities" title="Link to this definition">¶</a></dt>
 <dd><p>Return batch probabilities by looping <code class="docutils literal notranslate"><span class="pre">predict_matchup</span></code>.</p>
+<p>Iterates team pairs, calling predict_matchup per matchup, and collects
+results into a list.</p>
 <p>Elo is O(1) per pair so looping is acceptable.</p>
 </dd></dl>
 
@@ -1082,6 +1084,9 @@ nodes.  <code class="docutils literal notranslate"><span class="pre">-1</span></
 <dt class="sig sig-object py" id="ncaa_eval.evaluation.EloProvider.matchup_probability">
 <span class="sig-name descname"><span class="pre">matchup_probability</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">team_a_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">team_b_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="ncaa_eval.evaluation.bracket.html#ncaa_eval.evaluation.bracket.MatchupContext" title="ncaa_eval.evaluation.bracket.MatchupContext"><span class="pre">MatchupContext</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/evaluation/providers.html#EloProvider.matchup_probability"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.evaluation.EloProvider.matchup_probability" title="Link to this definition">¶</a></dt>
 <dd><p>Return P(team_a beats team_b) via the model’s <code class="docutils literal notranslate"><span class="pre">predict_matchup</span></code>.</p>
+<p>Delegates to the model’s predict_matchup method, which retrieves both
+teams’ current ratings and applies the Elo logistic expected-score
+formula.</p>
 </dd></dl>
 
 </dd></dl>
@@ -1315,12 +1320,17 @@ models (Elo) typically ignore context and use internal ratings.</p>
 <dt class="sig sig-object py" id="ncaa_eval.evaluation.MatrixProvider.batch_matchup_probabilities">
 <span class="sig-name descname"><span class="pre">batch_matchup_probabilities</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">team_a_ids</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">team_b_ids</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="ncaa_eval.evaluation.bracket.html#ncaa_eval.evaluation.bracket.MatchupContext" title="ncaa_eval.evaluation.bracket.MatchupContext"><span class="pre">MatchupContext</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/evaluation/providers.html#MatrixProvider.batch_matchup_probabilities"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.evaluation.MatrixProvider.batch_matchup_probabilities" title="Link to this definition">¶</a></dt>
 <dd><p>Return batch probabilities from the stored matrix.</p>
+<p>Extracts row/column indices from the team pairs, vectorizes lookups
+into the probability matrix, and returns a list of win probabilities.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="ncaa_eval.evaluation.MatrixProvider.matchup_probability">
 <span class="sig-name descname"><span class="pre">matchup_probability</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">team_a_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">team_b_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="ncaa_eval.evaluation.bracket.html#ncaa_eval.evaluation.bracket.MatchupContext" title="ncaa_eval.evaluation.bracket.MatchupContext"><span class="pre">MatchupContext</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/evaluation/providers.html#MatrixProvider.matchup_probability"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.evaluation.MatrixProvider.matchup_probability" title="Link to this definition">¶</a></dt>
 <dd><p>Return P(team_a beats team_b) from the stored matrix.</p>
+<p>Indexes into the pre-built probability matrix using the team-to-index
+mapping, returning P(team_i beats team_j) directly from the stored
+array.</p>
 </dd></dl>
 
 </dd></dl>
@@ -1440,7 +1450,8 @@ across all games.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="ncaa_eval.evaluation.ReliabilityData.fraction_of_positives">
 <span class="sig-name descname"><span class="pre">fraction_of_positives</span></span><a class="headerlink" href="#ncaa_eval.evaluation.ReliabilityData.fraction_of_positives" title="Link to this definition">¶</a></dt>
-<dd><p>Observed fraction of positives per bin (from calibration_curve).</p>
+<dd><p>Observed fraction of positives per bin
+(from calibration_curve).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>numpy.ndarray[tuple[Any, …], numpy.dtype[numpy.float64]]</p>
@@ -1451,7 +1462,8 @@ across all games.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="ncaa_eval.evaluation.ReliabilityData.mean_predicted_value">
 <span class="sig-name descname"><span class="pre">mean_predicted_value</span></span><a class="headerlink" href="#ncaa_eval.evaluation.ReliabilityData.mean_predicted_value" title="Link to this definition">¶</a></dt>
-<dd><p>Mean predicted probability per bin (from calibration_curve).</p>
+<dd><p>Mean predicted probability per bin
+(from calibration_curve).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>numpy.ndarray[tuple[Any, …], numpy.dtype[numpy.float64]]</p>
@@ -1474,8 +1486,9 @@ across all games.</p>
 <dt class="sig sig-object py" id="ncaa_eval.evaluation.ReliabilityData.bin_edges">
 <span class="sig-name descname"><span class="pre">bin_edges</span></span><a class="headerlink" href="#ncaa_eval.evaluation.ReliabilityData.bin_edges" title="Link to this definition">¶</a></dt>
 <dd><p>Full bin edge array of shape <code class="docutils literal notranslate"><span class="pre">(n_bins</span> <span class="pre">+</span> <span class="pre">1,)</span></code>, i.e.
-<code class="docutils literal notranslate"><span class="pre">np.linspace(0.0,</span> <span class="pre">1.0,</span> <span class="pre">n_bins</span> <span class="pre">+</span> <span class="pre">1)</span></code>.  Includes both the lower (0.0)
-and upper (1.0) boundaries so callers do not need to recompute them.</p>
+<code class="docutils literal notranslate"><span class="pre">np.linspace(0.0,</span> <span class="pre">1.0,</span> <span class="pre">n_bins</span> <span class="pre">+</span> <span class="pre">1)</span></code>.  Includes both the lower
+(0.0) and upper (1.0) boundaries so callers do not need to
+recompute them.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>numpy.ndarray[tuple[Any, …], numpy.dtype[numpy.float64]]</p>
@@ -1804,11 +1817,9 @@ shape <code class="docutils literal notranslate"><span class="pre">(n_simulation
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Brier Score value (lower is better).</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float</p>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – If inputs are empty, mismatched, or probabilities are outside [0, 1].</p>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If inputs are empty, mismatched, or probabilities are
+    outside [0, 1].</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1991,11 +2002,9 @@ ECE is the weighted average of per-bin <a href="#id48"><span class="problematic"
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>ECE value in [0, 1] (lower is better).</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float</p>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – If inputs are empty, mismatched, or probabilities are outside [0, 1].</p>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If inputs are empty, mismatched, or probabilities are
+    outside [0, 1].</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2045,11 +2054,9 @@ ECE is the weighted average of per-bin <a href="#id48"><span class="problematic"
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Log Loss value.</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float</p>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – If inputs are empty, mismatched, or probabilities are outside [0, 1].</p>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If inputs are empty, mismatched, or probabilities are
+    outside [0, 1].</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2185,12 +2192,9 @@ augments with per-bin sample counts.</p>
 <dd class="field-even"><p>Structured data containing fraction of positives, mean predicted
 values, bin counts, bin edges, and requested number of bins.</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="#ncaa_eval.evaluation.ReliabilityData" title="ncaa_eval.evaluation.ReliabilityData">ReliabilityData</a></p>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – If inputs are empty, mismatched, <code class="docutils literal notranslate"><span class="pre">n_bins</span> <span class="pre">&lt;</span> <span class="pre">1</span></code>, or probabilities are
-    outside [0, 1].</p>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If inputs are empty, mismatched, <code class="docutils literal notranslate"><span class="pre">n_bins</span> <span class="pre">&lt;</span> <span class="pre">1</span></code>, or
+    probabilities are outside [0, 1].</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2209,12 +2213,10 @@ values, bin counts, bin edges, and requested number of bins.</p>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>ROC-AUC value.</p>
 </dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>float</p>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – If inputs are empty, mismatched, probabilities are outside [0, 1],
-    or <code class="docutils literal notranslate"><span class="pre">y_true</span></code> contains only one class (AUC is undefined).</p>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If inputs are empty, mismatched, probabilities are
+    outside [0, 1], or <code class="docutils literal notranslate"><span class="pre">y_true</span></code> contains only one class (AUC is
+    undefined).</p>
 </dd>
 </dl>
 </dd></dl>
