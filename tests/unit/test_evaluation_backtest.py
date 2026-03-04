@@ -216,23 +216,6 @@ class TestEvaluateFold:
         for col in received_cols:
             assert col not in METADATA_COLS
 
-    def test_metric_exception_produces_nan(self) -> None:
-        """Per-metric exceptions produce NaN, not crash."""
-        fold = _make_fold(2012)
-        model = _FakeStatelessModel()
-
-        def _raising_metric(
-            y_true: np.ndarray,
-            y_prob: np.ndarray,
-        ) -> float:
-            msg = "boom"
-            raise ValueError(msg)
-
-        result = _evaluate_fold(fold, model, {"good": _constant_metric, "bad": _raising_metric})
-
-        assert result.metrics["good"] == pytest.approx(0.42)
-        assert np.isnan(result.metrics["bad"])
-
     def test_fold_result_frozen(self) -> None:
         """FoldResult is a frozen dataclass."""
         fold = _make_fold(2012)

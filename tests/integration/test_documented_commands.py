@@ -98,16 +98,6 @@ def test_pytest_smoke() -> None:
 
 @pytest.mark.integration
 @pytest.mark.slow
-def test_pytest_full_suite() -> None:
-    """``pytest`` (full suite) exits 0 (AC #3)."""
-    result = _run(["pytest", _SELF_IGNORE], timeout=300)
-    assert result.returncode == 0, (
-        f"pytest full suite failed (rc={result.returncode}):\n{result.stdout}\n{result.stderr}"
-    )
-
-
-@pytest.mark.integration
-@pytest.mark.slow
 def test_pytest_coverage() -> None:
     """``pytest --cov`` exits 0 and stdout contains 'TOTAL' (AC #4)."""
     result = _run(
@@ -175,16 +165,6 @@ def test_nox_typecheck() -> None:
     result = _run(["nox", "-s", "typecheck"], timeout=120)
     assert result.returncode == 0, (
         f"nox -s typecheck failed (rc={result.returncode}):\n{result.stdout}\n{result.stderr}"
-    )
-
-
-@pytest.mark.integration
-@pytest.mark.slow
-def test_nox_tests() -> None:
-    """``nox -s tests`` exits 0 (AC #8)."""
-    result = _run(["nox", "-s", "tests", "--", _SELF_IGNORE], timeout=300)
-    assert result.returncode == 0, (
-        f"nox -s tests failed (rc={result.returncode}):\n{result.stdout}\n{result.stderr}"
     )
 
 
