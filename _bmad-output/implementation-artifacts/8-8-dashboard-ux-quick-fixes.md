@@ -31,10 +31,10 @@ so that the dashboard is immediately usable without squinting, confusion, or sta
   - [x] 2.3 If years exist but runs is empty, display `st.info()` explaining: data exists but no models trained yet, run `ncaa-eval train --model elo --start-year 2015 --end-year 2025`
   - [x] 2.4 Preserve the existing summary metrics for the happy path (data + runs both present)
 
-- [ ] Task 3: Add "Refresh Data" button to sidebar (AC: #3)
-  - [ ] 3.1 In `dashboard/app.py`, add a button at the bottom of the sidebar section (after the Scoring Format filter)
-  - [ ] 3.2 On click, call `st.cache_data.clear()` followed by `st.rerun()`
-  - [ ] 3.3 Use a subtle button style — this is a utility action, not a primary CTA (consider `st.button("🔄 Refresh Data", use_container_width=True)`)
+- [x] Task 3: Add "Refresh Data" button to sidebar (AC: #3)
+  - [x] 3.1 In `dashboard/app.py`, add a button at the bottom of the sidebar section (after the Scoring Format filter)
+  - [x] 3.2 On click, call `st.cache_data.clear()` followed by `st.rerun()`
+  - [x] 3.3 Use a subtle button style — this is a utility action, not a primary CTA (consider `st.button("🔄 Refresh Data", use_container_width=True)`)
 
 - [ ] Task 4: Add breadcrumbs to Leaderboard page (AC: #4)
   - [ ] 4.1 In `dashboard/pages/1_Lab.py`, add breadcrumb block before the `st.header("Backtest Leaderboard")` call (around line 20)

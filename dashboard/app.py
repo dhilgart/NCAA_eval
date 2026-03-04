@@ -97,6 +97,12 @@ with st.sidebar:
         st.session_state.setdefault("selected_scoring", None)
         st.info("No scoring formats available")
 
+    # Refresh Data
+    st.divider()
+    if st.button("\U0001f504 Refresh Data", use_container_width=True):
+        st.cache_data.clear()
+        st.rerun()
+
 # --- Run selected page ------------------------------------------------------
 
 pg.run()
