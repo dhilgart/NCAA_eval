@@ -3465,3 +3465,46 @@ except (OSError, ValueError, KeyError) as exc:
 ```
 
 **Note:** Always pair `except` blocks with `logger.debug()` — silent `pass` hides failures during debugging.
+
+### `rglob("*.parquet")` for Freshness Must Exclude Model/Run Artifacts (Discovered Story 8.8 Code Review Round 2, 2026-03-04)
+
+When using file modification time to indicate "last data sync date", scope the glob to **game/sync data directories only** — never use an unrestricted `rglob` from the data root. `data/runs/*/fold_predictions.parquet` and friends are updated on every model training run, not on data sync, and will silently make "Data synced" reflect the last TRAINING date rather than the last sync.
+
+**Anti-pattern:**
+```python
+parquets = list(path.rglob("*.parquet"))  # includes data/runs/ — polluted by training
+```
+
+**Template pattern:**
+```python
+games_parquets = list((path / "games").rglob("*.parquet")) if (path / "games").is_dir() else []
+top_level_parquets = list(path.glob("*.parquet"))
+parquets = games_parquets + top_level_parquets
+```
+
+**Rule:** Any freshness/mtime indicator must be derived only from the data layer it represents. If "sync date" — scope to `games/` + top-level parquets. If "model training date" — scope to `runs/`. Never mix.
+
+### Streamlit Pages Must Wrap Logic in `_render_xxx()` — No Module-Level Execution (Discovered Story 8.8 Code Review Round 2, 2026-03-04)
+
+All Streamlit pages should follow the `_render_xxx()` / `_render_xxx()` function-call pattern used by `1_Lab.py`, `2_Presentation.py`, `3_Model_Deep_Dive.py`, and `4_Pool_Scorer.py`. Module-level execution (code outside any function) is untestable — you can't patch `st.*` calls or data loaders before the module runs.
+
+**Anti-pattern (home.py before Story 8.8 Round 2):**
+```python
+data_dir = str(get_data_dir())   # module-level — runs at import time
+years = load_available_years(data_dir)
+if not years:
+    st.error(...)  # impossible to unit-test
+```
+
+**Template pattern:**
+```python
+def _render_home() -> None:
+    data_dir = str(get_data_dir())
+    years = load_available_years(data_dir)
+    if not years:
+        st.error(...)
+
+_render_home()  # single call at module bottom
+```
+
+**Consequence:** Module-level page code produces zero test coverage for AC-critical display logic (banners, metrics, navigation). `TestDashboardImports.test_import_page_home` only checks that the module imports without error — it cannot verify that `st.error` fires on empty data. The function pattern enables full `patch.object` mocking.

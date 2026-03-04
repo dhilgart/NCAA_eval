@@ -173,21 +173,31 @@ Claude Opus 4.6
 - **M3 — breadcrumb escape inconsistency**: Changed `"\u2190 Home"` to `"← Home"` in `1_Lab.py` to match literal usage in all other pages.
 - **M4 — silent logger**: Added `logger.debug()` calls in both `except` blocks of `load_data_freshness` for debugging visibility.
 
+### Code Review Fixes Applied (2026-03-04, Round 2)
+
+- **H1 — load_data_freshness rglob too broad**: Fixed `rglob("*.parquet")` to only scan `data/games/` and top-level `data/*.parquet` — excludes `data/runs/` so model training timestamps don't pollute the "Data synced" indicator.
+- **M1 — test_import_filters missing new re-exports**: Added `load_data_freshness` and `load_scoring_display_names` assertions to `TestDashboardImports.test_import_filters`.
+- **M2 — no home.py empty-state tests**: Added `tests/unit/test_home_page.py` with `TestHomePageEmptyState` (4 tests: no-data error, no-runs info, no-columns when empty, happy-path metrics).
+- **M3 — home.py module-level execution**: Refactored `home.py` to wrap all logic in `_render_home()`, matching the pattern used by all other pages.
+- Updated `test_parquet_file_sets_sync_date` to use `games/season=2025/data.parquet` (matches new scoped rglob).
+
 ### Change Log
 
 - 2026-03-04: Implemented all 5 UX quick fixes (AC #1-#5), all quality gates pass
-- 2026-03-04: Code review applied — 2 HIGH + 4 MEDIUM fixes, 927 tests passing
+- 2026-03-04: Code review (round 1) applied — 2 HIGH + 4 MEDIUM fixes, 927 tests passing
+- 2026-03-04: Code review (round 2) applied — 1 HIGH + 3 MEDIUM fixes, 931 tests passing
 
 ### File List
 
 - `dashboard/lib/bracket_renderer.py` — Modified: CSS font sizes and min-height
 - `dashboard/pages/2_Presentation.py` — Modified: iframe height 700→750
-- `dashboard/pages/home.py` — Modified: empty state banners (st.warning→st.error for no-data)
+- `dashboard/pages/home.py` — Modified: empty state banners, refactored to _render_home()
 - `dashboard/app.py` — Modified: Refresh Data button, data freshness import + display
 - `dashboard/pages/1_Lab.py` — Modified: breadcrumb navigation (literal ← Home)
-- `dashboard/lib/data_loaders.py` — Modified: added `load_data_freshness()`, `datetime` import, logger calls, broadened exception handling
+- `dashboard/lib/data_loaders.py` — Modified: added `load_data_freshness()`, scoped parquet rglob to games dir, datetime import, logger, broadened exception handling
 - `dashboard/lib/filters.py` — Modified: added `load_data_freshness` and `load_scoring_display_names` re-exports
-- `tests/unit/test_dashboard_app.py` — Modified: added `TestLoadDataFreshness` (5 tests)
+- `tests/unit/test_dashboard_app.py` — Modified: added `TestLoadDataFreshness` (5 tests), updated test_import_filters, updated test_parquet_file_sets_sync_date
+- `tests/unit/test_home_page.py` — Added: `TestHomePageEmptyState` (4 tests)
 - `tests/unit/test_leaderboard_page.py` — Modified: fixed mock columns for breadcrumbs
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` — Modified: status updated
 - `_bmad-output/implementation-artifacts/8-8-dashboard-ux-quick-fixes.md` — Modified: task tracking

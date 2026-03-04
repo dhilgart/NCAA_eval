@@ -265,7 +265,12 @@ def load_data_freshness(data_dir: str) -> dict[str, str | None]:
     if not path.exists():
         return result
     try:
-        parquets = list(path.rglob("*.parquet"))
+        # Scope to game data only — data/games/**/*.parquet and data/seasons.parquet.
+        # Excluding data/runs/ prevents model-training timestamps from polluting
+        # the "last sync date" indicator.
+        games_parquets = list((path / "games").rglob("*.parquet")) if (path / "games").is_dir() else []
+        top_level_parquets = [p for p in path.glob("*.parquet")]
+        parquets = games_parquets + top_level_parquets
         if parquets:
             latest_mtime = max(p.stat().st_mtime for p in parquets)
             result["last_sync_date"] = datetime.datetime.fromtimestamp(

@@ -15,6 +15,9 @@ class TestDashboardImports:
         assert hasattr(mod, "load_available_years")
         assert hasattr(mod, "load_available_runs")
         assert hasattr(mod, "load_available_scorings")
+        # Story 8.8: these were explicitly added to filters.__all__ as re-exports
+        assert hasattr(mod, "load_data_freshness")
+        assert hasattr(mod, "load_scoring_display_names")
 
     def test_import_styles(self) -> None:
         mod = importlib.import_module("dashboard.lib.styles")
@@ -119,8 +122,8 @@ class TestLoadDataFreshness:
     def test_parquet_file_sets_sync_date(self, tmp_path: Path) -> None:
         from dashboard.lib.data_loaders import load_data_freshness
 
-        # Create a dummy parquet file
-        parquet_file = tmp_path / "seasons" / "dummy.parquet"
+        # Create a dummy parquet file under games/ (sync-data location, not runs/)
+        parquet_file = tmp_path / "games" / "season=2025" / "data.parquet"
         parquet_file.parent.mkdir(parents=True)
         parquet_file.write_bytes(b"dummy")
 
