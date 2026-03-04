@@ -355,8 +355,9 @@ Tests are organized across four **orthogonal dimensions**:
 **Rationale:** Traditional "unit/integration only" taxonomy is insufficient. Orthogonal dimensions clarify test type selection and enable precise test filtering via markers.
 
 ### Test Marker Taxonomy ⭐
-8 pytest markers defined in pyproject.toml:
+9 pytest markers defined in pyproject.toml (as of Story 8.5 code review, 2026-03-03):
 - `smoke` - Pre-commit tests (< 10s total)
+- `unit` - Pure unit tests, no I/O or external deps (registered Story 8.5 CR — was used across 4 files before being formally registered)
 - `slow` - Excluded from pre-commit (> 5s each)
 - `integration` - I/O or external dependencies
 - `property` - Hypothesis property-based tests
@@ -366,6 +367,15 @@ Tests are organized across four **orthogonal dimensions**:
 - `mutation` - Mutation testing coverage
 
 **Template Pattern:** Define markers in [tool.pytest.ini_options] with clear descriptions
+
+**Marker Discipline — Every test must carry a marker (Discovered: Story 8.5 Code Review, 2026-03-03):**
+- Unmarked tests in `tests/unit/` are technically not wrong but violate the taxonomy and get silently excluded from `pytest -m smoke` while also not being explicitly `unit`-queryable
+- Rule: tests that run in < 1s → `@pytest.mark.smoke`; tests > 1s but no I/O → `@pytest.mark.unit`; tests with I/O → `@pytest.mark.integration`
+- Dev story specs should include marker selection as an explicit subtask (e.g. "Use `@pytest.mark.smoke` if < 1s, else `@pytest.mark.unit`") — confirmed effective when included in Story 8.5, caught in review when test timing exceeded 1s threshold
+- **Always register new markers before use** — `@pytest.mark.unit` was applied across 4 files before being registered in pyproject.toml, causing a silent gap under `--strict-markers`. Code review agents must check the markers list in pyproject.toml against markers used in changed test files.
+
+**Test Artifact Assertions (Discovered: Story 8.5 Code Review, 2026-03-03):**
+- When a test is designed to prove "the model took path X not path Y", assert the on-disk artifact specific to that path — not metadata fields that could come from config or the early-exit branch. Example: `(model_dir / "model.ubj").exists()` proves XGBoost path; `(model_dir / "feature_names.json").exists()` proves fit() completed. Metadata fields like `start_year` / `end_year` come from the config, not the execution path.
 
 ### Hub-and-Spoke Documentation Architecture ⭐
 Testing strategy uses 1 main document (TESTING_STRATEGY.md) + 7 focused guides:

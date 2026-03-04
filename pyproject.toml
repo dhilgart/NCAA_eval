@@ -152,6 +152,7 @@ markers = [
     "regression: Regression tests to prevent bug recurrence",
     "mutation: Tests specifically for mutation testing coverage",
     "no_mutation: Tests incompatible with mutmut runner directory (Path(__file__)-dependent structural tests)",
+    "unit: Pure unit tests with no I/O or external dependencies",
 ]
 
 [tool.coverage.run]
