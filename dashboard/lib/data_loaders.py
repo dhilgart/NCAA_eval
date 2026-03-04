@@ -271,8 +271,8 @@ def load_data_freshness(data_dir: str) -> dict[str, str | None]:
             result["last_sync_date"] = datetime.datetime.fromtimestamp(
                 latest_mtime, tz=datetime.timezone.utc
             ).strftime("%Y-%m-%d")
-    except OSError:
-        pass
+    except OSError as exc:
+        logger.debug("Could not determine sync date from parquet mtime: %s", exc)
     try:
         repo = ParquetRepository(path)
         seasons = repo.get_seasons()
@@ -282,8 +282,8 @@ def load_data_freshness(data_dir: str) -> dict[str, str | None]:
             dates = [g.date for g in games if g.date is not None]
             if dates:
                 result["latest_game_date"] = str(max(dates))
-    except OSError:
-        pass
+    except (OSError, ValueError, KeyError) as exc:
+        logger.debug("Could not determine latest game date: %s", exc)
     return result
 
 

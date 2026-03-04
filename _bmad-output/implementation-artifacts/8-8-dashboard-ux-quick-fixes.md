@@ -1,6 +1,6 @@
 # Story 8.8: Dashboard UX Quick Fixes
 
-Status: review
+Status: done
 
 ## Story
 
@@ -158,24 +158,36 @@ Claude Opus 4.6
 ### Completion Notes List
 
 - **AC #1**: Bracket font sizes increased — `.name` 10px→12px, `.prob` 9px→10px, `.seed` 10px→11px, `.team` min-height 18px→20px. Iframe height bumped 700px→750px.
-- **AC #2**: Home page shows `st.warning` banner with sync command when no data, `st.info` with train command when data exists but no models. Happy path preserves metrics + guidance.
+- **AC #2**: Home page shows `st.error` banner (upgraded from `st.warning` during code review — more prominent for blocking state) with sync command when no data, `st.info` with train command when data exists but no models. Happy path preserves metrics + guidance.
 - **AC #3**: "Refresh Data" button added below sidebar filters with `st.divider()` separator. Clears `st.cache_data` and calls `st.rerun()`.
-- **AC #4**: Breadcrumbs added to `1_Lab.py` using identical pattern to other pages (`st.columns([1, 3])` + `st.page_link` + `st.caption`).
+- **AC #4**: Breadcrumbs added to `1_Lab.py` using identical pattern to other pages (`st.columns([1, 3])` + `st.page_link` + `st.caption`). Breadcrumb uses literal `←` (consistent with other pages).
 - **AC #5**: `load_data_freshness()` added to `data_loaders.py` using Parquet mtime for sync date and `ParquetRepository` for latest game date. Displayed as caption in sidebar, only when data exists.
-- All quality gates pass: ruff check, ruff format, mypy --strict, pytest (922 passed).
+- All quality gates pass: ruff check, ruff format, mypy --strict, pytest (927 passed).
+
+### Code Review Fixes Applied (2026-03-04)
+
+- **H1 — filters.py missing re-exports**: Added `load_data_freshness` and `load_scoring_display_names` to `filters.py` `__all__` and re-export block (backward-compat shim was incomplete).
+- **H2 — zero test coverage for load_data_freshness**: Added `TestLoadDataFreshness` class (5 tests) to `test_dashboard_app.py` covering dict structure, non-existent dir, empty dir, parquet mtime detection, and cache decorator presence.
+- **M1 — st.warning vs st.error**: Changed `home.py` no-data banner from `st.warning` (yellow) to `st.error` (red) — no-data is a blocking state warranting the more prominent signal.
+- **M2 — narrow except OSError in freshness**: Broadened second `try/except` from `OSError` to `(OSError, ValueError, KeyError)` to catch parquet data-level parse errors.
+- **M3 — breadcrumb escape inconsistency**: Changed `"\u2190 Home"` to `"← Home"` in `1_Lab.py` to match literal usage in all other pages.
+- **M4 — silent logger**: Added `logger.debug()` calls in both `except` blocks of `load_data_freshness` for debugging visibility.
 
 ### Change Log
 
 - 2026-03-04: Implemented all 5 UX quick fixes (AC #1-#5), all quality gates pass
+- 2026-03-04: Code review applied — 2 HIGH + 4 MEDIUM fixes, 927 tests passing
 
 ### File List
 
 - `dashboard/lib/bracket_renderer.py` — Modified: CSS font sizes and min-height
 - `dashboard/pages/2_Presentation.py` — Modified: iframe height 700→750
-- `dashboard/pages/home.py` — Modified: empty state banners
+- `dashboard/pages/home.py` — Modified: empty state banners (st.warning→st.error for no-data)
 - `dashboard/app.py` — Modified: Refresh Data button, data freshness import + display
-- `dashboard/pages/1_Lab.py` — Modified: breadcrumb navigation
-- `dashboard/lib/data_loaders.py` — Modified: added `load_data_freshness()`, `datetime` import
+- `dashboard/pages/1_Lab.py` — Modified: breadcrumb navigation (literal ← Home)
+- `dashboard/lib/data_loaders.py` — Modified: added `load_data_freshness()`, `datetime` import, logger calls, broadened exception handling
+- `dashboard/lib/filters.py` — Modified: added `load_data_freshness` and `load_scoring_display_names` re-exports
+- `tests/unit/test_dashboard_app.py` — Modified: added `TestLoadDataFreshness` (5 tests)
 - `tests/unit/test_leaderboard_page.py` — Modified: fixed mock columns for breadcrumbs
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` — Modified: status updated
 - `_bmad-output/implementation-artifacts/8-8-dashboard-ux-quick-fixes.md` — Modified: task tracking

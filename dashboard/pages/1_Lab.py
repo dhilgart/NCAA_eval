@@ -20,7 +20,7 @@ def _render_leaderboard() -> None:
     # Breadcrumbs
     col_nav, col_bc = st.columns([1, 3])
     with col_nav:
-        st.page_link("pages/home.py", label="\u2190 Home")
+        st.page_link("pages/home.py", label="← Home")
     with col_bc:
         st.caption("Home > Lab > Backtest Leaderboard")
 

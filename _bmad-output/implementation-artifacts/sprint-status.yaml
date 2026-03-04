@@ -121,7 +121,7 @@ development_status:
   8-5-testing-gaps-missing-tests-dead-code-cleanup: done
   8-6-type-safety-configuration-improvements: done
   8-7-sprint-housekeeping-ci-cd-improvements: done
-  8-8-dashboard-ux-quick-fixes: review
+  8-8-dashboard-ux-quick-fixes: done
   8-9-add-pep20-solid-pure-function-gates: done
   8-10-documentation-command-e2e-integration-tests: done
   8-11-fix-testing-documentation-staleness-marker-gaps: backlog

@@ -14,7 +14,7 @@ years = load_available_years(data_dir)
 runs = load_available_runs(data_dir)
 
 if not years:
-    st.warning(
+    st.error(
         "**Setup needed — no data found.**\n\n"
         "Download game data before using the dashboard:\n\n"
         "```\nncaa-eval sync --source all --dest data/\n```"
