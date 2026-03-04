@@ -60,6 +60,8 @@ def walk_forward_splits(
         ValueError: If ``seasons`` has fewer than 2 elements, or if ``mode``
             is not ``"batch"`` or ``"stateful"``.
     """
+    # Runtime guard: Literal["batch","stateful"] enforces at static-analysis
+    # time; this check also protects callers who bypass mypy (e.g. YAML config).
     if mode not in ("batch", "stateful"):
         msg = f"mode must be 'batch' or 'stateful', got {mode!r}"
         raise ValueError(msg)

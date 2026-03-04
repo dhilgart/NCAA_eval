@@ -55,8 +55,6 @@ METADATA_COLS: frozenset[str] = frozenset(
     }
 )
 
-_VALID_MODES: frozenset[str] = frozenset({"batch", "stateful"})
-
 DEFAULT_METRICS: Mapping[
     str,
     Callable[[npt.NDArray[np.float64], npt.NDArray[np.float64]], float],
@@ -292,6 +290,8 @@ def run_backtest(  # noqa: PLR0913 — REFACTOR Story 8.1
             ``seasons`` contains fewer than 2 elements (propagated from
             :func:`walk_forward_splits`).
     """
+    # Runtime guard: Literal["batch","stateful"] enforces at static-analysis
+    # time; this check also protects callers who bypass mypy (e.g. YAML config).
     if mode not in ("batch", "stateful"):
         msg = f"mode must be 'batch' or 'stateful', got {mode!r}"
         raise ValueError(msg)

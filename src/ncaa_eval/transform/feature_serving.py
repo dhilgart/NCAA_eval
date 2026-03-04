@@ -194,6 +194,8 @@ class StatefulFeatureServer:
         Returns:
             One row per game with metadata, feature deltas, and the target label.
         """
+        # Runtime guard: Literal["batch","stateful"] enforces at static-analysis
+        # time; this check also protects callers who bypass mypy (e.g. YAML config).
         if mode not in ("batch", "stateful"):
             msg = f"mode must be 'batch' or 'stateful', got {mode!r}"
             raise ValueError(msg)
