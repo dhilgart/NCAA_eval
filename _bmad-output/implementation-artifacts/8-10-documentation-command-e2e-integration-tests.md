@@ -14,12 +14,12 @@ so that documentation rot is caught automatically and users following the guides
 
 1. New test file `tests/integration/test_documented_commands.py` created
 2. E2E test validates `pytest -m smoke` completes successfully and finishes in under 10 seconds
-3. E2E test validates `pytest` (full suite) completes with exit code 0
-4. E2E test validates `pytest --cov=src/ncaa_eval --cov-report=term-missing` produces coverage output
+3. ~~E2E test validates `pytest` (full suite) completes with exit code 0~~ — removed: circular (pytest-within-pytest doubles CI time for zero signal; outer run passing implies inner would too)
+4. ~~E2E test validates `pytest --cov=src/ncaa_eval --cov-report=term-missing` produces coverage output~~ — removed: same circular argument; coverage is validated by CI directly
 5. E2E test validates `ruff check .` exits with code 0
 6. E2E test validates `ruff format --check .` exits with code 0
 7. E2E test validates `mypy --strict src/ncaa_eval tests` exits with code 0
-8. E2E test validates each `nox` session individually: `nox -s lint`, `nox -s typecheck`, `nox -s tests`
+8. E2E test validates each `nox` session individually: `nox -s lint`, `nox -s typecheck`; ~~`nox -s tests`~~ removed — `nox -s tests` is just `pytest --tb=short`, a subset of AC #4 which was itself removed
 9. E2E test validates `python -m ncaa_eval.cli --help` prints help text (CLI is importable and functional)
 10. E2E test validates `python -m ncaa_eval.cli train --help` prints train help
 11. E2E test validates `check-manifest` runs (or the check is removed from documentation if not configured)
@@ -37,14 +37,14 @@ so that documentation rot is caught automatically and users following the guides
   - [x] 1.2 Define helper function `_run(cmd: list[str], *, timeout: int = 120) -> subprocess.CompletedProcess[str]` for subprocess invocation with timeout
 - [x] Task 2: Implement quality-gate command tests (AC: #2–#8)
   - [x] 2.1 `test_pytest_smoke` — `pytest -m smoke` exit 0, under 10s wall-clock
-  - [x] 2.2 `test_pytest_full_suite` — `pytest` exit 0
-  - [x] 2.3 `test_pytest_coverage` — `pytest --cov=src/ncaa_eval --cov-report=term-missing` exit 0, stdout contains "TOTAL"
+  - ~~[x] 2.2 `test_pytest_full_suite` — removed: circular pytest-within-pytest~~
+  - ~~[x] 2.3 `test_pytest_coverage` — removed: circular pytest-within-pytest~~
   - [x] 2.4 `test_ruff_check` — `ruff check .` exit 0
   - [x] 2.5 `test_ruff_format_check` — `ruff format --check .` exit 0
   - [x] 2.6 `test_mypy_strict` — `mypy --strict src/ncaa_eval tests` exit 0
   - [x] 2.7 `test_nox_lint` — `nox -s lint` exit 0
   - [x] 2.8 `test_nox_typecheck` — `nox -s typecheck` exit 0
-  - [x] 2.9 `test_nox_tests` — `nox -s tests` exit 0
+  - ~~[x] 2.9 `test_nox_tests` — removed: nox -s tests is just pytest, subset of removed AC #4~~
 - [x] Task 3: Implement CLI help tests (AC: #9–#10)
   - [x] 3.1 `test_cli_help` — `python -m ncaa_eval.cli --help` exit 0, stdout contains "Usage"
   - [x] 3.2 `test_cli_train_help` — `python -m ncaa_eval.cli train --help` exit 0, stdout contains "--model"
@@ -163,16 +163,22 @@ Claude Opus 4.6
 
 ### Completion Notes List
 
-- Created `tests/integration/test_documented_commands.py` with 12 E2E tests covering all documented toolchain commands
+- Created `tests/integration/test_documented_commands.py` with 12 E2E tests covering documented toolchain commands
 - All tests use `subprocess.run()` for true E2E validation (not in-process testing)
 - All tests marked with `@pytest.mark.integration` and `@pytest.mark.slow`
 - Recursive test avoidance: pytest/nox subprocess calls use `--ignore=tests/integration/test_documented_commands.py`
+- 3 circular pytest-within-pytest tests removed after adversarial review: `test_pytest_full_suite`, `test_pytest_coverage`, `test_nox_tests`
 - Fixed `docs/tutorials/getting-started.md`: replaced `ncaa-eval sync` with `python sync.py` (no poetry scripts entry exists)
 - Fixed `pyproject.toml` `[tool.check-manifest]`: added ignore patterns for .streamlit, CLAUDE.md, notebooks, scripts, template, mutants
 - Fixed `pyproject.toml` `[tool.ruff]`: added `extend-exclude = ["notebooks"]` to exempt EDA notebooks from strict linting
 - Fixed `noxfile.py`: added `*session.posargs` to `tests` session to support extra args via `--`
 - Auto-formatted 15 files with `ruff format .` to fix formatting drift
-- All 12 E2E tests pass, full regression suite (886 tests) passes with 0 failures
+- Fixed 3 pre-existing production bugs in stateless model training (SRS features, label balancing, NaN column drop)
+- Fixed backtest `_evaluate_fold`: randomize test fold team assignment (seed=43) so roc_auc gets both classes in y_true
+- Removed blind `except Exception` from `_evaluate_fold` metric loop — metric failures now propagate loudly
+- DRY'd `_randomize_team_assignment`: canonical copy in `evaluation/backtest.py`, imported in `cli/train.py`
+- Added 9 unit tests for `_randomize_team_assignment` covering label balancing, ID swapping, delta negation, _a/_b swap, immutability, and seed determinism
+- All 12 E2E tests pass, full regression suite (860 tests) passes with 0 failures
 
 ### Change Log
 
@@ -182,10 +188,12 @@ Claude Opus 4.6
 - 2026-03-03: Code review (adversarial, round 2) — fixed H1: `ruff format .` applied to 7 unformatted files (including `test_documented_commands.py` itself and 5 unit test files not previously in File List); fixed H2: added `import os` + `NO_COLOR=1` env in `_run()` to prevent Typer/Rich ANSI escape codes from breaking `--model` text assertion under GitHub Actions `FORCE_COLOR=1`; fixed M1: added `.edgetest/` to `.gitignore`; updated File List with 5 previously-undocumented ruff-format files and `.gitignore`; fixed PR body to follow template exactly.
 - 2026-03-03: ruff version alignment — pre-commit ruff updated from v0.8.4 → v0.15.1 to match CI's installed ruff; reformatted 7 files per ruff 0.15.1 conventions (pre-existing drift caught by new `test_ruff_format_check`). Added `.pre-commit-config.yaml` to File List.
 - 2026-03-04: CLI train E2E tests + stateless model training bug fixes — added `train_data_dir` fixture and 3 new E2E tests (`test_cli_train_elo`, `test_cli_train_xgboost`, `test_cli_train_logistic_regression`) for AC #14. Fixed 3 pre-existing production bugs: (1) `_setup_feature_server` now enables `batch_rating_types=("srs",)` so stateless models get non-NaN features; (2) `_randomize_team_assignment` added to `cli/train.py` and `evaluation/backtest.py` to balance `team_a_won` labels (was always True, breaking sklearn classifiers); (3) all-NaN feature columns dropped before fit in both `_prepare_and_train` and `_evaluate_fold`. All 3 new tests pass; all 15 E2E tests pass; 0 regressions.
+- 2026-03-04: Adversarial code review (round 3) — (1) removed 3 circular pytest-within-pytest tests (`test_pytest_full_suite`, `test_pytest_coverage`, `test_nox_tests`); (2) fixed roc_auc always-NaN bug: randomize `fold.test` team assignment (seed=43) before metric computation in `_evaluate_fold`; (3) removed blind `except Exception` from `_evaluate_fold` metric loop; (4) DRY'd `_randomize_team_assignment` — removed duplicate from `cli/train.py`, import from `evaluation.backtest`; (5) removed dead `test_metric_exception_produces_nan` unit test; (6) added 9 unit tests for `_randomize_team_assignment`. 12 E2E tests remain (net -3 redundant). Updated ACs #3, #4, #8 and tasks 2.2, 2.3, 2.9 to reflect deliberate removals.
 
 ### File List
 
-- tests/integration/test_documented_commands.py (modified) — added `train_data_dir` fixture + 3 CLI train E2E tests (15 total); added `import datetime`
+- tests/integration/test_documented_commands.py (modified) — added `train_data_dir` fixture + 3 CLI train E2E tests; removed 3 circular pytest-within-pytest tests (12 total); added `import datetime`
+- tests/unit/test_evaluation_backtest.py (modified) — removed `test_metric_exception_produces_nan`; added `TestRandomizeTeamAssignment` (9 tests for `_randomize_team_assignment`)
 - src/ncaa_eval/cli/train.py (modified) — enable SRS batch rating; add `_randomize_team_assignment`; balance labels + drop NaN cols in `_prepare_and_train`; ruff format
 - src/ncaa_eval/evaluation/backtest.py (modified) — add `_randomize_team_assignment`; balance labels + drop NaN cols in `_evaluate_fold`
 - docs/tutorials/getting-started.md (modified) — replaced non-existent `ncaa-eval sync` with `python sync.py`
