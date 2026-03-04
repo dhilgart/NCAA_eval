@@ -14,6 +14,7 @@ tests run ``pytest`` itself), the subprocess calls use
 from __future__ import annotations
 
 import os
+import re
 import subprocess
 import sys
 import time
@@ -22,10 +23,16 @@ from pathlib import Path
 import pytest
 
 # Project root — all subprocess commands run from here.
+# Anchored to this file's location so the path stays valid regardless of cwd.
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
 # Reusable ignore flag to prevent recursive test discovery.
 _SELF_IGNORE = f"--ignore={PROJECT_ROOT / 'tests' / 'integration' / 'test_documented_commands.py'}"
+
+# Regex that matches any ANSI/VT100 escape sequence.
+# Used to strip color codes from subprocess output so text-content assertions
+# are not broken by FORCE_COLOR=1 (set by GitHub Actions).
+_ANSI_ESCAPE = re.compile(r"\x1b\[[0-9;]*[a-zA-Z]")
 
 
 def _run(
@@ -45,11 +52,14 @@ def _run(
     Returns:
         Completed process with captured stdout/stderr.
     """
-    # NO_COLOR suppresses ANSI escape sequences (e.g. from Typer/Rich) so
-    # text-content assertions work correctly regardless of FORCE_COLOR env var
-    # set by CI runners (GitHub Actions sets FORCE_COLOR=1).
-    env = {**os.environ, "NO_COLOR": "1"}
-    return subprocess.run(
+    # Build an environment that suppresses ANSI output.
+    # GitHub Actions sets FORCE_COLOR=1, which causes Rich/Typer to emit ANSI
+    # escape sequences even when stdout is a captured pipe.  Removing
+    # FORCE_COLOR and setting NO_COLOR=1 is the belt-and-suspenders approach;
+    # _ANSI_ESCAPE stripping below is the final fallback.
+    env = {k: v for k, v in os.environ.items() if k not in {"FORCE_COLOR", "FORCE_COLORS"}}
+    env["NO_COLOR"] = "1"
+    result = subprocess.run(
         cmd,
         cwd=PROJECT_ROOT,
         capture_output=True,
@@ -57,6 +67,13 @@ def _run(
         encoding="utf-8",
         timeout=timeout,
         env=env,
+    )
+    # Strip any remaining ANSI sequences so callers' text assertions are robust.
+    return subprocess.CompletedProcess(
+        args=result.args,
+        returncode=result.returncode,
+        stdout=_ANSI_ESCAPE.sub("", result.stdout),
+        stderr=_ANSI_ESCAPE.sub("", result.stderr),
     )
 
 
