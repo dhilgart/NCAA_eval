@@ -210,7 +210,11 @@ def _evaluate_fold(
             test_team_b_ids=pd.Series(dtype="int64"),
         )
 
-    y_test = fold.test["team_a_won"].astype(np.float64)
+    # Randomize test-fold team assignment: feature server always assigns
+    # team_a = winner, so y_test would be all 1s without this, making
+    # roc_auc undefined.  Use a distinct seed from the train randomisation.
+    test_data = _randomize_team_assignment(fold.test, seed=43)
+    y_test = test_data["team_a_won"].astype(np.float64)
 
     is_stateful = isinstance(model, StatefulModel)
     feat_cols = feature_cols(fold.train)
@@ -228,9 +232,9 @@ def _evaluate_fold(
         model.fit(train_data[feat_cols], y_train)
 
     if is_stateful:
-        preds = model.predict_proba(fold.test)
+        preds = model.predict_proba(test_data)
     else:
-        preds = model.predict_proba(fold.test[feat_cols])
+        preds = model.predict_proba(test_data[feat_cols])
 
     y_true_np = y_test.to_numpy()
     y_prob_np = preds.to_numpy().astype(np.float64)
@@ -250,9 +254,9 @@ def _evaluate_fold(
         actuals=y_test,
         metrics=metrics,
         elapsed_seconds=elapsed,
-        test_game_ids=fold.test["game_id"].reset_index(drop=True),
-        test_team_a_ids=fold.test["team_a_id"].reset_index(drop=True),
-        test_team_b_ids=fold.test["team_b_id"].reset_index(drop=True),
+        test_game_ids=test_data["game_id"].reset_index(drop=True),
+        test_team_a_ids=test_data["team_a_id"].reset_index(drop=True),
+        test_team_b_ids=test_data["team_b_id"].reset_index(drop=True),
     )
 
 
