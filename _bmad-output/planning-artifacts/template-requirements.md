@@ -367,6 +367,11 @@ Tests are organized across four **orthogonal dimensions**:
 
 **Template Pattern:** Define markers in [tool.pytest.ini_options] with clear descriptions
 
+**Marker Discipline — Every test must carry a marker (Discovered: Story 8.5 Code Review, 2026-03-03):**
+- Unmarked tests in `tests/unit/` are technically not wrong but violate the taxonomy and get silently excluded from `pytest -m smoke` while also not being explicitly `unit`-queryable
+- Rule: tests that run in < 1s → `@pytest.mark.smoke`; tests > 1s but no I/O → `@pytest.mark.unit`; tests with I/O → `@pytest.mark.integration`
+- Dev story specs should include marker selection as an explicit subtask (e.g. "Use `@pytest.mark.smoke` if < 1s, else `@pytest.mark.unit`") — confirmed effective when included in Story 8.5, caught in review when test timing exceeded 1s threshold
+
 ### Hub-and-Spoke Documentation Architecture ⭐
 Testing strategy uses 1 main document (TESTING_STRATEGY.md) + 7 focused guides:
 - test-scope-guide.md (Unit vs Integration)

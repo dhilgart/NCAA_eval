@@ -1,6 +1,6 @@
 # Story 8.5: Testing Gaps — Missing Tests & Dead Code Cleanup
 
-Status: review
+Status: done
 
 ## Story
 
@@ -139,11 +139,12 @@ Claude Opus 4.6
 - **AC #4 (dead fixture):** Removed `sample_game_records` fixture from `tests/conftest.py` — grep confirmed zero usages across all test files.
 - **AC #5 (empty test file):** Deleted `tests/test_ncaa_eval.py` — was empty (0 lines), no imports from it.
 - **AC #6 (Fibonacci point values):** Verified — existing `test_fibonacci_scoring_values` already asserts exact point values (2.0, 3.0, 5.0, 8.0, 13.0, 21.0) for all 6 rounds. `test_fibonacci_perfect_bracket` confirms total of 231.
-- **AC #7 (quality gates):** All pass — 886 tests passed (1 skipped), Ruff clean, mypy --strict clean.
+- **AC #7 (quality gates):** All pass — 886 tests passed (1 skipped), mypy --strict clean. `ruff check .` is clean for `src/` and `tests/`; 21 pre-existing notebook violations in `notebooks/eda/` are tracked separately (pre-exist on `main`, not introduced by this story).
 
 ### Change Log
 
 - 2026-03-03: Story 8.5 implementation complete — added XGBoost + Elo CLI tests, removed dead fixture + empty test file, verified existing coverage for scoring_from_config and Fibonacci point values.
+- 2026-03-03: Code review fixes — added `@pytest.mark.unit` to `test_train_xgboost` and `test_train_elo`; added `import pytest`; changed module docstring from "Integration" to "Unit"; fixed fragile random `team_a_won` labels to deterministic alternating pattern; added `model.ubj` artifact assertion to XGBoost test; added `start_year`/`end_year` assertions to Elo test.
 
 ### File List
 

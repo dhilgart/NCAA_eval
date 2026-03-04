@@ -1,4 +1,4 @@
-"""Integration tests for the training CLI (``python -m ncaa_eval.cli train``)."""
+"""Unit tests for the training CLI (``python -m ncaa_eval.cli train``)."""
 
 from __future__ import annotations
 
@@ -9,6 +9,7 @@ from unittest.mock import patch
 
 import numpy as np
 import pandas as pd  # type: ignore[import-untyped]
+import pytest
 from typer.testing import CliRunner
 
 from ncaa_eval.cli.main import app
@@ -41,7 +42,7 @@ def _make_synthetic_season(
         "team_b_id": [200 + i for i in range(n_games)],
         "is_tournament": [*([False] * n_reg), *([True] * n_tournament)],
         "loc_encoding": [rng.choice([0, 1, -1]) for _ in range(n_games)],
-        "team_a_won": [bool(rng.choice([True, False])) for _ in range(n_games)],
+        "team_a_won": [bool(i % 2) for i in range(n_games)],
         "w_score": [75 + int(rng.integers(0, 20)) for _ in range(n_games)],
         "l_score": [55 + int(rng.integers(0, 15)) for _ in range(n_games)],
         "num_ot": [0] * n_games,
@@ -287,6 +288,7 @@ class TestCLITrain:
     # Story 8.5: CLI train with xgboost (stateless model path)
     # -----------------------------------------------------------------------
 
+    @pytest.mark.unit
     @patch(
         "ncaa_eval.cli.train.StatefulFeatureServer.serve_season_features",
         _mock_serve_season_features,
@@ -334,11 +336,15 @@ class TestCLITrain:
         runs = store.list_runs()
         assert len(runs) == 1
         assert runs[0].model_type == "xgboost"
+        # Verify XGBoost-specific artifact proves stateless path was exercised
+        run_model_dir = output_dir / "runs" / runs[0].run_id / "model"
+        assert (run_model_dir / "model.ubj").exists(), "XGBoost native model artifact must be written"
 
     # -----------------------------------------------------------------------
     # Story 8.5: CLI train with elo (stateful model path)
     # -----------------------------------------------------------------------
 
+    @pytest.mark.unit
     @patch(
         "ncaa_eval.cli.train.StatefulFeatureServer.serve_season_features",
         _mock_serve_season_features,
@@ -372,6 +378,9 @@ class TestCLITrain:
         runs = store.list_runs()
         assert len(runs) == 1
         assert runs[0].model_type == "elo"
+        # Verify training path was exercised (not the no-data early-exit branch)
+        assert runs[0].start_year == 2020
+        assert runs[0].end_year == 2021
 
     # -----------------------------------------------------------------------
     # Task 6.4: Config override applies custom hyperparameters
