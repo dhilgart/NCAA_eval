@@ -381,6 +381,10 @@ class TestCLITrain:
         # Verify training path was exercised (not the no-data early-exit branch)
         assert runs[0].start_year == 2020
         assert runs[0].end_year == 2021
+        # Verify model artifacts were persisted — proves stateful fit() completed
+        run_model_dir = output_dir / "runs" / runs[0].run_id / "model"
+        assert run_model_dir.exists(), "model/ directory must be created during training"
+        assert (run_model_dir / "feature_names.json").exists(), "feature_names.json must be saved"
 
     # -----------------------------------------------------------------------
     # Task 6.4: Config override applies custom hyperparameters

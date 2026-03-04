@@ -144,10 +144,12 @@ Claude Opus 4.6
 ### Change Log
 
 - 2026-03-03: Story 8.5 implementation complete — added XGBoost + Elo CLI tests, removed dead fixture + empty test file, verified existing coverage for scoring_from_config and Fibonacci point values.
-- 2026-03-03: Code review fixes — added `@pytest.mark.unit` to `test_train_xgboost` and `test_train_elo`; added `import pytest`; changed module docstring from "Integration" to "Unit"; fixed fragile random `team_a_won` labels to deterministic alternating pattern; added `model.ubj` artifact assertion to XGBoost test; added `start_year`/`end_year` assertions to Elo test.
+- 2026-03-03: Code review fixes (round 1) — added `@pytest.mark.unit` to `test_train_xgboost` and `test_train_elo`; added `import pytest`; changed module docstring from "Integration" to "Unit"; fixed fragile random `team_a_won` labels to deterministic alternating pattern; added `model.ubj` artifact assertion to XGBoost test; added `start_year`/`end_year` assertions to Elo test.
+- 2026-03-03: Code review fixes (round 2) — registered `unit` marker in `pyproject.toml` (was used across 4 test files without being formally registered); added `model/` directory + `feature_names.json` artifact assertions to `test_train_elo` to prove stateful fit() path completed.
 
 ### File List
 
-- `tests/unit/test_cli_train.py` — modified (added `test_train_xgboost`, `test_train_elo`; fixed `w_score`/`l_score` ranges in `_make_synthetic_season`)
+- `tests/unit/test_cli_train.py` — modified (added `test_train_xgboost`, `test_train_elo`; fixed `w_score`/`l_score` ranges in `_make_synthetic_season`; added Elo model artifact assertions)
 - `tests/conftest.py` — modified (removed dead `sample_game_records` fixture)
 - `tests/test_ncaa_eval.py` — deleted (was empty)
+- `pyproject.toml` — modified (registered `unit` marker in `[tool.pytest.ini_options]` markers list)
