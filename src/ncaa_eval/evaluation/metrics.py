@@ -59,7 +59,7 @@ def _validate_inputs(
         msg = "y_true and y_prob must be non-empty arrays."
         raise ValueError(msg)
     if len(y_true) != len(y_prob):
-        msg = f"y_true and y_prob must have the same length, " f"got {len(y_true)} and {len(y_prob)}."
+        msg = f"y_true and y_prob must have the same length, got {len(y_true)} and {len(y_prob)}."
         raise ValueError(msg)
     if not np.all((y_true == 0) | (y_true == 1)):
         msg = "y_true must contain only binary values (0 or 1)."

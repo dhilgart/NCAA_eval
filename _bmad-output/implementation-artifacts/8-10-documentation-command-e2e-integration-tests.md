@@ -1,6 +1,6 @@
 # Story 8.10: Documentation Command E2E Integration Tests
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -32,32 +32,32 @@ so that documentation rot is caught automatically and users following the guides
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `tests/integration/test_documented_commands.py` with test scaffolding (AC: #1, #12)
-  - [ ] 1.1 Create file with module docstring, imports (`subprocess`, `pytest`), and markers
-  - [ ] 1.2 Define helper function `_run(cmd: list[str], *, timeout: int = 120) -> subprocess.CompletedProcess[str]` for subprocess invocation with timeout
-- [ ] Task 2: Implement quality-gate command tests (AC: #2–#8)
-  - [ ] 2.1 `test_pytest_smoke` — `pytest -m smoke` exit 0, under 10s wall-clock
-  - [ ] 2.2 `test_pytest_full_suite` — `pytest` exit 0
-  - [ ] 2.3 `test_pytest_coverage` — `pytest --cov=src/ncaa_eval --cov-report=term-missing` exit 0, stdout contains "TOTAL"
-  - [ ] 2.4 `test_ruff_check` — `ruff check .` exit 0
-  - [ ] 2.5 `test_ruff_format_check` — `ruff format --check .` exit 0
-  - [ ] 2.6 `test_mypy_strict` — `mypy --strict src/ncaa_eval tests` exit 0
-  - [ ] 2.7 `test_nox_lint` — `nox -s lint` exit 0
-  - [ ] 2.8 `test_nox_typecheck` — `nox -s typecheck` exit 0
-  - [ ] 2.9 `test_nox_tests` — `nox -s tests` exit 0
-- [ ] Task 3: Implement CLI help tests (AC: #9–#10)
-  - [ ] 3.1 `test_cli_help` — `python -m ncaa_eval.cli --help` exit 0, stdout contains "Usage"
-  - [ ] 3.2 `test_cli_train_help` — `python -m ncaa_eval.cli train --help` exit 0, stdout contains "--model"
-- [ ] Task 4: Implement check-manifest test (AC: #11)
-  - [ ] 4.1 `test_check_manifest` — `check-manifest` exit 0 OR document/fix the gap
-- [ ] Task 5: Validate documented commands against reality (AC: #13–#14)
-  - [ ] 5.1 Test `ncaa-eval sync --help` — if no `[tool.poetry.scripts]` entry exists, either create it or fix the tutorial to use `python sync.py`
-  - [ ] 5.2 Review all code blocks in `docs/tutorials/getting-started.md` for accuracy
-  - [ ] 5.3 Update any expected output that differs from actual output
-- [ ] Task 6: Run full test suite and verify all E2E tests pass (AC: all)
-  - [ ] 6.1 `pytest tests/integration/test_documented_commands.py -v`
-  - [ ] 6.2 `ruff check .`
-  - [ ] 6.3 `mypy --strict src/ncaa_eval tests`
+- [x] Task 1: Create `tests/integration/test_documented_commands.py` with test scaffolding (AC: #1, #12)
+  - [x] 1.1 Create file with module docstring, imports (`subprocess`, `pytest`), and markers
+  - [x] 1.2 Define helper function `_run(cmd: list[str], *, timeout: int = 120) -> subprocess.CompletedProcess[str]` for subprocess invocation with timeout
+- [x] Task 2: Implement quality-gate command tests (AC: #2–#8)
+  - [x] 2.1 `test_pytest_smoke` — `pytest -m smoke` exit 0, under 10s wall-clock
+  - [x] 2.2 `test_pytest_full_suite` — `pytest` exit 0
+  - [x] 2.3 `test_pytest_coverage` — `pytest --cov=src/ncaa_eval --cov-report=term-missing` exit 0, stdout contains "TOTAL"
+  - [x] 2.4 `test_ruff_check` — `ruff check .` exit 0
+  - [x] 2.5 `test_ruff_format_check` — `ruff format --check .` exit 0
+  - [x] 2.6 `test_mypy_strict` — `mypy --strict src/ncaa_eval tests` exit 0
+  - [x] 2.7 `test_nox_lint` — `nox -s lint` exit 0
+  - [x] 2.8 `test_nox_typecheck` — `nox -s typecheck` exit 0
+  - [x] 2.9 `test_nox_tests` — `nox -s tests` exit 0
+- [x] Task 3: Implement CLI help tests (AC: #9–#10)
+  - [x] 3.1 `test_cli_help` — `python -m ncaa_eval.cli --help` exit 0, stdout contains "Usage"
+  - [x] 3.2 `test_cli_train_help` — `python -m ncaa_eval.cli train --help` exit 0, stdout contains "--model"
+- [x] Task 4: Implement check-manifest test (AC: #11)
+  - [x] 4.1 `test_check_manifest` — `check-manifest` exit 0 OR document/fix the gap
+- [x] Task 5: Validate documented commands against reality (AC: #13–#14)
+  - [x] 5.1 Test `ncaa-eval sync --help` — if no `[tool.poetry.scripts]` entry exists, either create it or fix the tutorial to use `python sync.py`
+  - [x] 5.2 Review all code blocks in `docs/tutorials/getting-started.md` for accuracy
+  - [x] 5.3 Update any expected output that differs from actual output
+- [x] Task 6: Run full test suite and verify all E2E tests pass (AC: all)
+  - [x] 6.1 `pytest tests/integration/test_documented_commands.py -v`
+  - [x] 6.2 `ruff check .`
+  - [x] 6.3 `mypy --strict src/ncaa_eval tests`
 
 ## Dev Notes
 
@@ -145,10 +145,52 @@ AC #2-3 runs `pytest` as a subprocess, which will discover and run ALL tests inc
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+- `ruff check .` failed on EDA notebook lint errors (D205, D103, E701, I001, I002, F541). Fixed by adding `extend-exclude = ["notebooks"]` to `[tool.ruff]` in pyproject.toml since EDA notebooks are exempt from strict linting per project conventions.
+- `ruff format --check .` failed on 15 files with formatting drift. Fixed by running `ruff format .` to auto-format all files.
+- `check-manifest` failed with missing sdist entries (.streamlit, CLAUDE.md, notebooks, scripts). Fixed by adding ignore patterns to `[tool.check-manifest]` in pyproject.toml.
+- `nox -s tests` timed out at 300s due to recursive test discovery (nox runs pytest which discovers E2E tests which run nox). Fixed by adding `*session.posargs` to noxfile.py `tests` session and passing `-- --ignore=...` from the E2E test.
+- Getting-started tutorial documented non-existent `ncaa-eval sync` CLI entry point. Fixed by replacing with `python sync.py` (Option B — no `[tool.poetry.scripts]` entry exists).
+
 ### Completion Notes List
 
+- Created `tests/integration/test_documented_commands.py` with 12 E2E tests covering all documented toolchain commands
+- All tests use `subprocess.run()` for true E2E validation (not in-process testing)
+- All tests marked with `@pytest.mark.integration` and `@pytest.mark.slow`
+- Recursive test avoidance: pytest/nox subprocess calls use `--ignore=tests/integration/test_documented_commands.py`
+- Fixed `docs/tutorials/getting-started.md`: replaced `ncaa-eval sync` with `python sync.py` (no poetry scripts entry exists)
+- Fixed `pyproject.toml` `[tool.check-manifest]`: added ignore patterns for .streamlit, CLAUDE.md, notebooks, scripts, template, mutants
+- Fixed `pyproject.toml` `[tool.ruff]`: added `extend-exclude = ["notebooks"]` to exempt EDA notebooks from strict linting
+- Fixed `noxfile.py`: added `*session.posargs` to `tests` session to support extra args via `--`
+- Auto-formatted 15 files with `ruff format .` to fix formatting drift
+- All 12 E2E tests pass, full regression suite (886 tests) passes with 0 failures
+
+### Change Log
+
+- 2026-03-03: Implemented Story 8.10 — 12 E2E tests for documented commands, fixed documentation rot, fixed check-manifest/ruff/nox gaps
+
 ### File List
+
+- tests/integration/test_documented_commands.py (new) — 12 E2E tests for documented toolchain commands
+- docs/tutorials/getting-started.md (modified) — replaced non-existent `ncaa-eval sync` with `python sync.py`
+- pyproject.toml (modified) — added ruff `extend-exclude`, check-manifest ignore patterns
+- noxfile.py (modified) — added `*session.posargs` to tests session
+- dashboard/pages/2_Presentation.py (modified) — ruff format
+- dashboard/pages/4_Pool_Scorer.py (modified) — ruff format
+- dashboard/pages/home.py (modified) — ruff format
+- src/ncaa_eval/cli/train.py (modified) — ruff format
+- src/ncaa_eval/evaluation/metrics.py (modified) — ruff format
+- src/ncaa_eval/evaluation/plotting.py (modified) — ruff format
+- src/ncaa_eval/model/elo.py (modified) — ruff format
+- src/ncaa_eval/model/xgboost_model.py (modified) — ruff format
+- tests/unit/test_bracket_renderer.py (modified) — ruff format
+- tests/unit/test_cli_train.py (modified) — ruff format
+- tests/unit/test_evaluation_simulation.py (modified) — ruff format
+- tests/unit/test_evaluation_splitter.py (modified) — ruff format
+- tests/unit/test_graph.py (modified) — ruff format
+- tests/unit/test_model_xgboost.py (modified) — ruff format
+- _bmad-output/implementation-artifacts/sprint-status.yaml (modified) — status updated
+- _bmad-output/implementation-artifacts/8-10-documentation-command-e2e-integration-tests.md (modified) — task checkboxes, dev record, status

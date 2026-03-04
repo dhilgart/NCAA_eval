@@ -209,7 +209,7 @@ def _render_pool_scorer_page() -> None:
     seeds_raw = load_tourney_seeds(data_dir, selected_year)
     if not seeds_raw:
         st.warning(
-            f"No tournament seeds available for {selected_year}. " "Run `python sync.py` to download data."
+            f"No tournament seeds available for {selected_year}. Run `python sync.py` to download data."
         )
         return
 

@@ -140,9 +140,7 @@ def _prepare_and_train(ctx: _TrainingContext, combined: pd.DataFrame) -> list[st
 
     feat_cols = _feature_cols(combined)
 
-    ctx.console.print(
-        f"Training [bold]{ctx.model_name}[/bold] on seasons " f"{ctx.start_year}–{ctx.end_year}..."
-    )
+    ctx.console.print(f"Training [bold]{ctx.model_name}[/bold] on seasons {ctx.start_year}–{ctx.end_year}...")
     if ctx.is_stateful:
         ctx.model.fit(combined, y)
     else:

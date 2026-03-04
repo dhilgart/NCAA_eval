@@ -37,7 +37,7 @@ def typecheck(session: nox.Session) -> None:
 @nox.session(python=False)
 def tests(session: nox.Session) -> None:
     """Run the full pytest test suite."""
-    session.run("pytest", "--tb=short")
+    session.run("pytest", "--tb=short", *session.posargs)
 
 
 @nox.session(python=False)
