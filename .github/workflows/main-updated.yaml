@@ -25,6 +25,7 @@ jobs:
           branch: main
 
   publish-github-page:
+    name: "Build and publish Sphinx docs to GitHub Pages"
     if: "!startsWith(github.event.head_commit.message, 'bump:')"
     runs-on: ubuntu-latest
     permissions:

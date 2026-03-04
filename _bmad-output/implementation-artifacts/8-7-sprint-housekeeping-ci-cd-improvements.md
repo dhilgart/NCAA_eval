@@ -56,6 +56,12 @@ so that the project's tracking, CI, and documentation reflect the true state of 
     - CI does NOT run nox (it runs pre-commit + standalone pytest) — this is the status quo and acceptable since pre-commit covers lint + typecheck + smoke tests
   - [x] 6.5 Optionally add `sync.py` and `noxfile.py` to the pre-commit mypy `files` regex to close the scope gap
 
+### Review Follow-ups (AI)
+
+- [ ] [AI-Review][MEDIUM] `commitizen-action@v3` is a mutable floating tag — for full supply chain security, pin to a specific commit SHA instead [`.github/workflows/main-updated.yaml:22`] (Backlog — @v3 is widely accepted practice; upgrade to SHA pin only if security posture demands it)
+- [ ] [AI-Review][MEDIUM] `pip install poetry` is unversioned in both CI workflow files — pin to a specific Poetry version to prevent surprise breakage if Poetry releases a breaking update [`.github/workflows/main-updated.yaml:44`, `.github/workflows/python-check.yaml:20`]
+- [ ] [AI-Review][MEDIUM] `bump-version` and `publish-github-page` jobs run in parallel — if `bump-version` creates a new bump commit it can cause a doc race condition; consider adding `needs: bump-version` to the publish job [`.github/workflows/main-updated.yaml:27-60`]
+
 - [x] Task 7: Run quality gates (all ACs)
   - [x] 7.1 `ruff check .` passes
   - [x] 7.2 `ruff format --check .` passes
@@ -167,6 +173,7 @@ No debug issues encountered.
 
 - 2026-03-04: Implemented all 7 tasks for Sprint Housekeeping & CI/CD Improvements
 - 2026-03-04: Code review — fixed 3 issues: (1) CI docs updated to include python-check.yaml, (2) commitizen-action pinned from @master to @v3, (3) publish-github-page job guarded with if: condition to skip on bump: commits
+- 2026-03-04: Second code review pass — fixed 2 issues: (1) added name: field to publish-github-page job for consistency with bump-version, (2) added template-requirements.md to File List; created 3 action items (M1: floating @v3 tag, M2: unversioned poetry install, M3: parallel job race potential)
 
 ### File List
 
@@ -176,3 +183,4 @@ No debug issues encountered.
 - `.pre-commit-config.yaml` — Extended mypy files regex to include `noxfile.py` and `sync.py`
 - `docs/STYLE_GUIDE.md` — Added Section 11: Quality Gate Architecture; updated CI Pipeline subsection to document both python-check.yaml and main-updated.yaml
 - `_bmad-output/implementation-artifacts/8-7-sprint-housekeeping-ci-cd-improvements.md` — Updated tasks, status, dev agent record
+- `_bmad-output/planning-artifacts/template-requirements.md` — Added CI security learning: pin actions to version tags, never @master; add symmetric if: guards
