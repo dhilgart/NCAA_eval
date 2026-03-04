@@ -2343,7 +2343,49 @@ def walk_forward_splits(seasons, feature_server, *, mode: str = "batch") -> ...:
     # ... rest of function
 ```
 
-Consider `typing.Literal["batch", "stateful"]` as the type annotation when the valid set is small and stable — mypy catches invalid literals at call sites without runtime overhead.
+**Confirmed Pattern (Story 8.6, 2026-03-04):** Use `Literal` directly — it IS the right approach. Replace `_VALID_MODES: frozenset[str]` with `Literal` and update all callers. Propagate the `Literal` annotation through the full call chain (splitter → backtest → CLI) so mypy catches invalid values at ALL callsites. The inline runtime check becomes a simple `if mode not in ("batch", "stateful"):` (no frozenset constant needed). Tests that intentionally pass invalid values need `# type: ignore[arg-type]`.
+
+```python
+# ✅ Confirmed pattern (Story 8.6)
+def serve_season_features(self, year: int, mode: Literal["batch", "stateful"] = "batch") -> pd.DataFrame:
+    if mode not in ("batch", "stateful"):
+        msg = f"mode must be 'batch' or 'stateful', got {mode!r}"
+        raise ValueError(msg)
+```
+
+### Constants Module Pattern: Avoid Circular Imports via `__init__.py` (Discovered Story 8.6, 2026-03-04)
+
+When a constant (e.g., `DEFAULT_MARGIN_CAP`) is shared across multiple submodules within a package (e.g., `transform/graph.py` and `transform/opponent.py`), putting it in `__init__.py` can cause circular imports if those submodules are also imported by `__init__.py`. Use a separate `constants.py` file:
+
+```
+src/ncaa_eval/transform/
+  constants.py        ← defines DEFAULT_MARGIN_CAP (no local imports)
+  graph.py            ← from ncaa_eval.transform.constants import DEFAULT_MARGIN_CAP
+  opponent.py         ← from ncaa_eval.transform.constants import DEFAULT_MARGIN_CAP
+  __init__.py         ← from ncaa_eval.transform.constants import DEFAULT_MARGIN_CAP (re-export)
+```
+
+Module docstring should explain WHY `constants.py` exists (to avoid circular imports).
+
+### Registry-Level Display Names: Avoid Protocol Pollution (Discovered Story 8.6, 2026-03-04)
+
+When a plugin registry has implementations with different `__init__` signatures (e.g., `SeedDiffBonusScoring(seed_map=...)` vs `StandardScoring()`), adding a `display_name` property to the Protocol forces all implementations to carry instance state just for UI labels — and prevents instantiation without args. Instead, add an optional `display_name` parameter to the `@register_xxx()` decorator and store it in a parallel `_DISPLAY_NAMES: dict[str, str]` dict:
+
+```python
+_SCORING_DISPLAY_NAMES: dict[str, str] = {}
+
+def register_scoring(name: str, *, display_name: str | None = None) -> Callable[[_ST], _ST]:
+    def decorator(cls: _ST) -> _ST:
+        _SCORING_REGISTRY[name] = cls
+        _SCORING_DISPLAY_NAMES[name] = display_name or name
+        return cls
+    return decorator
+
+@register_scoring("fibonacci", display_name="Fibonacci (2-3-5-8-13-21)")
+class FibonacciScoring: ...
+```
+
+This keeps the Protocol clean (no `display_name` property), avoids instantiation for label lookups, and works for implementations with mandatory `__init__` args.
 
 ### Exception Guard Breadth in Per-Item try/except Blocks (Discovered Story 6.3 Code Review, 2026-02-23)
 
