@@ -1,3 +1,5 @@
+"""Shared constants and utilities for invoke tasks."""
+
 from __future__ import annotations
 
 VENV_PREFIX = "pipenv run"

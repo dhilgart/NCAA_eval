@@ -1,3 +1,5 @@
+"""Git workflow tasks (commit, version bump)."""
+
 from __future__ import annotations
 
 from invoke.context import Context
@@ -14,6 +16,6 @@ def commit(ctx: Context) -> None:
 
 @task
 def bump(ctx: Context, changelog: bool = False) -> None:
-    """bump version through commitizen"""
+    """Bump version through commitizen."""
     arguments = " --changelog" if changelog else ""
     ctx.run(f"{VENV_PREFIX} cz bump -nr 3 --yes{arguments}", warn=True)

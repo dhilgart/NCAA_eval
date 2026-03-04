@@ -1,3 +1,5 @@
+"""Security scanning tasks (pip-audit, bandit)."""
+
 from __future__ import annotations
 
 from invoke.context import Context

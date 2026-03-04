@@ -1,3 +1,5 @@
+"""Documentation build and deploy tasks."""
+
 from __future__ import annotations
 
 from invoke.context import Context

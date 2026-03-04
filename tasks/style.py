@@ -1,3 +1,5 @@
+"""Code style and formatting tasks (ruff, mypy)."""
+
 from __future__ import annotations
 
 from invoke.context import Context

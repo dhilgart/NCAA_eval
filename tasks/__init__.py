@@ -1,3 +1,5 @@
+"""Invoke task collection for NCAA eval project automation."""
+
 from __future__ import annotations
 
 from invoke.collection import Collection

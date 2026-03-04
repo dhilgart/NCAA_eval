@@ -1,3 +1,5 @@
+"""Sphinx configuration for NCAA eval project documentation."""
+
 from __future__ import annotations
 
 import sys
