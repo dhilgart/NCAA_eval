@@ -13,6 +13,7 @@ tests run ``pytest`` itself), the subprocess calls use
 
 from __future__ import annotations
 
+import datetime
 import os
 import re
 import subprocess
@@ -232,4 +233,146 @@ def test_check_manifest() -> None:
     result = _run(["check-manifest"], timeout=60)
     assert result.returncode == 0, (
         f"check-manifest failed (rc={result.returncode}):\n{result.stdout}\n{result.stderr}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# CLI train execution fixture and tests (AC #14 — tutorial command validation)
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def train_data_dir(tmp_path: Path) -> Path:
+    """Minimal Parquet data directory for CLI train execution tests.
+
+    Creates teams, seasons, and 24 regular-season games per season (2023 and
+    2024) so that ``python -m ncaa_eval.cli train`` can run end-to-end without
+    requiring a real data download.
+
+    Returns:
+        Path to the populated data directory.
+    """
+    from ncaa_eval.ingest.repository import ParquetRepository
+    from ncaa_eval.ingest.schema import Game, Season, Team
+
+    data_dir = tmp_path / "train_data"
+    repo = ParquetRepository(base_path=data_dir)
+
+    repo.save_teams(
+        [
+            Team(team_id=101, team_name="Team A", canonical_name="team_a"),
+            Team(team_id=102, team_name="Team B", canonical_name="team_b"),
+            Team(team_id=103, team_name="Team C", canonical_name="team_c"),
+            Team(team_id=104, team_name="Team D", canonical_name="team_d"),
+        ]
+    )
+    repo.save_seasons([Season(year=2023), Season(year=2024)])
+
+    # 4 teams → 6 unique pairs × 4 rounds = 24 regular-season games per season.
+    # Enough data for SRS batch-rating computation and stateless model training.
+    team_ids = [101, 102, 103, 104]
+    pairs = [(w, l_id) for i, w in enumerate(team_ids) for l_id in team_ids[i + 1 :]]
+    all_games: list[Game] = []
+    for season_year in (2023, 2024):
+        for rnd, (w_id, l_id) in enumerate(pairs * 4):
+            day = 10 + rnd * 4
+            all_games.append(
+                Game(
+                    game_id=f"g{season_year}_{rnd + 1:03d}",
+                    season=season_year,
+                    day_num=day,
+                    date=datetime.date(season_year - 1, 11, 1) + datetime.timedelta(days=day),
+                    w_team_id=w_id,
+                    l_team_id=l_id,
+                    w_score=75,
+                    l_score=60,
+                    loc="N",
+                )
+            )
+    repo.save_games(all_games)
+    return data_dir
+
+
+@pytest.mark.integration
+@pytest.mark.slow
+def test_cli_train_elo(train_data_dir: Path, tmp_path: Path) -> None:
+    """``python -m ncaa_eval.cli train --model elo`` exits 0 (AC #14)."""
+    result = _run(
+        [
+            sys.executable,
+            "-m",
+            "ncaa_eval.cli",
+            "train",
+            "--model",
+            "elo",
+            "--start-year",
+            "2023",
+            "--end-year",
+            "2024",
+            "--data-dir",
+            str(train_data_dir),
+            "--output-dir",
+            str(tmp_path / "output"),
+        ],
+        timeout=120,
+    )
+    assert result.returncode == 0, (
+        f"CLI train --model elo failed (rc={result.returncode}):\n{result.stdout}\n{result.stderr}"
+    )
+
+
+@pytest.mark.integration
+@pytest.mark.slow
+def test_cli_train_xgboost(train_data_dir: Path, tmp_path: Path) -> None:
+    """``python -m ncaa_eval.cli train --model xgboost`` exits 0 (AC #14)."""
+    result = _run(
+        [
+            sys.executable,
+            "-m",
+            "ncaa_eval.cli",
+            "train",
+            "--model",
+            "xgboost",
+            "--start-year",
+            "2023",
+            "--end-year",
+            "2024",
+            "--data-dir",
+            str(train_data_dir),
+            "--output-dir",
+            str(tmp_path / "output"),
+        ],
+        timeout=120,
+    )
+    assert result.returncode == 0, (
+        f"CLI train --model xgboost failed (rc={result.returncode}):\n{result.stdout}\n{result.stderr}"
+    )
+
+
+@pytest.mark.integration
+@pytest.mark.slow
+def test_cli_train_logistic_regression(train_data_dir: Path, tmp_path: Path) -> None:
+    """``python -m ncaa_eval.cli train --model logistic_regression`` exits 0 (AC #14)."""
+    result = _run(
+        [
+            sys.executable,
+            "-m",
+            "ncaa_eval.cli",
+            "train",
+            "--model",
+            "logistic_regression",
+            "--start-year",
+            "2023",
+            "--end-year",
+            "2024",
+            "--data-dir",
+            str(train_data_dir),
+            "--output-dir",
+            str(tmp_path / "output"),
+        ],
+        timeout=120,
+    )
+    assert result.returncode == 0, (
+        f"CLI train --model logistic_regression failed "
+        f"(rc={result.returncode}):\n{result.stdout}\n{result.stderr}"
     )

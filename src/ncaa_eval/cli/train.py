@@ -13,6 +13,7 @@ import uuid
 from dataclasses import dataclass
 from pathlib import Path
 
+import numpy as np
 import pandas as pd  # type: ignore[import-untyped]
 from rich.console import Console
 from rich.progress import Progress
@@ -85,13 +86,63 @@ def _build_fold_predictions(result: BacktestResult) -> pd.DataFrame | None:
     return pd.concat(fold_frames, ignore_index=True)
 
 
+def _randomize_team_assignment(df: pd.DataFrame, seed: int = 42) -> pd.DataFrame:
+    """Randomly swap team_a/team_b for ~50% of rows to balance binary labels.
+
+    The feature server assigns ``team_a = winner`` for every game, so
+    ``team_a_won`` is always ``True``.  Stateless classifiers require at least
+    two classes in the training labels; this function randomly re-assigns which
+    team is "a" so roughly half the rows become ``team_a_won = False``.
+
+    Paired ``_a`` / ``_b`` feature columns are swapped; ``delta_*`` and
+    ``seed_diff`` columns are negated; ``loc_encoding`` is negated.
+
+    Args:
+        df: Feature DataFrame from ``StatefulFeatureServer.serve_season_features``.
+        seed: RNG seed for reproducibility.
+
+    Returns:
+        Copy of ``df`` with team assignment randomly swapped for ~50% of rows.
+    """
+    rng = np.random.default_rng(seed)
+    mask = pd.Series(rng.random(len(df)) < 0.5, index=df.index)
+    result = df.copy()
+
+    # Swap team IDs
+    tmp_id = result.loc[mask, "team_a_id"].copy()
+    result.loc[mask, "team_a_id"] = result.loc[mask, "team_b_id"]
+    result.loc[mask, "team_b_id"] = tmp_id
+
+    # Flip label
+    result.loc[mask, "team_a_won"] = ~result.loc[mask, "team_a_won"].astype(bool)
+
+    # Negate direction-dependent scalar columns
+    for col in result.columns:
+        if col.startswith("delta_") or col in ("seed_diff", "loc_encoding"):
+            result.loc[mask, col] = -result.loc[mask, col]
+
+    # Swap paired _a / _b feature columns (e.g. srs_a ↔ srs_b)
+    checked: set[str] = set()
+    for col in list(result.columns):
+        if col.endswith("_a") and col not in ("team_a_id", "team_a_won"):
+            base = col[:-2]
+            col_b = f"{base}_b"
+            if col_b in result.columns and base not in checked:
+                checked.add(base)
+                tmp_a = result.loc[mask, col].copy()
+                result.loc[mask, col] = result.loc[mask, col_b]
+                result.loc[mask, col_b] = tmp_a
+
+    return result
+
+
 def _setup_feature_server(data_dir: Path) -> StatefulFeatureServer:
     """Initialize the repository, data server, and feature server."""
     repo = ParquetRepository(base_path=data_dir)
     data_server = ChronologicalDataServer(repo)
     feature_config = FeatureConfig(
         graph_features_enabled=False,
-        batch_rating_types=(),
+        batch_rating_types=("srs",),
         ordinal_composite=None,
         calibration_method=None,
     )
@@ -128,6 +179,11 @@ def _prepare_and_train(ctx: _TrainingContext, combined: pd.DataFrame) -> list[st
     Returns:
         List of feature column names used for training.
     """
+    # Stateless classifiers require balanced labels; the feature server
+    # assigns team_a = winner for every game, making team_a_won always True.
+    if not ctx.is_stateful:
+        combined = _randomize_team_assignment(combined)
+
     y = combined["team_a_won"].astype(int)
 
     label_mean = y.mean()
@@ -139,6 +195,10 @@ def _prepare_and_train(ctx: _TrainingContext, combined: pd.DataFrame) -> list[st
         )
 
     feat_cols = _feature_cols(combined)
+    if not ctx.is_stateful:
+        # Drop columns that are entirely NaN (e.g. seed features without a seed
+        # table) so sklearn classifiers that reject NaN inputs can still fit.
+        feat_cols = [c for c in feat_cols if not combined[c].isna().all()]
 
     ctx.console.print(f"Training [bold]{ctx.model_name}[/bold] on seasons {ctx.start_year}–{ctx.end_year}...")
     if ctx.is_stateful:
