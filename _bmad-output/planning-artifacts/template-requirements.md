@@ -2286,6 +2286,8 @@ Dev agents default to **NumPy docstring style** (`Parameters\n----------`, `Retu
 
 **Story 8.4 addendum (2026-03-03):** Even after enabling D-rules in pyproject.toml, `calibration.py`, `xgboost_model.py`, and `feature_serving.py` retained NumPy-style docstrings — because Ruff D-rules only verify *presence* of docstrings and basic section *naming*, NOT whether the format is NumPy vs. Google. Hybrid violations (e.g., `Returns:\n-------` — Google section name with NumPy underline) also slip through. **Code review must grep for `Parameters\n` and `------` underlines explicitly** — automated tooling does not catch these.
 
+**Story 8.4 PR fix (2026-03-03) — D-rule scope is ALL Python files, not just `src/`:** When `"D"` is added to `extend-select` in pyproject.toml, the pre-commit ruff-lint hook applies D100/D104 (missing module/package docstrings) to **every Python file it processes** — including `docs/conf.py` and `tasks/*.py`. The PR ruff-lint check failed because these files had no module docstrings. **Template requirement:** When enabling D-rules for a project, immediately add module docstrings to `docs/conf.py`, all `tasks/*.py`, and any other top-level Python modules that aren't in `src/`. Exclude them from D-rule checks in pyproject.toml per-file-ignores (`D100`, `D104`) OR add the docstrings — the docstring approach is preferable.
+
 ### `mode: str` Public APIs Must Validate at Entry Point (Discovered Story 6.2 Code Review, 2026-02-23)
 
 When a public function accepts a `mode: str` (or any str standing in for an enum), validation must happen **at the function's entry point**, not delegated to a downstream internal call. The delegation pattern causes:
