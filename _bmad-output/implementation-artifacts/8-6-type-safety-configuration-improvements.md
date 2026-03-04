@@ -161,6 +161,7 @@ Claude Opus 4.6
 - 2026-03-04: Task 3 — Added scoring display names with point values
 - 2026-03-04: Task 4 — Quality gates passed (ruff, mypy --strict, pytest 912/912)
 - 2026-03-04: Code review fixes — Literal mode type propagated to splitter/backtest/train; misleading parameter name fixed in 4_Pool_Scorer.py; new tests for Literal aliases and DEFAULT_MARGIN_CAP centralization; quality gates re-passed (ruff clean, mypy strict clean, 912/912 tests pass)
+- 2026-03-04: Adversarial code review — removed dead `_VALID_MODES` constant from backtest.py; added explanatory comments to Literal+runtime guard coexistence; quality gates pass (ruff clean, mypy strict clean, 922/922 tests pass)
 
 ### File List
 

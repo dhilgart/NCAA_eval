@@ -2345,6 +2345,8 @@ def walk_forward_splits(seasons, feature_server, *, mode: str = "batch") -> ...:
 
 **Confirmed Pattern (Story 8.6, 2026-03-04):** Use `Literal` directly — it IS the right approach. Replace `_VALID_MODES: frozenset[str]` with `Literal` and update all callers. Propagate the `Literal` annotation through the full call chain (splitter → backtest → CLI) so mypy catches invalid values at ALL callsites. The inline runtime check becomes a simple `if mode not in ("batch", "stateful"):` (no frozenset constant needed). Tests that intentionally pass invalid values need `# type: ignore[arg-type]`.
 
+**⚠️ Dead-code trap (Discovered Story 8.6 code review, 2026-03-04):** When migrating `_VALID_MODES: frozenset[str]` → `Literal` types, the old constant is frequently left behind as dead code. mypy and ruff do NOT flag an unused module-level frozenset (it's a valid assignment, not an import). Always search for the old constant after migration and delete it.
+
 ```python
 # ✅ Confirmed pattern (Story 8.6)
 def serve_season_features(self, year: int, mode: Literal["batch", "stateful"] = "batch") -> pd.DataFrame:
