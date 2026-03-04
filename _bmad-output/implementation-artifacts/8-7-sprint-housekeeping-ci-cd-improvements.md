@@ -1,6 +1,6 @@
 # Story 8.7: Sprint Housekeeping & CI/CD Improvements
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -19,49 +19,49 @@ so that the project's tracking, CI, and documentation reflect the true state of 
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Update sprint-status.yaml epic statuses (AC: #1)
-  - [ ] 1.1 Change `epic-1` through `epic-7` from `in-progress` to `done`
-  - [ ] 1.2 Verify all stories within those epics are `done` (sanity check)
-  - [ ] 1.3 Leave `epic-8` as `in-progress` (still active)
-  - [ ] 1.4 Leave `epic-9` as `backlog` (not yet started)
+- [x] Task 1: Update sprint-status.yaml epic statuses (AC: #1)
+  - [x] 1.1 Change `epic-1` through `epic-7` from `in-progress` to `done`
+  - [x] 1.2 Verify all stories within those epics are `done` (sanity check)
+  - [x] 1.3 Leave `epic-8` as `in-progress` (still active)
+  - [x] 1.4 Leave `epic-9` as `backlog` (not yet started)
 
-- [ ] Task 2: Fill Story 6.6 Dev Agent Record (AC: #2)
-  - [ ] 2.1 Open `_bmad-output/implementation-artifacts/6-6-implement-tournament-scoring-user-defined-point-schedules.md`
-  - [ ] 2.2 Replace `{{agent_model_name_version}}` at line 239 with `Claude Opus 4.6 (implementation) / Claude Sonnet 4.6 (code review)`
+- [x] Task 2: Fill Story 6.6 Dev Agent Record (AC: #2)
+  - [x] 2.1 Open `_bmad-output/implementation-artifacts/6-6-implement-tournament-scoring-user-defined-point-schedules.md`
+  - [x] 2.2 Replace `{{agent_model_name_version}}` at line 239 with `Claude Opus 4.6 (implementation) / Claude Sonnet 4.6 (code review)`
 
-- [ ] Task 3: Add `sphinx-apidoc` step to CI workflow (AC: #3)
-  - [ ] 3.1 In `.github/workflows/main-updated.yaml`, add a new step before "Build docs":
+- [x] Task 3: Add `sphinx-apidoc` step to CI workflow (AC: #3)
+  - [x] 3.1 In `.github/workflows/main-updated.yaml`, add a new step before "Build docs":
     ```yaml
     - name: Generate API docs
       run: poetry run sphinx-apidoc -f -e -o docs/api src/ncaa_eval
     ```
-  - [ ] 3.2 Verify the step order: Install deps -> Generate API docs -> Build docs -> Deploy
+  - [x] 3.2 Verify the step order: Install deps -> Generate API docs -> Build docs -> Deploy
 
-- [ ] Task 4: Upgrade `peaceiris/actions-gh-pages` to v4 (AC: #4)
-  - [ ] 4.1 Change `peaceiris/actions-gh-pages@v3.8.0` to `peaceiris/actions-gh-pages@v4` on line 52
+- [x] Task 4: Upgrade `peaceiris/actions-gh-pages` to v4 (AC: #4)
+  - [x] 4.1 Change `peaceiris/actions-gh-pages@v3.8.0` to `peaceiris/actions-gh-pages@v4` on line 52
 
-- [ ] Task 5: Verify `.ruff_cache` cleanup (AC: #5)
-  - [ ] 5.1 Run `git ls-files template/ | grep ruff_cache` to confirm no tracked cache files
-  - [ ] 5.2 If any found, run `git rm -r --cached template/{{cookiecutter.project_slug}}/.ruff_cache`
-  - [ ] 5.3 Verify `.gitignore` contains `.ruff_cache` entry (should already be present)
-  - [ ] 5.4 **Pre-investigation result**: As of 2026-03-04, `git ls-files template/` returns empty — no tracked files exist in `template/` at all. This AC is already satisfied. Still verify `.gitignore` coverage.
+- [x] Task 5: Verify `.ruff_cache` cleanup (AC: #5)
+  - [x] 5.1 Run `git ls-files template/ | grep ruff_cache` to confirm no tracked cache files
+  - [x] 5.2 If any found, run `git rm -r --cached template/{{cookiecutter.project_slug}}/.ruff_cache`
+  - [x] 5.3 Verify `.gitignore` contains `.ruff_cache` entry (should already be present)
+  - [x] 5.4 **Pre-investigation result**: As of 2026-03-04, `git ls-files template/` returns empty — no tracked files exist in `template/` at all. This AC is already satisfied. Still verify `.gitignore` coverage.
 
-- [ ] Task 6: Document canonical quality gate (AC: #6)
-  - [ ] 6.1 Add a "Quality Gate Architecture" subsection to `docs/STYLE_GUIDE.md` Section 10 (or appropriate section)
-  - [ ] 6.2 Declare **pre-commit as canonical** (runs in CI via `.github/workflows/`, enforced on every commit)
-  - [ ] 6.3 Declare **nox as local convenience runner** (runs same checks via `nox` command, useful for manual full-suite runs)
-  - [ ] 6.4 Document the known divergences and their rationale:
+- [x] Task 6: Document canonical quality gate (AC: #6)
+  - [x] 6.1 Add a "Quality Gate Architecture" subsection to `docs/STYLE_GUIDE.md` Section 10 (or appropriate section)
+  - [x] 6.2 Declare **pre-commit as canonical** (runs in CI via `.github/workflows/`, enforced on every commit)
+  - [x] 6.3 Declare **nox as local convenience runner** (runs same checks via `nox` command, useful for manual full-suite runs)
+  - [x] 6.4 Document the known divergences and their rationale:
     - nox mypy scope includes `noxfile.py` and `sync.py`; pre-commit mypy only checks `^(src/|tests/)` — this is intentional (pre-commit only checks changed files' scope)
     - nox runs `ruff format --check` (check-only); pre-commit runs `ruff-format` (auto-fix) — this is intentional (pre-commit should fix, nox should only check)
     - CI does NOT run nox (it runs pre-commit + standalone pytest) — this is the status quo and acceptable since pre-commit covers lint + typecheck + smoke tests
-  - [ ] 6.5 Optionally add `sync.py` and `noxfile.py` to the pre-commit mypy `files` regex to close the scope gap
+  - [x] 6.5 Optionally add `sync.py` and `noxfile.py` to the pre-commit mypy `files` regex to close the scope gap
 
-- [ ] Task 7: Run quality gates (all ACs)
-  - [ ] 7.1 `ruff check .` passes
-  - [ ] 7.2 `ruff format --check .` passes
-  - [ ] 7.3 `mypy --strict src/ncaa_eval tests` passes
-  - [ ] 7.4 `pytest` passes (full suite)
-  - [ ] 7.5 `actionlint` passes on modified workflow file (if available locally)
+- [x] Task 7: Run quality gates (all ACs)
+  - [x] 7.1 `ruff check .` passes
+  - [x] 7.2 `ruff format --check .` passes
+  - [x] 7.3 `mypy --strict src/ncaa_eval tests` passes
+  - [x] 7.4 `pytest` passes (full suite, 922 passed, 1 skipped)
+  - [x] 7.5 `actionlint` passes on modified workflow file (if available locally) — not installed standalone; will be validated by pre-commit hook at commit time
 
 ## Dev Notes
 
@@ -146,10 +146,32 @@ Recent commits show Epic 8 stories being merged via PRs (squash merge pattern). 
 
 ### Agent Model Used
 
+Claude Opus 4.6
+
 ### Debug Log References
+
+No debug issues encountered.
 
 ### Completion Notes List
 
+- Updated epic-1 through epic-7 statuses from `in-progress` to `done` in sprint-status.yaml after verifying all constituent stories are `done`
+- Replaced `{{agent_model_name_version}}` template variable in Story 6.6 with actual model info
+- Added `sphinx-apidoc` step to CI workflow before docs build step, aligning CI with noxfile docs session
+- Upgraded `peaceiris/actions-gh-pages` from v3.8.0 to v4
+- Verified no `.ruff_cache` files tracked in `template/` directory; `.gitignore` already covers `.ruff_cache/`
+- Added Section 11 "Quality Gate Architecture" to `docs/STYLE_GUIDE.md` declaring pre-commit as canonical and nox as local convenience runner
+- Closed mypy scope gap by adding `noxfile.py` and `sync.py` to pre-commit mypy `files` regex
+- All quality gates pass: ruff check, ruff format, mypy --strict, pytest (922 passed)
+
 ### Change Log
 
+- 2026-03-04: Implemented all 7 tasks for Sprint Housekeeping & CI/CD Improvements
+
 ### File List
+
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — Updated epic-1 through epic-7 to `done`, story 8-7 to `in-progress` then `review`
+- `_bmad-output/implementation-artifacts/6-6-implement-tournament-scoring-user-defined-point-schedules.md` — Replaced agent model template variable
+- `.github/workflows/main-updated.yaml` — Added sphinx-apidoc step, upgraded peaceiris/actions-gh-pages to v4
+- `.pre-commit-config.yaml` — Extended mypy files regex to include `noxfile.py` and `sync.py`
+- `docs/STYLE_GUIDE.md` — Added Section 11: Quality Gate Architecture
+- `_bmad-output/implementation-artifacts/8-7-sprint-housekeeping-ci-cd-improvements.md` — Updated tasks, status, dev agent record

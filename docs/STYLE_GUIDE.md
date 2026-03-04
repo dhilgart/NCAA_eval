@@ -1109,6 +1109,60 @@ During code review, verify:
 
 ---
 
+## 11. Quality Gate Architecture
+
+This project has two complementary quality gate systems. **Pre-commit is canonical;
+nox is the local convenience runner.**
+
+### Pre-commit (Canonical)
+
+Pre-commit hooks (`.pre-commit-config.yaml`) run automatically on every commit and
+are enforced in CI. They are the single source of truth for code quality enforcement.
+
+| Hook | Stage | What It Does |
+|---|---|---|
+| `ruff-lint` | commit | Ruff linting with `--fix` (auto-corrects violations) |
+| `ruff-format` | commit | Ruff formatting (auto-formats code) |
+| `mypy-strict` | commit | Mypy strict type checking (`src/`, `tests/`, `noxfile.py`, `sync.py`) |
+| `pytest-smoke` | commit | Pytest smoke tests (`-m smoke`) |
+| `commitizen` | commit-msg | Conventional commit message enforcement |
+| `actionlint` | commit | GitHub Actions workflow linting |
+
+Pre-commit also includes housekeeping hooks: `end-of-file-fixer`,
+`trailing-whitespace`, `check-yaml`, `check-toml`, `detect-private-key`,
+`no-commit-to-branch`, `check-merge-conflict`, `debug-statements`.
+
+### Nox (Local Convenience Runner)
+
+Nox (`noxfile.py`) provides a single command (`nox`) that runs the full quality
+pipeline locally. It is useful for manual full-suite runs before pushing but is NOT
+used in CI.
+
+| Session | What It Does |
+|---|---|
+| `lint` | `ruff check . --fix` + `ruff format --check .` |
+| `typecheck` | `mypy --strict` on `src/ncaa_eval`, `tests`, `noxfile.py`, `sync.py` |
+| `tests` | Full `pytest` suite |
+| `docs` | `sphinx-apidoc` + `sphinx-build` |
+
+### Known Divergences (Intentional)
+
+| Area | Pre-commit | Nox | Rationale |
+|---|---|---|---|
+| **ruff format** | Auto-fix (rewrites files) | Check-only (`--check`) | Pre-commit should fix on commit; nox should only report for manual inspection |
+| **CI usage** | Runs in CI (`.github/workflows/`) | Not used in CI | Pre-commit + standalone pytest covers lint + typecheck + full tests in CI |
+
+### CI Pipeline
+
+CI (`.github/workflows/main-updated.yaml`) runs:
+1. **Commitizen** — version bump and changelog on main pushes
+2. **Sphinx docs** — `sphinx-apidoc` + `sphinx-build` → GitHub Pages deployment
+
+Pre-commit hooks run as part of the commit/push process; CI relies on pre-commit
+having already enforced quality gates before code reaches main.
+
+---
+
 ## References
 
 - `pyproject.toml` — Single source of truth for all tool configurations

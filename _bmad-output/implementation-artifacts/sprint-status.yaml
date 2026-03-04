@@ -41,7 +41,7 @@ story_location: _bmad-output/implementation-artifacts
 
 development_status:
   # Epic 1: Project Foundation & Developer Toolchain
-  epic-1: in-progress
+  epic-1: done
   1-1-initialize-repository-package-structure: done
   1-2-define-code-quality-standards-style-guide: done
   1-3-define-testing-strategy: done
@@ -54,7 +54,7 @@ development_status:
   epic-1-retrospective: optional
 
   # Epic 2: Data Ingestion & Local Warehouse
-  epic-2: in-progress
+  epic-2: done
   2-1-evaluate-data-sources: done
   2-2-define-internal-data-schema-repository-layer: done
   2-3-implement-data-source-connectors: done
@@ -62,14 +62,14 @@ development_status:
   epic-2-retrospective: optional
 
   # Epic 3: Exploratory Data Analysis
-  epic-3: in-progress
+  epic-3: done
   3-1-data-quality-audit: done
   3-2-statistical-exploration-relationship-analysis: done
   3-3-document-findings-feature-engineering-recommendations: done
   epic-3-retrospective: optional
 
   # Epic 4: Feature Engineering Suite
-  epic-4: in-progress
+  epic-4: done
   4-1-research-feature-engineering-techniques: done
   4-2-implement-chronological-data-serving-api: done
   4-3-implement-canonical-team-id-mapping-data-cleaning: done
@@ -81,7 +81,7 @@ development_status:
   epic-4-retrospective: optional
 
   # Epic 5: Core Modeling Framework
-  epic-5: in-progress
+  epic-5: done
   5-1-research-modeling-approaches: done
   5-2-define-model-abc-plugin-registry: done
   5-3-implement-reference-stateful-model-elo: done
@@ -90,7 +90,7 @@ development_status:
   epic-5-retrospective: optional
 
   # Epic 6: Evaluation & Validation Engine
-  epic-6: in-progress
+  epic-6: done
   6-1-implement-metric-library-scikit-learn-numpy: done
   6-2-implement-walk-forward-cross-validation-splitter: done
   6-3-implement-parallel-cross-validation-execution: done
@@ -100,7 +100,7 @@ development_status:
   epic-6-retrospective: optional
 
   # Epic 7: Lab & Presentation Dashboard
-  epic-7: in-progress
+  epic-7: done
   7-1-build-plotly-adapters-jupyter-lab-visualization: done
   7-2-build-streamlit-app-shell-navigation: done
   7-3-build-lab-page-backtest-leaderboard: done
@@ -120,7 +120,7 @@ development_status:
   8-4-fix-docstring-style-violations-documentation-gaps: done
   8-5-testing-gaps-missing-tests-dead-code-cleanup: done
   8-6-type-safety-configuration-improvements: done
-  8-7-sprint-housekeeping-ci-cd-improvements: ready-for-dev
+  8-7-sprint-housekeeping-ci-cd-improvements: review
   8-8-dashboard-ux-quick-fixes: backlog
   8-9-add-pep20-solid-pure-function-gates: done
   8-10-documentation-command-e2e-integration-tests: done

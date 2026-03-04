@@ -236,7 +236,7 @@ No new dependencies. Everything uses:
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6 (implementation) / Claude Sonnet 4.6 (code review)
 
 ### Debug Log References
 
