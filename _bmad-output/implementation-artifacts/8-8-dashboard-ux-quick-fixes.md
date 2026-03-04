@@ -18,12 +18,12 @@ so that the dashboard is immediately usable without squinting, confusion, or sta
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Increase bracket renderer font sizes (AC: #1)
-  - [ ] 1.1 In `dashboard/lib/bracket_renderer.py`, change `.name` font-size from `10px` to `12px` (line 79)
-  - [ ] 1.2 Change `.prob` font-size from `9px` to `10px` (line 83)
-  - [ ] 1.3 Consider increasing `.seed` font-size from `10px` to `11px` for proportionality
-  - [ ] 1.4 Adjust `.team` min-height from `18px` to `20px` if needed to accommodate larger text
-  - [ ] 1.5 Verify bracket still fits within the 700px-height iframe (`components.html(bracket_html, height=700)` in `2_Presentation.py:46`) — increase height if needed
+- [x] Task 1: Increase bracket renderer font sizes (AC: #1)
+  - [x] 1.1 In `dashboard/lib/bracket_renderer.py`, change `.name` font-size from `10px` to `12px` (line 79)
+  - [x] 1.2 Change `.prob` font-size from `9px` to `10px` (line 83)
+  - [x] 1.3 Consider increasing `.seed` font-size from `10px` to `11px` for proportionality
+  - [x] 1.4 Adjust `.team` min-height from `18px` to `20px` if needed to accommodate larger text
+  - [x] 1.5 Verify bracket still fits within the 700px-height iframe (`components.html(bracket_html, height=700)` in `2_Presentation.py:46`) — increase height if needed
 
 - [ ] Task 2: Add prominent "Setup needed" message on home page (AC: #2)
   - [ ] 2.1 In `dashboard/pages/home.py`, check if `years` is empty (already computed on line 13)
@@ -149,7 +149,7 @@ Recent commits are all squash-merge PRs for Epic 8 stories. Pattern: `type(scope
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 

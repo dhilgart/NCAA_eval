@@ -63,12 +63,12 @@ body {
     padding: 2px 6px;
     border-radius: 3px;
     white-space: nowrap;
-    min-height: 18px;
+    min-height: 20px;
     border: 1px solid #2a2e3d;
 }
 .seed {
     color: #888;
-    font-size: 10px;
+    font-size: 11px;
     min-width: 14px;
     text-align: right;
 }
@@ -76,11 +76,11 @@ body {
     flex: 1;
     overflow: hidden;
     text-overflow: ellipsis;
-    font-size: 10px;
+    font-size: 12px;
 }
 .prob {
     color: #ccc;
-    font-size: 9px;
+    font-size: 10px;
     min-width: 28px;
     text-align: right;
 }

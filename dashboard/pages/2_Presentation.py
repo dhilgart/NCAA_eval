@@ -43,7 +43,7 @@ def _render_results(sim_data: BracketSimulationResult, scoring: str) -> None:
         seed_map=bracket.seed_map,
         prob_matrix=sim_data.prob_matrix,
     )
-    components.html(bracket_html, height=700, scrolling=True)
+    components.html(bracket_html, height=750, scrolling=True)
 
     # Advancement heatmap
     st.subheader("Advancement Probabilities")
