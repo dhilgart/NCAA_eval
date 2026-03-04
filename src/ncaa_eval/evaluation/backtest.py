@@ -239,13 +239,7 @@ def _evaluate_fold(
     y_true_np = y_test.to_numpy()
     y_prob_np = preds.to_numpy().astype(np.float64)
 
-    metrics: dict[str, float] = {}
-    for name, fn in metric_fns.items():
-        try:
-            metrics[name] = fn(y_true_np, y_prob_np)
-        except Exception:  # noqa: BLE001
-            logger.warning("Metric '%s' computation failed; substituting NaN", name, exc_info=True)
-            metrics[name] = float("nan")
+    metrics: dict[str, float] = {name: fn(y_true_np, y_prob_np) for name, fn in metric_fns.items()}
 
     elapsed = time.perf_counter() - start
     return FoldResult(
