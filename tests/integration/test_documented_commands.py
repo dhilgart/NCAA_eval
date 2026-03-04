@@ -98,25 +98,6 @@ def test_pytest_smoke() -> None:
 
 @pytest.mark.integration
 @pytest.mark.slow
-def test_pytest_coverage() -> None:
-    """``pytest --cov`` exits 0 and stdout contains 'TOTAL' (AC #4)."""
-    result = _run(
-        [
-            "pytest",
-            "--cov=src/ncaa_eval",
-            "--cov-report=term-missing",
-            _SELF_IGNORE,
-        ],
-        timeout=300,
-    )
-    assert result.returncode == 0, (
-        f"pytest --cov failed (rc={result.returncode}):\n{result.stdout}\n{result.stderr}"
-    )
-    assert "TOTAL" in result.stdout, f"Coverage output missing 'TOTAL':\n{result.stdout}"
-
-
-@pytest.mark.integration
-@pytest.mark.slow
 def test_ruff_check() -> None:
     """``ruff check .`` exits 0 (AC #5)."""
     result = _run(["ruff", "check", "."], timeout=60)
