@@ -1367,18 +1367,10 @@ Add relaxed mypy configuration for `dashboard/` directory (e.g., `--follow-impor
 - **Source:** Codebase audit item P2-6; `noxfile.py:30-33`, `.pre-commit-config.yaml:67`
 - **Deferred because:** Streamlit has poor type stubs; strict mypy impractical; relaxed config is a low-priority improvement
 
-### Fibonacci Scoring UI Label Correction (Origin: Audit item 1.8, 2026-03-05)
+### NFR3 Tutorial — Clarify Metric Extension vs. Plugin Registry (Origin: Audit item P3-17, 2026-03-05)
 
-The Pool Scorer UI labels the scoring schedule as "Fibonacci (1-1-2-3-5-8)" but the code uses (2-3-5-8-13-21). PO accepted the code values as canonical (Story 8.13 decision log); the UI label needs to be updated to display the actual values.
+Story 7.9 tutorial documents "How to Add a Custom Metric" via function injection into `run_backtest(metric_fns=...)`. This IS supported and the tutorial is functionally correct. However, audit item P3-17 flagged a potential reader confusion: NFR3 specifies a "plugin-registry architecture" for metrics, but the tutorial shows function-injection (not `@register_metric`). Clarify in the tutorial that metric extensibility uses function injection (not a registry) while scoring extensibility uses the `@register_scoring` decorator registry.
 
-- **Effort:** Trivial — update label string in dashboard (~1 line)
-- **Distinctness:** UI accuracy fix; prevents user confusion about scoring
-- **Source:** Codebase audit item 1.8; `src/ncaa_eval/evaluation/simulation.py:480`; PO decision: code values are canonical, update UI label
-
-### NFR3 Tutorial Claim Correction (Origin: Audit item P3-17, 2026-03-05)
-
-Story 7.9 tutorial documents "How to Add a Custom Metric" but a Custom Metric Plugin Registry does not exist (only Model and Scoring registries are implemented). PO accepted the current plugin registry scope (2/4) as sufficient for MVP; the tutorial claim needs to be corrected.
-
-- **Effort:** Low — update tutorial to reflect actual extensibility points (~20 lines)
-- **Distinctness:** Documentation accuracy fix; prevents users from following non-existent workflow
-- **Source:** Codebase audit item P3-17; `docs/tutorials/`; PO decision: metric/feature-generator registries deferred, correct tutorial claim
+- **Effort:** Low — add a clarifying note or sidebar to the tutorial (~5 lines)
+- **Distinctness:** Documentation clarity improvement; prevents confusion about which extension mechanism applies to metrics vs. scoring rules
+- **Source:** Codebase audit item P3-17; `docs/tutorials/custom-metric.md`; PO decision: metric/feature-generator registries deferred, clarify tutorial distinction

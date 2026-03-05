@@ -315,18 +315,18 @@ N/A — no production code changes; planning artifacts only.
   - 10.4 Fix Public API Documentation (from audit 2.18)
   - 10.5 Post-Sync Data Validation (from audit 2.20)
 - **Sprint status** updated with Epic 10 and 5 new stories (all `backlog`)
-- **Post-MVP Backlog** expanded with 8 new deferred items (2.12, 2.14, 2.17, 2.21, P2-5, P2-6, plus two Cat-3 fix orphans: 1.8 label correction and P3-17 tutorial correction) following established format from Story 8.12
+- **Post-MVP Backlog** expanded with 7 new deferred items (2.12, 2.14, 2.17, 2.21, P2-5, P2-6, plus P3-17 tutorial clarification) following established format from Story 8.12; Cat-3 item 1.8 Fibonacci label was initially added to backlog but removed — Story 8.6 already fixed this (registered `display_name="Fibonacci (2-3-5-8-13-21)"` via `@register_scoring`)
 - Promoted item (1.3 Kaggle Export → Epic 10 Story 10.1) removed from Post-MVP Backlog to avoid duplication
 - Items already resolved identified: 2.11 (Story 8.3), 2.19 (Story 8.4)
 
 ### Change Log
 
 - 2026-03-05: Story 8.13 completed — PO decisions recorded for all 40 audit items, Epic 10 created with 5 follow-up stories, Post-MVP Backlog updated with 7 new deferred items
-- 2026-03-05: Code review fixes — corrected decision count summaries (Cat-1: 9 Defer/4 Accept, Cat-2: 12 Accept/8 Defer/2 Resolved/2 Fix), removed promoted Kaggle Export from Post-MVP Backlog, added 2 Cat-3 fix orphans (1.8 label, P3-17 tutorial) to Post-MVP Backlog
+- 2026-03-05: Code review fixes — corrected decision count summaries (Cat-1: 9 Defer/4 Accept, Cat-2: 12 Accept/8 Defer/2 Resolved/2 Fix), removed promoted Kaggle Export from Post-MVP Backlog, added 1 Cat-3 tracking entry (P3-17 tutorial clarification), removed erroneous Fibonacci label entry (Story 8.6 already fixed it)
 
 ### File List
 
 - `_bmad-output/planning-artifacts/po-decision-log-epic8.md` (new)
-- `_bmad-output/planning-artifacts/epics.md` (modified — added Epic 10, 9 new Post-MVP Backlog entries, removed promoted Kaggle Export entry)
+- `_bmad-output/planning-artifacts/epics.md` (modified — added Epic 10, 7 new Post-MVP Backlog entries, removed promoted Kaggle Export entry and erroneous Fibonacci label entry already fixed in Story 8.6)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified — story 8.13 in-progress→review, added Epic 10 entries)
 - `_bmad-output/implementation-artifacts/8-13-gather-po-direction-category-1-2-items.md` (modified — tasks completed, status updated)
