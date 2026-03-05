@@ -3530,3 +3530,13 @@ Story 8.11 Task 3.2 ("Fixed `Game` TypedDict example to use actual Pydantic fiel
 4. The story File List entry should say "fixed in ALL docs" not just mention specific files
 
 The actual `Game` model fields (from `src/ncaa_eval/ingest/schema.py`): `season`, `day_num`, `w_team_id`, `l_team_id`, `w_score`, `l_score`, `loc`, `num_ot`, `date`. There is NO `game_id`, `home_team`, `away_team`, `home_score`, or `away_score` field.
+
+### pyproject.toml Marker Descriptions Must Be Updated Along With Doc Tables (Discovered Story 8.11 Code Review Pass 2, 2026-03-04)
+
+When a documentation story fixes time budget wording in `docs/testing/` markdown tables, the `[tool.pytest.ini_options] markers` descriptions in `pyproject.toml` are also visible to developers (via `pytest --markers` and direct file reading). Story 8.11 correctly updated all markdown tables to show "smoke subset < 5s; Tier 1 overall < 10s" but left the `pyproject.toml` smoke marker description as `"< 10 seconds total"` — contradicting the docs.
+
+**Pattern:** After fixing any time budget or marker semantics in `docs/`, always check that `pyproject.toml` marker descriptions are also updated to match. Run:
+```bash
+grep -A1 "markers = \[" pyproject.toml
+```
+and compare each marker description against the docs tables.
