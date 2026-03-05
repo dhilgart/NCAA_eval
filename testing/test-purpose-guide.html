@@ -353,14 +353,14 @@
 <section id="examples">
 <h3>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h3>
 <p><strong>Functional unit test (example-based):</strong></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">test_calculate_brier_score_correct_formula</span><span class="p">():</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">test_brier_score_correct_formula</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify Brier score calculation follows the correct mathematical formula.&quot;&quot;&quot;</span>
     <span class="n">predictions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">])</span>
     <span class="n">actuals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
 
     <span class="c1"># Brier = mean((prediction - actual)^2)</span>
     <span class="n">expected</span> <span class="o">=</span> <span class="p">((</span><span class="mf">0.8</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="mf">0.3</span><span class="o">-</span><span class="mi">0</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="mf">0.6</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="mi">3</span>
-    <span class="n">result</span> <span class="o">=</span> <span class="n">calculate_brier_score</span><span class="p">(</span><span class="n">predictions</span><span class="p">,</span> <span class="n">actuals</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">brier_score</span><span class="p">(</span><span class="n">predictions</span><span class="p">,</span> <span class="n">actuals</span><span class="p">)</span>
 
     <span class="k">assert</span> <span class="nb">abs</span><span class="p">(</span><span class="n">result</span> <span class="o">-</span> <span class="n">expected</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-10</span>
 </pre></div>
@@ -373,7 +373,7 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify all loaded games contain required fields (functional correctness).&quot;&quot;&quot;</span>
     <span class="n">games</span> <span class="o">=</span> <span class="n">load_games_for_season</span><span class="p">(</span><span class="n">season</span><span class="p">)</span>
 
-    <span class="n">required_fields</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;game_id&quot;</span><span class="p">,</span> <span class="s2">&quot;date&quot;</span><span class="p">,</span> <span class="s2">&quot;home_team&quot;</span><span class="p">,</span> <span class="s2">&quot;away_team&quot;</span><span class="p">,</span> <span class="s2">&quot;home_score&quot;</span><span class="p">,</span> <span class="s2">&quot;away_score&quot;</span><span class="p">]</span>
+    <span class="n">required_fields</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;season&quot;</span><span class="p">,</span> <span class="s2">&quot;day_num&quot;</span><span class="p">,</span> <span class="s2">&quot;w_team_id&quot;</span><span class="p">,</span> <span class="s2">&quot;l_team_id&quot;</span><span class="p">,</span> <span class="s2">&quot;w_score&quot;</span><span class="p">,</span> <span class="s2">&quot;l_score&quot;</span><span class="p">]</span>
     <span class="k">for</span> <span class="n">game</span> <span class="ow">in</span> <span class="n">games</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">required_fields</span><span class="p">:</span>
             <span class="k">assert</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">game</span><span class="p">,</span> <span class="n">field</span><span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;Game missing required field: </span><span class="si">{</span><span class="n">field</span><span class="si">}</span><span class="s2">&quot;</span>
@@ -422,14 +422,14 @@
 
 <span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">slow</span>
 <span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">performance</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">test_calculate_brier_score_vectorized_performance</span><span class="p">():</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_brier_score_vectorized_performance</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify Brier score calculation meets performance target (vectorized).&quot;&quot;&quot;</span>
     <span class="n">predictions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">100_000</span><span class="p">)</span>
     <span class="n">actuals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">100_000</span><span class="p">)</span>
 
     <span class="c1"># Should complete in &lt; 10ms for 100k predictions (vectorized)</span>
     <span class="n">time_taken</span> <span class="o">=</span> <span class="n">timeit</span><span class="o">.</span><span class="n">timeit</span><span class="p">(</span>
-        <span class="k">lambda</span><span class="p">:</span> <span class="n">calculate_brier_score</span><span class="p">(</span><span class="n">predictions</span><span class="p">,</span> <span class="n">actuals</span><span class="p">),</span>
+        <span class="k">lambda</span><span class="p">:</span> <span class="n">brier_score</span><span class="p">(</span><span class="n">predictions</span><span class="p">,</span> <span class="n">actuals</span><span class="p">),</span>
         <span class="n">number</span><span class="o">=</span><span class="mi">10</span>
     <span class="p">)</span> <span class="o">/</span> <span class="mi">10</span>  <span class="c1"># Average per iteration</span>
 
@@ -530,14 +530,14 @@
 <span class="sd">    Bug: Issue #42 - Elo.update() didn&#39;t properly floor ratings at minimum value.</span>
 <span class="sd">    Fixed: 2026-01-15 - Added max(rating, MIN_RATING) in update logic.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">rating</span> <span class="o">=</span> <span class="mi">1200</span>
+    <span class="n">engine</span> <span class="o">=</span> <span class="n">EloFeatureEngine</span><span class="p">(</span><span class="n">elo_config</span><span class="p">)</span>
 
     <span class="c1"># Simulate 100 consecutive losses to much higher-rated opponent</span>
-    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">100</span><span class="p">):</span>
-        <span class="n">rating</span> <span class="o">=</span> <span class="n">update_elo_rating</span><span class="p">(</span><span class="n">rating</span><span class="p">,</span> <span class="n">opponent_rating</span><span class="o">=</span><span class="mi">2400</span><span class="p">,</span> <span class="n">won</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">k_factor</span><span class="o">=</span><span class="mi">32</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">game</span> <span class="ow">in</span> <span class="n">losing_streak_games</span><span class="p">:</span>
+        <span class="n">engine</span><span class="o">.</span><span class="n">update_game</span><span class="p">(</span><span class="n">game</span><span class="p">)</span>
 
     <span class="c1"># Should never go below minimum rating (e.g., 0 or 100)</span>
-    <span class="k">assert</span> <span class="n">rating</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Elo rating went negative: </span><span class="si">{</span><span class="n">rating</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="n">r</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">engine</span><span class="o">.</span><span class="n">ratings</span><span class="o">.</span><span class="n">values</span><span class="p">()),</span> <span class="s2">&quot;Elo rating went negative&quot;</span>
 </pre></div>
 </div>
 <p><strong>Regression integration test (example-based):</strong></p>
@@ -549,7 +549,7 @@
 <span class="sd">    Bug: Issue #87 - get_games_before() used &lt;= instead of &lt; for date comparison.</span>
 <span class="sd">    Fixed: 2026-02-10 - Changed to strict less-than comparison.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">api</span> <span class="o">=</span> <span class="n">ChronologicalDataAPI</span><span class="p">()</span>
+    <span class="n">api</span> <span class="o">=</span> <span class="n">ChronologicalDataServer</span><span class="p">()</span>
     <span class="n">cutoff</span> <span class="o">=</span> <span class="s2">&quot;2023-03-15&quot;</span>
 
     <span class="c1"># Load games before cutoff</span>
@@ -575,11 +575,13 @@
 <span class="sd">    Bug: Issue #56 - No upper bound on rating change led to overflow.</span>
 <span class="sd">    Fixed: 2026-01-20 - Clamped rating changes to reasonable bounds.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">rating</span> <span class="o">=</span> <span class="mi">1500</span>
-    <span class="n">result</span> <span class="o">=</span> <span class="n">update_elo_rating</span><span class="p">(</span><span class="n">rating</span><span class="p">,</span> <span class="n">opponent_rating</span><span class="o">=</span><span class="mi">1500</span><span class="p">,</span> <span class="n">won</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">k_factor</span><span class="o">=</span><span class="n">k_factor</span><span class="p">)</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">EloConfig</span><span class="p">(</span><span class="n">k_factor</span><span class="o">=</span><span class="n">k_factor</span><span class="p">)</span>
+    <span class="n">engine</span> <span class="o">=</span> <span class="n">EloFeatureEngine</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+    <span class="n">engine</span><span class="o">.</span><span class="n">update_game</span><span class="p">(</span><span class="n">sample_game</span><span class="p">)</span>
 
     <span class="c1"># Rating should stay within reasonable bounds</span>
-    <span class="k">assert</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">result</span> <span class="o">&lt;=</span> <span class="mi">3000</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Rating exploded with k_factor=</span><span class="si">{</span><span class="n">k_factor</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">result</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="k">for</span> <span class="n">rating</span> <span class="ow">in</span> <span class="n">engine</span><span class="o">.</span><span class="n">ratings</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="k">assert</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">rating</span> <span class="o">&lt;=</span> <span class="mi">3000</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Rating exploded with k_factor=</span><span class="si">{</span><span class="n">k_factor</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">rating</span><span class="si">}</span><span class="s2">&quot;</span>
 </pre></div>
 </div>
 </section>
@@ -625,7 +627,7 @@
 
     <span class="c1"># Functional: Verify correctness</span>
     <span class="n">expected</span> <span class="o">=</span> <span class="p">((</span><span class="mf">0.8</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="mf">0.3</span><span class="o">-</span><span class="mi">0</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
-    <span class="n">result</span> <span class="o">=</span> <span class="n">calculate_brier_score</span><span class="p">(</span><span class="n">predictions</span><span class="p">,</span> <span class="n">actuals</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">brier_score</span><span class="p">(</span><span class="n">predictions</span><span class="p">,</span> <span class="n">actuals</span><span class="p">)</span>
     <span class="k">assert</span> <span class="nb">abs</span><span class="p">(</span><span class="n">result</span> <span class="o">-</span> <span class="n">expected</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-10</span>
 
     <span class="c1"># Performance: Verify speed for large datasets</span>
@@ -634,7 +636,7 @@
 
     <span class="kn">import</span><span class="w"> </span><span class="nn">timeit</span>
     <span class="n">time_taken</span> <span class="o">=</span> <span class="n">timeit</span><span class="o">.</span><span class="n">timeit</span><span class="p">(</span>
-        <span class="k">lambda</span><span class="p">:</span> <span class="n">calculate_brier_score</span><span class="p">(</span><span class="n">large_preds</span><span class="p">,</span> <span class="n">large_actuals</span><span class="p">),</span>
+        <span class="k">lambda</span><span class="p">:</span> <span class="n">brier_score</span><span class="p">(</span><span class="n">large_preds</span><span class="p">,</span> <span class="n">large_actuals</span><span class="p">),</span>
         <span class="n">number</span><span class="o">=</span><span class="mi">10</span>
     <span class="p">)</span> <span class="o">/</span> <span class="mi">10</span>
 
@@ -688,7 +690,7 @@
 
     <span class="c1"># Functional: Verify correctness</span>
     <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">games</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
-    <span class="n">required_fields</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;game_id&quot;</span><span class="p">,</span> <span class="s2">&quot;date&quot;</span><span class="p">,</span> <span class="s2">&quot;home_team&quot;</span><span class="p">,</span> <span class="s2">&quot;away_team&quot;</span><span class="p">]</span>
+    <span class="n">required_fields</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;season&quot;</span><span class="p">,</span> <span class="s2">&quot;day_num&quot;</span><span class="p">,</span> <span class="s2">&quot;w_team_id&quot;</span><span class="p">,</span> <span class="s2">&quot;l_team_id&quot;</span><span class="p">]</span>
     <span class="k">for</span> <span class="n">game</span> <span class="ow">in</span> <span class="n">games</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">required_fields</span><span class="p">:</span>
             <span class="k">assert</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">game</span><span class="p">,</span> <span class="n">field</span><span class="p">)</span>

@@ -366,17 +366,12 @@
 <td><p>Missing annotations, type errors</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">mypy</span> <span class="pre">src/ncaa_eval</span> <span class="pre">tests</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><strong>Package manifest</strong></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">check-manifest</span></code></p></td>
-<td><p>Missing files from distribution (MANIFEST.in drift)</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">check-manifest</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p><strong>Smoke tests</strong></p></td>
+<tr class="row-odd"><td><p><strong>Smoke tests</strong></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">-m</span> <span class="pre">smoke</span></code></p></td>
 <td><p>Broken imports, basic sanity failures, schema contract breaks</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">-m</span> <span class="pre">smoke</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><strong>Commit message</strong></p></td>
+<tr class="row-even"><td><p><strong>Commit message</strong></p></td>
 <td><p>Commitizen</p></td>
 <td><p>Non-conventional commit format</p></td>
 <td><p>Automatic validation</p></td>
@@ -419,35 +414,29 @@
 
 <span class="c1"># Smoke-eligible: Fast unit test (sanity check)</span>
 <span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">smoke</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">test_calculate_brier_score_accepts_valid_input</span><span class="p">():</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_brier_score_accepts_valid_input</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify Brier score accepts valid input without crashing.&quot;&quot;&quot;</span>
     <span class="n">predictions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">])</span>
     <span class="n">actuals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
-    <span class="n">result</span> <span class="o">=</span> <span class="n">calculate_brier_score</span><span class="p">(</span><span class="n">predictions</span><span class="p">,</span> <span class="n">actuals</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">brier_score</span><span class="p">(</span><span class="n">predictions</span><span class="p">,</span> <span class="n">actuals</span><span class="p">)</span>
     <span class="k">assert</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>  <span class="c1"># Just verify it doesn&#39;t crash</span>
 
 <span class="c1"># Smoke-eligible: Schema contract test</span>
 <span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">smoke</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">test_game_schema_validates</span><span class="p">():</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify Game TypedDict validates with sample data.&quot;&quot;&quot;</span>
-    <span class="n">game</span><span class="p">:</span> <span class="n">Game</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;game_id&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-        <span class="s2">&quot;season&quot;</span><span class="p">:</span> <span class="mi">2023</span><span class="p">,</span>
-        <span class="s2">&quot;home_team&quot;</span><span class="p">:</span> <span class="s2">&quot;Duke&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;away_team&quot;</span><span class="p">:</span> <span class="s2">&quot;UNC&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;home_score&quot;</span><span class="p">:</span> <span class="mi">75</span><span class="p">,</span>
-        <span class="s2">&quot;away_score&quot;</span><span class="p">:</span> <span class="mi">70</span><span class="p">,</span>
-    <span class="p">}</span>
-    <span class="c1"># If this compiles with mypy --strict, schema is correct</span>
-    <span class="k">assert</span> <span class="n">game</span><span class="p">[</span><span class="s2">&quot;game_id&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify Game Pydantic model validates with sample data.&quot;&quot;&quot;</span>
+    <span class="n">game</span> <span class="o">=</span> <span class="n">Game</span><span class="p">(</span><span class="n">season</span><span class="o">=</span><span class="mi">2023</span><span class="p">,</span> <span class="n">day_num</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">w_team_id</span><span class="o">=</span><span class="mi">1234</span><span class="p">,</span> <span class="n">l_team_id</span><span class="o">=</span><span class="mi">5678</span><span class="p">,</span> <span class="n">w_score</span><span class="o">=</span><span class="mi">75</span><span class="p">,</span> <span class="n">l_score</span><span class="o">=</span><span class="mi">70</span><span class="p">)</span>
+    <span class="c1"># If this constructs without error, schema is correct</span>
+    <span class="k">assert</span> <span class="n">game</span><span class="o">.</span><span class="n">w_team_id</span> <span class="o">==</span> <span class="mi">1234</span>
 
 <span class="c1"># Smoke-eligible: Fast regression test</span>
 <span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">smoke</span>
 <span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">regression</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">test_elo_rating_never_negative_quick</span><span class="p">():</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_elo_rating_never_negative_quick</span><span class="p">(</span><span class="n">elo_config</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Regression test: Elo ratings should never go negative (fast check).&quot;&quot;&quot;</span>
-    <span class="n">rating</span> <span class="o">=</span> <span class="n">update_elo_rating</span><span class="p">(</span><span class="mi">1200</span><span class="p">,</span> <span class="n">opponent_rating</span><span class="o">=</span><span class="mi">2400</span><span class="p">,</span> <span class="n">won</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">k_factor</span><span class="o">=</span><span class="mi">32</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="n">rating</span> <span class="o">&gt;=</span> <span class="mi">0</span>
+    <span class="n">engine</span> <span class="o">=</span> <span class="n">EloFeatureEngine</span><span class="p">(</span><span class="n">elo_config</span><span class="p">)</span>
+    <span class="c1"># After a loss against much stronger opponent, rating should stay non-negative</span>
+    <span class="k">assert</span> <span class="n">engine</span><span class="o">.</span><span class="n">get_rating</span><span class="p">(</span><span class="n">team_id</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span>
 
 <span class="c1"># NOT smoke-eligible: Integration test with I/O</span>
 <span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">integration</span>
@@ -528,17 +517,12 @@
 <td><p>Vectorization violations, speed regressions</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">-m</span> <span class="pre">performance</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><strong>Edge compatibility</strong></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">edgetest</span></code></p></td>
-<td><p>Dependency compatibility issues at version boundaries</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">edgetest</span></code></p></td>
-</tr>
-<tr class="row-odd"><td><p><strong>Coverage</strong></p></td>
+<tr class="row-even"><td><p><strong>Coverage</strong></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">pytest-cov</span></code></p></td>
 <td><p>Untested code paths</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">--cov=src/ncaa_eval</span> <span class="pre">--cov-report=term-missing</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><strong>Mutation testing (selective)</strong></p></td>
+<tr class="row-odd"><td><p><strong>Mutation testing (selective)</strong></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">mutmut</span></code></p></td>
 <td><p>Weak tests, gaps in test coverage</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">mutmut</span> <span class="pre">run</span> <span class="pre">--paths-to-mutate=src/ncaa_eval/evaluation/metrics.py</span></code></p></td>
@@ -585,13 +569,13 @@
 <span class="c1"># Complete-only: Performance test</span>
 <span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">slow</span>
 <span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">performance</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">test_calculate_brier_score_vectorized_performance</span><span class="p">():</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_brier_score_vectorized_performance</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify Brier score meets performance target (vectorized).&quot;&quot;&quot;</span>
     <span class="n">predictions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">100_000</span><span class="p">)</span>
     <span class="n">actuals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">100_000</span><span class="p">)</span>
 
     <span class="n">time_taken</span> <span class="o">=</span> <span class="n">timeit</span><span class="o">.</span><span class="n">timeit</span><span class="p">(</span>
-        <span class="k">lambda</span><span class="p">:</span> <span class="n">calculate_brier_score</span><span class="p">(</span><span class="n">predictions</span><span class="p">,</span> <span class="n">actuals</span><span class="p">),</span>
+        <span class="k">lambda</span><span class="p">:</span> <span class="n">brier_score</span><span class="p">(</span><span class="n">predictions</span><span class="p">,</span> <span class="n">actuals</span><span class="p">),</span>
         <span class="n">number</span><span class="o">=</span><span class="mi">10</span>
     <span class="p">)</span> <span class="o">/</span> <span class="mi">10</span>
 
@@ -604,9 +588,9 @@
     <span class="p">([</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="mf">0.25</span><span class="p">),</span>      <span class="c1"># Random</span>
     <span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="mf">1.0</span><span class="p">),</span>       <span class="c1"># Worst case</span>
 <span class="p">])</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">test_calculate_brier_score_edge_cases</span><span class="p">(</span><span class="n">predictions</span><span class="p">,</span> <span class="n">actuals</span><span class="p">,</span> <span class="n">expected</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_brier_score_edge_cases</span><span class="p">(</span><span class="n">predictions</span><span class="p">,</span> <span class="n">actuals</span><span class="p">,</span> <span class="n">expected</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify Brier score for known edge cases (comprehensive).&quot;&quot;&quot;</span>
-    <span class="n">result</span> <span class="o">=</span> <span class="n">calculate_brier_score</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">predictions</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">actuals</span><span class="p">))</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">brier_score</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">predictions</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">actuals</span><span class="p">))</span>
     <span class="k">assert</span> <span class="nb">abs</span><span class="p">(</span><span class="n">result</span> <span class="o">-</span> <span class="n">expected</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">0.01</span>
 </pre></div>
 </div>

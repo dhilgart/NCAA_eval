@@ -32,7 +32,6 @@ Catch the most common issues before code ever leaves the developer's machine. Mu
 | **Lint** | `ruff check .` | Style violations, import issues, anti-patterns | Auto-fix on commit |
 | **Format** | `ruff format --check .` | Inconsistent formatting | Auto-fix on commit |
 | **Type-check** | `mypy` (strict) | Missing annotations, type errors | `mypy src/ncaa_eval tests` |
-| **Package manifest** | `check-manifest` | Missing files from distribution (MANIFEST.in drift) | `check-manifest` |
 | **Smoke tests** | `pytest -m smoke` | Broken imports, basic sanity failures, schema contract breaks | `pytest -m smoke` |
 | **Commit message** | Commitizen | Non-conventional commit format | Automatic validation |
 
@@ -71,35 +70,29 @@ def test_import_package():
 
 # Smoke-eligible: Fast unit test (sanity check)
 @pytest.mark.smoke
-def test_calculate_brier_score_accepts_valid_input():
+def test_brier_score_accepts_valid_input():
     """Verify Brier score accepts valid input without crashing."""
     predictions = np.array([0.8, 0.3])
     actuals = np.array([1, 0])
-    result = calculate_brier_score(predictions, actuals)
+    result = brier_score(predictions, actuals)
     assert result is not None  # Just verify it doesn't crash
 
 # Smoke-eligible: Schema contract test
 @pytest.mark.smoke
 def test_game_schema_validates():
-    """Verify Game TypedDict validates with sample data."""
-    game: Game = {
-        "game_id": 1,
-        "season": 2023,
-        "home_team": "Duke",
-        "away_team": "UNC",
-        "home_score": 75,
-        "away_score": 70,
-    }
-    # If this compiles with mypy --strict, schema is correct
-    assert game["game_id"] == 1
+    """Verify Game Pydantic model validates with sample data."""
+    game = Game(season=2023, day_num=100, w_team_id=1234, l_team_id=5678, w_score=75, l_score=70)
+    # If this constructs without error, schema is correct
+    assert game.w_team_id == 1234
 
 # Smoke-eligible: Fast regression test
 @pytest.mark.smoke
 @pytest.mark.regression
-def test_elo_rating_never_negative_quick():
+def test_elo_rating_never_negative_quick(elo_config):
     """Regression test: Elo ratings should never go negative (fast check)."""
-    rating = update_elo_rating(1200, opponent_rating=2400, won=False, k_factor=32)
-    assert rating >= 0
+    engine = EloFeatureEngine(elo_config)
+    # After a loss against much stronger opponent, rating should stay non-negative
+    assert engine.get_rating(team_id=1) >= 0
 
 # NOT smoke-eligible: Integration test with I/O
 @pytest.mark.integration
@@ -150,7 +143,6 @@ Complete testing ensures nothing is broken before code reaches the main branch. 
 | **Integration tests** | `pytest -m integration` | Component interaction failures | `pytest -m integration` |
 | **Property-based tests** | `pytest -m property` | Invariant violations, edge cases | `pytest -m property` |
 | **Performance tests** | `pytest -m performance` | Vectorization violations, speed regressions | `pytest -m performance` |
-| **Edge compatibility** | `edgetest` | Dependency compatibility issues at version boundaries | `edgetest` |
 | **Coverage** | `pytest-cov` | Untested code paths | `pytest --cov=src/ncaa_eval --cov-report=term-missing` |
 | **Mutation testing (selective)** | `mutmut` | Weak tests, gaps in test coverage | `mutmut run --paths-to-mutate=src/ncaa_eval/evaluation/metrics.py` |
 
@@ -194,13 +186,13 @@ def test_rolling_average_length_invariant(data):
 # Complete-only: Performance test
 @pytest.mark.slow
 @pytest.mark.performance
-def test_calculate_brier_score_vectorized_performance():
+def test_brier_score_vectorized_performance():
     """Verify Brier score meets performance target (vectorized)."""
     predictions = np.random.rand(100_000)
     actuals = np.random.randint(0, 2, 100_000)
 
     time_taken = timeit.timeit(
-        lambda: calculate_brier_score(predictions, actuals),
+        lambda: brier_score(predictions, actuals),
         number=10
     ) / 10
 
@@ -213,9 +205,9 @@ def test_calculate_brier_score_vectorized_performance():
     ([0.5, 0.5, 0.5], [1, 0, 1], 0.25),      # Random
     ([0.0, 1.0, 0.0], [1, 0, 1], 1.0),       # Worst case
 ])
-def test_calculate_brier_score_edge_cases(predictions, actuals, expected):
+def test_brier_score_edge_cases(predictions, actuals, expected):
     """Verify Brier score for known edge cases (comprehensive)."""
-    result = calculate_brier_score(np.array(predictions), np.array(actuals))
+    result = brier_score(np.array(predictions), np.array(actuals))
     assert abs(result - expected) < 0.01
 ```
 

@@ -324,20 +324,62 @@
 <section id="directory-structure">
 <h3>Directory Structure<a class="headerlink" href="#directory-structure" title="Link to this heading">¶</a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>tests/
-├── __init__.py                   # Existing (Story 1.1)
-├── conftest.py                   # Shared fixtures (Story 1.5)
-├── unit/                         # Unit tests (Story 1.5)
+├── __init__.py
+├── conftest.py                          # Shared fixtures
+├── fixtures/
+│   ├── .gitkeep
+│   └── kaggle/
+│       ├── MNCAATourneyCompactResults.csv
+│       ├── MRegularSeasonCompactResults.csv
+│       ├── MSeasons.csv
+│       └── MTeams.csv
+├── integration/
 │   ├── __init__.py
-│   ├── test_metrics.py           # Unit tests for evaluation/metrics.py
-│   ├── test_elo.py               # Unit tests for model/elo.py
-│   └── test_features.py          # Unit tests for transform/features.py
-├── integration/                  # Integration tests (Story 1.5)
-│   ├── __init__.py
-│   ├── test_sync_pipeline.py     # Integration: ingest → storage
-│   └── test_training_pipeline.py # Integration: feature → model → eval
-└── fixtures/                     # Test data files (as needed)
-    ├── sample_games.csv
-    └── sample_predictions.json
+│   ├── test_documented_commands.py      # E2E CLI documentation tests
+│   ├── test_elo_integration.py          # Integration: Elo pipeline
+│   ├── test_feature_serving_integration.py  # Integration: feature serving
+│   └── test_sync.py                     # Integration: ingest → storage
+└── unit/
+    ├── __init__.py
+    ├── test_bracket_page.py
+    ├── test_bracket_renderer.py
+    ├── test_calibration.py
+    ├── test_chronological_serving.py
+    ├── test_cli_train.py
+    ├── test_connector_base.py
+    ├── test_dashboard_app.py
+    ├── test_dashboard_filters.py
+    ├── test_deep_dive_page.py
+    ├── test_elo.py
+    ├── test_espn_connector.py
+    ├── test_evaluation_backtest.py
+    ├── test_evaluation_metrics.py
+    ├── test_evaluation_plotting.py
+    ├── test_evaluation_simulation.py
+    ├── test_evaluation_splitter.py
+    ├── test_feature_serving.py
+    ├── test_framework_validation.py
+    ├── test_fuzzy.py
+    ├── test_graph.py
+    ├── test_home_page.py
+    ├── test_imports.py
+    ├── test_kaggle_connector.py
+    ├── test_leaderboard_page.py
+    ├── test_logger.py
+    ├── test_model_base.py
+    ├── test_model_elo.py
+    ├── test_model_logistic_regression.py
+    ├── test_model_registry.py
+    ├── test_model_tracking.py
+    ├── test_model_xgboost.py
+    ├── test_normalization.py
+    ├── test_opponent.py
+    ├── test_package_structure.py
+    ├── test_pool_scorer_page.py
+    ├── test_repository.py
+    ├── test_run_store_metrics.py
+    ├── test_schema.py
+    └── test_sequential.py
 </pre></div>
 </div>
 </section>
@@ -358,11 +400,11 @@
 </tr>
 <tr class="row-odd"><td><p><strong>Test functions</strong></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">test_&lt;function&gt;_&lt;scenario&gt;()</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">test_calculate_brier_score_perfect_prediction()</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">test_brier_score_perfect_prediction()</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p><strong>Fixture functions</strong></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">&lt;resource&gt;_fixture()</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">sample_games_fixture()</span></code></p></td>
+<td><p>Descriptive name (no suffix)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">sample_teams()</span></code>, <code class="docutils literal notranslate"><span class="pre">elo_config()</span></code>, <code class="docutils literal notranslate"><span class="pre">temp_data_dir()</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><strong>Test classes</strong></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">Test&lt;ClassName&gt;</span></code></p></td>
@@ -425,8 +467,7 @@
 <section id="fixture-organization">
 <h3>Fixture Organization<a class="headerlink" href="#fixture-organization" title="Link to this heading">¶</a></h3>
 <ul class="simple">
-<li><p><strong><code class="docutils literal notranslate"><span class="pre">conftest.py</span></code> (root):</strong> Project-wide fixtures (e.g., <code class="docutils literal notranslate"><span class="pre">sample_games_fixture()</span></code>, <code class="docutils literal notranslate"><span class="pre">temp_data_dir()</span></code>)</p></li>
-<li><p><strong><code class="docutils literal notranslate"><span class="pre">conftest.py</span></code> (subdirectory):</strong> Subdirectory-specific fixtures (e.g., <code class="docutils literal notranslate"><span class="pre">tests/unit/conftest.py</span></code>)</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">tests/conftest.py</span></code>:</strong> Project-wide fixtures (e.g., <code class="docutils literal notranslate"><span class="pre">sample_teams()</span></code>, <code class="docutils literal notranslate"><span class="pre">elo_config()</span></code>, <code class="docutils literal notranslate"><span class="pre">temp_data_dir()</span></code>)</p></li>
 <li><p><strong>Inline fixtures:</strong> Simple fixtures can be defined in test files if not reused elsewhere</p></li>
 </ul>
 </section>
@@ -436,12 +477,12 @@
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">pytest</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.types</span><span class="w"> </span><span class="kn">import</span> <span class="n">Game</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.ingest.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">Game</span>
 
 <span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">sample_game</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Game</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Provide a sample game for testing.&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">Game</span><span class="p">(</span><span class="n">game_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">season</span><span class="o">=</span><span class="mi">2023</span><span class="p">,</span> <span class="n">home_team</span><span class="o">=</span><span class="s2">&quot;Duke&quot;</span><span class="p">,</span> <span class="n">away_team</span><span class="o">=</span><span class="s2">&quot;UNC&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Game</span><span class="p">(</span><span class="n">season</span><span class="o">=</span><span class="mi">2023</span><span class="p">,</span> <span class="n">day_num</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">w_team_id</span><span class="o">=</span><span class="mi">1234</span><span class="p">,</span> <span class="n">l_team_id</span><span class="o">=</span><span class="mi">5678</span><span class="p">,</span> <span class="n">w_score</span><span class="o">=</span><span class="mi">75</span><span class="p">,</span> <span class="n">l_score</span><span class="o">=</span><span class="mi">70</span><span class="p">)</span>
 </pre></div>
 </div>
 <p><strong>2. Parametrized fixtures:</strong> Use <code class="docutils literal notranslate"><span class="pre">&#64;pytest.fixture(params=[...])</span></code> for testing multiple scenarios</p>
@@ -486,7 +527,7 @@
 <tbody>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&#64;pytest.mark.smoke</span></code></p></td>
 <td><p>Speed</p></td>
-<td><p>Fast smoke tests for pre-commit (&lt; 1s each, &lt; 5s total)</p></td>
+<td><p>Fast smoke tests for pre-commit (&lt; 1s each; smoke subset &lt; 5s; Tier 1 overall &lt; 10s)</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">-m</span> <span class="pre">smoke</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&#64;pytest.mark.slow</span></code></p></td>
@@ -494,20 +535,20 @@
 <td><p>Slow tests excluded from pre-commit (&gt; 5 seconds each)</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">-m</span> <span class="pre">&quot;not</span> <span class="pre">slow&quot;</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&#64;pytest.mark.integration</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&#64;pytest.mark.unit</span></code></p></td>
+<td><p>Scope</p></td>
+<td><p>Pure unit tests with no I/O or external dependencies</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">-m</span> <span class="pre">unit</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&#64;pytest.mark.integration</span></code></p></td>
 <td><p>Scope</p></td>
 <td><p>Integration tests (I/O, database)</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">-m</span> <span class="pre">integration</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&#64;pytest.mark.property</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&#64;pytest.mark.property</span></code></p></td>
 <td><p>Approach</p></td>
 <td><p>Property-based tests (Hypothesis)</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">-m</span> <span class="pre">property</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&#64;pytest.mark.fuzz</span></code></p></td>
-<td><p>Approach</p></td>
-<td><p>Fuzz-based tests (Hypothesis)</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">-m</span> <span class="pre">fuzz</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&#64;pytest.mark.performance</span></code></p></td>
 <td><p>Purpose</p></td>
@@ -519,10 +560,10 @@
 <td><p>Regression tests (prevent bug recurrence)</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">-m</span> <span class="pre">regression</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&#64;pytest.mark.mutation</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&#64;pytest.mark.no_mutation</span></code></p></td>
 <td><p>Quality</p></td>
-<td><p>Tests for mutation testing coverage</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">-m</span> <span class="pre">mutation</span></code></p></td>
+<td><p>Tests incompatible with mutmut runner directory (<code class="docutils literal notranslate"><span class="pre">Path(__file__)</span></code>-dependent)</p></td>
+<td><p>N/A</p></td>
 </tr>
 </tbody>
 </table>
@@ -530,17 +571,17 @@
 </section>
 <section id="marker-configuration">
 <h3>Marker Configuration<a class="headerlink" href="#marker-configuration" title="Link to this heading">¶</a></h3>
-<p>Markers are configured in <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code> (Story 1.5):</p>
+<p>Markers are configured in <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code>:</p>
 <div class="highlight-toml notranslate"><div class="highlight"><pre><span></span><span class="k">[tool.pytest.ini_options]</span>
 <span class="n">markers</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span>
-<span class="w">    </span><span class="s2">&quot;smoke: Fast smoke tests for pre-commit (&lt; 5 seconds total)&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;smoke: Fast smoke tests for pre-commit (&lt; 5s smoke subset; Tier 1 overall &lt; 10s)&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s2">&quot;slow: Slow tests excluded from pre-commit (&gt; 5 seconds each)&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s2">&quot;integration: Integration tests with I/O or external dependencies&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s2">&quot;property: Hypothesis property-based tests&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="s2">&quot;fuzz: Hypothesis fuzz-based tests for crash resilience&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s2">&quot;performance: Performance and benchmark tests&quot;</span><span class="p">,</span>
 <span class="w">    </span><span class="s2">&quot;regression: Regression tests to prevent bug recurrence&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="s2">&quot;mutation: Tests specifically for mutation testing coverage&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;no_mutation: Tests incompatible with mutmut runner directory (Path(__file__)-dependent structural tests)&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="s2">&quot;unit: Pure unit tests with no I/O or external dependencies&quot;</span><span class="p">,</span>
 <span class="p">]</span>
 </pre></div>
 </div>
@@ -567,11 +608,13 @@
 
 <span class="c1"># Approach marker only (property-based unit test)</span>
 <span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">property</span>
-<span class="nd">@given</span><span class="p">(</span><span class="n">scores</span><span class="o">=</span><span class="n">st</span><span class="o">.</span><span class="n">lists</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">floats</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">150</span><span class="p">),</span> <span class="n">min_size</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">test_average_is_bounded</span><span class="p">(</span><span class="n">scores</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify average is always between min and max (invariant).&quot;&quot;&quot;</span>
-    <span class="n">avg</span> <span class="o">=</span> <span class="n">calculate_average</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="nb">min</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">avg</span> <span class="o">&lt;=</span> <span class="nb">max</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
+<span class="nd">@given</span><span class="p">(</span><span class="n">probs</span><span class="o">=</span><span class="n">st</span><span class="o">.</span><span class="n">lists</span><span class="p">(</span><span class="n">st</span><span class="o">.</span><span class="n">floats</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="n">min_size</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_brier_score_is_bounded</span><span class="p">(</span><span class="n">probs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify Brier score is always in [0, 1] (invariant).&quot;&quot;&quot;</span>
+    <span class="n">preds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">probs</span><span class="p">)</span>
+    <span class="n">actuals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">probs</span><span class="p">))</span>
+    <span class="n">score</span> <span class="o">=</span> <span class="n">brier_score</span><span class="p">(</span><span class="n">preds</span><span class="p">,</span> <span class="n">actuals</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="mf">0.0</span> <span class="o">&lt;=</span> <span class="n">score</span> <span class="o">&lt;=</span> <span class="mf">1.0</span>
 
 <span class="c1"># Scope + Approach markers (property-based integration test)</span>
 <span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">integration</span>
@@ -579,18 +622,18 @@
 <span class="nd">@given</span><span class="p">(</span><span class="n">cutoff_year</span><span class="o">=</span><span class="n">st</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="mi">2015</span><span class="p">,</span> <span class="mi">2025</span><span class="p">))</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">test_temporal_boundary_invariant</span><span class="p">(</span><span class="n">cutoff_year</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify API enforces temporal boundaries (integration + invariant).&quot;&quot;&quot;</span>
-    <span class="n">api</span> <span class="o">=</span> <span class="n">ChronologicalDataAPI</span><span class="p">()</span>
+    <span class="n">api</span> <span class="o">=</span> <span class="n">ChronologicalDataServer</span><span class="p">()</span>
     <span class="n">games</span> <span class="o">=</span> <span class="n">api</span><span class="o">.</span><span class="n">get_games_before</span><span class="p">(</span><span class="n">cutoff_year</span><span class="o">=</span><span class="n">cutoff_year</span><span class="p">)</span>
     <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="n">game</span><span class="o">.</span><span class="n">season</span> <span class="o">&lt;=</span> <span class="n">cutoff_year</span> <span class="k">for</span> <span class="n">game</span> <span class="ow">in</span> <span class="n">games</span><span class="p">)</span>
 
 <span class="c1"># Purpose markers (regression test)</span>
 <span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">regression</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">test_elo_never_negative</span><span class="p">():</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_elo_never_negative</span><span class="p">(</span><span class="n">elo_config</span><span class="p">,</span> <span class="n">sample_games</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Regression test: Prevent Issue #42 (negative Elo ratings).&quot;&quot;&quot;</span>
-    <span class="n">rating</span> <span class="o">=</span> <span class="mi">1200</span>
-    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">100</span><span class="p">):</span>
-        <span class="n">rating</span> <span class="o">=</span> <span class="n">update_elo_rating</span><span class="p">(</span><span class="n">rating</span><span class="p">,</span> <span class="n">opponent_rating</span><span class="o">=</span><span class="mi">2400</span><span class="p">,</span> <span class="n">won</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">k_factor</span><span class="o">=</span><span class="mi">32</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="n">rating</span> <span class="o">&gt;=</span> <span class="mi">0</span>
+    <span class="n">engine</span> <span class="o">=</span> <span class="n">EloFeatureEngine</span><span class="p">(</span><span class="n">elo_config</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">game</span> <span class="ow">in</span> <span class="n">sample_games</span><span class="p">:</span>
+        <span class="n">engine</span><span class="o">.</span><span class="n">update_game</span><span class="p">(</span><span class="n">game</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="n">r</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">engine</span><span class="o">.</span><span class="n">ratings</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
 
 <span class="c1"># All dimensions combined (integration + property + performance)</span>
 <span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">integration</span>
@@ -749,28 +792,28 @@
 <h3>Nox Workflow<a class="headerlink" href="#nox-workflow" title="Link to this heading">¶</a></h3>
 <p>The testing strategy integrates into the <strong>nox-orchestrated development pipeline</strong>:</p>
 <p><strong>Command:</strong> <code class="docutils literal notranslate"><span class="pre">nox</span></code>
-<strong>Workflow:</strong> Ruff → Mypy → Pytest</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Example noxfile.py session (Story 1.6 will implement this)</span>
-<span class="nd">@nox</span><span class="o">.</span><span class="n">session</span>
+<strong>Workflow:</strong> Ruff (lint/format) → Mypy (strict) → Pytest (full suite)</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Actual noxfile.py tests session (python=False uses active conda env)</span>
+<span class="nd">@nox</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">python</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">tests</span><span class="p">(</span><span class="n">session</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run the test suite.&quot;&quot;&quot;</span>
-    <span class="n">session</span><span class="o">.</span><span class="n">install</span><span class="p">(</span><span class="s2">&quot;pytest&quot;</span><span class="p">,</span> <span class="s2">&quot;pytest-cov&quot;</span><span class="p">,</span> <span class="s2">&quot;hypothesis&quot;</span><span class="p">)</span>
-    <span class="n">session</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;pytest&quot;</span><span class="p">,</span> <span class="s2">&quot;-m&quot;</span><span class="p">,</span> <span class="s2">&quot;smoke&quot;</span><span class="p">,</span> <span class="s2">&quot;--cov=src/ncaa_eval&quot;</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run the full pytest test suite.&quot;&quot;&quot;</span>
+    <span class="n">session</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s2">&quot;pytest&quot;</span><span class="p">,</span> <span class="s2">&quot;--tb=short&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">session</span><span class="o">.</span><span class="n">posargs</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <section id="pre-commit-hook-integration">
 <h3>Pre-commit Hook Integration<a class="headerlink" href="#pre-commit-hook-integration" title="Link to this heading">¶</a></h3>
-<p>Story 1.4 configures pre-commit hooks:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># .pre-commit-config.yaml</span>
-<span class="nt">repos</span><span class="p">:</span>
+<p>Pre-commit hooks are configured in <code class="docutils literal notranslate"><span class="pre">.pre-commit-config.yaml</span></code>:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># .pre-commit-config.yaml (excerpt — pytest-smoke hook)</span>
 <span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">repo</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">local</span>
 <span class="w">    </span><span class="nt">hooks</span><span class="p">:</span>
-<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">smoke-tests</span>
-<span class="w">        </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Run smoke tests</span>
-<span class="w">        </span><span class="nt">entry</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pytest -m smoke</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pytest-smoke</span>
+<span class="w">        </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pytest-smoke</span>
+<span class="w">        </span><span class="nt">entry</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">poetry run pytest -m smoke --tb=short -q</span>
 <span class="w">        </span><span class="nt">language</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">system</span>
+<span class="w">        </span><span class="nt">types</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">python</span><span class="p p-Indicator">]</span>
 <span class="w">        </span><span class="nt">pass_filenames</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">        </span><span class="nt">stages</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">commit</span><span class="p p-Indicator">]</span>
 </pre></div>
 </div>
 </section>

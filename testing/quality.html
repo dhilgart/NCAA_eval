@@ -445,7 +445,7 @@ mutmut<span class="w"> </span>run<span class="w"> </span>--paths-to-mutate<span 
 </section>
 <section id="marker">
 <h3>Marker<a class="headerlink" href="#marker" title="Link to this heading">¶</a></h3>
-<p><code class="docutils literal notranslate"><span class="pre">&#64;pytest.mark.mutation</span></code> - Tag tests that are good candidates for mutation testing</p>
+<p>No dedicated marker — mutation testing is run via <code class="docutils literal notranslate"><span class="pre">mutmut</span></code> as a quality tool, not as a pytest marker.</p>
 </section>
 <section id="execution-tier">
 <h3>Execution Tier<a class="headerlink" href="#execution-tier" title="Link to this heading">¶</a></h3>
@@ -536,7 +536,6 @@ mutmut<span class="w"> </span>results
 mutmut<span class="w"> </span>show<span class="w"> </span><span class="m">42</span><span class="w">  </span><span class="c1"># Mutation: changed `&gt;` to `&gt;=` and tests still passed</span>
 
 <span class="c1"># Step 4: Add test to catch this mutation</span>
-@pytest.mark.mutation
 def<span class="w"> </span>test_threshold_boundary<span class="o">()</span>:
 <span class="w">    </span><span class="s2">&quot;&quot;&quot;Regression test: Ensure &gt; is used, not &gt;= (catches mutant #42).&quot;&quot;&quot;</span>
 <span class="w">    </span><span class="nv">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span>is_above_threshold<span class="o">(</span><span class="nv">value</span><span class="o">=</span><span class="m">50</span>,<span class="w"> </span><span class="nv">threshold</span><span class="o">=</span><span class="m">50</span><span class="o">)</span>

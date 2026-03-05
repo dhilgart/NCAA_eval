@@ -388,7 +388,7 @@
 <ul class="simple">
 <li><p><strong>Example-based:</strong> Concrete inputs → expected outputs</p></li>
 <li><p><strong>Property-based (Hypothesis):</strong> Invariants that should hold for all inputs</p></li>
-<li><p><strong>Fuzz-based (Hypothesis):</strong> Random/mutated inputs to find crashes and error handling gaps</p></li>
+<li><p><strong>Fuzz-based (Hypothesis):</strong> Random/mutated inputs to find crashes and error handling gaps (no dedicated marker — use <code class="docutils literal notranslate"><span class="pre">&#64;pytest.mark.slow</span></code>)</p></li>
 </ul>
 </li>
 <li><p><strong>Test Purpose</strong> - <em>Why</em> you’re writing the test → <a class="reference internal" href="testing/test-purpose-guide.html"><span class="std std-doc">Purpose Guide</span></a></p>
@@ -438,10 +438,6 @@
 <tr class="row-odd"><td><p>Smoke tests</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">-m</span> <span class="pre">smoke</span></code></p></td>
 <td><p>Broken imports, sanity failures</p></td>
-</tr>
-<tr class="row-even"><td><p>Package manifest</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">check-manifest</span></code></p></td>
-<td><p>Missing distribution files</p></td>
 </tr>
 </tbody>
 </table>
@@ -530,7 +526,7 @@
 <h3>Which approach?<a class="headerlink" href="#which-approach" title="Link to this heading">¶</a></h3>
 <div class="highlight-mermaid notranslate"><div class="highlight"><pre><span></span>flowchart TD
     Start{Testing error handling&lt;br/&gt;or crash resilience?}
-    Start --&gt;|YES| Fuzz[Fuzz-based&lt;br/&gt;@pytest.mark.fuzz&lt;br/&gt;Hypothesis st.text/st.binary]
+    Start --&gt;|YES| Fuzz[Fuzz-based&lt;br/&gt;Hypothesis st.text/st.binary]
     Start --&gt;|NO| Known{Have specific&lt;br/&gt;known scenarios?}
     Known --&gt;|YES| Example[Example-based&lt;br/&gt;parametrize for multiple cases]
     Known --&gt;|NO| Invariant{Can you state&lt;br/&gt;an invariant?}
@@ -571,17 +567,17 @@
 <td><p>Speed</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">-m</span> <span class="pre">&quot;not</span> <span class="pre">slow&quot;</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&#64;pytest.mark.integration</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&#64;pytest.mark.unit</span></code></p></td>
+<td><p>Scope</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">-m</span> <span class="pre">unit</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&#64;pytest.mark.integration</span></code></p></td>
 <td><p>Scope</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">-m</span> <span class="pre">integration</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&#64;pytest.mark.property</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&#64;pytest.mark.property</span></code></p></td>
 <td><p>Approach</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">-m</span> <span class="pre">property</span></code></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">&#64;pytest.mark.fuzz</span></code></p></td>
-<td><p>Approach</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">-m</span> <span class="pre">fuzz</span></code></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&#64;pytest.mark.performance</span></code></p></td>
 <td><p>Purpose</p></td>
@@ -591,9 +587,9 @@
 <td><p>Purpose</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">-m</span> <span class="pre">regression</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&#64;pytest.mark.mutation</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">&#64;pytest.mark.no_mutation</span></code></p></td>
 <td><p>Quality</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">-m</span> <span class="pre">mutation</span></code></p></td>
+<td><p>Tests incompatible with mutmut runner</p></td>
 </tr>
 </tbody>
 </table>
@@ -619,7 +615,7 @@
 <tbody>
 <tr class="row-even"><td><p><strong>Tier 1 (Pre-commit)</strong></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">-m</span> <span class="pre">smoke</span></code></p></td>
-<td><p>Smoke tests only (&lt; 5s total)</p></td>
+<td><p>Smoke tests only (&lt; 5s; Tier 1 overall &lt; 10s)</p></td>
 </tr>
 <tr class="row-odd"><td><p><strong>Tier 2 (PR/CI - full)</strong></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">pytest</span></code></p></td>
@@ -649,23 +645,69 @@
 <section id="test-organization">
 <h2>Test Organization<a class="headerlink" href="#test-organization" title="Link to this heading">¶</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>tests/
-├── conftest.py                   # Shared fixtures
-├── unit/                         # Unit tests
-│   ├── test_metrics.py
-│   ├── test_elo.py
-│   └── test_features.py
-├── integration/                  # Integration tests
-│   ├── test_sync_pipeline.py
-│   └── test_training_pipeline.py
-└── fixtures/                     # Test data files
-    └── sample_games.csv
+├── __init__.py
+├── conftest.py                          # Shared fixtures
+├── fixtures/
+│   ├── .gitkeep
+│   └── kaggle/
+│       ├── MNCAATourneyCompactResults.csv
+│       ├── MRegularSeasonCompactResults.csv
+│       ├── MSeasons.csv
+│       └── MTeams.csv
+├── integration/
+│   ├── __init__.py
+│   ├── test_documented_commands.py
+│   ├── test_elo_integration.py
+│   ├── test_feature_serving_integration.py
+│   └── test_sync.py
+└── unit/
+    ├── __init__.py
+    ├── test_bracket_page.py
+    ├── test_bracket_renderer.py
+    ├── test_calibration.py
+    ├── test_chronological_serving.py
+    ├── test_cli_train.py
+    ├── test_connector_base.py
+    ├── test_dashboard_app.py
+    ├── test_dashboard_filters.py
+    ├── test_deep_dive_page.py
+    ├── test_elo.py
+    ├── test_espn_connector.py
+    ├── test_evaluation_backtest.py
+    ├── test_evaluation_metrics.py
+    ├── test_evaluation_plotting.py
+    ├── test_evaluation_simulation.py
+    ├── test_evaluation_splitter.py
+    ├── test_feature_serving.py
+    ├── test_framework_validation.py
+    ├── test_fuzzy.py
+    ├── test_graph.py
+    ├── test_home_page.py
+    ├── test_imports.py
+    ├── test_kaggle_connector.py
+    ├── test_leaderboard_page.py
+    ├── test_logger.py
+    ├── test_model_base.py
+    ├── test_model_elo.py
+    ├── test_model_logistic_regression.py
+    ├── test_model_registry.py
+    ├── test_model_tracking.py
+    ├── test_model_xgboost.py
+    ├── test_normalization.py
+    ├── test_opponent.py
+    ├── test_package_structure.py
+    ├── test_pool_scorer_page.py
+    ├── test_repository.py
+    ├── test_run_store_metrics.py
+    ├── test_schema.py
+    └── test_sequential.py
 </pre></div>
 </div>
 <p><strong>Naming conventions:</strong></p>
 <ul class="simple">
 <li><p>Test files: <code class="docutils literal notranslate"><span class="pre">test_&lt;module_name&gt;.py</span></code></p></li>
 <li><p>Test functions: <code class="docutils literal notranslate"><span class="pre">test_&lt;function&gt;_&lt;scenario&gt;()</span></code></p></li>
-<li><p>Fixtures: <code class="docutils literal notranslate"><span class="pre">&lt;resource&gt;_fixture()</span></code></p></li>
+<li><p>Fixtures: Descriptive names (e.g., <code class="docutils literal notranslate"><span class="pre">sample_teams</span></code>, <code class="docutils literal notranslate"><span class="pre">elo_config</span></code>, <code class="docutils literal notranslate"><span class="pre">temp_data_dir</span></code>)</p></li>
 </ul>
 <p>See <a class="reference internal" href="testing/conventions.html"><span class="std std-doc">Conventions Guide</span></a> for details.</p>
 </section>
@@ -753,7 +795,7 @@
 </tr>
 <tr class="row-even"><td><p><strong>Nox</strong></p></td>
 <td><p>Session orchestration</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">noxfile.py</span></code> (Story 1.6)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">noxfile.py</span></code></p></td>
 </tr>
 </tbody>
 </table>

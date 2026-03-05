@@ -336,11 +336,11 @@
 <h4>1. Assertion-Based Unit Tests (Quick Smoke Check)<a class="headerlink" href="#assertion-based-unit-tests-quick-smoke-check" title="Link to this heading">¶</a></h4>
 <p><strong>Purpose:</strong> Catch obvious violations quickly during pre-commit</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">smoke</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">test_calculate_brier_score_is_vectorized</span><span class="p">():</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_brier_score_is_vectorized</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify Brier score uses vectorized operations (no Python loops).&quot;&quot;&quot;</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">inspect</span>
 
-    <span class="n">source</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getsource</span><span class="p">(</span><span class="n">calculate_brier_score</span><span class="p">)</span>
+    <span class="n">source</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getsource</span><span class="p">(</span><span class="n">brier_score</span><span class="p">)</span>
 
     <span class="c1"># Check that implementation doesn&#39;t contain for loops over data</span>
     <span class="c1"># (Allow for loops in fixture setup, just not in calculation logic)</span>
@@ -361,13 +361,13 @@
 
 <span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">slow</span>
 <span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">integration</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">test_calculate_brier_score_performance</span><span class="p">():</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_brier_score_performance</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify Brier score meets performance target.&quot;&quot;&quot;</span>
     <span class="n">predictions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">10_000</span><span class="p">)</span>
     <span class="n">actuals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">10_000</span><span class="p">)</span>
 
     <span class="n">time_taken</span> <span class="o">=</span> <span class="n">timeit</span><span class="o">.</span><span class="n">timeit</span><span class="p">(</span>
-        <span class="k">lambda</span><span class="p">:</span> <span class="n">calculate_brier_score</span><span class="p">(</span><span class="n">predictions</span><span class="p">,</span> <span class="n">actuals</span><span class="p">),</span>
+        <span class="k">lambda</span><span class="p">:</span> <span class="n">brier_score</span><span class="p">(</span><span class="n">predictions</span><span class="p">,</span> <span class="n">actuals</span><span class="p">),</span>
         <span class="n">number</span><span class="o">=</span><span class="mi">100</span>
     <span class="p">)</span>
 
@@ -384,23 +384,23 @@
 <section id="pytest-benchmark-optional-for-critical-paths">
 <h4>3. pytest-benchmark (Optional, for Critical Paths)<a class="headerlink" href="#pytest-benchmark-optional-for-critical-paths" title="Link to this heading">¶</a></h4>
 <blockquote>
-<div><p>⚠️ <strong>NOT YET INSTALLED:</strong> <code class="docutils literal notranslate"><span class="pre">pytest-benchmark</span></code> is optional and NOT currently in <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code>.
-Use timeit-based benchmarks (Option 2) for now. Story 1.5 will evaluate pytest-benchmark for installation.</p>
+<div><p>⚠️ <strong>NOT INSTALLED:</strong> <code class="docutils literal notranslate"><span class="pre">pytest-benchmark</span></code> is optional and NOT currently in <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code>.
+Use timeit-based benchmarks (Option 2) for now.</p>
 </div></blockquote>
 <p><strong>Purpose:</strong> Track performance over time with detailed statistics</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">test_calculate_brier_score_benchmark</span><span class="p">(</span><span class="n">benchmark</span><span class="p">):</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">test_brier_score_benchmark</span><span class="p">(</span><span class="n">benchmark</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Benchmark Brier score calculation.&quot;&quot;&quot;</span>
     <span class="n">predictions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">10_000</span><span class="p">)</span>
     <span class="n">actuals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">10_000</span><span class="p">)</span>
 
-    <span class="n">result</span> <span class="o">=</span> <span class="n">benchmark</span><span class="p">(</span><span class="n">calculate_brier_score</span><span class="p">,</span> <span class="n">predictions</span><span class="p">,</span> <span class="n">actuals</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">benchmark</span><span class="p">(</span><span class="n">brier_score</span><span class="p">,</span> <span class="n">predictions</span><span class="p">,</span> <span class="n">actuals</span><span class="p">)</span>
 
     <span class="c1"># Benchmark provides detailed statistics (mean, stddev, percentiles)</span>
     <span class="k">assert</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
 </pre></div>
 </div>
 <p><strong>Pros:</strong> Detailed statistics, integrated with pytest, tracks performance over time
-<strong>Cons:</strong> Requires <code class="docutils literal notranslate"><span class="pre">pytest-benchmark</span></code> plugin (evaluate in Story 1.5)</p>
+<strong>Cons:</strong> Requires <code class="docutils literal notranslate"><span class="pre">pytest-benchmark</span></code> plugin (not currently installed)</p>
 <p><strong>Pre-commit:</strong> ❌ <strong>NO</strong>
 <strong>PR-time:</strong> ✅ <strong>YES</strong> (if plugin is installed)</p>
 </section>
@@ -459,7 +459,7 @@ Use timeit-based benchmarks (Option 2) for now. Story 1.5 will evaluate pytest-b
 <ul class="simple">
 <li><p>Use <strong>assertion-based tests</strong> for quick smoke checks (mark as <code class="docutils literal notranslate"><span class="pre">&#64;pytest.mark.smoke</span></code>)</p></li>
 <li><p>Use <strong>performance benchmarks</strong> for critical modules (<code class="docutils literal notranslate"><span class="pre">evaluation/metrics.py</span></code>, <code class="docutils literal notranslate"><span class="pre">evaluation/simulation.py</span></code>) as <code class="docutils literal notranslate"><span class="pre">&#64;pytest.mark.slow</span></code> tests (PR-time only)</p></li>
-<li><p>Consider <strong>pytest-benchmark</strong> for performance regression tracking (optional, evaluate during Story 1.5)</p></li>
+<li><p>Consider <strong>pytest-benchmark</strong> for performance regression tracking (optional, not currently installed)</p></li>
 </ul>
 </section>
 </section>
@@ -479,7 +479,7 @@ Use timeit-based benchmarks (Option 2) for now. Story 1.5 will evaluate pytest-b
 <p><strong>Purpose:</strong> Verify API rejects requests for future data</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">test_get_chronological_season_enforces_cutoff</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify chronological API rejects requests for future data.&quot;&quot;&quot;</span>
-    <span class="n">api</span> <span class="o">=</span> <span class="n">ChronologicalDataAPI</span><span class="p">()</span>
+    <span class="n">api</span> <span class="o">=</span> <span class="n">ChronologicalDataServer</span><span class="p">()</span>
 
     <span class="k">with</span> <span class="n">pytest</span><span class="o">.</span><span class="n">raises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">match</span><span class="o">=</span><span class="s2">&quot;Cannot access future data&quot;</span><span class="p">):</span>
         <span class="n">api</span><span class="o">.</span><span class="n">get_games_before</span><span class="p">(</span><span class="n">date</span><span class="o">=</span><span class="s2">&quot;2025-12-31&quot;</span><span class="p">,</span> <span class="n">cutoff_date</span><span class="o">=</span><span class="s2">&quot;2025-01-01&quot;</span><span class="p">)</span>
@@ -493,11 +493,11 @@ Use timeit-based benchmarks (Option 2) for now. Story 1.5 will evaluate pytest-b
 <h4>2. Integration Tests (End-to-End Workflow)<a class="headerlink" href="#integration-tests-end-to-end-workflow" title="Link to this heading">¶</a></h4>
 <p><strong>Purpose:</strong> Verify end-to-end workflows prevent leakage</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">integration</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">test_walk_forward_validation_prevents_leakage</span><span class="p">(</span><span class="n">sample_games_fixture</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_walk_forward_validation_prevents_leakage</span><span class="p">(</span><span class="n">sample_games</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify walk-forward CV never trains on future data.&quot;&quot;&quot;</span>
     <span class="n">splitter</span> <span class="o">=</span> <span class="n">WalkForwardSplitter</span><span class="p">(</span><span class="n">years</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">2015</span><span class="p">,</span> <span class="mi">2025</span><span class="p">))</span>
 
-    <span class="k">for</span> <span class="n">train_data</span><span class="p">,</span> <span class="n">test_data</span><span class="p">,</span> <span class="n">year</span> <span class="ow">in</span> <span class="n">splitter</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">sample_games_fixture</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">train_data</span><span class="p">,</span> <span class="n">test_data</span><span class="p">,</span> <span class="n">year</span> <span class="ow">in</span> <span class="n">splitter</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">sample_games</span><span class="p">):</span>
         <span class="c1"># Verify all training games occur before test games</span>
         <span class="n">train_max_date</span> <span class="o">=</span> <span class="n">train_data</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
         <span class="n">test_min_date</span> <span class="o">=</span> <span class="n">test_data</span><span class="p">[</span><span class="s1">&#39;date&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
@@ -520,7 +520,7 @@ Use timeit-based benchmarks (Option 2) for now. Story 1.5 will evaluate pytest-b
 <span class="nd">@given</span><span class="p">(</span><span class="n">cutoff_year</span><span class="o">=</span><span class="n">st</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="mi">2015</span><span class="p">,</span> <span class="mi">2025</span><span class="p">))</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">test_temporal_boundary_invariant</span><span class="p">(</span><span class="n">cutoff_year</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify no API call can access data beyond cutoff year.&quot;&quot;&quot;</span>
-    <span class="n">api</span> <span class="o">=</span> <span class="n">ChronologicalDataAPI</span><span class="p">()</span>
+    <span class="n">api</span> <span class="o">=</span> <span class="n">ChronologicalDataServer</span><span class="p">()</span>
     <span class="n">games</span> <span class="o">=</span> <span class="n">api</span><span class="o">.</span><span class="n">get_games_before</span><span class="p">(</span><span class="n">cutoff_year</span><span class="o">=</span><span class="n">cutoff_year</span><span class="p">)</span>
 
     <span class="c1"># Invariant: ALL games must be from or before cutoff year</span>
@@ -544,7 +544,7 @@ Use timeit-based benchmarks (Option 2) for now. Story 1.5 will evaluate pytest-b
 <span class="sd">    Bug: Issue #87 - get_games_before() used &lt;= instead of &lt; for date comparison.</span>
 <span class="sd">    Fixed: 2026-02-10 - Changed to strict less-than comparison.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">api</span> <span class="o">=</span> <span class="n">ChronologicalDataAPI</span><span class="p">()</span>
+    <span class="n">api</span> <span class="o">=</span> <span class="n">ChronologicalDataServer</span><span class="p">()</span>
     <span class="n">cutoff</span> <span class="o">=</span> <span class="s2">&quot;2023-03-15&quot;</span>
 
     <span class="c1"># Load games before cutoff</span>

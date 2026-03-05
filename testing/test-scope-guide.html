@@ -339,7 +339,7 @@
 <li><p>Pure functions with clear input → output behavior</p></li>
 <li><p>Data transformations (e.g., <code class="docutils literal notranslate"><span class="pre">clean_team_name()</span></code>, <code class="docutils literal notranslate"><span class="pre">calculate_rolling_average()</span></code>)</p></li>
 <li><p>Single-responsibility classes (e.g., <code class="docutils literal notranslate"><span class="pre">EloRating.update()</span></code>)</p></li>
-<li><p>Mathematical calculations (e.g., <code class="docutils literal notranslate"><span class="pre">calculate_brier_score()</span></code>)</p></li>
+<li><p>Mathematical calculations (e.g., <code class="docutils literal notranslate"><span class="pre">brier_score()</span></code>)</p></li>
 </ul>
 </section>
 <section id="characteristics">
@@ -357,11 +357,11 @@
     <span class="k">assert</span> <span class="n">clean_team_name</span><span class="p">(</span><span class="s2">&quot;St. Mary&#39;s&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;Saint Mary&#39;s&quot;</span>
     <span class="k">assert</span> <span class="n">clean_team_name</span><span class="p">(</span><span class="s2">&quot;UNC-Chapel Hill&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;North Carolina&quot;</span>
 
-<span class="k">def</span><span class="w"> </span><span class="nf">test_calculate_brier_score_perfect_prediction</span><span class="p">():</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_brier_score_perfect_prediction</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify Brier score is 0 for perfect predictions.&quot;&quot;&quot;</span>
     <span class="n">predictions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">])</span>
     <span class="n">actuals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
-    <span class="k">assert</span> <span class="n">calculate_brier_score</span><span class="p">(</span><span class="n">predictions</span><span class="p">,</span> <span class="n">actuals</span><span class="p">)</span> <span class="o">==</span> <span class="mf">0.0</span>
+    <span class="k">assert</span> <span class="n">brier_score</span><span class="p">(</span><span class="n">predictions</span><span class="p">,</span> <span class="n">actuals</span><span class="p">)</span> <span class="o">==</span> <span class="mf">0.0</span>
 </pre></div>
 </div>
 </section>
@@ -423,9 +423,9 @@
     <span class="k">assert</span> <span class="s2">&quot;game_id&quot;</span> <span class="ow">in</span> <span class="n">games_df</span><span class="o">.</span><span class="n">columns</span>
 
 <span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">integration</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">test_end_to_end_training_pipeline</span><span class="p">(</span><span class="n">sample_games_fixture</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_end_to_end_training_pipeline</span><span class="p">(</span><span class="n">sample_games</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify complete pipeline from data to trained model.&quot;&quot;&quot;</span>
-    <span class="n">features</span> <span class="o">=</span> <span class="n">engineer_features</span><span class="p">(</span><span class="n">sample_games_fixture</span><span class="p">)</span>
+    <span class="n">features</span> <span class="o">=</span> <span class="n">engineer_features</span><span class="p">(</span><span class="n">sample_games</span><span class="p">)</span>
     <span class="n">model</span> <span class="o">=</span> <span class="n">EloModel</span><span class="p">()</span>
     <span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>
     <span class="n">predictions</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">features</span><span class="p">)</span>
@@ -444,7 +444,7 @@
 <span class="nd">@given</span><span class="p">(</span><span class="n">cutoff_year</span><span class="o">=</span><span class="n">st</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="mi">2015</span><span class="p">,</span> <span class="mi">2025</span><span class="p">))</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">test_temporal_boundary_invariant_across_years</span><span class="p">(</span><span class="n">cutoff_year</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify chronological API enforces boundaries for any cutoff year.&quot;&quot;&quot;</span>
-    <span class="n">api</span> <span class="o">=</span> <span class="n">ChronologicalDataAPI</span><span class="p">()</span>
+    <span class="n">api</span> <span class="o">=</span> <span class="n">ChronologicalDataServer</span><span class="p">()</span>
     <span class="n">games</span> <span class="o">=</span> <span class="n">api</span><span class="o">.</span><span class="n">get_games_before</span><span class="p">(</span><span class="n">cutoff_year</span><span class="o">=</span><span class="n">cutoff_year</span><span class="p">)</span>
 
     <span class="c1"># Invariant: ALL games must be from or before cutoff year</span>
@@ -516,7 +516,7 @@
 <span class="nd">@given</span><span class="p">(</span><span class="n">cutoff_year</span><span class="o">=</span><span class="n">st</span><span class="o">.</span><span class="n">integers</span><span class="p">(</span><span class="mi">2015</span><span class="p">,</span> <span class="mi">2025</span><span class="p">))</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">test_temporal_boundary_invariant</span><span class="p">(</span><span class="n">cutoff_year</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Verify API enforces temporal boundaries (property-based integration).&quot;&quot;&quot;</span>
-    <span class="n">api</span> <span class="o">=</span> <span class="n">ChronologicalDataAPI</span><span class="p">()</span>
+    <span class="n">api</span> <span class="o">=</span> <span class="n">ChronologicalDataServer</span><span class="p">()</span>
     <span class="n">games</span> <span class="o">=</span> <span class="n">api</span><span class="o">.</span><span class="n">get_games_before</span><span class="p">(</span><span class="n">cutoff_year</span><span class="o">=</span><span class="n">cutoff_year</span><span class="p">)</span>
     <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="n">game</span><span class="o">.</span><span class="n">season</span> <span class="o">&lt;=</span> <span class="n">cutoff_year</span> <span class="k">for</span> <span class="n">game</span> <span class="ow">in</span> <span class="n">games</span><span class="p">)</span>
 </pre></div>

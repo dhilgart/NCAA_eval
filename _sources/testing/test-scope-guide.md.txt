@@ -20,7 +20,7 @@ Single function, method, or class in isolation.
 - Pure functions with clear input → output behavior
 - Data transformations (e.g., `clean_team_name()`, `calculate_rolling_average()`)
 - Single-responsibility classes (e.g., `EloRating.update()`)
-- Mathematical calculations (e.g., `calculate_brier_score()`)
+- Mathematical calculations (e.g., `brier_score()`)
 
 ### Characteristics
 - **Fast:** No I/O, database, or network access
@@ -35,11 +35,11 @@ def test_clean_team_name_normalizes_abbreviations():
     assert clean_team_name("St. Mary's") == "Saint Mary's"
     assert clean_team_name("UNC-Chapel Hill") == "North Carolina"
 
-def test_calculate_brier_score_perfect_prediction():
+def test_brier_score_perfect_prediction():
     """Verify Brier score is 0 for perfect predictions."""
     predictions = np.array([1.0, 0.0, 1.0])
     actuals = np.array([1, 0, 1])
-    assert calculate_brier_score(predictions, actuals) == 0.0
+    assert brier_score(predictions, actuals) == 0.0
 ```
 
 ### Example (property-based)
@@ -92,9 +92,9 @@ def test_sync_command_fetches_and_stores_games(temp_data_dir):
     assert "game_id" in games_df.columns
 
 @pytest.mark.integration
-def test_end_to_end_training_pipeline(sample_games_fixture):
+def test_end_to_end_training_pipeline(sample_games):
     """Verify complete pipeline from data to trained model."""
-    features = engineer_features(sample_games_fixture)
+    features = engineer_features(sample_games)
     model = EloModel()
     model.fit(features)
     predictions = model.predict(features)
@@ -113,7 +113,7 @@ from hypothesis import given, strategies as st
 @given(cutoff_year=st.integers(2015, 2025))
 def test_temporal_boundary_invariant_across_years(cutoff_year):
     """Verify chronological API enforces boundaries for any cutoff year."""
-    api = ChronologicalDataAPI()
+    api = ChronologicalDataServer()
     games = api.get_games_before(cutoff_year=cutoff_year)
 
     # Invariant: ALL games must be from or before cutoff year
@@ -187,7 +187,7 @@ def test_full_backtest_meets_60_second_target():
 @given(cutoff_year=st.integers(2015, 2025))
 def test_temporal_boundary_invariant(cutoff_year):
     """Verify API enforces temporal boundaries (property-based integration)."""
-    api = ChronologicalDataAPI()
+    api = ChronologicalDataServer()
     games = api.get_games_before(cutoff_year=cutoff_year)
     assert all(game.season <= cutoff_year for game in games)
 ```
