@@ -3508,3 +3508,35 @@ _render_home()  # single call at module bottom
 ```
 
 **Consequence:** Module-level page code produces zero test coverage for AC-critical display logic (banners, metrics, navigation). `TestDashboardImports.test_import_page_home` only checks that the module imports without error — it cannot verify that `st.error` fires on empty data. The function pattern enables full `patch.object` mocking.
+
+### When Removing a Marker From `pyproject.toml`, Audit ALL Doc Examples — Not Just Named Files (Discovered Story 8.11 Code Review, 2026-03-04)
+
+When a pytest marker is removed from `[tool.pytest.ini_options] markers` (e.g., `fuzz`, `mutation`), the doc-update sweep must cover **every guide in `docs/testing/`**, not just the files explicitly listed in the story's File List. Story 8.11 listed `test-approach-guide.md` as updated ("fixed API names") but did NOT fix the 6 occurrences of `@pytest.mark.fuzz` in that file. With `--strict-markers` enforced in pytest, any developer copying those examples will get immediate test failures.
+
+**Checklist when removing a marker:**
+1. Search ALL `docs/` for `@pytest.mark.<marker-name>` (not just the convention/strategy files)
+2. Search ALL `docs/` for the marker name in decision trees, "Mark as `...`" instructions, and prose
+3. Update every occurrence — replace with the appropriate substitute (e.g., `@pytest.mark.fuzz` → `@pytest.mark.slow`)
+4. Verify with `grep -rn "@pytest.mark.<marker-name>" docs/` returning zero results before marking tasks done
+
+### Documentation Stories: Validate Code Examples Against Actual Source Before Claiming "Fixed" (Discovered Story 8.11 Code Review, 2026-03-04)
+
+Story 8.11 Task 3.2 ("Fixed `Game` TypedDict example to use actual Pydantic fields") was marked `[x]` but the fix was only applied to `conventions.md`. Two other files (`execution.md`, `test-purpose-guide.md`) still showed stale `home_team`/`away_team`/`home_score`/`away_score` field names — fields that don't exist on the actual `Game` Pydantic model.
+
+**Pattern:** When fixing stale API names in docs, always:
+1. Run `grep -rn "<stale_name>" docs/` to get a **complete file list** before starting
+2. Fix ALL occurrences across ALL matching files in a single pass
+3. Re-run the grep after fixes to confirm zero remaining matches
+4. The story File List entry should say "fixed in ALL docs" not just mention specific files
+
+The actual `Game` model fields (from `src/ncaa_eval/ingest/schema.py`): `season`, `day_num`, `w_team_id`, `l_team_id`, `w_score`, `l_score`, `loc`, `num_ot`, `date`. There is NO `game_id`, `home_team`, `away_team`, `home_score`, or `away_score` field.
+
+### pyproject.toml Marker Descriptions Must Be Updated Along With Doc Tables (Discovered Story 8.11 Code Review Pass 2, 2026-03-04)
+
+When a documentation story fixes time budget wording in `docs/testing/` markdown tables, the `[tool.pytest.ini_options] markers` descriptions in `pyproject.toml` are also visible to developers (via `pytest --markers` and direct file reading). Story 8.11 correctly updated all markdown tables to show "smoke subset < 5s; Tier 1 overall < 10s" but left the `pyproject.toml` smoke marker description as `"< 10 seconds total"` — contradicting the docs.
+
+**Pattern:** After fixing any time budget or marker semantics in `docs/`, always check that `pyproject.toml` marker descriptions are also updated to match. Run:
+```bash
+grep -A1 "markers = \[" pyproject.toml
+```
+and compare each marker description against the docs tables.

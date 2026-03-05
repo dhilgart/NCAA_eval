@@ -39,11 +39,12 @@ Tests that specify concrete input examples and their expected outputs.
 **Simple assertions:** Basic input → output tests
 
 ```python
-def test_elo_update_increases_winner_rating():
+def test_elo_update_increases_winner_rating(elo_config, sample_game):
     """Verify Elo rating increases for the winning team."""
-    initial_rating = 1500
-    result = update_elo_rating(initial_rating, opponent_rating=1500, won=True, k_factor=32)
-    assert result > initial_rating
+    engine = EloFeatureEngine(elo_config)
+    initial_rating = engine.get_rating(sample_game.w_team_id)
+    engine.update_game(sample_game)
+    assert engine.get_rating(sample_game.w_team_id) > initial_rating
 ```
 
 **Parametrized tests:** `@pytest.mark.parametrize` to test multiple scenarios with same logic
@@ -54,9 +55,9 @@ def test_elo_update_increases_winner_rating():
     ([0.9, 0.1, 0.9], [1, 0, 1], 0.03),      # Near-perfect predictions
     ([0.5, 0.5, 0.5], [1, 0, 1], 0.25),      # Random guessing
 ])
-def test_calculate_brier_score_known_cases(predictions, actuals, expected):
+def test_brier_score_known_cases(predictions, actuals, expected):
     """Verify Brier score for known prediction scenarios."""
-    result = calculate_brier_score(np.array(predictions), np.array(actuals))
+    result = brier_score(np.array(predictions), np.array(actuals))
     assert abs(result - expected) < 0.01
 ```
 
@@ -116,7 +117,7 @@ def test_rolling_average_length_invariant(data):
 @given(cutoff_year=st.integers(2015, 2025))
 def test_temporal_boundary_invariant(cutoff_year):
     """Verify API never returns data beyond cutoff (invariant holds for all years)."""
-    api = ChronologicalDataAPI()
+    api = ChronologicalDataServer()
     games = api.get_games_before(cutoff_year=cutoff_year)
 
     # Invariant: all games before or at cutoff year
@@ -138,7 +139,7 @@ def test_brier_score_always_non_negative(predictions, actuals):
     preds = np.array(predictions[:min_len])
     acts = np.array(actuals[:min_len])
 
-    result = calculate_brier_score(preds, acts)
+    result = brier_score(preds, acts)
     assert result >= 0  # Invariant: Brier score cannot be negative
 ```
 
@@ -208,7 +209,7 @@ Tests that feed **random or mutated inputs** to find crashes, unhandled exceptio
 ```python
 from hypothesis import given, strategies as st
 
-@pytest.mark.fuzz
+@pytest.mark.slow
 @given(text=st.text())
 def test_parse_team_name_never_crashes(text):
     """Verify parser handles arbitrary text without crashing."""
@@ -225,7 +226,7 @@ def test_parse_team_name_never_crashes(text):
 
 ```python
 @pytest.mark.integration
-@pytest.mark.fuzz
+@pytest.mark.slow
 @given(data=st.binary())
 def test_ingest_csv_handles_malformed_data(data, tmp_path):
     """Verify CSV ingestion handles malformed files gracefully."""
@@ -245,14 +246,14 @@ def test_ingest_csv_handles_malformed_data(data, tmp_path):
 **Fuzz-based test (API validation):**
 
 ```python
-@pytest.mark.fuzz
+@pytest.mark.slow
 @given(
     season=st.integers(),  # Any integer, including negatives
     game_id=st.text(),     # Any string, including empty/special chars
 )
 def test_api_validates_inputs_safely(season, game_id):
     """Verify API validation doesn't crash on invalid inputs."""
-    api = GameDataAPI()
+    api = ChronologicalDataServer()
 
     try:
         # API should either return data or raise ValueError
@@ -287,7 +288,7 @@ st.text().map(lambda x: x + "\x00" + x)  # Null byte injection
 ### Pre-commit eligibility
 ❌ **NO** - Fuzz testing is slow (generates many random test cases)
 
-Mark as `@pytest.mark.fuzz` or `@pytest.mark.slow`
+Mark as `@pytest.mark.slow`
 
 ---
 
@@ -295,7 +296,7 @@ Mark as `@pytest.mark.fuzz` or `@pytest.mark.slow`
 
 ```
 Are you testing error handling / crash resilience?
-├─ YES → Use Fuzz-Based Testing (@pytest.mark.fuzz, Hypothesis)
+├─ YES → Use Fuzz-Based Testing (@pytest.mark.slow, Hypothesis)
 │         - Generate random/mutated inputs to find crashes
 │         - Examples: CSV parsing, API validation, input sanitization
 │
@@ -340,7 +341,7 @@ def test_clean_team_name_never_empty(name):
     assert len(result) > 0  # Invariant: output is never empty
 
 # Fuzz-based: Test crash resilience
-@pytest.mark.fuzz
+@pytest.mark.slow
 @given(name=st.text())  # Including empty strings, special chars
 def test_clean_team_name_never_crashes(name):
     """Verify normalization handles any text without crashing."""

@@ -90,7 +90,7 @@ def test_calculate_margin_correctness():
 ```
 
 ### Marker
-`@pytest.mark.mutation` - Tag tests that are good candidates for mutation testing
+No dedicated marker — mutation testing is run via `mutmut` as a quality tool, not as a pytest marker.
 
 ### Execution Tier
 - **Tier 1 (Pre-commit):** ❌ NO (extremely slow)
@@ -169,7 +169,6 @@ mutmut results
 mutmut show 42  # Mutation: changed `>` to `>=` and tests still passed
 
 # Step 4: Add test to catch this mutation
-@pytest.mark.mutation
 def test_threshold_boundary():
     """Regression test: Ensure > is used, not >= (catches mutant #42)."""
     result = is_above_threshold(value=50, threshold=50)

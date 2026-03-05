@@ -55,7 +55,7 @@ This strategy separates **four independent dimensions** of testing. Choose the a
 2. **Test Approach** - *How* you write the test → [Approach Guide](testing/test-approach-guide.md)
    - **Example-based:** Concrete inputs → expected outputs
    - **Property-based (Hypothesis):** Invariants that should hold for all inputs
-   - **Fuzz-based (Hypothesis):** Random/mutated inputs to find crashes and error handling gaps
+   - **Fuzz-based (Hypothesis):** Random/mutated inputs to find crashes and error handling gaps (no dedicated marker — use `@pytest.mark.slow`)
 
 3. **Test Purpose** - *Why* you're writing the test → [Purpose Guide](testing/test-purpose-guide.md)
    - **Functional:** Correctness of behavior (default)
@@ -83,7 +83,6 @@ Fast, local checks that run on every commit:
 | Format | `ruff format --check .` | Inconsistent formatting |
 | Type-check | `mypy` (strict) | Missing annotations, type errors |
 | Smoke tests | `pytest -m smoke` | Broken imports, sanity failures |
-| Package manifest | `check-manifest` | Missing distribution files |
 
 **Rationale:** Catch 80% of issues in seconds before code leaves your machine.
 
@@ -144,7 +143,7 @@ flowchart TD
 ```mermaid
 flowchart TD
     Start{Testing error handling<br/>or crash resilience?}
-    Start -->|YES| Fuzz[Fuzz-based<br/>@pytest.mark.fuzz<br/>Hypothesis st.text/st.binary]
+    Start -->|YES| Fuzz[Fuzz-based<br/>Hypothesis st.text/st.binary]
     Start -->|NO| Known{Have specific<br/>known scenarios?}
     Known -->|YES| Example[Example-based<br/>parametrize for multiple cases]
     Known -->|NO| Invariant{Can you state<br/>an invariant?}
@@ -171,12 +170,12 @@ flowchart TD
 |--------|-----------|---------|
 | `@pytest.mark.smoke` | Speed |  `pytest -m smoke` |
 | `@pytest.mark.slow` | Speed |  `pytest -m "not slow"` |
+| `@pytest.mark.unit` | Scope |  `pytest -m unit` |
 | `@pytest.mark.integration` | Scope |  `pytest -m integration` |
 | `@pytest.mark.property` | Approach |  `pytest -m property` |
-| `@pytest.mark.fuzz` | Approach |  `pytest -m fuzz` |
 | `@pytest.mark.performance` | Purpose |  `pytest -m performance` |
 | `@pytest.mark.regression` | Purpose |  `pytest -m regression` |
-| `@pytest.mark.mutation` | Quality |  `pytest -m mutation` |
+| `@pytest.mark.no_mutation` | Quality |  Tests incompatible with mutmut runner |
 
 
 **Combine markers across dimensions:**
@@ -192,7 +191,7 @@ flowchart TD
 
 | Context | Command | What Runs |
 |---------|---------|-----------|
-| **Tier 1 (Pre-commit)** | `pytest -m smoke` | Smoke tests only (< 5s total) |
+| **Tier 1 (Pre-commit)** | `pytest -m smoke` | Smoke tests only (< 5s; Tier 1 overall < 10s) |
 | **Tier 2 (PR/CI - full)** | `pytest` | All tests |
 | **Tier 2 (PR/CI - coverage)** | `pytest --cov=src/ncaa_eval --cov-report=term-missing` | All + coverage report |
 | **Tier 2 (exclude slow)** | `pytest -m "not slow"` | All except slow tests |
@@ -205,22 +204,68 @@ flowchart TD
 
 ```
 tests/
-├── conftest.py                   # Shared fixtures
-├── unit/                         # Unit tests
-│   ├── test_metrics.py
-│   ├── test_elo.py
-│   └── test_features.py
-├── integration/                  # Integration tests
-│   ├── test_sync_pipeline.py
-│   └── test_training_pipeline.py
-└── fixtures/                     # Test data files
-    └── sample_games.csv
+├── __init__.py
+├── conftest.py                          # Shared fixtures
+├── fixtures/
+│   ├── .gitkeep
+│   └── kaggle/
+│       ├── MNCAATourneyCompactResults.csv
+│       ├── MRegularSeasonCompactResults.csv
+│       ├── MSeasons.csv
+│       └── MTeams.csv
+├── integration/
+│   ├── __init__.py
+│   ├── test_documented_commands.py
+│   ├── test_elo_integration.py
+│   ├── test_feature_serving_integration.py
+│   └── test_sync.py
+└── unit/
+    ├── __init__.py
+    ├── test_bracket_page.py
+    ├── test_bracket_renderer.py
+    ├── test_calibration.py
+    ├── test_chronological_serving.py
+    ├── test_cli_train.py
+    ├── test_connector_base.py
+    ├── test_dashboard_app.py
+    ├── test_dashboard_filters.py
+    ├── test_deep_dive_page.py
+    ├── test_elo.py
+    ├── test_espn_connector.py
+    ├── test_evaluation_backtest.py
+    ├── test_evaluation_metrics.py
+    ├── test_evaluation_plotting.py
+    ├── test_evaluation_simulation.py
+    ├── test_evaluation_splitter.py
+    ├── test_feature_serving.py
+    ├── test_framework_validation.py
+    ├── test_fuzzy.py
+    ├── test_graph.py
+    ├── test_home_page.py
+    ├── test_imports.py
+    ├── test_kaggle_connector.py
+    ├── test_leaderboard_page.py
+    ├── test_logger.py
+    ├── test_model_base.py
+    ├── test_model_elo.py
+    ├── test_model_logistic_regression.py
+    ├── test_model_registry.py
+    ├── test_model_tracking.py
+    ├── test_model_xgboost.py
+    ├── test_normalization.py
+    ├── test_opponent.py
+    ├── test_package_structure.py
+    ├── test_pool_scorer_page.py
+    ├── test_repository.py
+    ├── test_run_store_metrics.py
+    ├── test_schema.py
+    └── test_sequential.py
 ```
 
 **Naming conventions:**
 - Test files: `test_<module_name>.py`
 - Test functions: `test_<function>_<scenario>()`
-- Fixtures: `<resource>_fixture()`
+- Fixtures: Descriptive names (e.g., `sample_teams`, `elo_config`, `temp_data_dir`)
 
 See [Conventions Guide](testing/conventions.md) for details.
 
@@ -252,7 +297,7 @@ See [Conventions Guide](testing/conventions.md#coverage-targets) for details.
 | **Hypothesis** | Property-based + Fuzz testing | Dev dependency |
 | **Mutmut** | Mutation testing (quality) | Dev dependency |
 | **pytest-cov** | Coverage reporting | `[tool.coverage.report]` |
-| **Nox** | Session orchestration | `noxfile.py` (Story 1.6) |
+| **Nox** | Session orchestration | `noxfile.py` |
 
 ---
 

@@ -24,11 +24,11 @@ This project has a **60-second backtest target** (10-year Elo training + inferen
 
 ```python
 @pytest.mark.smoke
-def test_calculate_brier_score_is_vectorized():
+def test_brier_score_is_vectorized():
     """Verify Brier score uses vectorized operations (no Python loops)."""
     import inspect
 
-    source = inspect.getsource(calculate_brier_score)
+    source = inspect.getsource(brier_score)
 
     # Check that implementation doesn't contain for loops over data
     # (Allow for loops in fixture setup, just not in calculation logic)
@@ -53,13 +53,13 @@ import pytest
 
 @pytest.mark.slow
 @pytest.mark.integration
-def test_calculate_brier_score_performance():
+def test_brier_score_performance():
     """Verify Brier score meets performance target."""
     predictions = np.random.rand(10_000)
     actuals = np.random.randint(0, 2, 10_000)
 
     time_taken = timeit.timeit(
-        lambda: calculate_brier_score(predictions, actuals),
+        lambda: brier_score(predictions, actuals),
         number=100
     )
 
@@ -77,25 +77,25 @@ def test_calculate_brier_score_performance():
 
 #### 3. pytest-benchmark (Optional, for Critical Paths)
 
-> ⚠️ **NOT YET INSTALLED:** `pytest-benchmark` is optional and NOT currently in `pyproject.toml`.
-> Use timeit-based benchmarks (Option 2) for now. Story 1.5 will evaluate pytest-benchmark for installation.
+> ⚠️ **NOT INSTALLED:** `pytest-benchmark` is optional and NOT currently in `pyproject.toml`.
+> Use timeit-based benchmarks (Option 2) for now.
 
 **Purpose:** Track performance over time with detailed statistics
 
 ```python
-def test_calculate_brier_score_benchmark(benchmark):
+def test_brier_score_benchmark(benchmark):
     """Benchmark Brier score calculation."""
     predictions = np.random.rand(10_000)
     actuals = np.random.randint(0, 2, 10_000)
 
-    result = benchmark(calculate_brier_score, predictions, actuals)
+    result = benchmark(brier_score, predictions, actuals)
 
     # Benchmark provides detailed statistics (mean, stddev, percentiles)
     assert result is not None
 ```
 
 **Pros:** Detailed statistics, integrated with pytest, tracks performance over time
-**Cons:** Requires `pytest-benchmark` plugin (evaluate in Story 1.5)
+**Cons:** Requires `pytest-benchmark` plugin (not currently installed)
 
 **Pre-commit:** ❌ **NO**
 **PR-time:** ✅ **YES** (if plugin is installed)
@@ -156,7 +156,7 @@ def test_metric_calculations_are_vectorized():
 
 - Use **assertion-based tests** for quick smoke checks (mark as `@pytest.mark.smoke`)
 - Use **performance benchmarks** for critical modules (`evaluation/metrics.py`, `evaluation/simulation.py`) as `@pytest.mark.slow` tests (PR-time only)
-- Consider **pytest-benchmark** for performance regression tracking (optional, evaluate during Story 1.5)
+- Consider **pytest-benchmark** for performance regression tracking (optional, not currently installed)
 
 ---
 
@@ -179,7 +179,7 @@ NFR4 requires strict temporal boundaries: **training data must never include inf
 ```python
 def test_get_chronological_season_enforces_cutoff():
     """Verify chronological API rejects requests for future data."""
-    api = ChronologicalDataAPI()
+    api = ChronologicalDataServer()
 
     with pytest.raises(ValueError, match="Cannot access future data"):
         api.get_games_before(date="2025-12-31", cutoff_date="2025-01-01")
@@ -197,11 +197,11 @@ def test_get_chronological_season_enforces_cutoff():
 
 ```python
 @pytest.mark.integration
-def test_walk_forward_validation_prevents_leakage(sample_games_fixture):
+def test_walk_forward_validation_prevents_leakage(sample_games):
     """Verify walk-forward CV never trains on future data."""
     splitter = WalkForwardSplitter(years=range(2015, 2025))
 
-    for train_data, test_data, year in splitter.split(sample_games_fixture):
+    for train_data, test_data, year in splitter.split(sample_games):
         # Verify all training games occur before test games
         train_max_date = train_data['date'].max()
         test_min_date = test_data['date'].min()
@@ -228,7 +228,7 @@ from hypothesis import given, strategies as st
 @given(cutoff_year=st.integers(2015, 2025))
 def test_temporal_boundary_invariant(cutoff_year):
     """Verify no API call can access data beyond cutoff year."""
-    api = ChronologicalDataAPI()
+    api = ChronologicalDataServer()
     games = api.get_games_before(cutoff_year=cutoff_year)
 
     # Invariant: ALL games must be from or before cutoff year
@@ -254,7 +254,7 @@ def test_chronological_api_rejects_exact_cutoff_date():
     Bug: Issue #87 - get_games_before() used <= instead of < for date comparison.
     Fixed: 2026-02-10 - Changed to strict less-than comparison.
     """
-    api = ChronologicalDataAPI()
+    api = ChronologicalDataServer()
     cutoff = "2023-03-15"
 
     # Load games before cutoff
