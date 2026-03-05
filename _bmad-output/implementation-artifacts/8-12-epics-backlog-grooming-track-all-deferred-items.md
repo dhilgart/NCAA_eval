@@ -1,6 +1,6 @@
 # Story 8.12: Epics & Backlog Grooming — Track All Deferred Items
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -19,40 +19,40 @@ so that all deferred work is tracked in one place with origin, description, and 
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add 15 deferred items to Post-MVP Backlog in epics.md (AC: #1)
-  - [ ] 1.1 Add "Game Theory Slider Implementation" — origin: Stories 7.5/7.7, spike research in `specs/research/game-theory-slider-mechanism.md`
-  - [ ] 1.2 Add "User-Editable Bracket" — origin: UX Spec Flow 1
-  - [ ] 1.3 Add "Kaggle Submission Export" — origin: PRD mission statement
-  - [ ] 1.4 Add "Metric Explorer: Round/Seed/Conference Drill-Downs" — origin: Story 7.4
-  - [ ] 1.5 Add "Candidate Entry Flagging" — origin: Story 7.5
-  - [ ] 1.6 Add "CLI `predict` Command" — origin: PRD
-  - [ ] 1.7 Add "Model Ensemble/Blending" — origin: competitive necessity
-  - [ ] 1.8 Add "JSON Export for Pool Scorer" — origin: Story 7.6
-  - [ ] 1.9 Add "st.progress for Simulation" — origin: Story 7.6, UX Spec
-  - [ ] 1.10 Add "Per-Game Prediction Explainability" — origin: PRD
-  - [ ] 1.11 Add "Demo/Sample Data for Zero-Setup Onboarding" — origin: UX need
-  - [ ] 1.12 Add "Custom Metric Plugin Registry" — origin: NFR3 (PRD)
-  - [ ] 1.13 Add "Custom Feature Generator Plugin Registry" — origin: NFR3 (PRD)
-  - [ ] 1.14 Add "Confusion Matrix in Model Deep Dive" — origin: PRD 3.2
-  - [ ] 1.15 Add "Public Bracket Competitive ROI Simulation" — origin: UX Spec Flow 2
+- [x] Task 1: Add 15 deferred items to Post-MVP Backlog in epics.md (AC: #1)
+  - [x] 1.1 Add "Game Theory Slider Implementation" — origin: Stories 7.5/7.7, spike research in `specs/research/game-theory-slider-mechanism.md`
+  - [x] 1.2 Add "User-Editable Bracket" — origin: UX Spec Flow 1
+  - [x] 1.3 Add "Kaggle Submission Export" — origin: PRD mission statement
+  - [x] 1.4 Add "Metric Explorer: Round/Seed/Conference Drill-Downs" — origin: Story 7.4
+  - [x] 1.5 Add "Candidate Entry Flagging" — origin: Story 7.5
+  - [x] 1.6 Add "CLI `predict` Command" — origin: PRD
+  - [x] 1.7 Add "Model Ensemble/Blending" — origin: competitive necessity
+  - [x] 1.8 Add "JSON Export for Pool Scorer" — origin: Story 7.6
+  - [x] 1.9 Add "st.progress for Simulation" — origin: Story 7.6, UX Spec
+  - [x] 1.10 Add "Per-Game Prediction Explainability" — origin: PRD
+  - [x] 1.11 Add "Demo/Sample Data for Zero-Setup Onboarding" — origin: UX need
+  - [x] 1.12 Add "Custom Metric Plugin Registry" — origin: NFR3 (PRD)
+  - [x] 1.13 Add "Custom Feature Generator Plugin Registry" — origin: NFR3 (PRD)
+  - [x] 1.14 Add "Confusion Matrix in Model Deep Dive" — origin: PRD 3.2
+  - [x] 1.15 Add "Public Bracket Competitive ROI Simulation" — origin: UX Spec Flow 2
 
-- [ ] Task 2: Add Story 1.9 retroactively to epics.md (AC: #2)
-  - [ ] 2.1 Add "### Story 1.9: Restructure docs/ as Pure Sphinx Source Directory" after Story 1.8 in Epic 1 section
-  - [ ] 2.2 Write user story and acceptance criteria matching the implemented story (reference `1-9-restructure-docs-sphinx-source.md`)
+- [x] Task 2: Add Story 1.9 retroactively to epics.md (AC: #2)
+  - [x] 2.1 Add "### Story 1.9: Restructure docs/ as Pure Sphinx Source Directory" after Story 1.8 in Epic 1 section
+  - [x] 2.2 Write user story and acceptance criteria matching the implemented story (reference `1-9-restructure-docs-sphinx-source.md`)
 
-- [ ] Task 3: Fix stale Story ACs (AC: #3, #4)
-  - [ ] 3.1 In Story 3.2 AC, replace "all visualizations use Plotly for interactive inline rendering" with "all visualizations use matplotlib for static PNG rendering (Plotly inline outputs caused ~800MB notebook files — see Story 3.1 findings)"
-  - [ ] 3.2 In Story 1.7, either remove "And edgetest is configured for dependency compatibility testing" or append "(Deferred: removed in Story 8.11 — never automated in CI)"
+- [x] Task 3: Fix stale Story ACs (AC: #3, #4)
+  - [x] 3.1 In Story 3.2 AC, replace "all visualizations use Plotly for interactive inline rendering" with "all visualizations use matplotlib for static PNG rendering (Plotly inline outputs caused ~800MB notebook files — see Story 3.1 findings)"
+  - [x] 3.2 In Story 1.7, either remove "And edgetest is configured for dependency compatibility testing" or append "(Deferred: removed in Story 8.11 — never automated in CI)"
 
-- [ ] Task 4: Update FR Coverage Map (AC: #5)
-  - [ ] 4.1 Change NFR3 row from "Epic 5" / "Plugin-registry extensibility" to: "Epic 5 (Partial)" / "Plugin-registry extensibility — model and scoring registries implemented; metric and feature-generator registries deferred to Post-MVP"
+- [x] Task 4: Update FR Coverage Map (AC: #5)
+  - [x] 4.1 Change NFR3 row from "Epic 5" / "Plugin-registry extensibility" to: "Epic 5 (Partial)" / "Plugin-registry extensibility — model and scoring registries implemented; metric and feature-generator registries deferred to Post-MVP"
 
-- [ ] Task 5: Annotate architecture spec (AC: #6)
-  - [ ] 5.1 Add banner to top of `specs/05-architecture-fullstack.md`: "> **Note:** This document reflects initial design decisions from project planning (2026-02). The implementation has diverged in several areas. See `_bmad-output/planning-artifacts/epics.md` and the actual codebase for current state."
+- [x] Task 5: Annotate architecture spec (AC: #6)
+  - [x] 5.1 Add banner to top of `specs/05-architecture-fullstack.md`: "> **Note:** This document reflects initial design decisions from project planning (2026-02). The implementation has diverged in several areas. See `_bmad-output/planning-artifacts/epics.md` and the actual codebase for current state."
 
-- [ ] Task 6: Add any additional deferred items discovered during Epic 8 implementation (AC: #1)
-  - [ ] 6.1 Review AI code review follow-ups from Stories 8-1, 8-3 for orphaned items not covered by completed stories
-  - [ ] 6.2 Add any remaining uncovered items to Post-MVP Backlog with appropriate origin references
+- [x] Task 6: Add any additional deferred items discovered during Epic 8 implementation (AC: #1)
+  - [x] 6.1 Review AI code review follow-ups from Stories 8-1, 8-3 for orphaned items not covered by completed stories
+  - [x] 6.2 Add any remaining uncovered items to Post-MVP Backlog with appropriate origin references
 
 ## Dev Notes
 
@@ -164,10 +164,31 @@ Recent commits are all Epic 8 squash merges (Stories 8.6-8.11). Key patterns:
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+claude-opus-4-6
 
 ### Debug Log References
 
+None — documentation-only story, no debugging required.
+
 ### Completion Notes List
 
+- Added all 15 P3-18 deferred items to Post-MVP Backlog in epics.md, each with description, effort estimate, distinctness, source reference, and deferral reason
+- Added 2 additional items from Epic 8 code reviews: PLR0913 run_training() API refactor (Story 8.1) and ESPN marker-file caching metadata (Story 8.3)
+- Log format (Story 8.3) and dashboard mypy (P2-6) are already tracked under Story 8.13 Category 1/2 items — not added to Post-MVP Backlog to avoid duplication
+- Story 1.9 retroactively added to Epic 1 section of epics.md with user story and acceptance criteria matching the implemented story
+- Story 3.2 AC updated: Plotly → matplotlib with explanation of ~800 MB notebook file issue
+- Story 1.7 edgetest AC marked with strikethrough and deferred annotation (removed in Story 8.11)
+- FR Coverage Map NFR3 row updated to "Epic 5 (Partial)" with note about metric and feature-generator registries
+- Architecture spec `specs/05-architecture-fullstack.md` annotated with historical-document banner
+- Total Post-MVP Backlog now contains 27 items (10 existing + 15 from P3-18 + 2 from Epic 8 reviews)
+
 ### File List
+
+- `_bmad-output/planning-artifacts/epics.md` (modified — 5 edits: Post-MVP Backlog additions, Story 1.9, Story 3.2 AC, Story 1.7 AC, FR Coverage Map NFR3)
+- `specs/05-architecture-fullstack.md` (modified — historical-document banner added)
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified — status update)
+- `_bmad-output/implementation-artifacts/8-12-epics-backlog-grooming-track-all-deferred-items.md` (modified — task completion, Dev Agent Record)
+
+### Change Log
+
+- 2026-03-04: Implemented all 6 tasks — 17 Post-MVP Backlog entries added, Story 1.9 retroactively documented, stale ACs fixed, FR Coverage Map updated, architecture spec annotated

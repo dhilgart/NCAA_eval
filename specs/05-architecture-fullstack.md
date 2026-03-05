@@ -1,3 +1,5 @@
+> **Note:** This document reflects initial design decisions from project planning (2026-02). The implementation has diverged in several areas. See `_bmad-output/planning-artifacts/epics.md` and the actual codebase for current state.
+
 # Fullstack Architecture Document
 
 | **Project** | NCAA Tournament Data & Evaluation Platform |
