@@ -14,6 +14,7 @@ from dashboard.lib.data_loaders import (
     load_available_runs,
     load_available_scorings,
     load_available_years,
+    load_data_freshness,
     load_scoring_display_names,
 )
 from dashboard.lib.styles import MONOSPACE_CSS
@@ -96,6 +97,20 @@ with st.sidebar:
     else:
         st.session_state.setdefault("selected_scoring", None)
         st.info("No scoring formats available")
+
+    # Refresh Data
+    st.divider()
+    if st.button("\U0001f504 Refresh Data", use_container_width=True):
+        st.cache_data.clear()
+        st.rerun()
+
+    # Data Freshness
+    if years:
+        freshness = load_data_freshness(data_dir)
+        if freshness["last_sync_date"] or freshness["latest_game_date"]:
+            sync_label = freshness["last_sync_date"] or "unknown"
+            game_label = freshness["latest_game_date"] or "unknown"
+            st.caption(f"Data synced: {sync_label}  \nLatest game: {game_label}")
 
 # --- Run selected page ------------------------------------------------------
 

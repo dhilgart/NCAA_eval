@@ -90,7 +90,10 @@ class TestYearFiltering:
         """_render_leaderboard with selected_year set renders only the filtered year rows."""
         mock_st = MagicMock()
         mock_st.session_state = {"selected_year": 2023}
-        mock_st.columns.return_value = [MagicMock(), MagicMock(), MagicMock(), MagicMock()]
+        mock_st.columns.side_effect = [
+            [MagicMock(), MagicMock()],  # breadcrumb columns
+            [MagicMock(), MagicMock(), MagicMock(), MagicMock()],  # KPI columns
+        ]
         mock_st.dataframe.return_value = MagicMock(selection=MagicMock(rows=[]))
 
         with (
@@ -109,7 +112,10 @@ class TestYearFiltering:
         """Year-filtered view must not expose internal columns (timestamp, start_year, etc.)."""
         mock_st = MagicMock()
         mock_st.session_state = {"selected_year": 2023}
-        mock_st.columns.return_value = [MagicMock(), MagicMock(), MagicMock(), MagicMock()]
+        mock_st.columns.side_effect = [
+            [MagicMock(), MagicMock()],  # breadcrumb columns
+            [MagicMock(), MagicMock(), MagicMock(), MagicMock()],  # KPI columns
+        ]
         mock_st.dataframe.return_value = MagicMock(selection=MagicMock(rows=[]))
 
         with (
@@ -129,6 +135,7 @@ class TestEmptyStateHandling:
         from unittest.mock import MagicMock, patch
 
         mock_st = MagicMock()
+        mock_st.columns.return_value = [MagicMock(), MagicMock()]
         with (
             patch.object(_lab_mod, "load_leaderboard_data", return_value=[]),
             patch.object(_lab_mod, "load_available_runs", return_value=[]),
@@ -145,6 +152,7 @@ class TestEmptyStateHandling:
         from unittest.mock import MagicMock, patch
 
         mock_st = MagicMock()
+        mock_st.columns.return_value = [MagicMock(), MagicMock()]
         with (
             patch.object(_lab_mod, "load_leaderboard_data", return_value=[]),
             patch.object(_lab_mod, "load_available_runs", return_value=[{"run_id": "old-run"}]),

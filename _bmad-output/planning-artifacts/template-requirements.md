@@ -3403,3 +3403,108 @@ assert df["col"].dtype in (np.dtype("int64"), object)
 
 
 **Applies to:** Any story that adds public setter/getter methods to replace private attribute access.
+
+### Backward-Compat Shim Modules: Keep `__all__` and Re-Export Block in Sync (Discovered Story 8.8 Code Review, 2026-03-04)
+
+When a project uses a backward-compatibility shim module (e.g., `filters.py` re-exporting from `data_loaders.py`), every new function added to the source module must be added to **both** the `__all__` list **and** the explicit `from ... import ...` re-export block. Omitting either leaves the shim incomplete — callers importing by name from the compat layer will get `ImportError`.
+
+**Anti-pattern (missed in Story 8.8 dev pass):**
+```python
+# filters.py __all__ — missing load_data_freshness
+__all__ = [..., "load_team_names", ...]
+
+# re-export block — also missing load_data_freshness
+from dashboard.lib.data_loaders import (
+    load_team_names,
+    # load_data_freshness omitted!
+)
+```
+
+**Correct pattern:**
+```python
+__all__ = [..., "load_data_freshness", "load_team_names", ...]
+
+from dashboard.lib.data_loaders import (
+    load_data_freshness,  # ← must match __all__
+    load_team_names,
+)
+```
+
+**Code review checklist item:** When `data_loaders.py` (or any source module with a compat shim) appears in the story File List, verify that `filters.py` (or the shim) `__all__` and re-export block contain every new public function.
+
+### Streamlit UX Severity: Use `st.error` for Blocking States, `st.warning` for Degraded States (Discovered Story 8.8 Code Review, 2026-03-04)
+
+Choose the appropriate Streamlit callout severity based on whether the user **can still use the app** in the current state:
+
+- `st.error` (red) — **Blocking**: app has no useful functionality until the user acts (e.g., no data directory = nothing works)
+- `st.warning` (yellow) — **Degraded**: some functionality is impacted but the user can still navigate and use other parts
+- `st.info` (blue) — **Informational**: a next step to unlock a feature (e.g., train a model to enable the Lab page)
+
+**Anti-pattern (Story 8.8):** Using `st.warning` for a zero-data state where the entire dashboard is non-functional.
+
+**Rule:** No-data states that render all pages empty → `st.error`. Partial-data states (data exists but no model runs) → `st.info`. Stale-data warnings → `st.warning`.
+
+### `load_data_freshness`-Style Loaders: Catch `(OSError, ValueError, KeyError)`, Not Just `OSError` (Discovered Story 8.8 Code Review, 2026-03-04)
+
+Dashboard data loaders that call repository methods (e.g., `ParquetRepository.get_games()`) should catch `(OSError, ValueError, KeyError)` in the second `try/except` block, not just `OSError`. Repository operations can raise `ValueError` (malformed parquet schema) or `KeyError` (unexpected data structure). Narrow `except OSError` will let these propagate to the Streamlit UI as red error banners.
+
+**Template pattern for graceful degradation loaders:**
+```python
+try:
+    # File-system operations — OSError is sufficient
+    mtimes = [p.stat().st_mtime for p in parquets]
+except OSError as exc:
+    logger.debug("mtime lookup failed: %s", exc)
+
+try:
+    # Repository/data operations — broader catch needed
+    games = repo.get_games(year)
+    result["latest_game_date"] = str(max(g.date for g in games))
+except (OSError, ValueError, KeyError) as exc:
+    logger.debug("latest game date unavailable: %s", exc)
+```
+
+**Note:** Always pair `except` blocks with `logger.debug()` — silent `pass` hides failures during debugging.
+
+### `rglob("*.parquet")` for Freshness Must Exclude Model/Run Artifacts (Discovered Story 8.8 Code Review Round 2, 2026-03-04)
+
+When using file modification time to indicate "last data sync date", scope the glob to **game/sync data directories only** — never use an unrestricted `rglob` from the data root. `data/runs/*/fold_predictions.parquet` and friends are updated on every model training run, not on data sync, and will silently make "Data synced" reflect the last TRAINING date rather than the last sync.
+
+**Anti-pattern:**
+```python
+parquets = list(path.rglob("*.parquet"))  # includes data/runs/ — polluted by training
+```
+
+**Template pattern:**
+```python
+games_parquets = list((path / "games").rglob("*.parquet")) if (path / "games").is_dir() else []
+top_level_parquets = list(path.glob("*.parquet"))
+parquets = games_parquets + top_level_parquets
+```
+
+**Rule:** Any freshness/mtime indicator must be derived only from the data layer it represents. If "sync date" — scope to `games/` + top-level parquets. If "model training date" — scope to `runs/`. Never mix.
+
+### Streamlit Pages Must Wrap Logic in `_render_xxx()` — No Module-Level Execution (Discovered Story 8.8 Code Review Round 2, 2026-03-04)
+
+All Streamlit pages should follow the `_render_xxx()` / `_render_xxx()` function-call pattern used by `1_Lab.py`, `2_Presentation.py`, `3_Model_Deep_Dive.py`, and `4_Pool_Scorer.py`. Module-level execution (code outside any function) is untestable — you can't patch `st.*` calls or data loaders before the module runs.
+
+**Anti-pattern (home.py before Story 8.8 Round 2):**
+```python
+data_dir = str(get_data_dir())   # module-level — runs at import time
+years = load_available_years(data_dir)
+if not years:
+    st.error(...)  # impossible to unit-test
+```
+
+**Template pattern:**
+```python
+def _render_home() -> None:
+    data_dir = str(get_data_dir())
+    years = load_available_years(data_dir)
+    if not years:
+        st.error(...)
+
+_render_home()  # single call at module bottom
+```
+
+**Consequence:** Module-level page code produces zero test coverage for AC-critical display logic (banners, metrics, navigation). `TestDashboardImports.test_import_page_home` only checks that the module imports without error — it cannot verify that `st.error` fires on empty data. The function pattern enables full `patch.object` mocking.

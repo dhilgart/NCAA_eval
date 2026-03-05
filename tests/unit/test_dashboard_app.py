@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib
+from pathlib import Path
 
 
 class TestDashboardImports:
@@ -14,6 +15,9 @@ class TestDashboardImports:
         assert hasattr(mod, "load_available_years")
         assert hasattr(mod, "load_available_runs")
         assert hasattr(mod, "load_available_scorings")
+        # Story 8.8: these were explicitly added to filters.__all__ as re-exports
+        assert hasattr(mod, "load_data_freshness")
+        assert hasattr(mod, "load_scoring_display_names")
 
     def test_import_styles(self) -> None:
         mod = importlib.import_module("dashboard.lib.styles")
@@ -89,6 +93,50 @@ class TestMonospaceCss:
 
         assert "<style>" in MONOSPACE_CSS
         assert "</style>" in MONOSPACE_CSS
+
+
+class TestLoadDataFreshness:
+    """Unit tests for load_data_freshness."""
+
+    def test_returns_dict_with_expected_keys(self, tmp_path: Path) -> None:
+        from dashboard.lib.data_loaders import load_data_freshness
+
+        result = load_data_freshness.__wrapped__(str(tmp_path))  # type: ignore[attr-defined]
+        assert "last_sync_date" in result
+        assert "latest_game_date" in result
+
+    def test_nonexistent_dir_returns_none_values(self) -> None:
+        from dashboard.lib.data_loaders import load_data_freshness
+
+        result = load_data_freshness.__wrapped__("/nonexistent/path/that/does/not/exist")  # type: ignore[attr-defined]
+        assert result["last_sync_date"] is None
+        assert result["latest_game_date"] is None
+
+    def test_empty_dir_returns_none_values(self, tmp_path: Path) -> None:
+        from dashboard.lib.data_loaders import load_data_freshness
+
+        result = load_data_freshness.__wrapped__(str(tmp_path))  # type: ignore[attr-defined]
+        assert result["last_sync_date"] is None
+        assert result["latest_game_date"] is None
+
+    def test_parquet_file_sets_sync_date(self, tmp_path: Path) -> None:
+        from dashboard.lib.data_loaders import load_data_freshness
+
+        # Create a dummy parquet file under games/ (sync-data location, not runs/)
+        parquet_file = tmp_path / "games" / "season=2025" / "data.parquet"
+        parquet_file.parent.mkdir(parents=True)
+        parquet_file.write_bytes(b"dummy")
+
+        result = load_data_freshness.__wrapped__(str(tmp_path))  # type: ignore[attr-defined]
+        # last_sync_date should be a date string (YYYY-MM-DD format)
+        assert result["last_sync_date"] is not None
+        assert len(result["last_sync_date"]) == 10
+        assert result["last_sync_date"][4] == "-"
+
+    def test_is_cached_with_wrapped(self) -> None:
+        from dashboard.lib.data_loaders import load_data_freshness
+
+        assert hasattr(load_data_freshness, "__wrapped__")
 
 
 class TestSessionStateKeys:
