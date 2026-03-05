@@ -1,6 +1,6 @@
 # Story 8.13: Gather PO Direction on Category 1 & 2 Items
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -226,20 +226,20 @@ so that **deferred items have clear dispositions, follow-up stories are created 
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: PO reads all three audit reports (AC: #1)
-  - [ ] 1.1 Read `codebase-audit-report.md` (Category 1: items 1.1–1.15, Category 2: items 2.1–2.21)
-  - [ ] 1.2 Read `codebase-audit-pass2-addendum.md` (reclassifications, P2-5, P2-6)
-  - [ ] 1.3 Read `codebase-audit-pass3-addendum.md` (P3-17, P3-20)
-- [ ] Task 2: Record Category 1 decisions (AC: #2)
-  - [ ] 2.1 For each of 16 Cat-1 items: Implement / Accept-as-is / Defer
-- [ ] Task 3: Record Category 2 decisions (AC: #3)
-  - [ ] 3.1 For each of 24 Cat-2 items: Fix / Accept-as-is / Defer
-- [ ] Task 4: Create PO Decision Log artifact (AC: #4)
-  - [ ] 4.1 Write `_bmad-output/planning-artifacts/po-decision-log-epic8.md`
-- [ ] Task 5: Create follow-up stories for approved items (AC: #5)
-  - [ ] 5.1 Add stories to `epics.md` (new Epic 10 or appropriate existing epic)
-- [ ] Task 6: Update sprint-status.yaml with new stories (AC: #6)
-- [ ] Task 7: Update Post-MVP Backlog with final dispositions (AC: #7)
+- [x] Task 1: PO reads all three audit reports (AC: #1)
+  - [x] 1.1 Read `codebase-audit-report.md` (Category 1: items 1.1–1.15, Category 2: items 2.1–2.21)
+  - [x] 1.2 Read `codebase-audit-pass2-addendum.md` (reclassifications, P2-5, P2-6)
+  - [x] 1.3 Read `codebase-audit-pass3-addendum.md` (P3-17, P3-20)
+- [x] Task 2: Record Category 1 decisions (AC: #2)
+  - [x] 2.1 For each of 16 Cat-1 items: Implement / Accept-as-is / Defer
+- [x] Task 3: Record Category 2 decisions (AC: #3)
+  - [x] 3.1 For each of 24 Cat-2 items: Fix / Accept-as-is / Defer
+- [x] Task 4: Create PO Decision Log artifact (AC: #4)
+  - [x] 4.1 Write `_bmad-output/planning-artifacts/po-decision-log-epic8.md`
+- [x] Task 5: Create follow-up stories for approved items (AC: #5)
+  - [x] 5.1 Add stories to `epics.md` (new Epic 10 or appropriate existing epic)
+- [x] Task 6: Update sprint-status.yaml with new stories (AC: #6)
+- [x] Task 7: Update Post-MVP Backlog with final dispositions (AC: #7)
 
 ## Dev Notes
 
@@ -300,6 +300,31 @@ claude-opus-4-6
 
 ### Debug Log References
 
+N/A — no production code changes; planning artifacts only.
+
 ### Completion Notes List
 
+- All three audit reports reviewed in full (Pass 1: 85+ issues, Pass 2: +8 net, Pass 3: +22 net = 99 total)
+- **Category 1 decisions (16 items):** 3 Implement, 6 Accept-as-is, 7 Defer
+- **Category 2 decisions (24 items):** 2 Fix, 10 Accept-as-is, 9 Defer, 3 Already Resolved
+- **PO Decision Log** created at `_bmad-output/planning-artifacts/po-decision-log-epic8.md` with full rationale for each decision
+- **Epic 10: Audit-Driven Enhancements** created in `epics.md` with 5 stories:
+  - 10.1 Kaggle Submission Export (from audit 1.3)
+  - 10.2 Feature Config CLI Option (from audit 1.6)
+  - 10.3 Feature Importance for All Models (from audit 1.15)
+  - 10.4 Fix Public API Documentation (from audit 2.18)
+  - 10.5 Post-Sync Data Validation (from audit 2.20)
+- **Sprint status** updated with Epic 10 and 5 new stories (all `backlog`)
+- **Post-MVP Backlog** expanded with 7 new deferred items (2.12, 2.14, 2.17, 2.21, P2-5, P2-6) following established format from Story 8.12
+- Items already resolved identified: 2.11 (Story 8.3), 2.19 (Story 8.4)
+
+### Change Log
+
+- 2026-03-05: Story 8.13 completed — PO decisions recorded for all 40 audit items, Epic 10 created with 5 follow-up stories, Post-MVP Backlog updated with 7 new deferred items
+
 ### File List
+
+- `_bmad-output/planning-artifacts/po-decision-log-epic8.md` (new)
+- `_bmad-output/planning-artifacts/epics.md` (modified — added Epic 10, 7 new Post-MVP Backlog entries)
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified — story 8.13 in-progress→review, added Epic 10 entries)
+- `_bmad-output/implementation-artifacts/8-13-gather-po-direction-category-1-2-items.md` (modified — tasks completed, status updated)

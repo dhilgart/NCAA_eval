@@ -126,10 +126,19 @@ development_status:
   8-10-documentation-command-e2e-integration-tests: done
   8-11-fix-testing-documentation-staleness-marker-gaps: done
   8-12-epics-backlog-grooming-track-all-deferred-items: done
-  8-13-gather-po-direction-category-1-2-items: ready-for-dev
+  8-13-gather-po-direction-category-1-2-items: review
   epic-8-retrospective: optional
 
   # Epic 9: Template & Knowledge Transfer
   epic-9: backlog
   9-1-create-cookie-cutter-template: ready-for-dev
   epic-9-retrospective: optional
+
+  # Epic 10: Audit-Driven Enhancements
+  epic-10: backlog
+  10-1-kaggle-submission-export: backlog
+  10-2-feature-config-cli-option: backlog
+  10-3-feature-importance-all-models: backlog
+  10-4-fix-public-api-documentation: backlog
+  10-5-post-sync-data-validation: backlog
+  epic-10-retrospective: optional

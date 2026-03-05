@@ -986,6 +986,94 @@ So that I can quickly learn how to use the platform's key workflows.
 **And** the `{contents}` TOC directive is removed from `docs/user-guide.md` (conflicts with Furo's built-in right-sidebar TOC). Make sure to search other documentation and see if other TOCs need removal.
 **And** the project `README.md` is reviewed and enhanced. At the very least it should be updated to include a link to the GitHub Pages documentation site (`https://dhilgart.github.io/NCAA_eval/`), but there should also be though given to what else should be added and what should be removed. Also pay attention to what status bars at the top should be added.
 
+## Epic 10: Audit-Driven Enhancements
+
+Focused improvements identified by the Epic 8 codebase audit and approved by the PO in the decision log (`po-decision-log-epic8.md`). These are low-to-medium effort items that address product gaps, usability, and documentation accuracy.
+
+### Story 10.1: Kaggle Submission Export
+
+As a **data scientist**,
+I want to **export my model's predictions in Kaggle March Machine Learning Mania submission format**,
+So that **I can submit my bracket predictions directly to the Kaggle competition**.
+
+**Acceptance Criteria:**
+
+**Given** a trained model's probability matrix is available
+**When** the user clicks "Export Kaggle Submission" in the dashboard (or runs a CLI command)
+**Then** a CSV file is generated with columns `ID` and `Pred` for all 2,278 possible team matchups
+**And** the `ID` column uses the Kaggle format `YYYY_TeamID1_TeamID2` (lower ID first)
+**And** the `Pred` column contains the model's win probability for TeamID1
+**And** the file conforms to the Kaggle `SampleSubmission.csv` schema
+
+**Source:** Audit item 1.3; PRD §1 (competitive submission workflow)
+
+### Story 10.2: Feature Config CLI Option
+
+As a **data scientist**,
+I want to **specify feature engineering configuration from the CLI when training models**,
+So that **I can experiment with different feature combinations without editing source code**.
+
+**Acceptance Criteria:**
+
+**Given** the training CLI (`ncaa-eval train`)
+**When** the user provides a `--feature-config` option (YAML file path or inline key=value pairs)
+**Then** the `FeatureConfig` is constructed from the provided configuration instead of the hardcoded defaults
+**And** the default behavior (no flag) remains unchanged
+**And** the feature config is saved alongside the model run for reproducibility
+
+**Source:** Audit item 1.6; `src/ncaa_eval/cli/train.py:101-109`
+
+### Story 10.3: Feature Importance for Elo and Logistic Regression
+
+As a **data scientist**,
+I want to **see feature importance / interpretability information for all model types, not just XGBoost**,
+So that **I can understand what drives predictions across Elo, Logistic Regression, and XGBoost models**.
+
+**Acceptance Criteria:**
+
+**Given** a trained model is selected in the Model Deep Dive dashboard page
+**When** the user views the Feature Importance section
+**Then** XGBoost shows feature importance (existing behavior, unchanged)
+**And** Logistic Regression shows coefficient values as feature importance
+**And** Elo shows team rating values and/or rating-based metrics as interpretability information
+**And** the "not available for stateful models" message is replaced with meaningful Elo interpretability
+
+**Source:** Audit item 1.15; `dashboard/pages/3_Model_Deep_Dive.py`
+
+### Story 10.4: Fix Public API Documentation
+
+As a **developer**,
+I want to **have accurate documentation of import paths for the ncaa_eval package**,
+So that **the Style Guide matches reality and I know how to import public symbols**.
+
+**Acceptance Criteria:**
+
+**Given** the Style Guide claims `from ncaa_eval import EloModel` should work
+**When** the developer reads the Style Guide
+**Then** documented import paths match actual importable paths
+**And** the Style Guide is updated to document the actual submodule import paths (e.g., `from ncaa_eval.model.elo import EloModel`)
+
+**Source:** Audit item 2.18; `src/ncaa_eval/__init__.py:1-3`, `docs/STYLE_GUIDE.md`
+
+### Story 10.5: Post-Sync Data Validation
+
+As a **data scientist**,
+I want to **have automatic validation checks run after data sync completes**,
+So that **I can detect data quality issues (missing games, duplicates, team reference errors) before they silently corrupt downstream predictions**.
+
+**Acceptance Criteria:**
+
+**Given** a data sync (`ncaa-eval sync` or `python sync.py`) completes
+**When** the sync finishes downloading and persisting data
+**Then** a validation step runs automatically checking:
+  - Game count per season is within expected range (±10% of historical average)
+  - No duplicate games exist (same teams, same day)
+  - All team IDs in games reference valid entries in the teams table
+**And** validation results are logged at INFO level with a summary
+**And** validation warnings do not block the sync (non-fatal) but are clearly visible
+
+**Source:** Audit item 2.20; PRD §4.4
+
 ## Post-MVP Backlog
 
 Items identified during development for future consideration. These are not scheduled for any sprint but may be promoted into epics/stories later.
@@ -1233,3 +1321,57 @@ Replace the current boolean marker file (`_espn_marker(year)`) with a `.espn_syn
 - **Distinctness:** Reliability improvement; prevents silently caching incomplete ESPN data
 - **Source:** Story 8.3 Dev Notes — "marker-file caching design flaw; marker.touch() runs after partial failures"
 - **Deferred because:** Story 8.3 addressed visibility (summary logging for partial failures) but not root cause; metadata file out of scope
+
+### Dashboard `get_data_dir()` Path Fragility (Origin: Audit item 2.12, 2026-03-05)
+
+Replace `Path(__file__).resolve().parent.parent.parent / "data"` in `dashboard/lib/filters.py` with a more robust path resolution (e.g., environment variable, configuration, or project root detection).
+
+- **Effort:** Low — single function refactor (~10 lines)
+- **Distinctness:** Maintenance improvement; prevents breakage if dashboard directory structure changes
+- **Source:** Codebase audit item 2.12; `dashboard/lib/filters.py:56-58`
+- **Deferred because:** Dashboard directory structure has been stable since Epic 7; low risk
+
+### Undocumented Streamlit API Usage (Origin: Audit item 2.14, 2026-03-05)
+
+Replace `event.selection.rows` (undocumented Streamlit dataframe selection API) with documented alternative or add pinned Streamlit version constraint to prevent breakage on upgrade.
+
+- **Effort:** Low — API replacement or version pin (~20 lines)
+- **Distinctness:** Maintenance improvement; prevents breakage on Streamlit upgrades
+- **Source:** Codebase audit item 2.14; `dashboard/pages/1_Lab.py:116-129`
+- **Deferred because:** API works correctly in current Streamlit version; will address if/when Streamlit breaks it
+
+### Story 2.3 Open AI-Review Follow-ups (Origin: Audit item 2.17, 2026-03-05)
+
+Address two deferred code quality items from Story 2.3's AI code review: (1) Add Pandera schema validation to KaggleConnector, (2) Replace `iterrows()` calls with vectorized operations in KaggleConnector.
+
+- **Effort:** Medium — Pandera schema definition + vectorized CSV parsing (~200 lines)
+- **Distinctness:** Code quality improvement; aligns ingest layer with project conventions
+- **Source:** Codebase audit item 2.17; `src/ncaa_eval/ingest/connectors/kaggle.py`
+- **Deferred because:** KaggleConnector works correctly; improvements are quality-of-code, not functional
+
+### Test Helper Duplication: `_make_season_df` (Origin: Audit item 2.21, 2026-03-05)
+
+Consolidate the duplicated `_make_season_df` helper function from `test_evaluation_splitter.py` and `test_evaluation_backtest.py` into a shared conftest fixture.
+
+- **Effort:** Low — move to conftest, update imports (~15 lines)
+- **Distinctness:** Minor test code quality improvement
+- **Source:** Codebase audit item 2.21; `tests/unit/test_evaluation_splitter.py:18`, `tests/unit/test_evaluation_backtest.py:28`
+- **Deferred because:** Duplication is minor; will consolidate when either test file is next modified
+
+### Coverage Threshold Enforcement (Origin: Audit item P2-5, 2026-03-05)
+
+Add `--cov-fail-under=XX` to CI pytest configuration to prevent silent coverage regression. Requires measuring current coverage level first to set an appropriate threshold.
+
+- **Effort:** Low — measure coverage, add flag to CI config (~5 lines)
+- **Distinctness:** Quality gate improvement; prevents coverage regression
+- **Source:** Codebase audit item P2-5; `.github/workflows/python-check.yaml:31`
+- **Deferred because:** Need to measure current coverage before setting threshold; arbitrary threshold risks blocking legitimate PRs
+
+### Dashboard Quality Gate Inclusion (Origin: Audit item P2-6, 2026-03-05)
+
+Add relaxed mypy configuration for `dashboard/` directory (e.g., `--follow-imports=normal` without `--strict`) to catch import errors and basic type mismatches while accommodating Streamlit's poor type stubs.
+
+- **Effort:** Medium — mypy config section, fix existing type errors, CI integration
+- **Distinctness:** Quality improvement for the primary user-facing layer
+- **Source:** Codebase audit item P2-6; `noxfile.py:30-33`, `.pre-commit-config.yaml:67`
+- **Deferred because:** Streamlit has poor type stubs; strict mypy impractical; relaxed config is a low-priority improvement
