@@ -209,7 +209,7 @@ Tests that feed **random or mutated inputs** to find crashes, unhandled exceptio
 ```python
 from hypothesis import given, strategies as st
 
-@pytest.mark.fuzz
+@pytest.mark.slow
 @given(text=st.text())
 def test_parse_team_name_never_crashes(text):
     """Verify parser handles arbitrary text without crashing."""
@@ -226,7 +226,7 @@ def test_parse_team_name_never_crashes(text):
 
 ```python
 @pytest.mark.integration
-@pytest.mark.fuzz
+@pytest.mark.slow
 @given(data=st.binary())
 def test_ingest_csv_handles_malformed_data(data, tmp_path):
     """Verify CSV ingestion handles malformed files gracefully."""
@@ -246,14 +246,14 @@ def test_ingest_csv_handles_malformed_data(data, tmp_path):
 **Fuzz-based test (API validation):**
 
 ```python
-@pytest.mark.fuzz
+@pytest.mark.slow
 @given(
     season=st.integers(),  # Any integer, including negatives
     game_id=st.text(),     # Any string, including empty/special chars
 )
 def test_api_validates_inputs_safely(season, game_id):
     """Verify API validation doesn't crash on invalid inputs."""
-    api = GameDataAPI()
+    api = ChronologicalDataServer()
 
     try:
         # API should either return data or raise ValueError
@@ -288,7 +288,7 @@ st.text().map(lambda x: x + "\x00" + x)  # Null byte injection
 ### Pre-commit eligibility
 ❌ **NO** - Fuzz testing is slow (generates many random test cases)
 
-Mark as `@pytest.mark.fuzz` or `@pytest.mark.slow`
+Mark as `@pytest.mark.slow`
 
 ---
 
@@ -296,7 +296,7 @@ Mark as `@pytest.mark.fuzz` or `@pytest.mark.slow`
 
 ```
 Are you testing error handling / crash resilience?
-├─ YES → Use Fuzz-Based Testing (@pytest.mark.fuzz, Hypothesis)
+├─ YES → Use Fuzz-Based Testing (@pytest.mark.slow, Hypothesis)
 │         - Generate random/mutated inputs to find crashes
 │         - Examples: CSV parsing, API validation, input sanitization
 │
@@ -341,7 +341,7 @@ def test_clean_team_name_never_empty(name):
     assert len(result) > 0  # Invariant: output is never empty
 
 # Fuzz-based: Test crash resilience
-@pytest.mark.fuzz
+@pytest.mark.slow
 @given(name=st.text())  # Including empty strings, special chars
 def test_clean_team_name_never_crashes(name):
     """Verify normalization handles any text without crashing."""

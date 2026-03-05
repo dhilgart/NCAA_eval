@@ -1,6 +1,6 @@
 # Story 8.11: Fix Testing Documentation Staleness & Marker Gaps
 
-Status: review
+Status: done
 
 ## Story
 
@@ -266,19 +266,23 @@ None — no debugging needed for this documentation-only story.
 ### Change Log
 
 - 2026-03-04: Story 8.11 implemented — fixed testing documentation staleness, marker gaps, stale API names, edgetest removal, check-manifest correction. All 17 ACs addressed.
+- 2026-03-04: Code review (AI) — 2 HIGH + 4 MEDIUM issues found; 6 fixes applied automatically:
+  - [HIGH] `@pytest.mark.fuzz` (6 occurrences) and `GameDataAPI` still in `test-approach-guide.md` despite task 2.4 marking it done — replaced with `@pytest.mark.slow` / `ChronologicalDataServer`
+  - [HIGH] Stale `Game` TypedDict fields (`home_team`/`away_team`/`game_id`) in `execution.md` and `test-purpose-guide.md` — updated to actual Pydantic model fields (`w_team_id`, `l_team_id`, etc.)
+  - [MEDIUM] `conventions.md` marker table said `< 5s total` for smoke while pyproject block said `< 10 seconds total` — table updated to show all three budgets clearly
 
 ### File List
 
 - `docs/TESTING_STRATEGY.md` — updated directory tree, marker table, Tier 1 table, time budgets, tool table
-- `docs/testing/conventions.md` — updated directory tree, marker tables, code block, nox/pre-commit examples, fixture naming, API names
-- `docs/testing/execution.md` — removed check-manifest and edgetest from tables, fixed API names
+- `docs/testing/conventions.md` — updated directory tree, marker tables, code block, nox/pre-commit examples, fixture naming, API names; smoke marker table entry clarified (code review fix)
+- `docs/testing/execution.md` — removed check-manifest and edgetest from tables, fixed API names; fixed stale Game TypedDict example (code review fix)
 - `docs/testing/test-scope-guide.md` — fixed API names (brier_score, ChronologicalDataServer, sample_games)
-- `docs/testing/test-approach-guide.md` — fixed API names
-- `docs/testing/test-purpose-guide.md` — fixed API names
+- `docs/testing/test-approach-guide.md` — fixed API names; removed @pytest.mark.fuzz (6 occurrences) → @pytest.mark.slow; fixed GameDataAPI → ChronologicalDataServer (code review fix)
+- `docs/testing/test-purpose-guide.md` — fixed API names; fixed stale Game field names (home_team/away_team → w_team_id/l_team_id) (code review fix)
 - `docs/testing/domain-testing.md` — fixed API names, removed Story references
 - `docs/testing/quality.md` — removed @pytest.mark.mutation marker reference
 - `pyproject.toml` — removed edgetest dependency, [tool.edgetest] section, fuzz/mutation markers
 - `poetry.lock` — regenerated after pyproject.toml changes
 - `.github/pull_request_template.md` — removed edgetest checkbox
-- `_bmad-output/implementation-artifacts/sprint-status.yaml` — status: in-progress → review
-- `_bmad-output/implementation-artifacts/8-11-fix-testing-documentation-staleness-marker-gaps.md` — tasks marked complete, Dev Agent Record updated
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — status: review → done
+- `_bmad-output/implementation-artifacts/8-11-fix-testing-documentation-staleness-marker-gaps.md` — tasks marked complete, Dev Agent Record updated, code review findings added

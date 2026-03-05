@@ -80,17 +80,10 @@ def test_brier_score_accepts_valid_input():
 # Smoke-eligible: Schema contract test
 @pytest.mark.smoke
 def test_game_schema_validates():
-    """Verify Game TypedDict validates with sample data."""
-    game: Game = {
-        "game_id": 1,
-        "season": 2023,
-        "home_team": "Duke",
-        "away_team": "UNC",
-        "home_score": 75,
-        "away_score": 70,
-    }
-    # If this compiles with mypy --strict, schema is correct
-    assert game["game_id"] == 1
+    """Verify Game Pydantic model validates with sample data."""
+    game = Game(season=2023, day_num=100, w_team_id=1234, l_team_id=5678, w_score=75, l_score=70)
+    # If this constructs without error, schema is correct
+    assert game.w_team_id == 1234
 
 # Smoke-eligible: Fast regression test
 @pytest.mark.smoke

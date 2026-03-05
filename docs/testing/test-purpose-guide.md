@@ -54,7 +54,7 @@ def test_games_loaded_have_required_fields(season):
     """Verify all loaded games contain required fields (functional correctness)."""
     games = load_games_for_season(season)
 
-    required_fields = ["game_id", "date", "home_team", "away_team", "home_score", "away_score"]
+    required_fields = ["season", "day_num", "w_team_id", "l_team_id", "w_score", "l_score"]
     for game in games:
         for field in required_fields:
             assert hasattr(game, field), f"Game missing required field: {field}"
@@ -364,7 +364,7 @@ def test_game_loading_comprehensive(season):
 
     # Functional: Verify correctness
     assert len(games) > 0
-    required_fields = ["game_id", "date", "home_team", "away_team"]
+    required_fields = ["season", "day_num", "w_team_id", "l_team_id"]
     for game in games:
         for field in required_fields:
             assert hasattr(game, field)

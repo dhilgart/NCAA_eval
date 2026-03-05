@@ -156,7 +156,7 @@ Pytest markers enable selective test execution for pre-commit vs. PR-time distin
 
 | Marker | Dimension | Purpose | Command |
 |---|---|---|---|
-| `@pytest.mark.smoke` | Speed | Fast smoke tests for pre-commit (< 1s each, < 5s total) | `pytest -m smoke` |
+| `@pytest.mark.smoke` | Speed | Fast smoke tests for pre-commit (< 1s each; smoke subset < 5s; Tier 1 overall < 10s) | `pytest -m smoke` |
 | `@pytest.mark.slow` | Speed | Slow tests excluded from pre-commit (> 5 seconds each) | `pytest -m "not slow"` |
 | `@pytest.mark.unit` | Scope | Pure unit tests with no I/O or external dependencies | `pytest -m unit` |
 | `@pytest.mark.integration` | Scope | Integration tests (I/O, database) | `pytest -m integration` |
