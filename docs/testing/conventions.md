@@ -172,7 +172,7 @@ Markers are configured in `pyproject.toml`:
 ```toml
 [tool.pytest.ini_options]
 markers = [
-    "smoke: Fast smoke tests for pre-commit (< 10 seconds total)",
+    "smoke: Fast smoke tests for pre-commit (< 5s smoke subset; Tier 1 overall < 10s)",
     "slow: Slow tests excluded from pre-commit (> 5 seconds each)",
     "integration: Integration tests with I/O or external dependencies",
     "property: Hypothesis property-based tests",

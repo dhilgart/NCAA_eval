@@ -266,10 +266,14 @@ None — no debugging needed for this documentation-only story.
 ### Change Log
 
 - 2026-03-04: Story 8.11 implemented — fixed testing documentation staleness, marker gaps, stale API names, edgetest removal, check-manifest correction. All 17 ACs addressed.
-- 2026-03-04: Code review (AI) — 2 HIGH + 4 MEDIUM issues found; 6 fixes applied automatically:
+- 2026-03-04: Code review pass 1 (AI) — 2 HIGH + 4 MEDIUM issues found; 6 fixes applied automatically:
   - [HIGH] `@pytest.mark.fuzz` (6 occurrences) and `GameDataAPI` still in `test-approach-guide.md` despite task 2.4 marking it done — replaced with `@pytest.mark.slow` / `ChronologicalDataServer`
   - [HIGH] Stale `Game` TypedDict fields (`home_team`/`away_team`/`game_id`) in `execution.md` and `test-purpose-guide.md` — updated to actual Pydantic model fields (`w_team_id`, `l_team_id`, etc.)
   - [MEDIUM] `conventions.md` marker table said `< 5s total` for smoke while pyproject block said `< 10 seconds total` — table updated to show all three budgets clearly
+- 2026-03-04: Code review pass 2 (AI) — 0 HIGH, 1 MEDIUM, 2 LOW issues found; 3 fixes applied automatically:
+  - [MEDIUM] `pyproject.toml` smoke marker description said `< 10 seconds total` (Tier 1 overall budget) — corrected to `< 5s smoke subset; Tier 1 overall < 10s` to match all docs/ files
+  - [LOW] `conventions.md` code block echoed the same incorrect `< 10 seconds total` — updated to match pyproject.toml fix
+  - [LOW] PR template "Pre-Commit Checks" listed `check-manifest` without clarifying it's a manual tool — added `(manual tool — not a pre-commit hook)` annotation
 
 ### File List
 
@@ -281,8 +285,8 @@ None — no debugging needed for this documentation-only story.
 - `docs/testing/test-purpose-guide.md` — fixed API names; fixed stale Game field names (home_team/away_team → w_team_id/l_team_id) (code review fix)
 - `docs/testing/domain-testing.md` — fixed API names, removed Story references
 - `docs/testing/quality.md` — removed @pytest.mark.mutation marker reference
-- `pyproject.toml` — removed edgetest dependency, [tool.edgetest] section, fuzz/mutation markers
+- `pyproject.toml` — removed edgetest dependency, [tool.edgetest] section, fuzz/mutation markers; fixed smoke marker description (code review pass 2 fix)
 - `poetry.lock` — regenerated after pyproject.toml changes
-- `.github/pull_request_template.md` — removed edgetest checkbox
+- `.github/pull_request_template.md` — removed edgetest checkbox; added manual-tool annotation to check-manifest item (code review pass 2 fix)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` — status: review → done
 - `_bmad-output/implementation-artifacts/8-11-fix-testing-documentation-staleness-marker-gaps.md` — tasks marked complete, Dev Agent Record updated, code review findings added

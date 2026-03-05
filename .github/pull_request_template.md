@@ -39,7 +39,7 @@ Steps to reproduce the behavior:
 - [ ] **Lint pass** — `ruff check .` reports no errors
 - [ ] **Format pass** — `ruff format --check .` reports no changes needed
 - [ ] **Type-check pass** — `mypy` reports no errors (strict mode)
-- [ ] **Package manifest** — `check-manifest` reports no missing files
+- [ ] **Package manifest** — `check-manifest` reports no missing files (manual tool — not a pre-commit hook)
 - [ ] **Smoke tests** — `pytest -m smoke` passes (imports, sanity, schema contracts)
 - [ ] **Commit messages** — All commits use conventional format (`feat:`, `fix:`, `docs:`, etc.)
 
