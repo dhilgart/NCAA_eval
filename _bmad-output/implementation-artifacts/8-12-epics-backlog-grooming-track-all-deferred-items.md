@@ -184,11 +184,13 @@ None — documentation-only story, no debugging required.
 
 ### File List
 
-- `_bmad-output/planning-artifacts/epics.md` (modified — 5 edits: Post-MVP Backlog additions, Story 1.9, Story 3.2 AC, Story 1.7 AC, FR Coverage Map NFR3)
+- `_bmad-output/planning-artifacts/epics.md` (modified — 6 edits: Post-MVP Backlog additions, Story 1.9, Story 3.2 AC, Story 1.7 AC, FR Coverage Map NFR3, Story 1.7 user-story narrative fix)
 - `specs/05-architecture-fullstack.md` (modified — historical-document banner added)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified — status update)
 - `_bmad-output/implementation-artifacts/8-12-epics-backlog-grooming-track-all-deferred-items.md` (modified — task completion, Dev Agent Record)
+- `_bmad-output/planning-artifacts/template-requirements.md` (modified — Post-MVP Backlog format pattern + retroactive story documentation pattern + stale narrative lesson)
 
 ### Change Log
 
 - 2026-03-04: Implemented all 6 tasks — 17 Post-MVP Backlog entries added, Story 1.9 retroactively documented, stale ACs fixed, FR Coverage Map updated, architecture spec annotated
+- 2026-03-04: Code review (claude-sonnet-4-6) — fixed Story 1.7 user-story narrative (still said "edgetest" after AC was struck through); updated template-requirements.md with 3 patterns from this story

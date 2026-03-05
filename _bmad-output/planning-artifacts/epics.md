@@ -226,7 +226,7 @@ So that running `nox` executes linting, type-checking, and testing in one comman
 ### Story 1.7: Configure Versioning, Packaging & Documentation
 
 As a developer,
-I want Commitizen, check-manifest, edgetest, and Sphinx configured,
+I want Commitizen, check-manifest, and Sphinx configured,
 So that the project has automated versioning, package integrity checks, dependency management, and documentation generation.
 
 **Acceptance Criteria:**
