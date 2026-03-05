@@ -10,8 +10,8 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 - `codebase-audit-pass3-addendum.md` (Pass 3)
 
 **Decision Counts:**
-- Category 1: 7 Defer, 6 Accept-as-is, 3 Implement
-- Category 2: 10 Accept-as-is, 9 Defer, 3 Already Resolved, 2 Fix
+- Category 1: 9 Defer, 4 Accept-as-is, 3 Implement
+- Category 2: 12 Accept-as-is, 8 Defer, 2 Already Resolved, 2 Fix
 
 ---
 

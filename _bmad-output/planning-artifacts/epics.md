@@ -1187,15 +1187,6 @@ Allow users to manually override picks in the bracket visualizer, then re-score 
 - **Source:** UX Spec §3.1 (Flow 1: "Backtest-to-Selection" Diagnostic Loop, Step 4)
 - **Deferred because:** Story 7.5 AC included "Team Detail Expansion" only; click-to-edit interaction was not scoped
 
-### Kaggle Submission Export (Origin: PRD mission, 2026-02-28)
-
-Export the most-likely bracket to Kaggle March Machine Learning Mania submission format (`SampleSubmission.csv` with `ID` and `Pred` columns for all 2,278 possible matchups). Different from Pool Scorer CSV export which uses round-based scoring schema.
-
-- **Effort:** Low — CSV schema mapping from bracket winners to Kaggle matchup IDs (~50 lines)
-- **Distinctness:** Different schema from existing Pool Scorer CSV export (matchup ID-based vs. round-based)
-- **Source:** PRD §1 (Goals: competitive submission workflow); Story 7.6 CSV export covers pool format only
-- **Deferred because:** Story 7.6 AC specified pool CSV export only; Kaggle submission format requires different schema and audience
-
 ### Metric Explorer: Round/Seed/Conference Drill-Downs (Origin: Story 7.4, 2026-02-28)
 
 Extend the Model Deep Dive page's Metric Explorer to drill down by tournament round, seed matchup (1v16, 5v12, etc.), and conference. Currently only year-level drill-down is implemented.
@@ -1375,3 +1366,19 @@ Add relaxed mypy configuration for `dashboard/` directory (e.g., `--follow-impor
 - **Distinctness:** Quality improvement for the primary user-facing layer
 - **Source:** Codebase audit item P2-6; `noxfile.py:30-33`, `.pre-commit-config.yaml:67`
 - **Deferred because:** Streamlit has poor type stubs; strict mypy impractical; relaxed config is a low-priority improvement
+
+### Fibonacci Scoring UI Label Correction (Origin: Audit item 1.8, 2026-03-05)
+
+The Pool Scorer UI labels the scoring schedule as "Fibonacci (1-1-2-3-5-8)" but the code uses (2-3-5-8-13-21). PO accepted the code values as canonical (Story 8.13 decision log); the UI label needs to be updated to display the actual values.
+
+- **Effort:** Trivial — update label string in dashboard (~1 line)
+- **Distinctness:** UI accuracy fix; prevents user confusion about scoring
+- **Source:** Codebase audit item 1.8; `src/ncaa_eval/evaluation/simulation.py:480`; PO decision: code values are canonical, update UI label
+
+### NFR3 Tutorial Claim Correction (Origin: Audit item P3-17, 2026-03-05)
+
+Story 7.9 tutorial documents "How to Add a Custom Metric" but a Custom Metric Plugin Registry does not exist (only Model and Scoring registries are implemented). PO accepted the current plugin registry scope (2/4) as sufficient for MVP; the tutorial claim needs to be corrected.
+
+- **Effort:** Low — update tutorial to reflect actual extensibility points (~20 lines)
+- **Distinctness:** Documentation accuracy fix; prevents users from following non-existent workflow
+- **Source:** Codebase audit item P3-17; `docs/tutorials/`; PO decision: metric/feature-generator registries deferred, correct tutorial claim
