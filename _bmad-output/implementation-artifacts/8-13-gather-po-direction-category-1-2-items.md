@@ -1,6 +1,6 @@
 # Story 8.13: Gather PO Direction on Category 1 & 2 Items
 
-Status: done
+Status: review
 
 ## Story
 
