@@ -82,7 +82,7 @@ NFR5 (Reliability - Fail-Fast Debugging): The system must provide deep logging, 
 | FR9 | Epic 6 | Monte Carlo tournament simulator |
 | NFR1 | Epic 6 | Vectorized metric calculations |
 | NFR2 | Epic 6 | Parallel cross-validation execution |
-| NFR3 | Epic 5 | Plugin-registry extensibility |
+| NFR3 | Epic 5 (Partial) | Plugin-registry extensibility — model and scoring registries implemented; metric and feature-generator registries deferred to Post-MVP |
 | NFR4 | Epic 4 | Temporal boundary enforcement |
 | NFR5 | Epic 1 | Fail-fast debugging toolchain + runtime logging & assertions |
 | UI-3 | Epic 7 | Jupyter progress bars (Story 7.1) |
@@ -226,7 +226,7 @@ So that running `nox` executes linting, type-checking, and testing in one comman
 ### Story 1.7: Configure Versioning, Packaging & Documentation
 
 As a developer,
-I want Commitizen, check-manifest, edgetest, and Sphinx configured,
+I want Commitizen, check-manifest, and Sphinx configured,
 So that the project has automated versioning, package integrity checks, dependency management, and documentation generation.
 
 **Acceptance Criteria:**
@@ -235,7 +235,7 @@ So that the project has automated versioning, package integrity checks, dependen
 **When** the developer uses Commitizen for commits
 **Then** commit messages follow the conventional commits format and version bumps are automated
 **And** `check-manifest` validates that the package manifest includes all necessary files
-**And** edgetest is configured for dependency compatibility testing
+**And** ~~edgetest is configured for dependency compatibility testing~~ (Deferred: removed in Story 8.11 — never automated in CI)
 **And** `sphinx-build` generates HTML documentation from the `docs/` directory using the Furo theme
 **And** `sphinx-apidoc` can auto-generate API docs from module docstrings
 **And** a Nox session exists for documentation generation (`nox -s docs`)
@@ -257,6 +257,23 @@ So that I can diagnose runtime issues efficiently and validate data integrity th
 **And** assertion failures produce clear error messages with the specific validation that failed and the actual vs. expected values
 **And** the logging and assertions framework is covered by unit tests
 **And** usage examples are documented in the module docstrings
+
+### Story 1.9: Restructure docs/ as Pure Sphinx Source Directory
+
+As a developer,
+I want `docs/` to be a pure Sphinx source directory with planning specs moved to a top-level `specs/` directory,
+So that all documentation in `docs/` is processed by Sphinx and the directory has a single, clear purpose.
+
+**Acceptance Criteria:**
+
+**Given** Sphinx is configured in `docs/` (Story 1.7)
+**When** `nox -s docs` is run
+**Then** STYLE_GUIDE.md, TESTING_STRATEGY.md, and all testing/ guides are rendered as HTML pages in the Sphinx output alongside the API reference
+**And** `docs/` contains only Sphinx source files (no excluded planning artifacts)
+**And** planning specs live at `specs/` (project root) with `specs/archive/` for legacy documents
+**And** the Sphinx HTML navigation has three sections: Developer Guides, Testing Guides, and API Reference
+**And** `check-manifest` passes cleanly with updated ignore patterns
+**And** `nox` (full pipeline: lint, typecheck, tests) passes with no regressions
 
 ## Epic 2: Data Ingestion & Local Warehouse
 
@@ -378,7 +395,7 @@ So that I can identify signals and relationships worth pursuing in feature engin
 **And** correlations between available statistics and tournament outcomes are analyzed
 **And** strength-of-schedule and conference-strength signals are explored
 **And** seed vs. actual performance patterns are documented (upset rates by seed matchup)
-**And** all visualizations use Plotly for interactive inline rendering
+**And** all visualizations use matplotlib for static PNG rendering (Plotly inline outputs caused ~800 MB notebook files — see Story 3.1 findings)
 **And** the notebook is committed to the repository with reproducible outputs
 
 ### Story 3.3: Document Findings & Feature Engineering Recommendations
@@ -1063,3 +1080,156 @@ Scrape warrennolan.com for NET rankings, RPI, and Nitty Gritty strength-of-sched
 - **Risk:** HTML scraping is fragile; categorized as "Deferred Scrape-Only" in Story 2.1 research document. Inclusion in the original Spike Decisions MVP table contradicted the research recommendation.
 - **Value:** NET rankings are the NCAA's official team evaluation metric (replaced RPI in 2018). Useful for tournament selection committee modeling but not essential for game outcome prediction.
 - **Source:** Story 2.1 spike — `specs/research/data-source-evaluation.md`, Section 4. Story 2.3 scoping deferred due to contradiction with research doc classification.
+
+### Game Theory Slider Implementation (Origin: Stories 7.5/7.7, 2026-02-28)
+
+Interactive sliders for probability perturbation in the bracket visualizer and pool scorer. Two independent parameters: Upset Aggression (bidirectional temperature scaling) and Seed-Weight (linear blend with historical seed win rates). Spike research (Story 7.7) completed; implementation requires wiring slider transforms into `run_bracket_simulation()` and resolving UX spec collision (three sliders proposed vs. two recommended).
+
+- **Effort:** Medium — core transformation functions (~150 lines), dashboard integration, slider-to-temperature mapping
+- **Distinctness:** Novel UX feature; no current mechanism to perturb model probabilities before simulation
+- **Source:** Story 7.7 spike — `specs/research/game-theory-slider-mechanism.md` §6, §8; UX Spec §3.1, §4.1
+- **Deferred because:** Spike research completed but implementation requires PO approval on slider count (2 vs. 3) before scoping
+
+### User-Editable Bracket (Origin: UX Spec Flow 1, 2026-02-28)
+
+Allow users to manually override picks in the bracket visualizer, then re-score the custom bracket against MC simulations without modifying the underlying model. Requires bidirectional UI communication and session state management.
+
+- **Effort:** Medium — bracket node click handlers, session state tracking, re-scoring pipeline
+- **Distinctness:** Extends bracket from read-only visualization to interactive editing tool
+- **Source:** UX Spec §3.1 (Flow 1: "Backtest-to-Selection" Diagnostic Loop, Step 4)
+- **Deferred because:** Story 7.5 AC included "Team Detail Expansion" only; click-to-edit interaction was not scoped
+
+### Kaggle Submission Export (Origin: PRD mission, 2026-02-28)
+
+Export the most-likely bracket to Kaggle March Machine Learning Mania submission format (`SampleSubmission.csv` with `ID` and `Pred` columns for all 2,278 possible matchups). Different from Pool Scorer CSV export which uses round-based scoring schema.
+
+- **Effort:** Low — CSV schema mapping from bracket winners to Kaggle matchup IDs (~50 lines)
+- **Distinctness:** Different schema from existing Pool Scorer CSV export (matchup ID-based vs. round-based)
+- **Source:** PRD §1 (Goals: competitive submission workflow); Story 7.6 CSV export covers pool format only
+- **Deferred because:** Story 7.6 AC specified pool CSV export only; Kaggle submission format requires different schema and audience
+
+### Metric Explorer: Round/Seed/Conference Drill-Downs (Origin: Story 7.4, 2026-02-28)
+
+Extend the Model Deep Dive page's Metric Explorer to drill down by tournament round, seed matchup (1v16, 5v12, etc.), and conference. Currently only year-level drill-down is implemented.
+
+- **Effort:** Medium — requires enriching `fold_predictions.parquet` with round/seed/conference columns, plus filter helpers and UI selectboxes
+- **Distinctness:** Extends existing year-level drill-down to three additional dimensions
+- **Source:** Story 7.4 AC #3 ("drill-down by year, round, seed matchup, or conference"); Dev Notes §Metric Explorer scope decision
+- **Deferred because:** Data enrichment for round/seed/conference lookup was not in Story 7.4 AC scope; year drill-down delivered as MVP
+
+### Candidate Entry Flagging (Origin: UX Spec Flow 1, 2026-02-28)
+
+Allow users to flag specific bracket configurations (model + slider settings + bracket winners) as "candidate entries" for later comparison and export. Persists flags in session state.
+
+- **Effort:** Low-Medium — candidate dataclass, session state persistence, flag button, summary page
+- **Distinctness:** New workflow capability enabling iterative bracket refinement across multiple model runs
+- **Source:** UX Spec §3.1 (Flow 1, Step 5: "User flags the specific configuration as a 'Candidate Entry'")
+- **Deferred because:** Neither Story 7.5 nor 7.6 included flagging UI in their ACs
+
+### CLI `predict` Command (Origin: PRD §3.3, 2026-02-28)
+
+Command-line interface for generating per-game predictions, e.g., `ncaa predict --model elo --year 2025 --round "Round of 64" --output predictions.csv`. Complements the existing `train.py` CLI.
+
+- **Effort:** Medium — CLI subcommand, prediction orchestrator, CSV output schema
+- **Distinctness:** CLI pathway for predictions; currently only available via dashboard or notebook
+- **Source:** PRD §3.3 (The CLI — "Background Jobs: Support for launching long-running backtests via CLI")
+- **Deferred because:** Story 5.5 implemented training CLI only; prediction is currently served via dashboard and notebooks
+
+### Model Ensemble/Blending (Origin: competitive necessity, 2026-02-28)
+
+Probability ensemble combining multiple trained models' predictions via averaging, weighted voting, or stacking meta-learner. E.g., blend Elo + XGBoost predictions to reduce variance.
+
+- **Effort:** High — Ensemble ABC, multiple blending strategies (averaging, voting, stacking), dashboard integration
+- **Distinctness:** New modeling paradigm; all current models are single-method
+- **Source:** Story 5.1 spike — `specs/research/modeling-approaches.md` §4.2 (ensemble approaches)
+- **Deferred because:** Requires training multiple independent models first; only justified if single-model performance is insufficient for competition
+
+### JSON Export for Pool Scorer (Origin: Story 7.6, 2026-02-28)
+
+Extend Story 7.6 CSV export to also generate JSON format with nested structure including game predictions, round structure, and custom scoring configuration.
+
+- **Effort:** Low — JSON schema mapping, export function, download button (~60 lines)
+- **Distinctness:** Structured alternative to flat CSV for downstream integrations and programmatic access
+- **Source:** Story 7.6 AC #5 (specifies CSV only)
+- **Deferred because:** Story 7.6 AC required CSV export only; JSON is a natural enhancement for structured data consumers
+
+### st.progress for Simulation (Origin: Story 7.6 / UX Spec §5.2, 2026-02-28)
+
+Display real-time numeric progress bar (`st.progress()`) during Monte Carlo simulation instead of the current `st.spinner()`. Provides iteration count feedback during 1-5 second computation.
+
+- **Effort:** Low — MC engine callback, `st.progress()` wrapper (~50 lines)
+- **Distinctness:** UX polish replacing opaque spinner with quantitative progress
+- **Source:** Story 7.6 AC #4 ("Simulation Progress"); UX Spec §5.2 (progress bar requirement)
+- **Deferred because:** `st.spinner()` already prevents UI freezing; `st.progress()` requires MC engine to expose iteration callback
+
+### Per-Game Prediction Explainability (Origin: PRD §3.2, 2026-02-28)
+
+For each game in the bracket visualizer, display explainability metrics: feature importance contributions, confidence intervals, and natural language reasoning (e.g., "Elo gap favors team A by +8.5%").
+
+- **Effort:** High — SHAP/LIME integration, confidence intervals, narrative generation, dashboard modal
+- **Distinctness:** Per-game granularity vs. current model-level feature importance in Model Deep Dive
+- **Source:** PRD §3.2 ("detailed views for specific models showing confusion matrices and feature importance")
+- **Deferred because:** Story 7.4 implemented model-level feature importance only; per-game explainability requires SHAP (complex, slow) or custom heuristics
+
+### Demo/Sample Data for Zero-Setup Onboarding (Origin: UX need, 2026-02-28)
+
+Pre-package a small sample NCAA dataset (2-3 seasons, ~500 games) so new users can immediately run the full pipeline without waiting for `sync.py` to download 40+ years of data.
+
+- **Effort:** Low — sample CSV generation, CLI `--use-sample-data` flag, Quick Start guide
+- **Distinctness:** Developer experience feature enabling immediate pipeline execution after clone
+- **Source:** PRD §3.3 (Usability: "3 commands" quick start); general onboarding best practice
+- **Deferred because:** MVP pipeline requires actual data; sample data is a convenience feature for developer onboarding
+
+### Custom Metric Plugin Registry (Origin: NFR3 / PRD §2, 2026-02-28)
+
+Extend NFR3 extensibility to metrics: `@register_metric("matthews_correlation")` decorator allowing users to register custom evaluation metrics beyond the core set (Log Loss, Brier, AUC, ECE).
+
+- **Effort:** Medium — metric registry singleton, Metric ABC, CLI/dashboard integration
+- **Distinctness:** Completes NFR3 extensibility for the metrics axis (currently only model and scoring registries exist)
+- **Source:** PRD §2 (NFR3: Extensibility — "models, scoring functions, metrics, feature generators"); Codebase audit P3-17
+- **Deferred because:** NFR3 partially implemented (model + scoring registries); metric registry not scoped into any story
+
+### Custom Feature Generator Plugin Registry (Origin: NFR3 / PRD §2, 2026-02-28)
+
+`@register_feature_generator("my_feature")` decorator allowing users to register custom feature transformations beyond the core set (Elo, SRS, graph centrality). Requires temporal boundary validation to prevent data leakage.
+
+- **Effort:** High — feature generator ABC, registry, pipeline integration, leakage prevention validation
+- **Distinctness:** Completes NFR3 extensibility for the feature engineering axis; requires careful temporal boundary enforcement
+- **Source:** PRD §2 (NFR3: Extensibility); Story 4.1 spike; Codebase audit P3-17
+- **Deferred because:** NFR3 partially implemented; feature generator registry requires leakage prevention validation not scoped in any story
+
+### Confusion Matrix in Model Deep Dive (Origin: PRD §3.2, 2026-02-28)
+
+Display binary classification confusion matrix (TP/FP/TN/FN) with derived metrics (specificity, sensitivity, F1) in the Model Deep Dive page alongside existing reliability diagram.
+
+- **Effort:** Low — `sklearn.metrics.confusion_matrix()`, heatmap rendering, dashboard section (~80 lines)
+- **Distinctness:** Standard diagnostic complementing reliability diagram; useful for threshold analysis
+- **Source:** PRD §3.2 ("confusion matrices and feature importance"); Story 7.4 (referenced but not in AC)
+- **Deferred because:** Story 7.4 prioritized reliability diagram and feature importance; confusion matrix was not in final AC
+
+### Public Bracket Competitive ROI Simulation (Origin: UX Spec Flow 2, 2026-02-28)
+
+Simulate the user's bracket against public brackets generated from historical pick rates to estimate percentile rank in a public pool. Requires historical public bracket pick rate data not currently in the Kaggle dataset.
+
+- **Effort:** High — historical pick rate data collection, public bracket generator, competitive ranking, dashboard visualization
+- **Distinctness:** Fundamentally different from Pool Scorer: simulates against competitive brackets (other players' picks) rather than tournament outcomes
+- **Source:** UX Spec §3.2 (Flow 2: "Pool-Specific ROI Simulation" — "simulates against 10,000 generated public brackets")
+- **Deferred because:** Requires public bracket history data not available in Kaggle dataset; would need scraping or maintaining separate database
+
+### run_training() API Refactor — PLR0913 Tech Debt (Origin: Story 8.1 review, 2026-03-04)
+
+Bundle `run_training()` function's 7 keyword arguments into a `DateRange` dataclass (or similar) to resolve the `PLR0913` (too-many-arguments) suppression. Currently acknowledged via `# noqa: PLR0913` on the public API in `src/ncaa_eval/cli/train.py`.
+
+- **Effort:** Low — dataclass definition (~15 lines) + signature refactor + call-site updates
+- **Distinctness:** API design improvement; reduces cognitive load for callers of the public training API
+- **Source:** Story 8.1 Senior Developer Review — "AC13 partial: run_training() retains # noqa: PLR0913 (7 keyword args — unchanged public API)"
+- **Deferred because:** Public API change requires deliberate design decision; Story 8.1 prioritized module split over API refactor
+
+### ESPN Marker-File Caching Metadata (Origin: Story 8.3, 2026-03-04)
+
+Replace the current boolean marker file (`_espn_marker(year)`) with a `.espn_synced_{year}.json` metadata file recording `{ success_count, failed_count, timestamp }`. Currently `marker.touch()` runs even after partial ESPN fetch failures, permanently caching incomplete data.
+
+- **Effort:** Low-Medium — metadata file schema, conditional marker write, pre-sync validation check
+- **Distinctness:** Reliability improvement; prevents silently caching incomplete ESPN data
+- **Source:** Story 8.3 Dev Notes — "marker-file caching design flaw; marker.touch() runs after partial failures"
+- **Deferred because:** Story 8.3 addressed visibility (summary logging for partial failures) but not root cause; metadata file out of scope

@@ -850,6 +850,11 @@ class MyModelConfig(BaseModel):
 - ⚠️ **score_distribution vs bracket_distributions semantic ambiguity**: When storing a "score distribution" in a simulation result, document clearly whether it is computed from a fixed reference bracket (chalk), from random simulation outcomes, or requires a user-supplied chosen bracket. Ambiguous naming leads to callers misinterpreting what the distribution represents.
 - ✅ **Dev Agent Record File List must always be populated**: The review workflow depends on the file list for cross-referencing with git changes. An empty file list is a documentation failure even when all ACs are implemented.
 
+**Story 8.12 - Epics & Backlog Grooming (2026-03-04 Code Review):**
+- ✅ **Post-MVP Backlog 5-field schema is the canonical format for deferred items** — All new backlog entries should use: `**Effort:**`, `**Distinctness:**`, `**Source:**`, `**Deferred because:**`, plus a date in the header. Header format: `### <Title> (Origin: <source>, <date>)`. The "Distinctness" field forces explicit comparison against existing functionality, preventing vague or duplicate entries.
+- ✅ **Retroactive story documentation pattern** — When a story was implemented but never captured in epics.md (e.g., a mid-sprint extraction story), add it retroactively by: (1) matching the format of adjacent stories in the same epic, (2) copying ACs verbatim from the implementation story file, (3) NOT modifying sprint-status.yaml (it's already accurate). This happened for Story 1.9 in Story 8.12.
+- ⚠️ **Stale story narrative text ("I want X, Y, and Z") is NOT auto-fixed by AC-only edits** — When an AC is deprecated/struck-through (e.g., edgetest AC in Story 1.7), the user story's "I want" sentence must ALSO be updated to remove the deprecated tool. Review both the narrative AND the AC list when correcting stale ACs. (Discovered: Story 8.12 Code Review — line 229 still said "edgetest" after line 238's AC was struck through.)
+
 ---
 
 ## 8. Cookie-Cutter Improvements Feedback Loop
