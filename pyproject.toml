@@ -37,7 +37,6 @@ pre-commit = "*"
 nox = "*"
 commitizen = "*"
 check-manifest = "*"
-edgetest = "*"
 sphinx = "*"
 furo = "*"
 myst-parser = "*"
@@ -148,10 +147,8 @@ markers = [
     "slow: Slow tests excluded from pre-commit (> 5 seconds each)",
     "integration: Integration tests with I/O or external dependencies",
     "property: Hypothesis property-based tests",
-    "fuzz: Hypothesis fuzz-based tests for crash resilience",
     "performance: Performance and benchmark tests",
     "regression: Regression tests to prevent bug recurrence",
-    "mutation: Tests specifically for mutation testing coverage",
     "no_mutation: Tests incompatible with mutmut runner directory (Path(__file__)-dependent structural tests)",
     "unit: Pure unit tests with no I/O or external dependencies",
 ]
@@ -172,14 +169,6 @@ exclude_lines = [
     'if __name__ == .__main__.:',
 ]
 omit = ['env/*', 'venv/*', '*/virtualenv/*', '*/virtualenvs/*', '*/tests/*']
-
-[tool.edgetest]
-extras = []
-
-[[tool.edgetest.envs]]
-name = "latest"
-upgrade = ["pandas", "numpy", "pandera", "scikit-learn", "xgboost", "networkx", "joblib"]
-command = "pytest tests/ -m smoke --tb=short -q"
 
 [tool.commitizen]
 name = "cz_conventional_commits"

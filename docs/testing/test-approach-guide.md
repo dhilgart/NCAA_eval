@@ -39,11 +39,12 @@ Tests that specify concrete input examples and their expected outputs.
 **Simple assertions:** Basic input → output tests
 
 ```python
-def test_elo_update_increases_winner_rating():
+def test_elo_update_increases_winner_rating(elo_config, sample_game):
     """Verify Elo rating increases for the winning team."""
-    initial_rating = 1500
-    result = update_elo_rating(initial_rating, opponent_rating=1500, won=True, k_factor=32)
-    assert result > initial_rating
+    engine = EloFeatureEngine(elo_config)
+    initial_rating = engine.get_rating(sample_game.w_team_id)
+    engine.update_game(sample_game)
+    assert engine.get_rating(sample_game.w_team_id) > initial_rating
 ```
 
 **Parametrized tests:** `@pytest.mark.parametrize` to test multiple scenarios with same logic
@@ -54,9 +55,9 @@ def test_elo_update_increases_winner_rating():
     ([0.9, 0.1, 0.9], [1, 0, 1], 0.03),      # Near-perfect predictions
     ([0.5, 0.5, 0.5], [1, 0, 1], 0.25),      # Random guessing
 ])
-def test_calculate_brier_score_known_cases(predictions, actuals, expected):
+def test_brier_score_known_cases(predictions, actuals, expected):
     """Verify Brier score for known prediction scenarios."""
-    result = calculate_brier_score(np.array(predictions), np.array(actuals))
+    result = brier_score(np.array(predictions), np.array(actuals))
     assert abs(result - expected) < 0.01
 ```
 
@@ -116,7 +117,7 @@ def test_rolling_average_length_invariant(data):
 @given(cutoff_year=st.integers(2015, 2025))
 def test_temporal_boundary_invariant(cutoff_year):
     """Verify API never returns data beyond cutoff (invariant holds for all years)."""
-    api = ChronologicalDataAPI()
+    api = ChronologicalDataServer()
     games = api.get_games_before(cutoff_year=cutoff_year)
 
     # Invariant: all games before or at cutoff year
@@ -138,7 +139,7 @@ def test_brier_score_always_non_negative(predictions, actuals):
     preds = np.array(predictions[:min_len])
     acts = np.array(actuals[:min_len])
 
-    result = calculate_brier_score(preds, acts)
+    result = brier_score(preds, acts)
     assert result >= 0  # Invariant: Brier score cannot be negative
 ```
 

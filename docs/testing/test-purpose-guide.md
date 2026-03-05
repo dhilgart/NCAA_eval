@@ -32,14 +32,14 @@ Ensure the code produces the correct output for given inputs and meets business/
 **Functional unit test (example-based):**
 
 ```python
-def test_calculate_brier_score_correct_formula():
+def test_brier_score_correct_formula():
     """Verify Brier score calculation follows the correct mathematical formula."""
     predictions = np.array([0.8, 0.3, 0.6])
     actuals = np.array([1, 0, 1])
 
     # Brier = mean((prediction - actual)^2)
     expected = ((0.8-1)**2 + (0.3-0)**2 + (0.6-1)**2) / 3
-    result = calculate_brier_score(predictions, actuals)
+    result = brier_score(predictions, actuals)
 
     assert abs(result - expected) < 1e-10
 ```
@@ -95,14 +95,14 @@ import pytest
 
 @pytest.mark.slow
 @pytest.mark.performance
-def test_calculate_brier_score_vectorized_performance():
+def test_brier_score_vectorized_performance():
     """Verify Brier score calculation meets performance target (vectorized)."""
     predictions = np.random.rand(100_000)
     actuals = np.random.randint(0, 2, 100_000)
 
     # Should complete in < 10ms for 100k predictions (vectorized)
     time_taken = timeit.timeit(
-        lambda: calculate_brier_score(predictions, actuals),
+        lambda: brier_score(predictions, actuals),
         number=10
     ) / 10  # Average per iteration
 
@@ -197,14 +197,14 @@ def test_elo_rating_never_negative_after_extreme_losses():
     Bug: Issue #42 - Elo.update() didn't properly floor ratings at minimum value.
     Fixed: 2026-01-15 - Added max(rating, MIN_RATING) in update logic.
     """
-    rating = 1200
+    engine = EloFeatureEngine(elo_config)
 
     # Simulate 100 consecutive losses to much higher-rated opponent
-    for _ in range(100):
-        rating = update_elo_rating(rating, opponent_rating=2400, won=False, k_factor=32)
+    for game in losing_streak_games:
+        engine.update_game(game)
 
     # Should never go below minimum rating (e.g., 0 or 100)
-    assert rating >= 0, f"Elo rating went negative: {rating}"
+    assert all(r >= 0 for r in engine.ratings.values()), "Elo rating went negative"
 ```
 
 **Regression integration test (example-based):**
@@ -218,7 +218,7 @@ def test_chronological_api_rejects_exact_cutoff_date():
     Bug: Issue #87 - get_games_before() used <= instead of < for date comparison.
     Fixed: 2026-02-10 - Changed to strict less-than comparison.
     """
-    api = ChronologicalDataAPI()
+    api = ChronologicalDataServer()
     cutoff = "2023-03-15"
 
     # Load games before cutoff
@@ -246,11 +246,13 @@ def test_elo_update_stable_for_all_k_factors(k_factor):
     Bug: Issue #56 - No upper bound on rating change led to overflow.
     Fixed: 2026-01-20 - Clamped rating changes to reasonable bounds.
     """
-    rating = 1500
-    result = update_elo_rating(rating, opponent_rating=1500, won=True, k_factor=k_factor)
+    config = EloConfig(k_factor=k_factor)
+    engine = EloFeatureEngine(config)
+    engine.update_game(sample_game)
 
     # Rating should stay within reasonable bounds
-    assert 0 <= result <= 3000, f"Rating exploded with k_factor={k_factor}: {result}"
+    for rating in engine.ratings.values():
+        assert 0 <= rating <= 3000, f"Rating exploded with k_factor={k_factor}: {rating}"
 ```
 
 ### Best Practice - Always include bug context
@@ -295,7 +297,7 @@ def test_brier_score_correct_and_fast():
 
     # Functional: Verify correctness
     expected = ((0.8-1)**2 + (0.3-0)**2) / 2
-    result = calculate_brier_score(predictions, actuals)
+    result = brier_score(predictions, actuals)
     assert abs(result - expected) < 1e-10
 
     # Performance: Verify speed for large datasets
@@ -304,7 +306,7 @@ def test_brier_score_correct_and_fast():
 
     import timeit
     time_taken = timeit.timeit(
-        lambda: calculate_brier_score(large_preds, large_actuals),
+        lambda: brier_score(large_preds, large_actuals),
         number=10
     ) / 10
 

@@ -372,18 +372,6 @@ requests = ">=2.27.0"
 tqdm = ">=4.63.0"
 
 [[package]]
-name = "cerberus"
-version = "1.3.8"
-description = "Lightweight, extensible schema and data validation tool for Pythondictionaries."
-optional = false
-python-versions = ">=3.7"
-groups = ["dev"]
-files = [
-    {file = "cerberus-1.3.8-py3-none-any.whl", hash = "sha256:46c029e3e2a4735408ed36bec14ef2cbf3e50d8ebe47fb34ee1e54b2da814df2"},
-    {file = "cerberus-1.3.8.tar.gz", hash = "sha256:579554887ffd189226774b87570f4a76db75cf0efcbaffcacd5e98b8ee877f61"},
-]
-
-[[package]]
 name = "certifi"
 version = "2026.1.4"
 description = "Python package for providing Mozilla's CA Bundle."
@@ -987,35 +975,6 @@ files = [
     {file = "docutils-0.22.4-py3-none-any.whl", hash = "sha256:d0013f540772d1420576855455d050a2180186c91c15779301ac2ccb3eeb68de"},
     {file = "docutils-0.22.4.tar.gz", hash = "sha256:4db53b1fde9abecbb74d91230d32ab626d94f6badfc575d6db9194a49df29968"},
 ]
-
-[[package]]
-name = "edgetest"
-version = "2026.1.1"
-description = "Bleeding edge dependency testing"
-optional = false
-python-versions = ">=3.10"
-groups = ["dev"]
-files = [
-    {file = "edgetest-2026.1.1-py3-none-any.whl", hash = "sha256:26f766bfedcb800ad8b5e36897576ea81ff201e3ed39a384ff820472a9201fd1"},
-    {file = "edgetest-2026.1.1.tar.gz", hash = "sha256:f698a85885a6c450237dc4857c8df7ea5f2b4aa3269820cda1ea3e0defa1526e"},
-]
-
-[package.dependencies]
-cerberus = ">=1.3.5,<=1.3.8"
-click = ">=7.0,<=8.3.1"
-packaging = ">20.6,<=26.0"
-pluggy = ">=1.5.0,<=1.6.0"
-pyproject-fmt = ">=2.0.0,<=2.11.1"
-tabulate = ">=0.8.9,<=0.9.0"
-tomlkit = ">=0.11.4,<=0.14.0"
-uv = ">=0.6.0,<=0.9.26"
-
-[package.extras]
-build = ["build", "bumpver", "twine", "wheel"]
-dev = ["edgetest[build]", "edgetest[docs]", "edgetest[qa]", "edgetest[tests]"]
-docs = ["furo", "pillow", "recommonmark", "sphinx", "sphinx-copybutton", "sphinx-tabs"]
-qa = ["mypy", "pre-commit", "ruff (>=0.5,<1.0)", "types-click", "types-setuptools", "types-tabulate"]
-tests = ["coverage", "pytest", "pytest-cov"]
 
 [[package]]
 name = "executing"
@@ -3499,42 +3458,6 @@ files = [
 windows-terminal = ["colorama (>=0.4.6)"]
 
 [[package]]
-name = "pyproject-fmt"
-version = "2.11.1"
-description = "Format your pyproject.toml file"
-optional = false
-python-versions = ">=3.10"
-groups = ["dev"]
-files = [
-    {file = "pyproject_fmt-2.11.1-cp39-abi3-macosx_10_12_x86_64.whl", hash = "sha256:a2dc64e7d048f32b504504fa1ed3285c81dcf7d97e014b382ede8e437b42855a"},
-    {file = "pyproject_fmt-2.11.1-cp39-abi3-macosx_11_0_arm64.whl", hash = "sha256:f9950376a9996f07b2b58b8b2ad64023f404f73c2cbc99c216b1add6f33f6cee"},
-    {file = "pyproject_fmt-2.11.1-cp39-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:a3d38b570bdeabe7b3b27e7aa2798b1091b7259c4ca4080de83e5145ba65b11e"},
-    {file = "pyproject_fmt-2.11.1-cp39-abi3-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:2679527bcbd973f1fc1b0fb31ca84455c3fa10199e776184ff125cd6b5157392"},
-    {file = "pyproject_fmt-2.11.1-cp39-abi3-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:97b6ba9923975667fab130c23bfd8ead66c4cdea4b66ae238de860a06afbb108"},
-    {file = "pyproject_fmt-2.11.1-cp39-abi3-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:b16ce0874ef2aee219a2c0dacd7c0ce374562c19937bd9c767093ade91e5e452"},
-    {file = "pyproject_fmt-2.11.1-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:2daf29e4958c310c27ce7750741ef60f79b2f4164df26b1f2bdd063f2beddf4c"},
-    {file = "pyproject_fmt-2.11.1-cp39-abi3-manylinux_2_24_aarch64.whl", hash = "sha256:e5da4b06eea58f89a93d7ae4426e31261d8c571dc5f71d8e13b9c7cdd8e8b253"},
-    {file = "pyproject_fmt-2.11.1-cp39-abi3-manylinux_2_24_armv7l.whl", hash = "sha256:a28c3425785fb28cee1316fdf860eab403274626f2cc0b6df14ec7dcce0f66d2"},
-    {file = "pyproject_fmt-2.11.1-cp39-abi3-manylinux_2_24_i686.whl", hash = "sha256:584e957a951330f777e632ccd12e87d6e8b2a7d113d4a2abbe1f84b8d85fce06"},
-    {file = "pyproject_fmt-2.11.1-cp39-abi3-manylinux_2_24_ppc64le.whl", hash = "sha256:ad8d5c0825a37ebe3414b0590336700600ee718bf6a461fbd1be01dba68e7a99"},
-    {file = "pyproject_fmt-2.11.1-cp39-abi3-manylinux_2_24_s390x.whl", hash = "sha256:a5fd2882b6ae5f0b1651e9e30cb2ba1ad07d99359dc1d056999766ec20706400"},
-    {file = "pyproject_fmt-2.11.1-cp39-abi3-manylinux_2_24_x86_64.whl", hash = "sha256:56abdaa2afafe86436302220ea90bde025dcec066e348e7f9001a7663dc398f8"},
-    {file = "pyproject_fmt-2.11.1-cp39-abi3-manylinux_2_5_i686.manylinux1_i686.whl", hash = "sha256:44b1edad216b33817d2651a15fb2793807fd7c9cfff1ce66d565c4885b89640e"},
-    {file = "pyproject_fmt-2.11.1-cp39-abi3-musllinux_1_2_i686.whl", hash = "sha256:08ccf565172179fc7f35a90f4541f68abcdbef7e7a4ea35fcead44f8cabe3e3a"},
-    {file = "pyproject_fmt-2.11.1-cp39-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:27a9af1fc8d2173deb7a0bbb8c368a585e7817bcbba6acf00922b73c76c8ee23"},
-    {file = "pyproject_fmt-2.11.1-cp39-abi3-win32.whl", hash = "sha256:0abae947f93cca80108675c025cb67b96a434f7a33148e3f7945e3009db0d073"},
-    {file = "pyproject_fmt-2.11.1-cp39-abi3-win_amd64.whl", hash = "sha256:5bf986b016eb157b30531d0f1036430023db0195cf2d6fd24e4b43cbc02c0da5"},
-    {file = "pyproject_fmt-2.11.1-pp310-pypy310_pp73-macosx_10_12_x86_64.whl", hash = "sha256:533da20593e9201320eb6ec939f108c5a1baac141538fd0d5e09a08cf25951bc"},
-    {file = "pyproject_fmt-2.11.1-pp310-pypy310_pp73-macosx_11_0_arm64.whl", hash = "sha256:8fb86748e061ee9b788fbc93b67c4f2e29fef4b82ece565a00af548d919e0dcd"},
-    {file = "pyproject_fmt-2.11.1-pp310-pypy310_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f8b184c0eda81022af915694a941b4eecf871be8fc23483a72fa4283c49f2eca"},
-    {file = "pyproject_fmt-2.11.1-pp310-pypy310_pp73-manylinux_2_24_x86_64.whl", hash = "sha256:81c40ef0129e7e0c8684bc8be25c90ebbcc31579f866cfe1ba016b0c7ee0280f"},
-    {file = "pyproject_fmt-2.11.1.tar.gz", hash = "sha256:86f4ebc71d658b848bd14da5f2d2f156a238687e5c9adc0e787ecbf925fd24b1"},
-]
-
-[package.dependencies]
-toml-fmt-common = "1.1"
-
-[[package]]
 name = "pyproject-hooks"
 version = "1.2.0"
 description = "Wrappers to call pyproject.toml-based build backend hooks."
@@ -4842,21 +4765,6 @@ sql = ["SQLAlchemy (>=2.0.0)"]
 starlette = ["anyio (>=4.0.0)", "itsdangerous (>=2.1.2)", "python-multipart (>=0.0.10)", "starlette (>=0.40.0)", "uvicorn (>=0.30.0)", "websockets (>=12.0.0)"]
 
 [[package]]
-name = "tabulate"
-version = "0.9.0"
-description = "Pretty-print tabular data"
-optional = false
-python-versions = ">=3.7"
-groups = ["dev"]
-files = [
-    {file = "tabulate-0.9.0-py3-none-any.whl", hash = "sha256:024ca478df22e9340661486f85298cff5f6dcdba14f3813e8830015b9ed1948f"},
-    {file = "tabulate-0.9.0.tar.gz", hash = "sha256:0095b12bf5966de529c0feb1fa08671671b3368eec77d7ef7ab114be2c068b3c"},
-]
-
-[package.extras]
-widechars = ["wcwidth"]
-
-[[package]]
 name = "tenacity"
 version = "9.1.4"
 description = "Retry code until it succeeds"
@@ -4985,18 +4893,6 @@ groups = ["main"]
 files = [
     {file = "toml-0.10.2-py2.py3-none-any.whl", hash = "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b"},
     {file = "toml-0.10.2.tar.gz", hash = "sha256:b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f"},
-]
-
-[[package]]
-name = "toml-fmt-common"
-version = "1.1.0"
-description = "Common logic to the TOML formatter."
-optional = false
-python-versions = ">=3.10"
-groups = ["dev"]
-files = [
-    {file = "toml_fmt_common-1.1.0-py3-none-any.whl", hash = "sha256:92a956c4abf9c14e72d51e4c23149b2596a84ac0c347484e7c36008807e2e0a3"},
-    {file = "toml_fmt_common-1.1.0.tar.gz", hash = "sha256:e4ba8f13e5fe25cfe0bfc60342ad7deb91c741fd31f2e5522e6a51bfbf1427d3"},
 ]
 
 [[package]]
@@ -5206,35 +5102,6 @@ brotli = ["brotli (>=1.2.0) ; platform_python_implementation == \"CPython\"", "b
 h2 = ["h2 (>=4,<5)"]
 socks = ["pysocks (>=1.5.6,!=1.5.7,<2.0)"]
 zstd = ["backports-zstd (>=1.0.0) ; python_version < \"3.14\""]
-
-[[package]]
-name = "uv"
-version = "0.9.26"
-description = "An extremely fast Python package and project manager, written in Rust."
-optional = false
-python-versions = ">=3.8"
-groups = ["dev"]
-files = [
-    {file = "uv-0.9.26-py3-none-linux_armv6l.whl", hash = "sha256:7dba609e32b7bd13ef81788d580970c6ff3a8874d942755b442cffa8f25dba57"},
-    {file = "uv-0.9.26-py3-none-macosx_10_12_x86_64.whl", hash = "sha256:b815e3b26eeed00e00f831343daba7a9d99c1506883c189453bb4d215f54faac"},
-    {file = "uv-0.9.26-py3-none-macosx_11_0_arm64.whl", hash = "sha256:1b012e6c4dfe767f818cbb6f47d02c207c9b0c82fee69a5de6d26ffb26a3ef3c"},
-    {file = "uv-0.9.26-py3-none-manylinux_2_17_aarch64.manylinux2014_aarch64.musllinux_1_1_aarch64.whl", hash = "sha256:ea296b700d7c4c27acdfd23ffaef2b0ecdd0aa1b58d942c62ee87df3b30f06ac"},
-    {file = "uv-0.9.26-py3-none-manylinux_2_17_armv7l.manylinux2014_armv7l.musllinux_1_1_armv7l.whl", hash = "sha256:1ba860d2988efc27e9c19f8537a2f9fa499a8b7ebe4afbe2d3d323d72f9aee61"},
-    {file = "uv-0.9.26-py3-none-manylinux_2_17_armv7l.manylinux2014_armv7l.whl", hash = "sha256:8610bdfc282a681a0a40b90495a478599aa3484c12503ef79ef42cd271fd80fe"},
-    {file = "uv-0.9.26-py3-none-manylinux_2_17_i686.manylinux2014_i686.whl", hash = "sha256:c4bf700bd071bd595084b9ee0a8d77c6a0a10ca3773d3771346a2599f306bd9c"},
-    {file = "uv-0.9.26-py3-none-manylinux_2_17_ppc64.manylinux2014_ppc64.whl", hash = "sha256:89a7beea1c692f76a6f8da13beff3cbb43f7123609e48e03517cc0db5c5de87c"},
-    {file = "uv-0.9.26-py3-none-manylinux_2_17_ppc64le.manylinux2014_ppc64le.whl", hash = "sha256:182f5c086c7d03ad447e522b70fa29a0302a70bcfefad4b8cd08496828a0e179"},
-    {file = "uv-0.9.26-py3-none-manylinux_2_17_s390x.manylinux2014_s390x.whl", hash = "sha256:5d8c62a501f13425b4b0ce1dd4c6b82f3ce5a5179e2549c55f4bb27cc0eb8ef8"},
-    {file = "uv-0.9.26-py3-none-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:b7e89798bd3df7dcc4b2b4ac4e2fc11d6b3ff4fe7d764aa3012d664c635e2922"},
-    {file = "uv-0.9.26-py3-none-manylinux_2_28_aarch64.whl", hash = "sha256:60a66f1783ec4efc87b7e1f9bd66e8fd2de3e3b30d122b31cb1487f63a3ea8b7"},
-    {file = "uv-0.9.26-py3-none-manylinux_2_31_riscv64.whl", hash = "sha256:63c6a1f1187facba1fb45a2fa45396980631a3427ac11b0e3d9aa3ebcf2c73cf"},
-    {file = "uv-0.9.26-py3-none-musllinux_1_1_i686.whl", hash = "sha256:c6d8650fbc980ccb348b168266143a9bd4deebc86437537caaf8ff2a39b6ea50"},
-    {file = "uv-0.9.26-py3-none-musllinux_1_1_x86_64.whl", hash = "sha256:25278f9298aa4dade38241a93d036739b0c87278dcfad1ec1f57e803536bfc49"},
-    {file = "uv-0.9.26-py3-none-win32.whl", hash = "sha256:10d075e0193e3a0e6c54f830731c4cb965d6f4e11956e84a7bed7ed61d42aa27"},
-    {file = "uv-0.9.26-py3-none-win_amd64.whl", hash = "sha256:0315fc321f5644b12118f9928086513363ed9b29d74d99f1539fda1b6b5478ab"},
-    {file = "uv-0.9.26-py3-none-win_arm64.whl", hash = "sha256:344ff38749b6cd7b7dfdfb382536f168cafe917ae3a5aa78b7a63746ba2a905b"},
-    {file = "uv-0.9.26.tar.gz", hash = "sha256:8b7017a01cc48847a7ae26733383a2456dd060fc50d21d58de5ee14f6b6984d7"},
-]
 
 [[package]]
 name = "virtualenv"
@@ -5472,4 +5339,4 @@ scikit-learn = ["scikit-learn"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<4.0"
-content-hash = "70e364f942c8db80f55542f8af4a82d627e896013265c32aece7cc2fc1ab4935"
+content-hash = "997e64e25d651fc3537b0f1ff751a896ea606b2e70ec0735f359f7f7fea27337"

@@ -1,6 +1,6 @@
 # Story 8.11: Fix Testing Documentation Staleness & Marker Gaps
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -41,40 +41,40 @@ so that I can trust the docs when writing tests, configuring CI, and onboarding 
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Update directory trees in both docs (AC: #1, #2)
-  - [ ] 1.1 Run `find tests/ -name '*.py' | sort` to get actual file list
-  - [ ] 1.2 Replace `TESTING_STRATEGY.md` lines 206-218 with actual tree
-  - [ ] 1.3 Replace `conventions.md` lines 11-27 with actual tree (including `fixtures/kaggle/*.csv`)
-- [ ] Task 2: Fix marker documentation across all files (AC: #9, #10, #11, #12, #13)
-  - [ ] 2.1 Add `unit` and `no_mutation` to `TESTING_STRATEGY.md` Test Markers Reference table
-  - [ ] 2.2 Add `unit` and `no_mutation` to `conventions.md` Marker Definitions table
-  - [ ] 2.3 Update `conventions.md` marker configuration code block to show all 10 markers
-  - [ ] 2.4 Decide on zero-usage markers (`fuzz`, `mutation`, `performance`, `regression`) — remove or keep with rationale
-- [ ] Task 3: Fix stale API names in code examples (AC: #3, #17)
-  - [ ] 3.1 Search all `docs/testing/*.md` for `calculate_brier_score`, `ChronologicalDataAPI`, `update_elo_rating`, `sample_games_fixture` and replace with actual names
-  - [ ] 3.2 Fix `Game` TypedDict example to use actual field names or note it's illustrative
-- [ ] Task 4: Fix nox and pre-commit examples (AC: #4, #5, #8)
-  - [ ] 4.1 Replace `conventions.md` nox example (lines 267-278) with actual noxfile session behavior
-  - [ ] 4.2 Replace `conventions.md` pre-commit YAML example (lines 282-294) with actual `.pre-commit-config.yaml` `pytest-smoke` hook
-  - [ ] 4.3 Remove all "Story X.Y will implement" future-tense language
-- [ ] Task 5: Standardize smoke test time budgets (AC: #6)
-  - [ ] 5.1 Audit all `docs/` files for time budget references
-  - [ ] 5.2 Standardize: Tier 1 overall < 10s, smoke tests < 5s, individual smoke test < 1s
-- [ ] Task 6: Fix fixture naming convention docs (AC: #7, #16)
-  - [ ] 6.1 Update `conventions.md` naming convention table — remove `_fixture()` suffix convention; document actual pattern (descriptive names without suffix)
-  - [ ] 6.2 Remove dead `sample_games_fixture()` reference and subdirectory conftest.py mention
-- [ ] Task 7: Clean up edgetest references (AC: #14)
-  - [ ] 7.1 Remove `edgetest` from `.github/pull_request_template.md`
-  - [ ] 7.2 Remove `edgetest` from `docs/testing/execution.md` Tier 2 table
-  - [ ] 7.3 Remove `edgetest` dev dependency and `[tool.edgetest]` config from `pyproject.toml`
-  - [ ] 7.4 Search all docs for remaining `edgetest` references and remove
-- [ ] Task 8: Fix check-manifest documentation (AC: #15)
-  - [ ] 8.1 Remove `check-manifest` from Tier 1 pre-commit table in `TESTING_STRATEGY.md` and `execution.md`
-  - [ ] 8.2 Optionally add a note that `check-manifest` is a manual dev tool, not a hook
-- [ ] Task 9: Run quality gates (AC: all)
-  - [ ] 9.1 `ruff check .`
-  - [ ] 9.2 `mypy --strict src/ncaa_eval tests` (only if source files changed)
-  - [ ] 9.3 `pytest -m smoke` to verify no regressions
+- [x] Task 1: Update directory trees in both docs (AC: #1, #2)
+  - [x] 1.1 Run `find tests/ -name '*.py' | sort` to get actual file list
+  - [x] 1.2 Replace `TESTING_STRATEGY.md` lines 206-218 with actual tree
+  - [x] 1.3 Replace `conventions.md` lines 11-27 with actual tree (including `fixtures/kaggle/*.csv`)
+- [x] Task 2: Fix marker documentation across all files (AC: #9, #10, #11, #12, #13)
+  - [x] 2.1 Add `unit` and `no_mutation` to `TESTING_STRATEGY.md` Test Markers Reference table
+  - [x] 2.2 Add `unit` and `no_mutation` to `conventions.md` Marker Definitions table
+  - [x] 2.3 Update `conventions.md` marker configuration code block to show all 8 markers (removed `fuzz`/`mutation`)
+  - [x] 2.4 Decide on zero-usage markers — removed `fuzz` and `mutation` from pyproject.toml and docs; kept `performance` and `regression` as aspirational
+- [x] Task 3: Fix stale API names in code examples (AC: #3, #17)
+  - [x] 3.1 Replaced `calculate_brier_score` → `brier_score`, `ChronologicalDataAPI` → `ChronologicalDataServer`, `update_elo_rating` → `EloFeatureEngine.update_game()`, `sample_games_fixture` → `sample_games` across all docs/testing/*.md files
+  - [x] 3.2 Fixed `Game` TypedDict example to use actual Pydantic model fields (`w_team_id`/`l_team_id`)
+- [x] Task 4: Fix nox and pre-commit examples (AC: #4, #5, #8)
+  - [x] 4.1 Replaced conventions.md nox example with actual `@nox.session(python=False)` / `pytest --tb=short`
+  - [x] 4.2 Replaced conventions.md pre-commit YAML with actual `pytest-smoke` hook from `.pre-commit-config.yaml`
+  - [x] 4.3 Removed all "Story X.Y will implement" future-tense language from docs/testing/ files
+- [x] Task 5: Standardize smoke test time budgets (AC: #6)
+  - [x] 5.1 Audited all docs/ files for time budget references
+  - [x] 5.2 Fixed TESTING_STRATEGY.md Test Commands table: clarified "< 5s; Tier 1 overall < 10s"
+- [x] Task 6: Fix fixture naming convention docs (AC: #7, #16)
+  - [x] 6.1 Updated conventions.md naming table — descriptive names without `_fixture()` suffix
+  - [x] 6.2 Removed dead `sample_games_fixture()` reference and subdirectory conftest.py mention
+- [x] Task 7: Clean up edgetest references (AC: #14)
+  - [x] 7.1 Removed `edgetest` checkbox from `.github/pull_request_template.md`
+  - [x] 7.2 Removed `edgetest` row from `docs/testing/execution.md` Tier 2 table
+  - [x] 7.3 Removed `edgetest` dev dependency and `[tool.edgetest]` config from `pyproject.toml`
+  - [x] 7.4 Confirmed no remaining `edgetest` references in active docs (only historical planning artifacts)
+- [x] Task 8: Fix check-manifest documentation (AC: #15)
+  - [x] 8.1 Removed `check-manifest` from Tier 1 pre-commit tables in `TESTING_STRATEGY.md` and `execution.md`
+  - [x] 8.2 check-manifest remains in PR template as manual dev tool (not a pre-commit hook)
+- [x] Task 9: Run quality gates (AC: all)
+  - [x] 9.1 `ruff check .` — all checks passed
+  - [x] 9.2 `mypy --strict` — skipped (no Python source changes)
+  - [x] 9.3 `pytest -m smoke` — 115 passed; full suite: 930 passed, 1 pre-existing flaky timeout (test_pytest_smoke)
 
 ## Dev Notes
 
@@ -241,10 +241,44 @@ The inconsistency is minor: `TESTING_STRATEGY.md` line 195 conflates Tier 1 (< 1
 
 ### Agent Model Used
 
+Claude Opus 4.6
+
 ### Debug Log References
+
+None — no debugging needed for this documentation-only story.
 
 ### Completion Notes List
 
+- Updated directory trees in TESTING_STRATEGY.md and conventions.md to match actual 39-file test suite structure
+- Added `unit` and `no_mutation` markers to all documentation tables; removed `fuzz` and `mutation` markers from pyproject.toml and docs (zero organic usage across 8 epics)
+- Replaced stale API names across 8 docs/testing/*.md files: `calculate_brier_score` → `brier_score`, `ChronologicalDataAPI` → `ChronologicalDataServer`, `update_elo_rating` → `EloFeatureEngine.update_game()`, `sample_games_fixture` → `sample_games`
+- Fixed Game model example to use actual Pydantic fields (w_team_id/l_team_id)
+- Replaced nox session example with actual `@nox.session(python=False)` behavior
+- Replaced pre-commit hook YAML with actual `pytest-smoke` hook config
+- Removed all "Story X.Y will implement" future-tense language
+- Standardized smoke test time budgets: clarified Tier 1 overall < 10s, smoke subset < 5s
+- Updated fixture naming convention: descriptive names (no `_fixture()` suffix)
+- Removed all edgetest references: PR template checkbox, execution.md Tier 2 table, pyproject.toml dependency and [tool.edgetest] config
+- Removed check-manifest from Tier 1 pre-commit tables (it's a manual dev tool, not a hook)
+- Regenerated poetry.lock after pyproject.toml changes
+- Quality gates: ruff clean, 115 smoke tests pass, 930/931 full suite pass (1 pre-existing flaky timeout)
+
 ### Change Log
 
+- 2026-03-04: Story 8.11 implemented — fixed testing documentation staleness, marker gaps, stale API names, edgetest removal, check-manifest correction. All 17 ACs addressed.
+
 ### File List
+
+- `docs/TESTING_STRATEGY.md` — updated directory tree, marker table, Tier 1 table, time budgets, tool table
+- `docs/testing/conventions.md` — updated directory tree, marker tables, code block, nox/pre-commit examples, fixture naming, API names
+- `docs/testing/execution.md` — removed check-manifest and edgetest from tables, fixed API names
+- `docs/testing/test-scope-guide.md` — fixed API names (brier_score, ChronologicalDataServer, sample_games)
+- `docs/testing/test-approach-guide.md` — fixed API names
+- `docs/testing/test-purpose-guide.md` — fixed API names
+- `docs/testing/domain-testing.md` — fixed API names, removed Story references
+- `docs/testing/quality.md` — removed @pytest.mark.mutation marker reference
+- `pyproject.toml` — removed edgetest dependency, [tool.edgetest] section, fuzz/mutation markers
+- `poetry.lock` — regenerated after pyproject.toml changes
+- `.github/pull_request_template.md` — removed edgetest checkbox
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — status: in-progress → review
+- `_bmad-output/implementation-artifacts/8-11-fix-testing-documentation-staleness-marker-gaps.md` — tasks marked complete, Dev Agent Record updated

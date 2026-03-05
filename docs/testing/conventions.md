@@ -10,20 +10,62 @@ This guide covers test organization, fixtures, markers, and naming conventions.
 
 ```
 tests/
-├── __init__.py                   # Existing (Story 1.1)
-├── conftest.py                   # Shared fixtures (Story 1.5)
-├── unit/                         # Unit tests (Story 1.5)
+├── __init__.py
+├── conftest.py                          # Shared fixtures
+├── fixtures/
+│   ├── .gitkeep
+│   └── kaggle/
+│       ├── MNCAATourneyCompactResults.csv
+│       ├── MRegularSeasonCompactResults.csv
+│       ├── MSeasons.csv
+│       └── MTeams.csv
+├── integration/
 │   ├── __init__.py
-│   ├── test_metrics.py           # Unit tests for evaluation/metrics.py
-│   ├── test_elo.py               # Unit tests for model/elo.py
-│   └── test_features.py          # Unit tests for transform/features.py
-├── integration/                  # Integration tests (Story 1.5)
-│   ├── __init__.py
-│   ├── test_sync_pipeline.py     # Integration: ingest → storage
-│   └── test_training_pipeline.py # Integration: feature → model → eval
-└── fixtures/                     # Test data files (as needed)
-    ├── sample_games.csv
-    └── sample_predictions.json
+│   ├── test_documented_commands.py      # E2E CLI documentation tests
+│   ├── test_elo_integration.py          # Integration: Elo pipeline
+│   ├── test_feature_serving_integration.py  # Integration: feature serving
+│   └── test_sync.py                     # Integration: ingest → storage
+└── unit/
+    ├── __init__.py
+    ├── test_bracket_page.py
+    ├── test_bracket_renderer.py
+    ├── test_calibration.py
+    ├── test_chronological_serving.py
+    ├── test_cli_train.py
+    ├── test_connector_base.py
+    ├── test_dashboard_app.py
+    ├── test_dashboard_filters.py
+    ├── test_deep_dive_page.py
+    ├── test_elo.py
+    ├── test_espn_connector.py
+    ├── test_evaluation_backtest.py
+    ├── test_evaluation_metrics.py
+    ├── test_evaluation_plotting.py
+    ├── test_evaluation_simulation.py
+    ├── test_evaluation_splitter.py
+    ├── test_feature_serving.py
+    ├── test_framework_validation.py
+    ├── test_fuzzy.py
+    ├── test_graph.py
+    ├── test_home_page.py
+    ├── test_imports.py
+    ├── test_kaggle_connector.py
+    ├── test_leaderboard_page.py
+    ├── test_logger.py
+    ├── test_model_base.py
+    ├── test_model_elo.py
+    ├── test_model_logistic_regression.py
+    ├── test_model_registry.py
+    ├── test_model_tracking.py
+    ├── test_model_xgboost.py
+    ├── test_normalization.py
+    ├── test_opponent.py
+    ├── test_package_structure.py
+    ├── test_pool_scorer_page.py
+    ├── test_repository.py
+    ├── test_run_store_metrics.py
+    ├── test_schema.py
+    └── test_sequential.py
 ```
 
 ### Naming Conventions
@@ -31,8 +73,8 @@ tests/
 | Entity | Convention | Example |
 |---|---|---|
 | **Test files** | `test_<module_name>.py` | `test_metrics.py` for `src/ncaa_eval/evaluation/metrics.py` |
-| **Test functions** | `test_<function>_<scenario>()` | `test_calculate_brier_score_perfect_prediction()` |
-| **Fixture functions** | `<resource>_fixture()` | `sample_games_fixture()` |
+| **Test functions** | `test_<function>_<scenario>()` | `test_brier_score_perfect_prediction()` |
+| **Fixture functions** | Descriptive name (no suffix) | `sample_teams()`, `elo_config()`, `temp_data_dir()` |
 | **Test classes** | `Test<ClassName>` | `class TestEloModel:` |
 
 ### Pytest Discovery
@@ -59,8 +101,7 @@ No custom discovery configuration is needed (already set in `pyproject.toml`).
 
 ### Fixture Organization
 
-- **`conftest.py` (root):** Project-wide fixtures (e.g., `sample_games_fixture()`, `temp_data_dir()`)
-- **`conftest.py` (subdirectory):** Subdirectory-specific fixtures (e.g., `tests/unit/conftest.py`)
+- **`tests/conftest.py`:** Project-wide fixtures (e.g., `sample_teams()`, `elo_config()`, `temp_data_dir()`)
 - **Inline fixtures:** Simple fixtures can be defined in test files if not reused elsewhere
 
 ### Fixture Best Practices
@@ -71,12 +112,12 @@ No custom discovery configuration is needed (already set in `pyproject.toml`).
 from __future__ import annotations
 
 import pytest
-from ncaa_eval.types import Game
+from ncaa_eval.ingest.schema import Game
 
 @pytest.fixture
 def sample_game() -> Game:
     """Provide a sample game for testing."""
-    return Game(game_id=1, season=2023, home_team="Duke", away_team="UNC")
+    return Game(season=2023, day_num=100, w_team_id=1234, l_team_id=5678, w_score=75, l_score=70)
 ```
 
 **2. Parametrized fixtures:** Use `@pytest.fixture(params=[...])` for testing multiple scenarios
@@ -117,28 +158,28 @@ Pytest markers enable selective test execution for pre-commit vs. PR-time distin
 |---|---|---|---|
 | `@pytest.mark.smoke` | Speed | Fast smoke tests for pre-commit (< 1s each, < 5s total) | `pytest -m smoke` |
 | `@pytest.mark.slow` | Speed | Slow tests excluded from pre-commit (> 5 seconds each) | `pytest -m "not slow"` |
+| `@pytest.mark.unit` | Scope | Pure unit tests with no I/O or external dependencies | `pytest -m unit` |
 | `@pytest.mark.integration` | Scope | Integration tests (I/O, database) | `pytest -m integration` |
 | `@pytest.mark.property` | Approach | Property-based tests (Hypothesis) | `pytest -m property` |
-| `@pytest.mark.fuzz` | Approach | Fuzz-based tests (Hypothesis) | `pytest -m fuzz` |
 | `@pytest.mark.performance` | Purpose | Performance/benchmark tests | `pytest -m performance` |
 | `@pytest.mark.regression` | Purpose | Regression tests (prevent bug recurrence) | `pytest -m regression` |
-| `@pytest.mark.mutation` | Quality | Tests for mutation testing coverage | `pytest -m mutation` |
+| `@pytest.mark.no_mutation` | Quality | Tests incompatible with mutmut runner directory (`Path(__file__)`-dependent) | N/A |
 
 ### Marker Configuration
 
-Markers are configured in `pyproject.toml` (Story 1.5):
+Markers are configured in `pyproject.toml`:
 
 ```toml
 [tool.pytest.ini_options]
 markers = [
-    "smoke: Fast smoke tests for pre-commit (< 5 seconds total)",
+    "smoke: Fast smoke tests for pre-commit (< 10 seconds total)",
     "slow: Slow tests excluded from pre-commit (> 5 seconds each)",
     "integration: Integration tests with I/O or external dependencies",
     "property: Hypothesis property-based tests",
-    "fuzz: Hypothesis fuzz-based tests for crash resilience",
     "performance: Performance and benchmark tests",
     "regression: Regression tests to prevent bug recurrence",
-    "mutation: Tests specifically for mutation testing coverage",
+    "no_mutation: Tests incompatible with mutmut runner directory (Path(__file__)-dependent structural tests)",
+    "unit: Pure unit tests with no I/O or external dependencies",
 ]
 ```
 
@@ -165,11 +206,13 @@ def test_full_season_processing(large_dataset_fixture):
 
 # Approach marker only (property-based unit test)
 @pytest.mark.property
-@given(scores=st.lists(st.floats(0, 150), min_size=1))
-def test_average_is_bounded(scores):
-    """Verify average is always between min and max (invariant)."""
-    avg = calculate_average(scores)
-    assert min(scores) <= avg <= max(scores)
+@given(probs=st.lists(st.floats(0.0, 1.0), min_size=1))
+def test_brier_score_is_bounded(probs):
+    """Verify Brier score is always in [0, 1] (invariant)."""
+    preds = np.array(probs)
+    actuals = np.ones(len(probs))
+    score = brier_score(preds, actuals)
+    assert 0.0 <= score <= 1.0
 
 # Scope + Approach markers (property-based integration test)
 @pytest.mark.integration
@@ -177,18 +220,18 @@ def test_average_is_bounded(scores):
 @given(cutoff_year=st.integers(2015, 2025))
 def test_temporal_boundary_invariant(cutoff_year):
     """Verify API enforces temporal boundaries (integration + invariant)."""
-    api = ChronologicalDataAPI()
+    api = ChronologicalDataServer()
     games = api.get_games_before(cutoff_year=cutoff_year)
     assert all(game.season <= cutoff_year for game in games)
 
 # Purpose markers (regression test)
 @pytest.mark.regression
-def test_elo_never_negative():
+def test_elo_never_negative(elo_config, sample_games):
     """Regression test: Prevent Issue #42 (negative Elo ratings)."""
-    rating = 1200
-    for _ in range(100):
-        rating = update_elo_rating(rating, opponent_rating=2400, won=False, k_factor=32)
-    assert rating >= 0
+    engine = EloFeatureEngine(elo_config)
+    for game in sample_games:
+        engine.update_game(game)
+    assert all(r >= 0 for r in engine.ratings.values())
 
 # All dimensions combined (integration + property + performance)
 @pytest.mark.integration
@@ -266,31 +309,31 @@ Coverage is a **quality signal, not a binary gate**. Targets guide development b
 The testing strategy integrates into the **nox-orchestrated development pipeline**:
 
 **Command:** `nox`
-**Workflow:** Ruff → Mypy → Pytest
+**Workflow:** Ruff (lint/format) → Mypy (strict) → Pytest (full suite)
 
 ```python
-# Example noxfile.py session (Story 1.6 will implement this)
-@nox.session
+# Actual noxfile.py tests session (python=False uses active conda env)
+@nox.session(python=False)
 def tests(session):
-    """Run the test suite."""
-    session.install("pytest", "pytest-cov", "hypothesis")
-    session.run("pytest", "-m", "smoke", "--cov=src/ncaa_eval")
+    """Run the full pytest test suite."""
+    session.run("pytest", "--tb=short", *session.posargs)
 ```
 
 ### Pre-commit Hook Integration
 
-Story 1.4 configures pre-commit hooks:
+Pre-commit hooks are configured in `.pre-commit-config.yaml`:
 
 ```yaml
-# .pre-commit-config.yaml
-repos:
+# .pre-commit-config.yaml (excerpt — pytest-smoke hook)
   - repo: local
     hooks:
-      - id: smoke-tests
-        name: Run smoke tests
-        entry: pytest -m smoke
+      - id: pytest-smoke
+        name: pytest-smoke
+        entry: poetry run pytest -m smoke --tb=short -q
         language: system
+        types: [python]
         pass_filenames: false
+        stages: [commit]
 ```
 
 ---

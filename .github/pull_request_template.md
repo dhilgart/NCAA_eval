@@ -48,7 +48,6 @@ Steps to reproduce the behavior:
 - [ ] **All tests pass** — `pytest` exits with code 0, no failures or errors
 - [ ] **No regressions** — Existing tests still pass after changes
 - [ ] **New tests added** — New functionality has corresponding unit tests
-- [ ] **Edge compatibility** — `edgetest` passes (dependency version boundaries verified)
 
 ## Code Quality
 
