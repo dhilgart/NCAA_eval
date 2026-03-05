@@ -1,6 +1,6 @@
 # Story 8.12: Epics & Backlog Grooming — Track All Deferred Items
 
-Status: review
+Status: done
 
 ## Story
 
