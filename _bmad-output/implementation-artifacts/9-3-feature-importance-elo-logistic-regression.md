@@ -41,13 +41,13 @@ so that **I can understand what drives predictions across Elo, Logistic Regressi
   - [x] 2.3 Sort descending by rating, limit to top 50 teams (avoid overwhelming the chart)
   - [x] 2.4 Return `None` if no ratings exist (fresh model, never fitted)
 
-- [ ] Task 3: Update dashboard to handle model-specific interpretability (AC: #3, #4)
-  - [ ] 3.1 Update `_render_feature_importance()` in `3_Model_Deep_Dive.py` to show model-appropriate title/labels
-  - [ ] 3.2 For `logistic_regression`: title "Feature Importance (|Coefficient|)", x-axis "Absolute Coefficient"
-  - [ ] 3.3 For `elo`: title "Team Elo Ratings (Top 50)", x-axis "Rating"
-  - [ ] 3.4 For `xgboost`: keep existing title "Feature Importance (Gain)" — unchanged
-  - [ ] 3.5 Remove the generic `"not available for stateful models"` fallback message (line 96)
-  - [ ] 3.6 Pass `model_type` context into the rendering to select chart title/axis labels
+- [x] Task 3: Update dashboard to handle model-specific interpretability (AC: #3, #4)
+  - [x] 3.1 Update `_render_feature_importance()` in `3_Model_Deep_Dive.py` to show model-appropriate title/labels
+  - [x] 3.2 For `logistic_regression`: title "Feature Importance (|Coefficient|)", x-axis "Absolute Coefficient"
+  - [x] 3.3 For `elo`: title "Team Elo Ratings (Top 50)", x-axis "Rating"
+  - [x] 3.4 For `xgboost`: keep existing title "Feature Importance (Gain)" — unchanged
+  - [x] 3.5 Remove the generic `"not available for stateful models"` fallback message (line 96)
+  - [x] 3.6 Pass `model_type` context into the rendering to select chart title/axis labels
 
 - [ ] Task 4: Update `load_feature_importances()` sort logic (AC: #3)
   - [ ] 4.1 The current sort in `data_loaders.py:192` sorts by `p[1]` descending — this works for XGBoost (higher = more important) and LogReg (higher abs coef = more important)
@@ -68,9 +68,9 @@ so that **I can understand what drives predictions across Elo, Logistic Regressi
   - [x] 6.4 Test: results are sorted descending by rating
   - [x] 6.5 Test: limit to top 50 when more than 50 teams exist
 
-- [ ] Task 7: Update dashboard tests (AC: #3, #4)
-  - [ ] 7.1 Update `test_returns_empty_for_elo_model` in `test_dashboard_filters.py` — Elo now returns data, not empty
-  - [ ] 7.2 Add test for logistic_regression model_type in dashboard rendering
+- [x] Task 7: Update dashboard tests (AC: #3, #4)
+  - [x] 7.1 Update `test_returns_empty_for_elo_model` in `test_dashboard_filters.py` — Elo now returns data, not empty
+  - [x] 7.2 Add test for logistic_regression model_type in dashboard rendering
 
 - [ ] Task 8: Verify existing XGBoost behavior unchanged (AC: #1)
   - [ ] 8.1 Run existing XGBoost feature importance tests — all must pass without changes

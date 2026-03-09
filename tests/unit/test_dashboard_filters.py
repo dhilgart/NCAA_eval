@@ -325,17 +325,45 @@ class TestLoadFeatureImportances:
 
     @patch("dashboard.lib.data_loaders.Path.exists", return_value=True)
     @patch("dashboard.lib.data_loaders.RunStore")
-    def test_returns_empty_for_elo_model(self, mock_store_cls: MagicMock, mock_exists: MagicMock) -> None:
+    def test_returns_ratings_for_elo_model(self, mock_store_cls: MagicMock, mock_exists: MagicMock) -> None:
+        """Story 9.3: Elo model now returns team ratings as feature importances."""
         mock_store = MagicMock()
-        mock_run = MagicMock()
-        mock_run.model_type = "elo"
-        mock_store.load_run.return_value = mock_run
+        mock_model = MagicMock()
+        mock_model.get_feature_importances.return_value = [
+            ("team_100", 1600.0),
+            ("team_200", 1400.0),
+        ]
+        mock_store.load_model.return_value = mock_model
         mock_store_cls.return_value = mock_store
 
         from dashboard.lib.data_loaders import load_feature_importances
 
         result: list[dict[str, object]] = _unwrap(load_feature_importances)("/fake/data", "run-1")
-        assert result == []
+        assert len(result) == 2
+        assert result[0]["feature"] == "team_100"
+        assert result[0]["importance"] == 1600.0
+
+    @patch("dashboard.lib.data_loaders.Path.exists", return_value=True)
+    @patch("dashboard.lib.data_loaders.RunStore")
+    def test_returns_importances_for_logistic_regression(
+        self, mock_store_cls: MagicMock, mock_exists: MagicMock
+    ) -> None:
+        """Story 9.3: LogReg model returns absolute coefficients as feature importances."""
+        mock_store = MagicMock()
+        mock_model = MagicMock()
+        mock_model.get_feature_importances.return_value = [
+            ("feat_a", 0.8),
+            ("feat_b", 0.3),
+        ]
+        mock_store.load_model.return_value = mock_model
+        mock_store_cls.return_value = mock_store
+
+        from dashboard.lib.data_loaders import load_feature_importances
+
+        result: list[dict[str, object]] = _unwrap(load_feature_importances)("/fake/data", "run-1")
+        assert len(result) == 2
+        assert result[0]["feature"] == "feat_a"
+        assert result[0]["importance"] == 0.8
 
     @patch("dashboard.lib.data_loaders.Path.exists", return_value=True)
     @patch("dashboard.lib.data_loaders.RunStore")
