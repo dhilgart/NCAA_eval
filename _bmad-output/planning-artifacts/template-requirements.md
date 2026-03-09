@@ -3699,3 +3699,31 @@ assert result[0]["feature"] == "team_100"  # only passes if sort is applied
 ```
 
 **Applies to:** Any test for a function that re-sorts data received from a dependency (model, API, etc.).
+
+### Parity Testing: Match Round-Trip Tests Across Model Implementations (Discovered Story 9.3 Code Review, 2026-03-09)
+
+When adding a method to multiple model implementations, ensure test parity across all implementations. If ModelA has a `test_save_load_preserves_X()` round-trip test, ModelB should have the equivalent even if the underlying persistence mechanism differs. The round-trip test catches bugs where a method relies on runtime state that is not restored by `load()`.
+
+**Pattern:**
+- LogisticRegressionModel: `get_feature_importances()` reads `_clf.coef_[0]` — always populated after `load()` since joblib restores the fitted sklearn object. ✅ Round-trip confirmed.
+- EloModel: `get_feature_importances()` reads `_engine.get_all_ratings()` — populated after `load()` via `set_state()`. Without a round-trip test, a future refactor breaking `set_state()→get_all_ratings()` connection would go undetected.
+
+**Applies to:** Any model method that derives output from runtime state (not config). When you write Task 5.5 (save/load round-trip) for stateless models, add the equivalent Task 6.6 for stateful models.
+
+### Dashboard Chart Tests: Assert Both Title AND Axis Labels (Discovered Story 9.3 Code Review, 2026-03-09)
+
+When testing dashboard charts that dispatch on `model_type` to set chart configuration (title + axis labels), assert BOTH `layout.title.text` AND `layout.xaxis.title.text`. Asserting only the title leaves axis label regressions undetected — a future refactor could swap "Rating"/"Absolute Coefficient"/"Importance" labels without any test failing.
+
+```python
+# ❌ Incomplete — only verifies title, misses axis label regression
+titles = [fig.layout.title.text for fig in fig_calls if hasattr(fig, "layout")]
+assert any("Team Elo Ratings" in (t or "") for t in titles)
+
+# ✅ Complete — verifies both chart title and x-axis label
+titles = [fig.layout.title.text for fig in fig_calls if hasattr(fig, "layout")]
+assert any("Team Elo Ratings" in (t or "") for t in titles)
+xaxis_titles = [fig.layout.xaxis.title.text for fig in fig_calls if hasattr(fig, "layout")]
+assert any("Rating" in (t or "") for t in xaxis_titles)
+```
+
+**Applies to:** Any Plotly chart dispatch test where different `model_type` values produce different axis labels.
