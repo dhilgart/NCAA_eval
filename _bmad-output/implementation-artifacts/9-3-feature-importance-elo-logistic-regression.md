@@ -1,6 +1,6 @@
 # Story 9.3: Feature Importance for Elo and Logistic Regression
 
-Status: in-progress
+Status: review
 
 ## Story
 
@@ -49,10 +49,10 @@ so that **I can understand what drives predictions across Elo, Logistic Regressi
   - [x] 3.5 Remove the generic `"not available for stateful models"` fallback message (line 96)
   - [x] 3.6 Pass `model_type` context into the rendering to select chart title/axis labels
 
-- [ ] Task 4: Update `load_feature_importances()` sort logic (AC: #3)
-  - [ ] 4.1 The current sort in `data_loaders.py:192` sorts by `p[1]` descending — this works for XGBoost (higher = more important) and LogReg (higher abs coef = more important)
-  - [ ] 4.2 For Elo, the model's `get_feature_importances()` should return data pre-sorted by rating descending, so the dashboard sort still works (highest rated teams first)
-  - [ ] 4.3 No changes needed to `load_feature_importances()` itself — the model contract handles it
+- [x] Task 4: Update `load_feature_importances()` sort logic (AC: #3)
+  - [x] 4.1 The current sort in `data_loaders.py:192` sorts by `p[1]` descending — this works for XGBoost (higher = more important) and LogReg (higher abs coef = more important)
+  - [x] 4.2 For Elo, the model's `get_feature_importances()` should return data pre-sorted by rating descending, so the dashboard sort still works (highest rated teams first)
+  - [x] 4.3 No changes needed to `load_feature_importances()` itself — the model contract handles it
 
 - [x] Task 5: Add unit tests for LogisticRegression feature importance (AC: #2)
   - [x] 5.1 Test: `get_feature_importances()` returns `None` before `fit()`
@@ -72,9 +72,9 @@ so that **I can understand what drives predictions across Elo, Logistic Regressi
   - [x] 7.1 Update `test_returns_empty_for_elo_model` in `test_dashboard_filters.py` — Elo now returns data, not empty
   - [x] 7.2 Add test for logistic_regression model_type in dashboard rendering
 
-- [ ] Task 8: Verify existing XGBoost behavior unchanged (AC: #1)
-  - [ ] 8.1 Run existing XGBoost feature importance tests — all must pass without changes
-  - [ ] 8.2 Run full test suite — baseline: 964 tests (from Story 9.2)
+- [x] Task 8: Verify existing XGBoost behavior unchanged (AC: #1)
+  - [x] 8.1 Run existing XGBoost feature importance tests — all must pass without changes
+  - [x] 8.2 Run full test suite — baseline: 964 tests (from Story 9.2), now 977 (13 new tests added)
 
 ## Dev Notes
 
@@ -232,6 +232,32 @@ Claude Opus 4.6 (claude-opus-4-6)
 
 ### Debug Log References
 
+- numpy `# type: ignore[import-untyped]` was unnecessary — numpy ships type stubs now. Removed the comment.
+- `test_deep_dive_page.py::test_shows_info_for_elo_model` needed update — it checked for "stateful" in the info message which was removed. Renamed to `test_shows_info_when_no_importances` checking for "not available".
+
 ### Completion Notes List
 
+- **Task 1**: Added `get_feature_importances()` to `LogisticRegressionModel` — returns `list[tuple[str, float]]` pairing `feature_names_` with `abs(coef_[0])`. Returns `None` for unfitted models.
+- **Task 2**: Added `get_feature_importances()` to `EloModel` — returns top 50 team ratings as `("team_{id}", rating)` tuples, sorted descending. Returns `None` for fresh models.
+- **Task 3**: Updated `_render_feature_importance()` in `3_Model_Deep_Dive.py` with model-type-aware chart titles and axis labels. Removed "not available for stateful models" fallback.
+- **Task 4**: Verified `load_feature_importances()` sort logic — no changes needed; descending sort works for all model types.
+- **Task 5**: Added 6 unit tests for LogReg feature importance (pre-fit None, post-fit tuples, names match, abs values, length, save/load round-trip).
+- **Task 6**: Added 5 unit tests for Elo interpretability (fresh None, tuples after set_ratings, team_id format, descending sort, top-50 limit).
+- **Task 7**: Updated dashboard tests: replaced `test_returns_empty_for_elo_model` with `test_returns_ratings_for_elo_model`, added `test_returns_importances_for_logistic_regression`. Fixed `test_deep_dive_page.py` to check for generic "not available" message.
+- **Task 8**: Full test suite: 977 passed, 0 failed, 1 skipped (up from 964 baseline — 13 new tests).
+
 ### File List
+
+- `src/ncaa_eval/model/logistic_regression.py` — Added `get_feature_importances()` override, added `import numpy as np`
+- `src/ncaa_eval/model/elo.py` — Added `get_feature_importances()` override
+- `dashboard/pages/3_Model_Deep_Dive.py` — Model-type-aware chart titles/labels, removed "stateful models" fallback
+- `tests/unit/test_model_logistic_regression.py` — Added `TestFeatureImportance` class (6 tests)
+- `tests/unit/test_model_elo.py` — Added `TestFeatureImportance` class (5 tests)
+- `tests/unit/test_dashboard_filters.py` — Replaced `test_returns_empty_for_elo_model` with `test_returns_ratings_for_elo_model`, added `test_returns_importances_for_logistic_regression`
+- `tests/unit/test_deep_dive_page.py` — Updated `test_shows_info_for_elo_model` → `test_shows_info_when_no_importances`
+- `_bmad-output/implementation-artifacts/9-3-feature-importance-elo-logistic-regression.md` — Story file updates
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — Status: ready-for-dev → in-progress → review
+
+### Change Log
+
+- 2026-03-09: Implemented feature importance for LogisticRegression (abs coefficients) and Elo (top 50 team ratings). Updated dashboard with model-specific chart titles. 13 new tests added (977 total).

@@ -177,7 +177,7 @@ class TestFeatureImportance:
         # plotly_chart called at least twice: reliability diagram + feature importance
         assert mock_st.plotly_chart.call_count >= 2
 
-    def test_shows_info_for_elo_model(self) -> None:
+    def test_shows_info_when_no_importances(self) -> None:
         mock_st = MagicMock()
         mock_st.session_state = {"selected_run_id": "abc12345-6789"}
         mock_st.columns.return_value = [MagicMock(), MagicMock()]
@@ -193,6 +193,6 @@ class TestFeatureImportance:
         ):
             _dd_mod._render_deep_dive()
 
-        # st.info should be called for feature importance section
+        # st.info should show generic unavailability message
         info_calls = [call[0][0] for call in mock_st.info.call_args_list]
-        assert any("stateful" in msg.lower() for msg in info_calls)
+        assert any("not available" in msg.lower() for msg in info_calls)
