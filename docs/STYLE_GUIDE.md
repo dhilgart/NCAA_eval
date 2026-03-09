@@ -129,8 +129,8 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import TimeSeriesSplit
 
-from ncaa_eval.transform import compute_rolling_stats
 from ncaa_eval.model import Model
+from ncaa_eval.transform import compute_rolling_stats
 ```
 
 ### Active Ruff Rules

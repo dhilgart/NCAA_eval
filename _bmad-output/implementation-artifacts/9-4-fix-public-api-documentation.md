@@ -149,8 +149,11 @@ None — documentation-only changes, no debugging required.
 
 ### File List
 
-- `docs/STYLE_GUIDE.md` — Fixed Section 3 import example (lines 132-133) and Section 8 Rule 3 (lines 875-876)
+- `docs/STYLE_GUIDE.md` — Fixed Section 3 import example (lines 132-133) and Section 8 Rule 3 (lines 875-876); corrected import ordering (`ncaa_eval.model` before `ncaa_eval.transform`)
+- `docs/testing/conventions.md` — Removed broken `assert ncaa_eval.__version__` (attribute does not exist); replaced with bare import
+- `docs/testing/execution.md` — Same fix as conventions.md
 
 ### Change Log
 
 - 2026-03-09: Fixed incorrect import paths in Style Guide documentation — Section 8 Rule 3 (submodule-level re-exports, not root-level) and Section 3 import ordering example (real module paths and symbol names). Audited all docs; no other incorrect imports found.
+- 2026-03-09 (code review): Fixed import ordering in STYLE_GUIDE Section 3 example (model before transform alphabetically). Fixed `assert ncaa_eval.__version__` in testing/conventions.md and testing/execution.md — `__version__` is not defined on the package; bare import is sufficient for the "package importable" assertion.
