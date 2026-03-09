@@ -3598,3 +3598,60 @@ run_training(model, feature_config=FeatureConfig(...), ...)  # user must keep th
 **OOF alignment policy:** Inner join on `game_id` across all base models' OOF prediction sets. Log a warning if the join drops >5% of games. Do not use outer join (NaN predictions in the meta-training set are misleading).
 
 **Source:** `specs/ensemble-architecture.md`; Epic 10
+
+---
+
+### CLI Commands That Output Structured Data Must Use `sys.stdout.write()`, Not Rich Console (Discovered Story 9.1 Code Review, 2026-03-09)
+
+When a CLI command outputs structured data (CSV, JSON, NDJSON) to stdout for downstream piping (e.g., `ncaa_eval export ... | gzip > submission.csv.gz`), use `sys.stdout.write()` directly — **not** `console.print()` or `con.print()` from Rich.
+
+Rich's `Console.print()` can:
+1. Add ANSI escape codes that corrupt structured output in terminal environments
+2. Write to the wrong file descriptor if the `Console` is configured for Rich markup output
+
+```python
+# ✅ Correct: raw structured output is pipe-safe
+import sys
+sys.stdout.write(csv_str)
+
+# ❌ Wrong: Rich may inject ANSI codes into CSV output
+con.print(csv_str)
+```
+
+Status/progress messages still belong on the Rich Console (to stderr or a separate output handle), but **the actual data payload** must bypass Rich entirely.
+
+**Test gap:** Typer's `CliRunner` captures all output (stdout + stderr) indiscriminately, so a test asserting `"ID,Pred" in result.output` will pass even if the CSV is written to stderr. Test the actual output channel in integration tests.
+
+---
+
+### Dashboard–CLI Shared Orchestration: Extract a No-I/O Helper Function (Discovered Story 9.1 Code Review, 2026-03-09)
+
+When a Streamlit dashboard page and a CLI command share orchestration logic (e.g., both load a model, query the repository, build a matrix, and format output), extract the orchestration into a **shared pure function** in the CLI module:
+
+```python
+# cli/export.py — shared helper, no I/O side-effects
+def build_kaggle_submission(*, run_id: str, season: int, data_dir: Path) -> str:
+    """Return CSV string. Callers decide where to write it."""
+    ...
+
+# CLI command — thin wrapper that adds progress output and file/stdout writing
+def run_export(...) -> str:
+    csv = build_kaggle_submission(...)
+    if output: output.write_text(csv)
+    else: sys.stdout.write(csv)
+    return csv
+
+# Dashboard — imports the helper directly
+from ncaa_eval.cli.export import build_kaggle_submission
+
+@st.cache_data(show_spinner="Generating...")
+def _build_kaggle_csv(...) -> str | None:
+    try:
+        return build_kaggle_submission(...)
+    except (FileNotFoundError, TypeError):
+        return None
+```
+
+**Key rule:** The shared helper must raise exceptions (not return `None`) for error cases — the CLI and dashboard handle errors differently (CLI exits with code 1; dashboard shows `st.info`). Catch the appropriate exception set in each caller.
+
+**DRY check:** If the same model-loading + repository-querying + matrix-building sequence appears in both a CLI module and a dashboard page, it belongs in a shared function regardless of which came first.
