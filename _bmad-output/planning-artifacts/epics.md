@@ -119,6 +119,20 @@ User can evaluate models with probabilistic metrics, calibration analysis, walk-
 User can visualize model performance via interactive Streamlit dashboards including leaderboards, reliability diagrams, bracket visualizer, point outcome analysis, and comprehensive documentation.
 **FRs covered:** UI requirements from PRD Section 3 + UX Spec + UI-10 (User Guide) + UI-11 (Tutorials)
 
+### Epic 8: Codebase Improvements & Technical Debt Resolution
+All Category 3 (obviously-need-fixing) findings from the multi-agent codebase audit are resolved; PO direction gathered on Category 1 & 2 items.
+**Source:** `_bmad-output/planning-artifacts/codebase-audit-report.md` and addenda; `_bmad-output/planning-artifacts/epic-8-codebase-improvements.md`
+
+### Epic 9: Audit-Driven Enhancements
+New features and fixes approved by the PO in the Epic 8 decision log — product gaps, usability improvements, and the `feature_config`-as-model-concern refactor that enables ensemble modeling.
+
+### Epic 10: Ensemble Modeling Framework
+Users can define a stacked ensemble of any base models, train the full stack end-to-end in one call, and generate live bracket predictions via a game-aware meta-learner. Depends on Epic 9 (Story 9.2).
+
+### Epic X: Cookiecutter Project Template
+Extract NCAA_eval's project structure, toolchain, BMAD workflow configuration, and conventions into a reusable cookiecutter template for future Python ML projects.
+**Timing:** Post-project-completion — not scheduled for active development sprints.
+
 ## Epic 1: Project Foundation & Developer Toolchain
 
 Developer can clone, install, lint, type-check, test, and commit against a fully configured Python project with enforced quality gates.
@@ -986,6 +1000,406 @@ So that I can quickly learn how to use the platform's key workflows.
 **And** the `{contents}` TOC directive is removed from `docs/user-guide.md` (conflicts with Furo's built-in right-sidebar TOC). Make sure to search other documentation and see if other TOCs need removal.
 **And** the project `README.md` is reviewed and enhanced. At the very least it should be updated to include a link to the GitHub Pages documentation site (`https://dhilgart.github.io/NCAA_eval/`), but there should also be though given to what else should be added and what should be removed. Also pay attention to what status bars at the top should be added.
 
+## Epic 8: Codebase Improvements & Technical Debt Resolution
+
+All Category 3 (obviously-need-fixing) findings from the multi-agent codebase audit are resolved; PO direction gathered on Category 1 & 2 items. Full story ACs are in [`_bmad-output/planning-artifacts/epic-8-codebase-improvements.md`](_bmad-output/planning-artifacts/epic-8-codebase-improvements.md).
+
+**Source:** `_bmad-output/planning-artifacts/codebase-audit-report.md` and addenda; `_bmad-output/planning-artifacts/epic-8-codebase-improvements.md`
+
+### Story 8.1: Code Architecture Cleanup — Simulation Module Split & Kitchen Sink Refactors
+
+Split `simulation.py` (1,291 lines, 7+ responsibilities) and `dashboard/lib/filters.py` (621 lines, kitchen-sink) into focused modules. Decompose `run_training()` God Function.
+
+**Priority:** High (Category 3) | **Full ACs:** `epic-8-codebase-improvements.md` §8.1
+
+### Story 8.2: Expose Public APIs & Eliminate Private Attribute Access
+
+Add public methods to `EloFeatureEngine`, create `Calibrator` Protocol/ABC, fix cross-module private attribute access, and use typed scoring registry. Eliminate all `_`-prefixed cross-boundary accesses.
+
+**Priority:** High (Category 3) | **Full ACs:** `epic-8-codebase-improvements.md` §8.2
+
+### Story 8.3: Fix Data Pipeline Resilience — ESPN Error Handling, Retry Logic, Typer Decoupling
+
+Add retry logic for ESPN API calls, improve error handling, decouple ESPN connector from Typer CLI context, and fix quiet mode behavior.
+
+**Priority:** High (Category 3) | **Full ACs:** `epic-8-codebase-improvements.md` §8.3
+
+### Story 8.4: Fix Docstring Style Violations & Documentation Gaps
+
+Correct all docstrings to Google style (Args/Returns sections), add missing docstrings to public functions/methods, and fix the `__init__` docstring anti-pattern.
+
+**Priority:** High (Category 3) | **Full ACs:** `epic-8-codebase-improvements.md` §8.4
+
+### Story 8.5: Testing Gaps — Missing Tests & Dead Code Cleanup
+
+Add missing unit tests for uncovered public functions, remove dead code, and fix test isolation issues.
+
+**Priority:** High (Category 3) | **Full ACs:** `epic-8-codebase-improvements.md` §8.5
+
+### Story 8.6: Type Safety & Configuration Improvements
+
+Eliminate remaining `Any` annotations, add proper return types to all functions, fix `Optional[X]` → `X | None` patterns, and address other mypy findings.
+
+**Priority:** High (Category 3) | **Full ACs:** `epic-8-codebase-improvements.md` §8.6
+
+### Story 8.7: Sprint Housekeeping & CI/CD Improvements
+
+Update sprint status and implementation artifacts, fix CI/CD pipeline issues, and clean up stale configuration.
+
+**Priority:** Medium (Category 3) | **Full ACs:** `epic-8-codebase-improvements.md` §8.7
+
+### Story 8.8: Dashboard UX Quick Fixes
+
+Fix cosmetic UX issues in the Streamlit dashboard: label corrections, layout improvements, and display consistency fixes.
+
+**Priority:** Medium (Category 3) | **Full ACs:** `epic-8-codebase-improvements.md` §8.8
+
+### Story 8.9: Add PEP 20, SOLID & Pure Function Gates to PR Template + Codebase PEP 20 Review
+
+Add engineering quality gates (PEP 20, SOLID, pure function checklist) to the PR review template, and audit the existing codebase against these principles.
+
+**Priority:** Medium (Category 3) | **Full ACs:** `epic-8-codebase-improvements.md` §8.9
+
+### Story 8.10: Documentation Command E2E Integration Tests
+
+Add end-to-end integration tests that execute the documentation build pipeline (`sphinx-build`, `nox -s docs`) to prevent regressions.
+
+**Priority:** Medium (Category 3) | **Full ACs:** `epic-8-codebase-improvements.md` §8.10
+
+### Story 8.11: Fix Testing Documentation Staleness & Marker Gaps
+
+Update testing docs to match actual test organization, add missing pytest markers, and ensure `pytest.ini`/`pyproject.toml` marker declarations are complete.
+
+**Priority:** Medium (Category 3) | **Full ACs:** `epic-8-codebase-improvements.md` §8.11
+
+### Story 8.12: Epics & Backlog Grooming — Track All Deferred Items
+
+Groom the epics and Post-MVP Backlog to ensure all deferred items from prior spikes and audit findings are tracked. Update sprint-status.yaml and backlog accordingly.
+
+**Priority:** Medium (Category 3) | **Full ACs:** `epic-8-codebase-improvements.md` §8.12
+
+### Story 8.13: Gather PO Direction on Category 1 & 2 Items
+
+Walk the PO through all Category 1 (judgment call) and Category 2 (nice-to-have) audit findings and record their decisions in `po-decision-log-epic8.md`. Decisions drive the Epic 9 story list.
+
+**Priority:** High (prerequisite for Epic 9) | **Full ACs:** `epic-8-codebase-improvements.md` §8.13
+
+---
+
+## Epic 9: Audit-Driven Enhancements
+
+Focused improvements identified by the Epic 8 codebase audit and approved by the PO in the decision log (`po-decision-log-epic8.md`). These are low-to-medium effort items that address product gaps, usability, and documentation accuracy.
+
+### Story 9.1: Kaggle Submission Export
+
+As a **data scientist**,
+I want to **export my model's predictions in Kaggle March Machine Learning Mania submission format**,
+So that **I can submit my bracket predictions directly to the Kaggle competition**.
+
+**Acceptance Criteria:**
+
+**Given** a trained model's probability matrix is available
+**When** the user clicks "Export Kaggle Submission" in the dashboard (or runs a CLI command)
+**Then** a CSV file is generated with columns `ID` and `Pred` for all 2,278 possible team matchups
+**And** the `ID` column uses the Kaggle format `YYYY_TeamID1_TeamID2` (lower ID first)
+**And** the `Pred` column contains the model's win probability for TeamID1
+**And** the file conforms to the Kaggle `SampleSubmission.csv` schema
+
+**Source:** Audit item 1.3; PRD §1 (competitive submission workflow)
+
+### Story 9.2: Feature Config as Model-Level Concern
+
+As a **data scientist**,
+I want to **embed feature engineering configuration directly in my model class**,
+So that **my model always receives inputs in the correct format, I can experiment with different feature combinations by passing constructor kwargs, and loaded model artifacts carry their own feature requirements without external configuration files**.
+
+**Acceptance Criteria:**
+
+**Given** any concrete `Model` subclass (`XGBoostModel`, `LogisticRegressionModel`, `EloModel`)
+**When** the developer instantiates the model
+**Then** the model exposes a `feature_config: FeatureConfig` attribute derived from its constructor kwargs
+**And** feature-relevant kwargs (e.g., `batch_rating_types`, `graph_features_enabled`, `ordinal_composite`) are accepted at `__init__` and threaded into the model's `FeatureConfig`
+**And** `run_training()` reads `model.feature_config` to build the feature server instead of using the hardcoded defaults in `_setup_feature_server()`
+**And** `model.save(path)` persists a `feature_config.json` sidecar alongside model weights
+**And** `model.load(path)` reads that sidecar and reconstructs the `FeatureConfig` so a loaded model knows exactly what columns it expects
+**And** after `fit()`, every stateless model stores `self.feature_names_: list[str]` — the ordered list of feature columns it was trained on
+**And** `FeatureConfig.calibration_method` is removed from `FeatureConfig` and added to `ModelConfig` (calibration is a model-output concern, not a feature-computation concern)
+**And** `EloModel` uses a minimal `FeatureConfig` (no batch ratings, no ordinals, `elo_enabled=True`) since it reconstructs `Game` objects from metadata columns only
+**And** existing CLI behavior (`ncaa-eval train`) is unchanged — the CLI instantiates model classes whose constructors carry default feature configs
+
+**Source:** Audit item 1.6; `src/ncaa_eval/cli/train.py:90-100`; design spec `specs/ensemble-architecture.md` §2
+**Prerequisite for:** Epic 10 (all stories)
+
+### Story 9.3: Feature Importance for Elo and Logistic Regression
+
+As a **data scientist**,
+I want to **see feature importance / interpretability information for all model types, not just XGBoost**,
+So that **I can understand what drives predictions across Elo, Logistic Regression, and XGBoost models**.
+
+**Acceptance Criteria:**
+
+**Given** a trained model is selected in the Model Deep Dive dashboard page
+**When** the user views the Feature Importance section
+**Then** XGBoost shows feature importance (existing behavior, unchanged)
+**And** Logistic Regression shows coefficient values as feature importance
+**And** Elo shows team rating values and/or rating-based metrics as interpretability information
+**And** the "not available for stateful models" message is replaced with meaningful Elo interpretability
+
+**Source:** Audit item 1.15; `dashboard/pages/3_Model_Deep_Dive.py`
+
+### Story 9.4: Fix Public API Documentation
+
+As a **developer**,
+I want to **have accurate documentation of import paths for the ncaa_eval package**,
+So that **the Style Guide matches reality and I know how to import public symbols**.
+
+**Acceptance Criteria:**
+
+**Given** the Style Guide claims `from ncaa_eval import EloModel` should work
+**When** the developer reads the Style Guide
+**Then** documented import paths match actual importable paths
+**And** the Style Guide is updated to document the actual submodule import paths (e.g., `from ncaa_eval.model.elo import EloModel`)
+
+**Source:** Audit item 2.18; `src/ncaa_eval/__init__.py:1-3`, `docs/STYLE_GUIDE.md`
+
+### Story 9.5: Post-Sync Data Validation
+
+As a **data scientist**,
+I want to **have automatic validation checks run after data sync completes**,
+So that **I can detect data quality issues (missing games, duplicates, team reference errors) before they silently corrupt downstream predictions**.
+
+**Acceptance Criteria:**
+
+**Given** a data sync (`ncaa-eval sync` or `python sync.py`) completes
+**When** the sync finishes downloading and persisting data
+**Then** a validation step runs automatically checking:
+  - Game count per season is within expected range (±10% of historical average)
+  - No duplicate games exist (same teams, same day)
+  - All team IDs in games reference valid entries in the teams table
+**And** validation results are logged at INFO level with a summary
+**And** validation warnings do not block the sync (non-fatal) but are clearly visible
+
+**Source:** Audit item 2.20; PRD §4.4
+
+### Story 9.6: Revisit Skipped Audit Decisions
+
+As a **product owner**,
+I want to **review and make decisions on the Epic 8 audit items that were deferred during Story 8.13**,
+So that **no potential improvements are permanently lost and I can choose which ones to promote into implementation stories**.
+
+**Acceptance Criteria:**
+
+**Given** the `po-decision-log-epic8.md` file with items marked `S — skip, come back later`
+**When** the PO reviews each skipped item
+**Then** each of the following audit items receives a final decision (Implement, Defer to Post-MVP, or Accept as-is):
+  - 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 2.10 (Category 2 items skipped in batch)
+  - 2.12, 2.13, 2.14, 2.15, 2.16, 2.17, 2.21 (additional Category 2 items)
+  - P2-5, P2-6 (Pass 2 addendum items)
+  - P3-20 (Pass 3 addendum item)
+**And** any items decided as "Implement" are converted into new Epic 9 stories (added to this epic or scheduled for the next available sprint)
+**And** any items decided as "Defer to Post-MVP" are added to the Post-MVP Backlog in `epics.md`
+**And** any items decided as "Accept as-is" are marked resolved in `po-decision-log-epic8.md`
+**And** `po-decision-log-epic8.md` has no remaining items in "S — skip" status after this story completes
+
+**Source:** Story 8.13 session — items deferred 2026-03-09; `po-decision-log-epic8.md`
+
+### Story 9.7: Game Theory Slider Implementation
+
+As a **data scientist**,
+I want to **adjust Upset Aggression, Chalk Bias, and Seed-Weight sliders in the dashboard sidebar to perturb the model's base probabilities in real time**,
+So that **I can explore bracket outcomes under different risk strategies without retraining the model**.
+
+**Acceptance Criteria:**
+
+**Given** the dashboard Presentation page
+**When** the user moves an Upset Aggression, Chalk Bias, or Seed-Weight slider
+**Then** the model's base win probabilities are perturbed using the formulas established in Story 7.7 spike research
+**And** the bracket visualization updates in real time to reflect the perturbed probabilities
+**And** the slider controls are documented in the user guide with a clear explanation of each slider's effect
+**And** the "NOT YET IMPLEMENTED" banner added in Story 8.4 is removed
+
+**Source:** Audit item 1.1; Story 7.7 spike (`specs/research/`); PO decision 2026-03-09
+
+### Story 9.8: User-Editable Bracket
+
+As a **data scientist**,
+I want to **click matchups in the bracket view to override the model's predicted winner**,
+So that **I can score my own picks against historical results and evaluate the model's guidance relative to my own judgment**.
+
+**Acceptance Criteria:**
+
+**Given** the Bracket Visualizer dashboard page
+**When** the user clicks a matchup to override the predicted winner
+**Then** the bracket downstream of that matchup updates to reflect the user's pick
+**And** the Pool Scorer scores the user-edited bracket (not just the model's most-likely bracket)
+**And** user overrides persist for the session and can be reset to model predictions with a "Reset" button
+
+**Architecture note:** Requires a `UserOverrideProvider` that wraps an existing `ProbabilityProvider` and substitutes user picks at specific bracket nodes, as identified by the Architect in audit item 1.2.
+
+**Source:** Audit item 1.2; PO decision 2026-03-09
+
+### Story 9.9: CLI `predict` Command
+
+As a **data scientist**,
+I want to **run `ncaa-eval predict <run-id>` from the command line to generate win-probability predictions for current-season matchups**,
+So that **I can get predictions without launching the dashboard or running a notebook**.
+
+**Acceptance Criteria:**
+
+**Given** a saved model run (identified by `<run-id>`)
+**When** the user runs `ncaa-eval predict <run-id>`
+**Then** the model is loaded from the run artifact directory
+**And** win probabilities are computed for all current-season games (or a specified date range)
+**And** output is written to stdout as CSV or optionally to a file via `--output`
+**And** the command is documented in the CLI reference (`docs/`)
+
+**Source:** Audit item 1.11; PO decision 2026-03-09
+
+### Story 9.10: Custom Metric Plugin Registry
+
+As a **data scientist**,
+I want to **register a custom metric function and have it appear in the metric explorer and leaderboard alongside the built-in metrics**,
+So that **I can evaluate models on domain-specific criteria without modifying library source code**.
+
+**Acceptance Criteria:**
+
+**Given** a function decorated with `@register_metric("my_metric")`
+**When** the user runs a backtest or opens the metric explorer dashboard
+**Then** `my_metric` appears alongside `log_loss`, `brier_score`, and the other built-in metrics
+**And** the `@register_metric` decorator and `MetricRegistry` are publicly exported from `ncaa_eval`
+**And** Story 7.9 tutorial "How to Add a Custom Metric" is updated to accurately document the registry API (replacing the stub that described a non-existent feature)
+**And** the feature-generator registry is NOT implemented in this story (remains in Post-MVP Backlog)
+
+**Source:** Audit item P3-17; PO decision 2026-03-09 (Custom — implement metric registry only)
+
+## Epic 10: Ensemble Modeling Framework
+
+Users can define a stacked ensemble of any base models, train the full stack end-to-end in one call, and generate live bracket predictions — without manually managing out-of-fold alignment, feature server coordination, or meta-learner input construction.
+
+**Design spec:** `specs/ensemble-architecture.md`
+**Prerequisite:** Story 9.2 (Feature Config as Model-Level Concern) must be complete before any Epic 10 story begins.
+
+### Story 10.1: StackedEnsemble Class and OOF Training Pipeline
+
+As a **data scientist**,
+I want to **define a stacked ensemble by listing base models and a meta-learner and train the whole thing in one `run_training()` call**,
+So that **I can build an ensemble that learns optimal, game-context-dependent weights without manually orchestrating out-of-fold prediction generation or alignment**.
+
+**Acceptance Criteria:**
+
+**Given** a `StackedEnsemble` instance with `base_models`, `meta_learner`, and `contextual_features`
+**When** the user calls `run_training(ensemble, data_dir=..., start_year=..., end_year=..., output_dir=..., model_name=...)`
+**Then** `run_training()` detects the `StackedEnsemble` type and routes to `_run_ensemble_training()`
+**And** for each base model, a walk-forward backtest is run using that model's own `feature_config` to produce out-of-fold (OOF) predictions
+**And** OOF predictions from all base models are aligned by `game_id` via inner join; a warning is logged if >5% of games are dropped by the join
+**And** a meta-training DataFrame is assembled with columns `[pred_base_0, pred_base_1, ..., <contextual_features>]`
+**And** the meta-learner is trained on the meta-training DataFrame
+**And** each base model is retrained on the full dataset (all seasons)
+**And** the ensemble artifact is saved: each base model, the meta-learner, and a manifest recording base model names, `contextual_features`, and the run IDs of the OOF backtest runs
+**And** `StackedEnsemble.feature_config` returns the union of all base models' `feature_config`s (used internally by the ensemble's own `predict_proba()`)
+
+**Source:** `specs/ensemble-architecture.md` §3–§4
+**Prerequisite:** Story 9.2
+
+### Story 10.2: Ensemble Inference Interface
+
+As a **data scientist**,
+I want to **generate bracket predictions and evaluate an ensemble on historical data using the same interfaces I use for single models**,
+So that **ensembles compose transparently with the existing evaluation and bracket-generation infrastructure**.
+
+**Acceptance Criteria:**
+
+**Given** a trained `StackedEnsemble`
+**When** `ensemble.predict_proba(X)` is called with a pre-built feature DataFrame
+**Then** for each stateless base model, `base_model.predict_proba(X[base_model.feature_names_])` is called using the stored post-fit feature name list
+**And** for each stateful base model, `base_model.predict_proba(X)` is called (stateful models use `team_a_id`/`team_b_id` from metadata and ignore feature columns)
+**And** base model predictions and `X[contextual_features]` are assembled into a meta-input DataFrame in the column order recorded during training
+**And** `meta_learner.predict_proba(meta_X)` returns the final ensemble probability
+
+**Given** a trained `StackedEnsemble` and a `data_dir` containing current-season data
+**When** `ensemble.predict_bracket(data_dir, season)` is called
+**Then** for each base model, a feature server is built from `base_model.feature_config` and current-season features are served
+**And** base model predictions for all possible team matchups are generated
+**And** the meta-input is assembled with contextual features from the current season
+**And** a probability matrix (indexed by team_id pairs) is returned, suitable for passing to the Monte Carlo bracket simulator
+
+**And** in both modes, the meta-learner input column order exactly matches the order recorded in the ensemble manifest, and a `ValueError` is raised if any required column is missing
+
+**Source:** `specs/ensemble-architecture.md` §5
+**Prerequisite:** Story 10.1
+
+### Story 10.3: Dashboard and Model Registry Integration
+
+As a **data scientist**,
+I want to **see ensemble models in the dashboard leaderboard and inspect their components**,
+So that **I can compare ensemble performance against single models and understand which base model the meta-learner is relying on**.
+
+**Acceptance Criteria:**
+
+**Given** a trained `StackedEnsemble` artifact in the output directory
+**When** the user opens the Model Leaderboard dashboard page
+**Then** the ensemble appears as a single entry with its `model_name`
+**And** an expandable "Ensemble Components" section shows each base model's name and its OOF log loss (from the manifest)
+**And** if the meta-learner supports `get_feature_importances()`, the importance chart shows `[pred_base_0, pred_base_1, ..., seed_diff, ...]` with interpretable labels (not raw column names)
+
+**Given** the ensemble is selected in the dashboard
+**When** the user navigates to the Bracket Visualizer page
+**Then** `ensemble.predict_bracket(data_dir, season)` is called to generate the probability matrix, and the rest of the bracket visualizer works identically to single-model mode
+
+**And** `StackedEnsemble` is registered in the model registry under the name provided to `run_training()` so the CLI `ncaa-eval evaluate` command works on ensemble run IDs
+
+**Source:** `specs/ensemble-architecture.md` §5.1; `src/ncaa_eval/model/registry.py`; `dashboard/`
+**Prerequisite:** Story 10.2
+
+### Story 10.4: Ensemble Tutorial Notebook
+
+As a **data scientist**,
+I want to **follow a step-by-step tutorial that walks me through defining, training, and evaluating a custom ensemble**,
+So that **I can understand the ensemble UX end-to-end and use it as a template for my own models**.
+
+**Acceptance Criteria:**
+
+**Given** the tutorial notebook `notebooks/tutorials/03_ensemble_model.ipynb`
+**When** the user executes all cells in order
+**Then** the notebook demonstrates:
+  1. Importing base model classes from `ncaa_eval` and configuring each with feature-relevant kwargs
+  2. Constructing a `StackedEnsemble` with at least one stateless model (XGBoost) and one stateful model (Elo) as base models, and a logistic regression meta-learner
+  3. Calling `run_training(ensemble, ...)` with the one-liner UX
+  4. Showing OOF log loss for each base model vs. the ensemble (demonstrates the blend adds value)
+  5. Calling `ensemble.predict_bracket(data_dir, season)` to generate a bracket probability matrix
+  6. Exporting a Kaggle submission CSV from the ensemble predictions
+**And** all cells execute without error using the standard `ncaa_eval` conda env
+**And** the notebook is referenced from `docs/tutorials.md` and included in the CI notebook-execution smoke test
+
+**Source:** `specs/ensemble-architecture.md`; Story 7.9 (tutorial series); Story 9.1 (Kaggle export)
+**Prerequisite:** Story 10.3
+
+---
+
+## Epic X: Cookiecutter Project Template
+
+Extract NCAA_eval's project structure, toolchain, BMAD workflow configuration, and development conventions into a reusable cookiecutter template for future Python ML projects.
+
+**Timing:** Post-project-completion — not scheduled for active development sprints. Epic X uses a letter designation (rather than a number) so that future numbered development epics (11, 12, 13...) always sort before it without requiring renumbering.
+
+### Story X.1: Extract Cookiecutter Template Skeleton
+
+As a **developer starting a new Python ML project**,
+I want to **run `cookiecutter gh:dhilgart/NCAA_eval` and get a fully configured project scaffold**,
+So that **I can skip the multi-day toolchain setup that NCAA_eval required and start with all quality gates, CI/CD, and BMAD workflows pre-wired**.
+
+**Acceptance Criteria:**
+
+**Given** the cookiecutter template at `template/{{cookiecutter.project_slug}}/`
+**When** the developer runs `cookiecutter` with project name, slug, and author prompts
+**Then** the generated project contains: Poetry `pyproject.toml` with standard quality gates (Ruff, mypy, pytest, nox), pre-commit config, GitHub Actions CI workflow, Sphinx docs scaffold, BMAD workflow configuration, and a minimal `src/` package structure
+**And** `nox -s lint tests` passes on the freshly generated project
+**And** the template is documented in `README.md` with a quickstart command
+
+**Source:** `_bmad-output/planning-artifacts/epic-cookiecutter-template.md` (if it exists) or derive from Epic 1 and current project structure
+
+---
+
 ## Post-MVP Backlog
 
 Items identified during development for future consideration. These are not scheduled for any sprint but may be promoted into epics/stories later.
@@ -1099,15 +1513,6 @@ Allow users to manually override picks in the bracket visualizer, then re-score 
 - **Source:** UX Spec §3.1 (Flow 1: "Backtest-to-Selection" Diagnostic Loop, Step 4)
 - **Deferred because:** Story 7.5 AC included "Team Detail Expansion" only; click-to-edit interaction was not scoped
 
-### Kaggle Submission Export (Origin: PRD mission, 2026-02-28)
-
-Export the most-likely bracket to Kaggle March Machine Learning Mania submission format (`SampleSubmission.csv` with `ID` and `Pred` columns for all 2,278 possible matchups). Different from Pool Scorer CSV export which uses round-based scoring schema.
-
-- **Effort:** Low — CSV schema mapping from bracket winners to Kaggle matchup IDs (~50 lines)
-- **Distinctness:** Different schema from existing Pool Scorer CSV export (matchup ID-based vs. round-based)
-- **Source:** PRD §1 (Goals: competitive submission workflow); Story 7.6 CSV export covers pool format only
-- **Deferred because:** Story 7.6 AC specified pool CSV export only; Kaggle submission format requires different schema and audience
-
 ### Metric Explorer: Round/Seed/Conference Drill-Downs (Origin: Story 7.4, 2026-02-28)
 
 Extend the Model Deep Dive page's Metric Explorer to drill down by tournament round, seed matchup (1v16, 5v12, etc.), and conference. Currently only year-level drill-down is implemented.
@@ -1135,14 +1540,11 @@ Command-line interface for generating per-game predictions, e.g., `ncaa predict 
 - **Source:** PRD §3.3 (The CLI — "Background Jobs: Support for launching long-running backtests via CLI")
 - **Deferred because:** Story 5.5 implemented training CLI only; prediction is currently served via dashboard and notebooks
 
-### Model Ensemble/Blending (Origin: competitive necessity, 2026-02-28)
+### ~~Model Ensemble/Blending~~ → Promoted to Epic 10 (2026-03-09)
 
-Probability ensemble combining multiple trained models' predictions via averaging, weighted voting, or stacking meta-learner. E.g., blend Elo + XGBoost predictions to reduce variance.
+~~Probability ensemble combining multiple trained models' predictions via averaging, weighted voting, or stacking meta-learner. E.g., blend Elo + XGBoost predictions to reduce variance.~~
 
-- **Effort:** High — Ensemble ABC, multiple blending strategies (averaging, voting, stacking), dashboard integration
-- **Distinctness:** New modeling paradigm; all current models are single-method
-- **Source:** Story 5.1 spike — `specs/research/modeling-approaches.md` §4.2 (ensemble approaches)
-- **Deferred because:** Requires training multiple independent models first; only justified if single-model performance is insufficient for competition
+**Promoted:** Fully designed and broken into Epic 10 stories during PO decision session 2026-03-09. Architecture uses stacked generalization with a game-aware meta-learner (input-dependent weights). See `specs/ensemble-architecture.md` for the complete design.
 
 ### JSON Export for Pool Scorer (Origin: Story 7.6, 2026-02-28)
 
@@ -1233,3 +1635,65 @@ Replace the current boolean marker file (`_espn_marker(year)`) with a `.espn_syn
 - **Distinctness:** Reliability improvement; prevents silently caching incomplete ESPN data
 - **Source:** Story 8.3 Dev Notes — "marker-file caching design flaw; marker.touch() runs after partial failures"
 - **Deferred because:** Story 8.3 addressed visibility (summary logging for partial failures) but not root cause; metadata file out of scope
+
+### Dashboard `get_data_dir()` Path Fragility (Origin: Audit item 2.12, 2026-03-05)
+
+Replace `Path(__file__).resolve().parent.parent.parent / "data"` in `dashboard/lib/filters.py` with a more robust path resolution (e.g., environment variable, configuration, or project root detection).
+
+- **Effort:** Low — single function refactor (~10 lines)
+- **Distinctness:** Maintenance improvement; prevents breakage if dashboard directory structure changes
+- **Source:** Codebase audit item 2.12; `dashboard/lib/filters.py:56-58`
+- **Deferred because:** Dashboard directory structure has been stable since Epic 7; low risk
+
+### Undocumented Streamlit API Usage (Origin: Audit item 2.14, 2026-03-05)
+
+Replace `event.selection.rows` (undocumented Streamlit dataframe selection API) with documented alternative or add pinned Streamlit version constraint to prevent breakage on upgrade.
+
+- **Effort:** Low — API replacement or version pin (~20 lines)
+- **Distinctness:** Maintenance improvement; prevents breakage on Streamlit upgrades
+- **Source:** Codebase audit item 2.14; `dashboard/pages/1_Lab.py:116-129`
+- **Deferred because:** API works correctly in current Streamlit version; will address if/when Streamlit breaks it
+
+### Story 2.3 Open AI-Review Follow-ups (Origin: Audit item 2.17, 2026-03-05)
+
+Address two deferred code quality items from Story 2.3's AI code review: (1) Add Pandera schema validation to KaggleConnector, (2) Replace `iterrows()` calls with vectorized operations in KaggleConnector.
+
+- **Effort:** Medium — Pandera schema definition + vectorized CSV parsing (~200 lines)
+- **Distinctness:** Code quality improvement; aligns ingest layer with project conventions
+- **Source:** Codebase audit item 2.17; `src/ncaa_eval/ingest/connectors/kaggle.py`
+- **Deferred because:** KaggleConnector works correctly; improvements are quality-of-code, not functional
+
+### Test Helper Duplication: `_make_season_df` (Origin: Audit item 2.21, 2026-03-05)
+
+Consolidate the duplicated `_make_season_df` helper function from `test_evaluation_splitter.py` and `test_evaluation_backtest.py` into a shared conftest fixture.
+
+- **Effort:** Low — move to conftest, update imports (~15 lines)
+- **Distinctness:** Minor test code quality improvement
+- **Source:** Codebase audit item 2.21; `tests/unit/test_evaluation_splitter.py:18`, `tests/unit/test_evaluation_backtest.py:28`
+- **Deferred because:** Duplication is minor; will consolidate when either test file is next modified
+
+### Coverage Threshold Enforcement (Origin: Audit item P2-5, 2026-03-05)
+
+Add `--cov-fail-under=XX` to CI pytest configuration to prevent silent coverage regression. Requires measuring current coverage level first to set an appropriate threshold.
+
+- **Effort:** Low — measure coverage, add flag to CI config (~5 lines)
+- **Distinctness:** Quality gate improvement; prevents coverage regression
+- **Source:** Codebase audit item P2-5; `.github/workflows/python-check.yaml:31`
+- **Deferred because:** Need to measure current coverage before setting threshold; arbitrary threshold risks blocking legitimate PRs
+
+### Dashboard Quality Gate Inclusion (Origin: Audit item P2-6, 2026-03-05)
+
+Add relaxed mypy configuration for `dashboard/` directory (e.g., `--follow-imports=normal` without `--strict`) to catch import errors and basic type mismatches while accommodating Streamlit's poor type stubs.
+
+- **Effort:** Medium — mypy config section, fix existing type errors, CI integration
+- **Distinctness:** Quality improvement for the primary user-facing layer
+- **Source:** Codebase audit item P2-6; `noxfile.py:30-33`, `.pre-commit-config.yaml:67`
+- **Deferred because:** Streamlit has poor type stubs; strict mypy impractical; relaxed config is a low-priority improvement
+
+### NFR3 Tutorial — Clarify Metric Extension vs. Plugin Registry (Origin: Audit item P3-17, 2026-03-05)
+
+Story 7.9 tutorial documents "How to Add a Custom Metric" via function injection into `run_backtest(metric_fns=...)`. This IS supported and the tutorial is functionally correct. However, audit item P3-17 flagged a potential reader confusion: NFR3 specifies a "plugin-registry architecture" for metrics, but the tutorial shows function-injection (not `@register_metric`). Clarify in the tutorial that metric extensibility uses function injection (not a registry) while scoring extensibility uses the `@register_scoring` decorator registry.
+
+- **Effort:** Low — add a clarifying note or sidebar to the tutorial (~5 lines)
+- **Distinctness:** Documentation clarity improvement; prevents confusion about which extension mechanism applies to metrics vs. scoring rules
+- **Source:** Codebase audit item P3-17; `docs/tutorials/custom-metric.md`; PO decision: metric/feature-generator registries deferred, clarify tutorial distinction

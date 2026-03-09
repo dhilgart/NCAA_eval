@@ -855,6 +855,12 @@ class MyModelConfig(BaseModel):
 - ✅ **Retroactive story documentation pattern** — When a story was implemented but never captured in epics.md (e.g., a mid-sprint extraction story), add it retroactively by: (1) matching the format of adjacent stories in the same epic, (2) copying ACs verbatim from the implementation story file, (3) NOT modifying sprint-status.yaml (it's already accurate). This happened for Story 1.9 in Story 8.12.
 - ⚠️ **Stale story narrative text ("I want X, Y, and Z") is NOT auto-fixed by AC-only edits** — When an AC is deprecated/struck-through (e.g., edgetest AC in Story 1.7), the user story's "I want" sentence must ALSO be updated to remove the deprecated tool. Review both the narrative AND the AC list when correcting stale ACs. (Discovered: Story 8.12 Code Review — line 229 still said "edgetest" after line 238's AC was struck through.)
 
+**Story 8.13 - PO Decision Log (2026-03-05 Code Review):**
+- ⚠️ **Decision count summary vs. actual table mismatch** — When writing a PO decision log with a Summary section showing counts (e.g., "7 Defer, 6 Accept-as-is"), ALWAYS count directly from the decision table, not from memory or mid-session tallying. The Summary is often written early and not re-verified after the full table is populated. Code review should always recount table rows and compare to summary totals. (Discovered: Story 8.13 — summary said "7 Defer, 6 Accept-as-is" but table showed 9 Defer, 4 Accept-as-is for Cat-1.)
+- ⚠️ **Remove promoted Post-MVP Backlog entries when creating follow-up stories** — When a deferred item is promoted to an active story (e.g., backlog item → Epic 9 story), the original Post-MVP Backlog entry must be removed to prevent duplication. Forgetting this creates confusion about whether the item is still deferred or actively planned. (Discovered: Story 8.13 — Kaggle Export remained in Post-MVP Backlog after being promoted to Story 9.1.)
+- ⚠️ **Cat-3 fix notes in decision rationale need explicit tracking** — When a PO decision mentions "Cat 3 fix: [action]" as part of the rationale (e.g., "update UI label"), that fix must be added to either an active story or the Post-MVP Backlog. Leaving it only in the decision prose means it will be forgotten. Always check decision rationale cells for embedded action items during code review. (Discovered: Story 8.13 — items 1.8 and P3-17 had Cat-3 fix notes with no corresponding tracking.)
+- ⚠️ **Cross-check backlog entries against actual implementation before tracking** — When adding a "fix needed" item to Post-MVP Backlog from a PO decision, first verify the fix has NOT already been done in a prior story. A decision rationale that says "Cat 3 fix: update UI label" may describe work completed in an earlier story. Code reviewers must search the codebase (grep/Glob) before creating a new backlog entry. (Discovered: Story 8.13 second review — "Fibonacci Scoring UI Label Correction" was added to Post-MVP Backlog, but Story 8.6 already fixed it via `@register_scoring("fibonacci", display_name="Fibonacci (2-3-5-8-13-21)")`.)
+
 ---
 
 ## 8. Cookie-Cutter Improvements Feedback Loop
@@ -3545,3 +3551,50 @@ When a documentation story fixes time budget wording in `docs/testing/` markdown
 grep -A1 "markers = \[" pyproject.toml
 ```
 and compare each marker description against the docs tables.
+
+---
+
+### FeatureConfig as Model-Level Concern — Design Pattern (Decided PO session 2026-03-09)
+
+**Context:** `FeatureConfig` controls which feature blocks a `StatefulFeatureServer` computes and therefore determines the column set of the output DataFrame. Different configs produce different-shaped DataFrames.
+
+**Pattern:** `FeatureConfig` belongs on the `Model`, not as an external parameter to `run_training()`. Each model subclass accepts feature-relevant kwargs in `__init__` and constructs its own `FeatureConfig` from them. `run_training()` reads `model.feature_config` to build the feature server.
+
+```python
+# ✅ Correct: feature config is a model concern
+class XGBoostModel(Model):
+    def __init__(self, *, batch_rating_types=("srs",), graph_features_enabled=False, n_estimators=100):
+        self.feature_config = FeatureConfig(batch_rating_types=batch_rating_types, ...)
+        self._n_estimators = n_estimators
+
+# ❌ Wrong: feature config as external parameter to run_training()
+run_training(model, feature_config=FeatureConfig(...), ...)  # user must keep these in sync manually
+```
+
+**Why:** A trained model and its feature config are inseparable. If you reload a trained model and pair it with a different feature config, the column names will mismatch silently. Embedding the config in the model and serializing it with `save()` closes this gap.
+
+**Additional rules:**
+- `save()` must write a `feature_config.json` sidecar; `load()` must read and reconstruct it
+- After `fit()`, stateless models store `self.feature_names_: list[str]` — the exact column list trained on (sklearn convention)
+- `FeatureConfig.calibration_method` is misplaced — calibration is applied to model outputs, not feature computation. It belongs in `ModelConfig`
+- `EloModel` uses a minimal FeatureConfig (`sequential_windows=()`, `batch_rating_types=()`, `elo_enabled=True`) — stateful models reconstruct `Game` objects from metadata columns and do not use feature columns
+
+**Source:** Epic 8 audit item 1.6 PO decision; `specs/ensemble-architecture.md` §2
+
+---
+
+### Stacked Ensemble Design Pattern — OOF + Game-Aware Meta-Learner (Decided PO session 2026-03-09)
+
+**Pattern:** Ensemble models in ncaa_eval use stacked generalization with a game-context-aware meta-learner:
+
+1. **Base models train independently** — each with its own `feature_config`, each through `run_training()`'s standard leaf-model path
+2. **OOF predictions come from `run_backtest()`** — the existing walk-forward backtest produces per-fold per-game predictions indexed by `game_id`; these are the meta-learner's training inputs
+3. **Meta-learner inputs = base model OOF predictions + contextual game features** — `[pred_xgb, pred_elo, seed_diff, is_tournament, loc_encoding]`. The contextual features let the meta-learner learn input-dependent weights (not just fixed blend coefficients)
+4. **One-liner UX via `StackedEnsemble` + `run_training()` dispatch** — `run_training()` detects `StackedEnsemble` and routes to `_run_ensemble_training()` which handles everything automatically
+5. **Two inference interfaces:** `predict_proba(X)` for backtest/evaluation contexts with a pre-built DataFrame; `predict_bracket(data_dir, season)` for live bracket generation with hypothetical matchups
+
+**Critical prerequisite:** The FeatureConfig-as-model-concern pattern (Story 9.2) must be complete before any ensemble story. The ensemble training orchestration reads `base_model.feature_config` to build per-sub-model feature servers; `feature_names_` is used at inference time to route the correct column slice from a superset DataFrame to each stateless sub-model.
+
+**OOF alignment policy:** Inner join on `game_id` across all base models' OOF prediction sets. Log a warning if the join drops >5% of games. Do not use outer join (NaN predictions in the meta-training set are misleading).
+
+**Source:** `specs/ensemble-architecture.md`; Epic 10
