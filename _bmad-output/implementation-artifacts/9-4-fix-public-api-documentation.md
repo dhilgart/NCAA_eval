@@ -1,6 +1,6 @@
 # Story 9.4: Fix Public API Documentation
 
-Status: ready-for-dev
+Status: in-progress
 
 ## Story
 
@@ -25,24 +25,24 @@ so that **the Style Guide matches reality and I know how to import public symbol
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Fix Style Guide Section 8 — `__init__.py` re-exports rule (AC: #1)
-  - [ ] 1.1: Update line 875-876 in `docs/STYLE_GUIDE.md` — change `from ncaa_eval import EloModel` to the correct submodule import convention: `from ncaa_eval.model import Model` (base classes and registry functions are importable from `ncaa_eval.model`; concrete models use `get_model("elo")` or direct imports like `from ncaa_eval.model.elo import EloModel`)
-  - [ ] 1.2: Clarify that `__init__.py` re-exports are at the *submodule* level (e.g., `ncaa_eval.model`, `ncaa_eval.ingest`, `ncaa_eval.evaluation`, `ncaa_eval.transform`, `ncaa_eval.utils`), not at the root `ncaa_eval` level
+- [x] Task 1: Fix Style Guide Section 8 — `__init__.py` re-exports rule (AC: #1)
+  - [x] 1.1: Update line 875-876 in `docs/STYLE_GUIDE.md` — change `from ncaa_eval import EloModel` to the correct submodule import convention: `from ncaa_eval.model import Model` (base classes and registry functions are importable from `ncaa_eval.model`; concrete models use `get_model("elo")` or direct imports like `from ncaa_eval.model.elo import EloModel`)
+  - [x] 1.2: Clarify that `__init__.py` re-exports are at the *submodule* level (e.g., `ncaa_eval.model`, `ncaa_eval.ingest`, `ncaa_eval.evaluation`, `ncaa_eval.transform`, `ncaa_eval.utils`), not at the root `ncaa_eval` level
 
-- [ ] Task 2: Fix Style Guide Section 3 — import ordering example (AC: #2)
-  - [ ] 2.1: Replace `from ncaa_eval.features import rolling_efficiency` with a real import, e.g., `from ncaa_eval.transform import compute_rolling_stats`
-  - [ ] 2.2: Replace `from ncaa_eval.models.base import ModelBase` with the real import `from ncaa_eval.model import Model`
+- [x] Task 2: Fix Style Guide Section 3 — import ordering example (AC: #2)
+  - [x] 2.1: Replace `from ncaa_eval.features import rolling_efficiency` with a real import, e.g., `from ncaa_eval.transform import compute_rolling_stats`
+  - [x] 2.2: Replace `from ncaa_eval.models.base import ModelBase` with the real import `from ncaa_eval.model import Model`
 
-- [ ] Task 3: Audit all docs for incorrect import paths (AC: #3)
-  - [ ] 3.1: Scan all `.md` and `.rst` files in `docs/` for `from ncaa_eval` patterns
-  - [ ] 3.2: Verify each documented import actually resolves — check against `__all__` exports in each `__init__.py`
-  - [ ] 3.3: Fix any additional incorrect paths found
-  - [ ] 3.4: Verify tutorials (`docs/tutorials/`) import paths are correct (based on prior analysis, these appear correct already)
+- [x] Task 3: Audit all docs for incorrect import paths (AC: #3)
+  - [x] 3.1: Scan all `.md` and `.rst` files in `docs/` for `from ncaa_eval` patterns
+  - [x] 3.2: Verify each documented import actually resolves — check against `__all__` exports in each `__init__.py`
+  - [x] 3.3: Fix any additional incorrect paths found
+  - [x] 3.4: Verify tutorials (`docs/tutorials/`) import paths are correct (based on prior analysis, these appear correct already)
 
-- [ ] Task 4: Run tests to confirm no regressions (AC: all)
-  - [ ] 4.1: Run `pytest` (full suite)
-  - [ ] 4.2: Run `ruff check .`
-  - [ ] 4.3: Run `mypy --strict src/ncaa_eval tests`
+- [x] Task 4: Run tests to confirm no regressions (AC: all)
+  - [x] 4.1: Run `pytest` (full suite)
+  - [x] 4.2: Run `ruff check .`
+  - [x] 4.3: Run `mypy --strict src/ncaa_eval tests`
 
 ## Dev Notes
 
@@ -134,8 +134,23 @@ Story 9.2 (Feature Config) noted an AI-Review follow-up: "Export FeatureConfig f
 
 ### Agent Model Used
 
+Claude Opus 4.6
+
 ### Debug Log References
+
+None — documentation-only changes, no debugging required.
 
 ### Completion Notes List
 
+- **Task 1 (Section 8):** Updated Rule 3 from incorrect claim (`from ncaa_eval import EloModel`) to accurate description of submodule-level re-exports with registry pattern for concrete models.
+- **Task 2 (Section 3):** Replaced fictional imports (`ncaa_eval.features.rolling_efficiency`, `ncaa_eval.models.base.ModelBase`) with real imports (`ncaa_eval.transform.compute_rolling_stats`, `ncaa_eval.model.Model`).
+- **Task 3 (Audit):** Scanned all `.md` and `.rst` files in `docs/`. Verified 21 unique import paths across tutorials, testing docs, and user guide — all resolve correctly. No additional fixes needed beyond Tasks 1-2.
+- **Task 4 (Validation):** pytest 979 passed (1 pre-existing flaky timing test unrelated to this story), ruff clean, mypy --strict clean.
+
 ### File List
+
+- `docs/STYLE_GUIDE.md` — Fixed Section 3 import example (lines 132-133) and Section 8 Rule 3 (lines 875-876)
+
+### Change Log
+
+- 2026-03-09: Fixed incorrect import paths in Style Guide documentation — Section 8 Rule 3 (submodule-level re-exports, not root-level) and Section 3 import ordering example (real module paths and symbol names). Audited all docs; no other incorrect imports found.

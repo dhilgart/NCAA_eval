@@ -129,8 +129,8 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import TimeSeriesSplit
 
-from ncaa_eval.features import rolling_efficiency
-from ncaa_eval.models.base import ModelBase
+from ncaa_eval.transform import compute_rolling_stats
+from ncaa_eval.model import Model
 ```
 
 ### Active Ruff Rules
@@ -873,7 +873,11 @@ data/                    # Local data store (git-ignored)
 2. **Mirror `src/` in `tests/`.** `src/ncaa_eval/model/elo.py` is tested by
    `tests/unit/test_elo.py` (or `tests/integration/test_elo_integration.py`).
 3. **`__init__.py` re-exports.** Public symbols should be importable from the
-   package level: `from ncaa_eval import EloModel`.
+   *submodule* level (e.g., `from ncaa_eval.model import Model, get_model`).
+   The root `ncaa_eval` package does not re-export anything. Concrete model
+   classes self-register via `@register_model` and are accessed through the
+   registry (`get_model("elo")`) or direct import
+   (`from ncaa_eval.model.elo import EloModel`).
 4. **No circular imports.** If two modules need each other, extract shared types
    into a third module.
 5. **Configuration lives in `pyproject.toml`.** Do not create separate config files
