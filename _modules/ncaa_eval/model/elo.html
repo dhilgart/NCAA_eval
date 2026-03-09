@@ -327,9 +327,11 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Self</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.ingest.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">Game</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.model._feature_config_io</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_feature_config</span><span class="p">,</span> <span class="n">save_feature_config</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.model.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelConfig</span><span class="p">,</span> <span class="n">StatefulModel</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.model.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">register_model</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.transform.elo</span><span class="w"> </span><span class="kn">import</span> <span class="n">EloConfig</span><span class="p">,</span> <span class="n">EloFeatureEngine</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.transform.feature_serving</span><span class="w"> </span><span class="kn">import</span> <span class="n">FeatureConfig</span>
 
 
 <div class="viewcode-block" id="EloModelConfig">
@@ -368,6 +370,14 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_config</span> <span class="o">=</span> <span class="n">config</span> <span class="ow">or</span> <span class="n">EloModelConfig</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_engine</span> <span class="o">=</span> <span class="n">EloFeatureEngine</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_to_elo_config</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feature_config</span> <span class="o">=</span> <span class="n">FeatureConfig</span><span class="p">(</span>
+            <span class="n">sequential_windows</span><span class="o">=</span><span class="p">(),</span>
+            <span class="n">graph_features_enabled</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">batch_rating_types</span><span class="o">=</span><span class="p">(),</span>
+            <span class="n">ordinal_composite</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">elo_enabled</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">elo_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_to_elo_config</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="p">),</span>
+        <span class="p">)</span>
 
     <span class="c1"># ------------------------------------------------------------------</span>
     <span class="c1"># StatefulModel abstract hooks</span>
@@ -454,11 +464,12 @@
 <div class="viewcode-block" id="EloModel.save">
 <a class="viewcode-back" href="../../../api/ncaa_eval.model.elo.html#ncaa_eval.model.elo.EloModel.save">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;JSON-dump config and state to *path* directory.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;JSON-dump config, state, and feature config to *path* directory.</span>
 
 <span class="sd">        Creates the output directory, JSON-dumps the Pydantic config, then</span>
 <span class="sd">        JSON-dumps the state dict (ratings and game counts) after coercing</span>
-<span class="sd">        numeric keys to strings for JSON compatibility.</span>
+<span class="sd">        numeric keys to strings for JSON compatibility.  Also writes the</span>
+<span class="sd">        ``feature_config.json`` sidecar.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">path</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="p">(</span><span class="n">path</span> <span class="o">/</span> <span class="s2">&quot;config.json&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">model_dump_json</span><span class="p">())</span>
@@ -468,7 +479,8 @@
             <span class="s2">&quot;ratings&quot;</span><span class="p">:</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">):</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;ratings&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()},</span>
             <span class="s2">&quot;game_counts&quot;</span><span class="p">:</span> <span class="p">{</span><span class="nb">str</span><span class="p">(</span><span class="n">k</span><span class="p">):</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">state</span><span class="p">[</span><span class="s2">&quot;game_counts&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()},</span>
         <span class="p">}</span>
-        <span class="p">(</span><span class="n">path</span> <span class="o">/</span> <span class="s2">&quot;state.json&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">serialisable</span><span class="p">))</span></div>
+        <span class="p">(</span><span class="n">path</span> <span class="o">/</span> <span class="s2">&quot;state.json&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">serialisable</span><span class="p">))</span>
+        <span class="n">save_feature_config</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">feature_config</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="EloModel.load">
@@ -497,6 +509,9 @@
             <span class="s2">&quot;game_counts&quot;</span><span class="p">:</span> <span class="p">{</span><span class="nb">int</span><span class="p">(</span><span class="n">k</span><span class="p">):</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">raw</span><span class="p">[</span><span class="s2">&quot;game_counts&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()},</span>
         <span class="p">}</span>
         <span class="n">instance</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+        <span class="n">loaded_fc</span> <span class="o">=</span> <span class="n">load_feature_config</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">loaded_fc</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">instance</span><span class="o">.</span><span class="n">feature_config</span> <span class="o">=</span> <span class="n">loaded_fc</span>
         <span class="k">return</span> <span class="n">instance</span></div>
 
 

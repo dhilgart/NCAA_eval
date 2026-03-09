@@ -325,6 +325,8 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="ncaa_eval.model.base.html">ncaa_eval.model.base module</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="ncaa_eval.model.base.html#ncaa_eval.model.base.Model"><code class="docutils literal notranslate"><span class="pre">Model</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.model.base.html#ncaa_eval.model.base.Model.feature_config"><code class="docutils literal notranslate"><span class="pre">Model.feature_config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.model.base.html#id0"><code class="docutils literal notranslate"><span class="pre">Model.feature_config</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="ncaa_eval.model.base.html#ncaa_eval.model.base.Model.fit"><code class="docutils literal notranslate"><span class="pre">Model.fit()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="ncaa_eval.model.base.html#ncaa_eval.model.base.Model.get_config"><code class="docutils literal notranslate"><span class="pre">Model.get_config()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="ncaa_eval.model.base.html#ncaa_eval.model.base.Model.get_feature_importances"><code class="docutils literal notranslate"><span class="pre">Model.get_feature_importances()</span></code></a></li>
@@ -334,6 +336,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="ncaa_eval.model.base.html#ncaa_eval.model.base.ModelConfig"><code class="docutils literal notranslate"><span class="pre">ModelConfig</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.model.base.html#ncaa_eval.model.base.ModelConfig.calibration_method"><code class="docutils literal notranslate"><span class="pre">ModelConfig.calibration_method</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="ncaa_eval.model.base.html#ncaa_eval.model.base.ModelConfig.model_config"><code class="docutils literal notranslate"><span class="pre">ModelConfig.model_config</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="ncaa_eval.model.base.html#ncaa_eval.model.base.ModelConfig.model_name"><code class="docutils literal notranslate"><span class="pre">ModelConfig.model_name</span></code></a></li>
 </ul>
@@ -386,6 +389,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="ncaa_eval.model.logistic_regression.html#ncaa_eval.model.logistic_regression.LogisticRegressionModel"><code class="docutils literal notranslate"><span class="pre">LogisticRegressionModel</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.model.logistic_regression.html#ncaa_eval.model.logistic_regression.LogisticRegressionModel.feature_names_"><code class="docutils literal notranslate"><span class="pre">LogisticRegressionModel.feature_names_</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="ncaa_eval.model.logistic_regression.html#ncaa_eval.model.logistic_regression.LogisticRegressionModel.fit"><code class="docutils literal notranslate"><span class="pre">LogisticRegressionModel.fit()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="ncaa_eval.model.logistic_regression.html#ncaa_eval.model.logistic_regression.LogisticRegressionModel.get_config"><code class="docutils literal notranslate"><span class="pre">LogisticRegressionModel.get_config()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="ncaa_eval.model.logistic_regression.html#ncaa_eval.model.logistic_regression.LogisticRegressionModel.load"><code class="docutils literal notranslate"><span class="pre">LogisticRegressionModel.load()</span></code></a></li>
@@ -484,6 +488,23 @@
 <p>Every model — stateful or stateless — must implement these five
 methods so that the training CLI, evaluation engine, and persistence
 layer can treat all models uniformly.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.model.Model.feature_config">
+<span class="sig-name descname"><span class="pre">feature_config</span></span><a class="headerlink" href="#ncaa_eval.model.Model.feature_config" title="Link to this definition">¶</a></dt>
+<dd><p>Declarative specification of which feature blocks
+the model expects.  Set by subclass <code class="docutils literal notranslate"><span class="pre">__init__</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="ncaa_eval.transform.feature_serving.html#ncaa_eval.transform.feature_serving.FeatureConfig" title="ncaa_eval.transform.feature_serving.FeatureConfig">ncaa_eval.transform.feature_serving.FeatureConfig</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">feature_config</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="ncaa_eval.transform.feature_serving.html#ncaa_eval.transform.feature_serving.FeatureConfig" title="ncaa_eval.transform.feature_serving.FeatureConfig"><span class="pre">FeatureConfig</span></a></span><a class="headerlink" href="#id0" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="ncaa_eval.model.Model.fit">
 <span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Series</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/model/base.html#Model.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.model.Model.fit" title="Link to this definition">¶</a></dt>
@@ -526,10 +547,15 @@ layer can treat all models uniformly.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="ncaa_eval.model.ModelConfig">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ncaa_eval.model.</span></span><span class="sig-name descname"><span class="pre">ModelConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ncaa_eval/model/base.html#ModelConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.model.ModelConfig" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ncaa_eval.model.</span></span><span class="sig-name descname"><span class="pre">ModelConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'isotonic'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'sigmoid'</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ncaa_eval/model/base.html#ModelConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.model.ModelConfig" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
 <p>Base configuration shared by all model implementations.</p>
 <p>Subclasses add model-specific hyperparameters as additional fields.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.model.ModelConfig.calibration_method">
+<span class="sig-name descname"><span class="pre">calibration_method</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">CalibrationMethod</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#ncaa_eval.model.ModelConfig.calibration_method" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="py attribute">
 <dt class="sig sig-object py" id="ncaa_eval.model.ModelConfig.model_config">
 <span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></span><a class="headerlink" href="#ncaa_eval.model.ModelConfig.model_config" title="Link to this definition">¶</a></dt>
@@ -698,6 +724,8 @@ and update() per game.</p>
 <li><a class="reference internal" href="#submodules">Submodules</a></li>
 <li><a class="reference internal" href="#module-ncaa_eval.model">Module contents</a><ul>
 <li><a class="reference internal" href="#ncaa_eval.model.Model"><code class="docutils literal notranslate"><span class="pre">Model</span></code></a><ul>
+<li><a class="reference internal" href="#ncaa_eval.model.Model.feature_config"><code class="docutils literal notranslate"><span class="pre">Model.feature_config</span></code></a></li>
+<li><a class="reference internal" href="#id0"><code class="docutils literal notranslate"><span class="pre">Model.feature_config</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.model.Model.fit"><code class="docutils literal notranslate"><span class="pre">Model.fit()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.model.Model.get_config"><code class="docutils literal notranslate"><span class="pre">Model.get_config()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.model.Model.get_feature_importances"><code class="docutils literal notranslate"><span class="pre">Model.get_feature_importances()</span></code></a></li>
@@ -707,6 +735,7 @@ and update() per game.</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#ncaa_eval.model.ModelConfig"><code class="docutils literal notranslate"><span class="pre">ModelConfig</span></code></a><ul>
+<li><a class="reference internal" href="#ncaa_eval.model.ModelConfig.calibration_method"><code class="docutils literal notranslate"><span class="pre">ModelConfig.calibration_method</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.model.ModelConfig.model_config"><code class="docutils literal notranslate"><span class="pre">ModelConfig.model_config</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.model.ModelConfig.model_name"><code class="docutils literal notranslate"><span class="pre">ModelConfig.model_name</span></code></a></li>
 </ul>

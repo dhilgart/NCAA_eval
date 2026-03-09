@@ -400,16 +400,10 @@
     <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">fold_frames</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_setup_feature_server</span><span class="p">(</span><span class="n">data_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">StatefulFeatureServer</span><span class="p">:</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_setup_feature_server</span><span class="p">(</span><span class="n">data_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">feature_config</span><span class="p">:</span> <span class="n">FeatureConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">StatefulFeatureServer</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Initialize the repository, data server, and feature server.&quot;&quot;&quot;</span>
     <span class="n">repo</span> <span class="o">=</span> <span class="n">ParquetRepository</span><span class="p">(</span><span class="n">base_path</span><span class="o">=</span><span class="n">data_dir</span><span class="p">)</span>
     <span class="n">data_server</span> <span class="o">=</span> <span class="n">ChronologicalDataServer</span><span class="p">(</span><span class="n">repo</span><span class="p">)</span>
-    <span class="n">feature_config</span> <span class="o">=</span> <span class="n">FeatureConfig</span><span class="p">(</span>
-        <span class="n">graph_features_enabled</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">batch_rating_types</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;srs&quot;</span><span class="p">,),</span>
-        <span class="n">ordinal_composite</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">calibration_method</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span>
     <span class="k">return</span> <span class="n">StatefulFeatureServer</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">feature_config</span><span class="p">,</span> <span class="n">data_server</span><span class="o">=</span><span class="n">data_server</span><span class="p">)</span>
 
 
@@ -604,7 +598,7 @@
 <span class="sd">        The persisted run metadata record.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">_console</span> <span class="o">=</span> <span class="n">console</span> <span class="ow">or</span> <span class="n">Console</span><span class="p">()</span>
-    <span class="n">server</span> <span class="o">=</span> <span class="n">_setup_feature_server</span><span class="p">(</span><span class="n">data_dir</span><span class="p">)</span>
+    <span class="n">server</span> <span class="o">=</span> <span class="n">_setup_feature_server</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">feature_config</span><span class="p">)</span>
     <span class="n">store</span> <span class="o">=</span> <span class="n">RunStore</span><span class="p">(</span><span class="n">base_path</span><span class="o">=</span><span class="n">output_dir</span><span class="p">)</span>
     <span class="n">ctx</span> <span class="o">=</span> <span class="n">_TrainingContext</span><span class="p">(</span>
         <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>

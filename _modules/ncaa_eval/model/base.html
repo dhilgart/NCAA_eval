@@ -329,6 +329,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.ingest.schema</span><span class="w"> </span><span class="kn">import</span> <span class="n">Game</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.transform.feature_serving</span><span class="w"> </span><span class="kn">import</span> <span class="n">CalibrationMethod</span><span class="p">,</span> <span class="n">FeatureConfig</span>
 
 
 <div class="viewcode-block" id="ModelConfig">
@@ -339,7 +340,8 @@
 <span class="sd">    Subclasses add model-specific hyperparameters as additional fields.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span></div>
+    <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">calibration_method</span><span class="p">:</span> <span class="n">CalibrationMethod</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span></div>
 
 
 
@@ -351,7 +353,13 @@
 <span class="sd">    Every model — stateful or stateless — must implement these five</span>
 <span class="sd">    methods so that the training CLI, evaluation engine, and persistence</span>
 <span class="sd">    layer can treat all models uniformly.</span>
+
+<span class="sd">    Attributes:</span>
+<span class="sd">        feature_config: Declarative specification of which feature blocks</span>
+<span class="sd">            the model expects.  Set by subclass ``__init__``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">feature_config</span><span class="p">:</span> <span class="n">FeatureConfig</span>
 
 <div class="viewcode-block" id="Model.fit">
 <a class="viewcode-back" href="../../../api/ncaa_eval.model.base.html#ncaa_eval.model.Model.fit">[docs]</a>

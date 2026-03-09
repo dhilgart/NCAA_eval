@@ -389,7 +389,6 @@
 <span class="sd">        matchup_deltas: Whether to compute team_A − team_B deltas for matchup features.</span>
 <span class="sd">        gender_scope: ``&quot;M&quot;`` for men&#39;s, ``&quot;W&quot;`` for women&#39;s.</span>
 <span class="sd">        dataset_scope: ``&quot;kaggle&quot;`` for Kaggle-only games, ``&quot;all&quot;`` for Kaggle + ESPN enrichment.</span>
-<span class="sd">        calibration_method: ``&quot;isotonic&quot;``, ``&quot;sigmoid&quot;``, or ``None`` to skip calibration.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">sequential_windows</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
@@ -401,7 +400,6 @@
     <span class="n">matchup_deltas</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">gender_scope</span><span class="p">:</span> <span class="n">GenderScope</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;M&quot;</span><span class="p">)</span>
     <span class="n">dataset_scope</span><span class="p">:</span> <span class="n">DatasetScope</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;kaggle&quot;</span><span class="p">)</span>
-    <span class="n">calibration_method</span><span class="p">:</span> <span class="n">CalibrationMethod</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="s2">&quot;isotonic&quot;</span>
     <span class="n">elo_enabled</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">elo_config</span><span class="p">:</span> <span class="n">EloConfig</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 
