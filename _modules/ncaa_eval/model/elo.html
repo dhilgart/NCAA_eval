@@ -519,6 +519,18 @@
     <span class="c1"># Model ABC: config</span>
     <span class="c1"># ------------------------------------------------------------------</span>
 
+<div class="viewcode-block" id="EloModel.get_feature_importances">
+<a class="viewcode-back" href="../../../api/ncaa_eval.model.elo.html#ncaa_eval.model.elo.EloModel.get_feature_importances">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_feature_importances</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return top team Elo ratings as interpretability information.&quot;&quot;&quot;</span>
+        <span class="n">ratings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_engine</span><span class="o">.</span><span class="n">get_all_ratings</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">ratings</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="n">sorted_ratings</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">ratings</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">top_n</span> <span class="o">=</span> <span class="n">sorted_ratings</span><span class="p">[:</span><span class="mi">50</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">[(</span><span class="sa">f</span><span class="s2">&quot;team_</span><span class="si">{</span><span class="n">team_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">rating</span><span class="p">)</span> <span class="k">for</span> <span class="n">team_id</span><span class="p">,</span> <span class="n">rating</span> <span class="ow">in</span> <span class="n">top_n</span><span class="p">]</span></div>
+
+
 <div class="viewcode-block" id="EloModel.get_config">
 <a class="viewcode-back" href="../../../api/ncaa_eval.model.elo.html#ncaa_eval.model.elo.EloModel.get_config">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EloModelConfig</span><span class="p">:</span>
