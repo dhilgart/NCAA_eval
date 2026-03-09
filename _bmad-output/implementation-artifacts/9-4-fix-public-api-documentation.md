@@ -1,6 +1,6 @@
 # Story 9.4: Fix Public API Documentation
 
-Status: review
+Status: done
 
 ## Story
 
