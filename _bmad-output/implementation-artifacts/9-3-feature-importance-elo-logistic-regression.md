@@ -35,11 +35,11 @@ so that **I can understand what drives predictions across Elo, Logistic Regressi
   - [x] 1.3 Return `None` if `feature_names_` is empty (unfitted model)
   - [x] 1.4 Add `import numpy as np` (needed for `np.abs`)
 
-- [ ] Task 2: Add `get_feature_importances()` to `EloModel` (AC: #3, #4)
-  - [ ] 2.1 Override `get_feature_importances()` in `elo.py`
-  - [ ] 2.2 Return team ratings as `list[tuple[str, float]]` — format: `("team_{id}", rating)`
-  - [ ] 2.3 Sort descending by rating, limit to top 50 teams (avoid overwhelming the chart)
-  - [ ] 2.4 Return `None` if no ratings exist (fresh model, never fitted)
+- [x] Task 2: Add `get_feature_importances()` to `EloModel` (AC: #3, #4)
+  - [x] 2.1 Override `get_feature_importances()` in `elo.py`
+  - [x] 2.2 Return team ratings as `list[tuple[str, float]]` — format: `("team_{id}", rating)`
+  - [x] 2.3 Sort descending by rating, limit to top 50 teams (avoid overwhelming the chart)
+  - [x] 2.4 Return `None` if no ratings exist (fresh model, never fitted)
 
 - [ ] Task 3: Update dashboard to handle model-specific interpretability (AC: #3, #4)
   - [ ] 3.1 Update `_render_feature_importance()` in `3_Model_Deep_Dive.py` to show model-appropriate title/labels
@@ -61,12 +61,12 @@ so that **I can understand what drives predictions across Elo, Logistic Regressi
   - [x] 5.4 Test: length matches `len(feature_names_)`
   - [x] 5.5 Test: save/load round-trip preserves `get_feature_importances()` behavior
 
-- [ ] Task 6: Add unit tests for Elo interpretability (AC: #3, #4)
-  - [ ] 6.1 Test: `get_feature_importances()` returns `None` on fresh model (no ratings)
-  - [ ] 6.2 Test: after `fit()` or manual `set_ratings()`, returns `list[tuple[str, float]]`
-  - [ ] 6.3 Test: returned entries are `("team_{id}", rating_value)` format
-  - [ ] 6.4 Test: results are sorted descending by rating
-  - [ ] 6.5 Test: limit to top 50 when more than 50 teams exist
+- [x] Task 6: Add unit tests for Elo interpretability (AC: #3, #4)
+  - [x] 6.1 Test: `get_feature_importances()` returns `None` on fresh model (no ratings)
+  - [x] 6.2 Test: after `fit()` or manual `set_ratings()`, returns `list[tuple[str, float]]`
+  - [x] 6.3 Test: returned entries are `("team_{id}", rating_value)` format
+  - [x] 6.4 Test: results are sorted descending by rating
+  - [x] 6.5 Test: limit to top 50 when more than 50 teams exist
 
 - [ ] Task 7: Update dashboard tests (AC: #3, #4)
   - [ ] 7.1 Update `test_returns_empty_for_elo_model` in `test_dashboard_filters.py` — Elo now returns data, not empty
