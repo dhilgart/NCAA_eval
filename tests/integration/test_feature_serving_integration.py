@@ -100,7 +100,6 @@ class TestTemporalIntegrity:
             batch_rating_types=(),
             ordinal_composite="simple_average",
             matchup_deltas=False,
-            calibration_method=None,
         )
         server = StatefulFeatureServer(config=cfg, data_server=ds, ordinals_store=ordinals)
         server.serve_season_features(2023, mode="batch")
@@ -131,7 +130,6 @@ class TestTemporalIntegrity:
             batch_rating_types=(),
             ordinal_composite=None,
             matchup_deltas=True,
-            calibration_method=None,
         )
         server = StatefulFeatureServer(config=cfg, data_server=ds, seed_table=seeds)
         result = server.serve_season_features(2023, mode="batch")
@@ -225,7 +223,6 @@ class TestMatchupDeltaCorrectness:
             batch_rating_types=(),
             ordinal_composite="simple_average",
             matchup_deltas=True,
-            calibration_method=None,
         )
         server = StatefulFeatureServer(config=cfg, data_server=ds, ordinals_store=ordinals)
         result = server.serve_season_features(2023, mode="batch")
@@ -262,7 +259,6 @@ class TestMatchupDeltaCorrectness:
             batch_rating_types=(),
             ordinal_composite=None,
             matchup_deltas=True,
-            calibration_method=None,
         )
         server = StatefulFeatureServer(config=cfg, data_server=ds, seed_table=seeds)
         result = server.serve_season_features(2023, mode="batch")
@@ -296,7 +292,6 @@ class TestBatchStatefulEquivalence:
             batch_rating_types=(),
             ordinal_composite=None,
             matchup_deltas=False,
-            calibration_method=None,
         )
         server = StatefulFeatureServer(config=cfg, data_server=ds)
 
@@ -329,7 +324,6 @@ class TestBatchStatefulEquivalence:
             batch_rating_types=(),
             ordinal_composite="simple_average",
             matchup_deltas=True,
-            calibration_method=None,
         )
         server = StatefulFeatureServer(config=cfg, data_server=ds, ordinals_store=ordinals)
 

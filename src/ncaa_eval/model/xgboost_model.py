@@ -16,8 +16,14 @@ from pydantic import Field
 from sklearn.model_selection import train_test_split  # type: ignore[import-untyped]
 from xgboost import XGBClassifier
 
+from ncaa_eval.model._feature_config_io import load_feature_config, save_feature_config
 from ncaa_eval.model.base import Model, ModelConfig
 from ncaa_eval.model.registry import register_model
+from ncaa_eval.transform.feature_serving import (
+    BatchRatingType,
+    FeatureConfig,
+    OrdinalCompositeMethod,
+)
 
 
 class XGBoostModelConfig(ModelConfig):
@@ -61,7 +67,14 @@ class XGBoostModel(Model):
     randomised.
     """
 
-    def __init__(self, config: XGBoostModelConfig | None = None) -> None:
+    def __init__(
+        self,
+        config: XGBoostModelConfig | None = None,
+        *,
+        batch_rating_types: tuple[BatchRatingType, ...] = ("srs",),
+        graph_features_enabled: bool = False,
+        ordinal_composite: OrdinalCompositeMethod | None = None,
+    ) -> None:
         """Initialize XGBoost model with optional configuration.
 
         Builds an :class:`XGBClassifier` from config hyperparameters, setting
@@ -71,10 +84,18 @@ class XGBoostModel(Model):
         Args:
             config: Pydantic config; defaults to
                 :class:`XGBoostModelConfig` when ``None``.
+            batch_rating_types: Which batch rating systems to include.
+            graph_features_enabled: Whether to compute graph centrality features.
+            ordinal_composite: Composite method for ordinal systems.
         """
         self._config = config or XGBoostModelConfig()
         self._is_fitted = False
-        self._feature_names: list[str] = []
+        self.feature_names_: list[str] = []
+        self.feature_config = FeatureConfig(
+            batch_rating_types=batch_rating_types,
+            graph_features_enabled=graph_features_enabled,
+            ordinal_composite=ordinal_composite,
+        )
         kwargs: dict[str, object] = dict(
             n_estimators=self._config.n_estimators,
             max_depth=self._config.max_depth,
@@ -120,7 +141,7 @@ class XGBoostModel(Model):
             random_state=42,
             stratify=y,
         )
-        self._feature_names = list(X.columns)
+        self.feature_names_ = list(X.columns)
         self._clf.fit(X_train, y_train, eval_set=[(X_val, y_val)], verbose=False)
         self._is_fitted = True
 
@@ -139,10 +160,11 @@ class XGBoostModel(Model):
     def save(self, path: Path) -> None:
         """Persist the trained model to *path* directory.
 
-        Writes three files:
+        Writes four files:
         - ``model.ubj`` — XGBoost native UBJSON format (stable across versions)
         - ``config.json`` — Pydantic-serialised hyperparameter config
         - ``feature_names.json`` — JSON array of feature column names
+        - ``feature_config.json`` — FeatureConfig sidecar
 
         Raises:
             RuntimeError: If called before :meth:`fit`.
@@ -153,7 +175,8 @@ class XGBoostModel(Model):
         path.mkdir(parents=True, exist_ok=True)
         self._clf.save_model(str(path / "model.ubj"))
         (path / "config.json").write_text(self._config.model_dump_json())
-        (path / "feature_names.json").write_text(json.dumps(self._feature_names))
+        (path / "feature_names.json").write_text(json.dumps(self.feature_names_))
+        save_feature_config(self.feature_config, path)
 
     @classmethod
     def load(cls, path: Path) -> Self:
@@ -175,7 +198,10 @@ class XGBoostModel(Model):
         instance._is_fitted = True
         feature_names_path = path / "feature_names.json"
         if feature_names_path.exists():
-            instance._feature_names = json.loads(feature_names_path.read_text())
+            instance.feature_names_ = json.loads(feature_names_path.read_text())
+        loaded_fc = load_feature_config(path)
+        if loaded_fc is not None:
+            instance.feature_config = loaded_fc
         return instance
 
     def get_config(self) -> XGBoostModelConfig:
@@ -184,7 +210,7 @@ class XGBoostModel(Model):
 
     def get_feature_importances(self) -> list[tuple[str, float]] | None:
         """Return feature name/importance pairs from the fitted classifier."""
-        if not self._is_fitted or not self._feature_names:
+        if not self._is_fitted or not self.feature_names_:
             return None
         importances = self._clf.feature_importances_
-        return list(zip(self._feature_names, importances.tolist()))
+        return list(zip(self.feature_names_, importances.tolist()))

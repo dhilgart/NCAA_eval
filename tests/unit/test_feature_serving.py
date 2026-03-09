@@ -58,7 +58,6 @@ class TestFeatureConfig:
         assert cfg.matchup_deltas is True
         assert cfg.gender_scope == "M"
         assert cfg.dataset_scope == "kaggle"
-        assert cfg.calibration_method == "isotonic"
 
     def test_frozen(self) -> None:
         cfg = FeatureConfig()
@@ -76,7 +75,6 @@ class TestFeatureConfig:
             matchup_deltas=True,
             gender_scope="W",
             dataset_scope="all",
-            calibration_method="sigmoid",
         )
         assert cfg.sequential_windows == (3, 7)
         assert cfg.ewma_alphas == (0.10,)
@@ -86,11 +84,6 @@ class TestFeatureConfig:
         assert cfg.ordinal_composite == "weighted"
         assert cfg.gender_scope == "W"
         assert cfg.dataset_scope == "all"
-        assert cfg.calibration_method == "sigmoid"
-
-    def test_calibration_method_none(self) -> None:
-        cfg = FeatureConfig(calibration_method=None)
-        assert cfg.calibration_method is None
 
     def test_active_blocks_all(self) -> None:
         cfg = FeatureConfig()
@@ -160,8 +153,11 @@ class TestFeatureConfigLiteralAliases:
             assert cfg.dataset_scope == val
 
     def test_calibration_method_valid_values(self) -> None:
+        """CalibrationMethod moved to ModelConfig (Story 9.2) — alias still importable."""
+        from ncaa_eval.model.base import ModelConfig
+
         for val in ("isotonic", "sigmoid"):
-            cfg = FeatureConfig(calibration_method=val)
+            cfg = ModelConfig(model_name="test", calibration_method=val)
             assert cfg.calibration_method == val
 
 
@@ -255,7 +251,6 @@ def _minimal_config() -> FeatureConfig:
         batch_rating_types=(),
         ordinal_composite=None,
         matchup_deltas=False,
-        calibration_method=None,
     )
 
 
@@ -452,7 +447,6 @@ class TestOrdinalTemporalSlicing:
             batch_rating_types=(),
             ordinal_composite="simple_average",
             matchup_deltas=False,
-            calibration_method=None,
         )
         server = StatefulFeatureServer(
             config=cfg,
@@ -479,7 +473,6 @@ class TestOrdinalTemporalSlicing:
             batch_rating_types=(),
             ordinal_composite="simple_average",
             matchup_deltas=False,
-            calibration_method=None,
         )
         server = StatefulFeatureServer(
             config=cfg,
@@ -532,7 +525,6 @@ class TestMatchupDeltas:
             batch_rating_types=(),
             ordinal_composite=None,
             matchup_deltas=True,
-            calibration_method=None,
         )
         server = StatefulFeatureServer(
             config=cfg,
@@ -554,7 +546,6 @@ class TestMatchupDeltas:
             batch_rating_types=(),
             ordinal_composite=None,
             matchup_deltas=True,
-            calibration_method=None,
         )
         server = StatefulFeatureServer(config=cfg, data_server=ds)
         result = server.serve_season_features(2023, mode="batch")
@@ -583,7 +574,6 @@ class TestMatchupDeltas:
             batch_rating_types=(),
             ordinal_composite="simple_average",
             matchup_deltas=True,
-            calibration_method=None,
         )
         server = StatefulFeatureServer(
             config=cfg,
@@ -613,7 +603,6 @@ class TestMatchupDeltas:
             batch_rating_types=("srs", "ridge", "colley"),
             ordinal_composite=None,
             matchup_deltas=True,
-            calibration_method=None,
         )
         server = StatefulFeatureServer(config=cfg, data_server=ds)
         result = server.serve_season_features(2023, mode="batch")
@@ -692,7 +681,6 @@ class TestEloFeatureServing:
             batch_rating_types=(),
             ordinal_composite=None,
             matchup_deltas=True,
-            calibration_method=None,
             elo_enabled=True,
         )
 

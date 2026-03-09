@@ -3579,6 +3579,12 @@ run_training(model, feature_config=FeatureConfig(...), ...)  # user must keep th
 - `FeatureConfig.calibration_method` is misplaced — calibration is applied to model outputs, not feature computation. It belongs in `ModelConfig`
 - `EloModel` uses a minimal FeatureConfig (`sequential_windows=()`, `batch_rating_types=()`, `elo_enabled=True`) — stateful models reconstruct `Game` objects from metadata columns and do not use feature columns
 
+**Sidecar serialization gotcha — do NOT use `default=str` in `json.dumps`** (Discovered: Story 9.2 Code Review, 2026-03-09):
+- `json.dumps` handles Python tuples natively (serializes them as JSON arrays) — `default=str` is NOT needed for frozen dataclasses containing tuples/strings/bools/None/numbers
+- Using `default=str` silently corrupts round-trips if a new field uses a non-JSON-native type (e.g., an Enum would serialize as `"MyEnum.VALUE"` instead of `"value"`, and deserialization would produce the wrong string)
+- ✅ Correct: `json.dumps(dataclasses.asdict(config))` — fails loudly on non-native types at write time
+- ❌ Fragile: `json.dumps(dataclasses.asdict(config), default=str)` — silently writes undeserializable values
+
 **Source:** Epic 8 audit item 1.6 PO decision; `specs/ensemble-architecture.md` §2
 
 ---

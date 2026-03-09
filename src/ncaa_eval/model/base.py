@@ -16,6 +16,7 @@ import pandas as pd  # type: ignore[import-untyped]
 from pydantic import BaseModel
 
 from ncaa_eval.ingest.schema import Game
+from ncaa_eval.transform.feature_serving import CalibrationMethod, FeatureConfig
 
 
 class ModelConfig(BaseModel):
@@ -25,6 +26,7 @@ class ModelConfig(BaseModel):
     """
 
     model_name: str
+    calibration_method: CalibrationMethod | None = None
 
 
 class Model(abc.ABC):
@@ -33,7 +35,13 @@ class Model(abc.ABC):
     Every model — stateful or stateless — must implement these five
     methods so that the training CLI, evaluation engine, and persistence
     layer can treat all models uniformly.
+
+    Attributes:
+        feature_config: Declarative specification of which feature blocks
+            the model expects.  Set by subclass ``__init__``.
     """
+
+    feature_config: FeatureConfig
 
     @abc.abstractmethod
     def fit(self, X: pd.DataFrame, y: pd.Series) -> None:

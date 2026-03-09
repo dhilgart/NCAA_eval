@@ -87,16 +87,10 @@ def _build_fold_predictions(result: BacktestResult) -> pd.DataFrame | None:
     return pd.concat(fold_frames, ignore_index=True)
 
 
-def _setup_feature_server(data_dir: Path) -> StatefulFeatureServer:
+def _setup_feature_server(data_dir: Path, feature_config: FeatureConfig) -> StatefulFeatureServer:
     """Initialize the repository, data server, and feature server."""
     repo = ParquetRepository(base_path=data_dir)
     data_server = ChronologicalDataServer(repo)
-    feature_config = FeatureConfig(
-        graph_features_enabled=False,
-        batch_rating_types=("srs",),
-        ordinal_composite=None,
-        calibration_method=None,
-    )
     return StatefulFeatureServer(config=feature_config, data_server=data_server)
 
 
@@ -289,7 +283,7 @@ def run_training(  # noqa: PLR0913
         The persisted run metadata record.
     """
     _console = console or Console()
-    server = _setup_feature_server(data_dir)
+    server = _setup_feature_server(data_dir, model.feature_config)
     store = RunStore(base_path=output_dir)
     ctx = _TrainingContext(
         model=model,
