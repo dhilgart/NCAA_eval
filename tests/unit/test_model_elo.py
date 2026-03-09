@@ -630,3 +630,83 @@ class TestFeatureConfigSaveLoad:
 
         loaded = EloModel.load(save_dir)
         assert loaded.feature_config.elo_enabled is True
+
+
+# ---------------------------------------------------------------------------
+# Story 9.3: Feature importance (Elo interpretability)
+# ---------------------------------------------------------------------------
+
+
+class TestFeatureImportance:
+    """Story 9.3: get_feature_importances() for EloModel."""
+
+    def test_returns_none_on_fresh_model(self) -> None:
+        """AC3: Fresh model with no ratings returns None."""
+        model = EloModel()
+        assert model.get_feature_importances() is None
+
+    def test_returns_tuples_after_ratings_set(self) -> None:
+        """AC3: After set_ratings(), returns list of (team_{id}, rating) tuples."""
+        model = EloModel()
+        model._engine.set_ratings({100: 1600.0, 200: 1400.0})
+        model._engine.set_game_counts({100: 5, 200: 5})
+        result = model.get_feature_importances()
+        assert result is not None
+        assert isinstance(result, list)
+        assert all(isinstance(t, tuple) and len(t) == 2 for t in result)
+
+    def test_entries_use_team_id_format(self) -> None:
+        """AC3: Returned entries have format ("team_{id}", rating_value)."""
+        model = EloModel()
+        model._engine.set_ratings({100: 1600.0, 200: 1400.0})
+        model._engine.set_game_counts({100: 5, 200: 5})
+        result = model.get_feature_importances()
+        assert result is not None
+        for name, _ in result:
+            assert name.startswith("team_")
+
+    def test_sorted_descending_by_rating(self) -> None:
+        """AC3: Results sorted descending by rating."""
+        model = EloModel()
+        model._engine.set_ratings({1: 1400.0, 2: 1600.0, 3: 1500.0})
+        model._engine.set_game_counts({1: 5, 2: 5, 3: 5})
+        result = model.get_feature_importances()
+        assert result is not None
+        values = [v for _, v in result]
+        assert values == sorted(values, reverse=True)
+
+    def test_limits_to_top_50(self) -> None:
+        """AC3: Limit to top 50 when more than 50 teams exist."""
+        model = EloModel()
+        ratings = {i: 1500.0 + float(i) for i in range(80)}
+        game_counts = {i: 5 for i in range(80)}
+        model._engine.set_ratings(ratings)
+        model._engine.set_game_counts(game_counts)
+        result = model.get_feature_importances()
+        assert result is not None
+        assert len(result) == 50
+        # Teams 30..79 have ratings 1530..1579 (highest 50) and must be included;
+        # teams 0..29 (ratings 1500..1529) must be excluded.
+        returned_names = {name for name, _ in result}
+        for i in range(30, 80):
+            assert f"team_{i}" in returned_names, f"team_{i} (rating {1500.0 + i}) should be in top 50"
+        for i in range(30):
+            assert f"team_{i}" not in returned_names, f"team_{i} (rating {1500.0 + i}) should be excluded"
+
+    def test_save_load_preserves_feature_importances(self, tmp_path: Path) -> None:
+        """AC3: save/load round-trip preserves get_feature_importances() behavior."""
+        model = EloModel()
+        model._engine.set_ratings({100: 1650.0, 200: 1550.0, 300: 1500.0})
+        model._engine.set_game_counts({100: 10, 200: 10, 300: 10})
+        original = model.get_feature_importances()
+        assert original is not None
+
+        save_dir = tmp_path / "elo_model"
+        model.save(save_dir)
+        loaded = EloModel.load(save_dir)
+        restored = loaded.get_feature_importances()
+        assert restored is not None
+        assert len(restored) == len(original)
+        for (n1, v1), (n2, v2) in zip(original, restored):
+            assert n1 == n2
+            assert abs(v1 - v2) < 1e-10

@@ -86,23 +86,30 @@ def _render_metric_summary(data_dir: str, run_id: str) -> None:
 
 
 def _render_feature_importance(data_dir: str, run_id: str, model_type: str) -> None:
-    """Render feature importance bar chart (XGBoost only)."""
+    """Render feature importance or interpretability bar chart."""
     st.subheader("Feature Importance")
     importances = load_feature_importances(data_dir, run_id)
     if not importances:
-        if model_type == "xgboost":
-            st.info("Feature importance not available. Re-run training to persist model artifacts.")
-        else:
-            st.info("Feature importance is not available for stateful models.")
+        st.info("Feature importance not available. Re-run training to persist model artifacts.")
         return
+
+    if model_type == "elo":
+        chart_title = "Team Elo Ratings (Top 50)"
+        x_label = "Rating"
+    elif model_type == "logistic_regression":
+        chart_title = "Feature Importance (|Coefficient|)"
+        x_label = "Absolute Coefficient"
+    else:
+        chart_title = "Feature Importance (Gain)"
+        x_label = "Importance"
 
     feature_names = [d["feature"] for d in importances]
     importance_values = [d["importance"] for d in importances]
     fig = go.Figure(go.Bar(x=importance_values, y=feature_names, orientation="h", marker_color=COLOR_GREEN))
     fig.update_layout(
         template=TEMPLATE,
-        title="Feature Importance (Gain)",
-        xaxis_title="Importance",
+        title=chart_title,
+        xaxis_title=x_label,
         yaxis_title="Feature",
         yaxis=dict(autorange="reversed"),
         height=min(max(400, len(feature_names) * 25), 2000),

@@ -183,6 +183,15 @@ class EloModel(StatefulModel):
     # Model ABC: config
     # ------------------------------------------------------------------
 
+    def get_feature_importances(self) -> list[tuple[str, float]] | None:
+        """Return top team Elo ratings as interpretability information."""
+        ratings = self._engine.get_all_ratings()
+        if not ratings:
+            return None
+        sorted_ratings = sorted(ratings.items(), key=lambda x: x[1], reverse=True)
+        top_n = sorted_ratings[:50]
+        return [(f"team_{team_id}", rating) for team_id, rating in top_n]
+
     def get_config(self) -> EloModelConfig:
         """Return the Pydantic-validated configuration."""
         return self._config

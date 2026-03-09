@@ -177,7 +177,79 @@ class TestFeatureImportance:
         # plotly_chart called at least twice: reliability diagram + feature importance
         assert mock_st.plotly_chart.call_count >= 2
 
-    def test_shows_info_for_elo_model(self) -> None:
+    def test_renders_chart_for_elo_model(self) -> None:
+        """Story 9.3 AC#3: Elo model shows 'Team Elo Ratings (Top 50)' chart title."""
+        mock_st = MagicMock()
+        mock_st.session_state = {"selected_run_id": "abc12345-6789"}
+        mock_st.columns.return_value = [MagicMock(), MagicMock()]
+        mock_st.selectbox.return_value = "All Years (Aggregate)"
+
+        elo_importances = [
+            {"feature": "team_1181", "importance": 1650.0},
+            {"feature": "team_1242", "importance": 1600.0},
+        ]
+
+        with (
+            patch.object(_dd_mod, "st", mock_st),
+            patch.object(_dd_mod, "get_data_dir", return_value="/fake/data"),
+            patch.object(_dd_mod, "load_available_runs", return_value=_sample_runs()),
+            patch.object(_dd_mod, "load_fold_predictions", return_value=_sample_fold_predictions()),
+            patch.object(_dd_mod, "load_leaderboard_data", return_value=[]),
+            patch.object(_dd_mod, "load_feature_importances", return_value=elo_importances),
+        ):
+            _dd_mod._render_deep_dive()
+
+        # Verify plotly_chart was called and figure layout has Elo-specific title and axis
+        assert mock_st.plotly_chart.call_count >= 2
+        fig_calls = [call[0][0] for call in mock_st.plotly_chart.call_args_list]
+        titles = [fig.layout.title.text for fig in fig_calls if hasattr(fig, "layout")]
+        assert any("Team Elo Ratings" in (t or "") for t in titles)
+        xaxis_titles = [fig.layout.xaxis.title.text for fig in fig_calls if hasattr(fig, "layout")]
+        assert any("Rating" in (t or "") for t in xaxis_titles)
+
+    def test_renders_chart_for_logistic_regression(self) -> None:
+        """Story 9.3 AC#2: LogReg model shows '|Coefficient|' chart title."""
+        mock_st = MagicMock()
+        mock_st.session_state = {"selected_run_id": "abc12345-6789"}
+        mock_st.columns.return_value = [MagicMock(), MagicMock()]
+        mock_st.selectbox.return_value = "All Years (Aggregate)"
+
+        lr_runs = [
+            {
+                "run_id": "abc12345-6789",
+                "model_type": "logistic_regression",
+                "hyperparameters": {"C": 1.0},
+                "timestamp": "2025-01-01T00:00:00",
+                "git_hash": "abc1234",
+                "start_year": 2015,
+                "end_year": 2025,
+                "prediction_count": 100,
+            },
+        ]
+        lr_importances = [
+            {"feature": "elo_delta", "importance": 0.8},
+            {"feature": "seed_diff", "importance": 0.3},
+        ]
+
+        with (
+            patch.object(_dd_mod, "st", mock_st),
+            patch.object(_dd_mod, "get_data_dir", return_value="/fake/data"),
+            patch.object(_dd_mod, "load_available_runs", return_value=lr_runs),
+            patch.object(_dd_mod, "load_fold_predictions", return_value=_sample_fold_predictions()),
+            patch.object(_dd_mod, "load_leaderboard_data", return_value=[]),
+            patch.object(_dd_mod, "load_feature_importances", return_value=lr_importances),
+        ):
+            _dd_mod._render_deep_dive()
+
+        # Verify figure layout has LogReg-specific title and axis label
+        assert mock_st.plotly_chart.call_count >= 2
+        fig_calls = [call[0][0] for call in mock_st.plotly_chart.call_args_list]
+        titles = [fig.layout.title.text for fig in fig_calls if hasattr(fig, "layout")]
+        assert any("Coefficient" in (t or "") for t in titles)
+        xaxis_titles = [fig.layout.xaxis.title.text for fig in fig_calls if hasattr(fig, "layout")]
+        assert any("Absolute Coefficient" in (t or "") for t in xaxis_titles)
+
+    def test_shows_info_when_no_importances(self) -> None:
         mock_st = MagicMock()
         mock_st.session_state = {"selected_run_id": "abc12345-6789"}
         mock_st.columns.return_value = [MagicMock(), MagicMock()]
@@ -193,6 +265,6 @@ class TestFeatureImportance:
         ):
             _dd_mod._render_deep_dive()
 
-        # st.info should be called for feature importance section
+        # st.info should show generic unavailability message
         info_calls = [call[0][0] for call in mock_st.info.call_args_list]
-        assert any("stateful" in msg.lower() for msg in info_calls)
+        assert any("not available" in msg.lower() for msg in info_calls)
