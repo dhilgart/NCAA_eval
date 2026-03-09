@@ -154,3 +154,16 @@ class TestFormatKaggleSubmission:
         lines = result.strip().split("\n")
         assert len(lines) == 2  # header + 1 row
         assert lines[1] == "2025_1101_1102,0.6"
+
+    def test_one_team_raises(self) -> None:
+        """ValueError raised for degenerate 1-team input (no matchups possible)."""
+        team_ids = [1101]
+        P = np.zeros((1, 1), dtype=np.float64)
+        with pytest.raises(ValueError, match="at least 2 teams"):
+            format_kaggle_submission(2025, team_ids, P)
+
+    def test_zero_teams_raises(self) -> None:
+        """ValueError raised for empty team list."""
+        P = np.zeros((0, 0), dtype=np.float64)
+        with pytest.raises(ValueError, match="at least 2 teams"):
+            format_kaggle_submission(2025, [], P)

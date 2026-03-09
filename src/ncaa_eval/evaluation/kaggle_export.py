@@ -15,6 +15,10 @@ from itertools import combinations
 import numpy as np
 import numpy.typing as npt
 
+# Kaggle March Machine Learning Mania uses day_num=136 as the Round-of-64 start.
+# This is the canonical neutral-site context for all-pairs probability export.
+KAGGLE_NEUTRAL_DAY_NUM: int = 136
+
 
 def format_kaggle_submission(
     season: int,
@@ -36,6 +40,9 @@ def format_kaggle_submission(
         ValueError: If the matrix shape doesn't match the team count.
     """
     n = len(team_ids)
+    if n < 2:
+        msg = f"Need at least 2 teams to generate matchups, got {n}"
+        raise ValueError(msg)
     if prob_matrix.shape != (n, n):
         msg = f"prob_matrix shape {prob_matrix.shape} != ({n}, {n})"
         raise ValueError(msg)

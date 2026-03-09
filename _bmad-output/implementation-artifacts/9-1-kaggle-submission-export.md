@@ -1,6 +1,6 @@
 # Story 9.1: Kaggle Submission Export
 
-Status: review
+Status: done
 
 ## Story
 
@@ -184,16 +184,25 @@ Claude Opus 4.6
 - **Task 4:** 9 unit tests for `format_kaggle_submission` (header, row count, ID format, probability values, valid range, complementarity, unsorted IDs, shape mismatch, 2-team edge case). 4 CLI tests (writes CSV, no model error, stateless model error, stdout output).
 - Full test suite: 944 passed, 1 skipped, 0 failures. mypy --strict and ruff clean.
 
+### Code Review Fixes (2026-03-09, Claude Sonnet 4.6)
+
+- **M2 (DRY):** Extracted `KAGGLE_NEUTRAL_DAY_NUM = 136` constant into `kaggle_export.py`; both `cli/export.py` and `dashboard/pages/2_Presentation.py` now import it instead of inlining the magic number.
+- **H1/M1 (stdout):** Fixed `run_export()` to write raw CSV via `sys.stdout.write()` instead of `con.print()` (which could corrupt CSV with Rich ANSI codes or write to the wrong file descriptor). Status messages remain on the Rich Console.
+- **M5 (DRY/SRP):** Extracted `build_kaggle_submission()` as a pure orchestration function (no I/O side-effects) from `run_export()`. Dashboard `_build_kaggle_csv` now delegates to `build_kaggle_submission` instead of duplicating 25 lines of model-loading logic.
+- **M3 (validation):** Added `n < 2` guard in `format_kaggle_submission` that raises `ValueError` for degenerate inputs (0 or 1 team). Added 2 new tests: `test_one_team_raises`, `test_zero_teams_raises`.
+- Full test suite after fixes: 946 passed, 1 skipped, 0 failures. mypy --strict and ruff clean.
+
 ### File List
 
-- `src/ncaa_eval/evaluation/kaggle_export.py` (new) — Core pure export function
-- `src/ncaa_eval/evaluation/__init__.py` (modified) — Added `format_kaggle_submission` export
-- `src/ncaa_eval/cli/export.py` (new) — CLI export orchestration
+- `src/ncaa_eval/evaluation/kaggle_export.py` (new) — Core pure export function + `KAGGLE_NEUTRAL_DAY_NUM` constant
+- `src/ncaa_eval/evaluation/__init__.py` (modified) — Added `format_kaggle_submission` and `KAGGLE_NEUTRAL_DAY_NUM` exports
+- `src/ncaa_eval/cli/export.py` (new) — CLI export orchestration; added `build_kaggle_submission()` shared helper
 - `src/ncaa_eval/cli/main.py` (modified) — Added `export` Typer command
-- `dashboard/pages/2_Presentation.py` (modified) — Added Kaggle download button
-- `tests/unit/test_kaggle_export.py` (new) — Unit tests for export function
-- `tests/unit/test_cli_export.py` (new) — CLI export command tests
+- `dashboard/pages/2_Presentation.py` (modified) — Added Kaggle download button; delegates to `build_kaggle_submission`
+- `tests/unit/test_kaggle_export.py` (new) — Unit tests for export function (11 tests)
+- `tests/unit/test_cli_export.py` (new) — CLI export command tests (4 tests)
 
 ## Change Log
 
 - 2026-03-09: Implemented Kaggle submission export (CLI + dashboard). Pure function generates C(n,2) pairwise matchup CSV in Kaggle format. CLI `export` command supports Elo models. Dashboard button builds full all-team probability matrix.
+- 2026-03-09: Code review fixes — extracted `KAGGLE_NEUTRAL_DAY_NUM` constant, fixed stdout pipe-safety, extracted `build_kaggle_submission()` shared helper (eliminating dashboard duplication), added degenerate-input validation.

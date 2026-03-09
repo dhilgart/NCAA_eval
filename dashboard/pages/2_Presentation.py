@@ -16,7 +16,6 @@ import streamlit.components.v1 as components
 from dashboard.lib.bracket_renderer import render_bracket_html
 from dashboard.lib.data_loaders import get_data_dir, load_scoring_display_names, load_tourney_seeds
 from dashboard.lib.simulation_helpers import BracketSimulationResult, run_bracket_simulation
-from ncaa_eval.evaluation.kaggle_export import format_kaggle_submission
 from ncaa_eval.evaluation.plotting import (
     plot_advancement_heatmap,
     plot_score_distribution,
@@ -27,37 +26,14 @@ from ncaa_eval.evaluation.plotting import (
 def _build_kaggle_csv(data_dir: str, run_id: str, season: int) -> str | None:
     """Build a full Kaggle submission CSV for all teams in the season.
 
-    Loads the model, collects all team IDs from the season's games,
-    builds an all-pairs probability matrix, and formats the CSV.
-    Returns ``None`` if the model type is not supported.
+    Returns ``None`` if the model type is not supported (non-Elo).
     """
-    from ncaa_eval.evaluation.bracket import MatchupContext
-    from ncaa_eval.evaluation.providers import EloProvider, build_probability_matrix
-    from ncaa_eval.ingest.repository import ParquetRepository
-    from ncaa_eval.model.base import StatefulModel
-    from ncaa_eval.model.tracking import RunStore
+    from ncaa_eval.cli.export import build_kaggle_submission
 
-    path = Path(data_dir)
-    store = RunStore(base_path=path)
-    model = store.load_model(run_id)
-    if model is None or not isinstance(model, StatefulModel):
+    try:
+        return build_kaggle_submission(run_id=run_id, season=season, data_dir=Path(data_dir))
+    except (FileNotFoundError, TypeError):
         return None
-
-    repo = ParquetRepository(base_path=path)
-    games = repo.get_games(season)
-    if not games:
-        return None
-
-    team_id_set: set[int] = set()
-    for g in games:
-        team_id_set.add(g.w_team_id)
-        team_id_set.add(g.l_team_id)
-    team_ids = sorted(team_id_set)
-
-    provider = EloProvider(model)
-    context = MatchupContext(season=season, day_num=136, is_neutral=True)
-    prob_matrix = build_probability_matrix(provider, team_ids, context)
-    return format_kaggle_submission(season, team_ids, prob_matrix)
 
 
 def _render_results(sim_data: BracketSimulationResult, scoring: str) -> None:
