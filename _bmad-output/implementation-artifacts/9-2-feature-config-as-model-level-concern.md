@@ -1,6 +1,6 @@
 # Story 9.2: Feature Config as Model-Level Concern
 
-Status: review
+Status: done
 
 ## Story
 
@@ -99,6 +99,14 @@ so that **my model always receives inputs in the correct format, I can experimen
   - [x] 9.9 Full test suite: 964 passed, 1 failed (check-manifest — expected, new file not in VCS), 1 skipped
   - [x] 9.10 Type checks: `mypy --strict` passes on all 94 source files
   - [x] 9.11 Linter: `ruff check .` passes
+
+- [ ] Review Follow-ups (AI)
+  - [ ] [AI-Review][MEDIUM] `feature_config` annotation on `Model` ABC is not enforced — a future subclass that forgets `self.feature_config = ...` in `__init__` will pass mypy and only crash at runtime. Consider an `__init_subclass__` check or abstract property. [src/ncaa_eval/model/base.py:44]
+  - [ ] [AI-Review][MEDIUM] `save_feature_config` uses `default=str` fallback in `json.dumps` — silently converts non-JSON-native types to strings if FeatureConfig gains new field types. Remove `default=str`; all current fields are JSON-native after `asdict()`. [src/ncaa_eval/model/_feature_config_io.py:15]
+  - [ ] [AI-Review][MEDIUM] No test for `ordinal_systems` non-None round-trip via save/load sidecar. Add a test: save model with `FeatureConfig(ordinal_systems=("massey", "rpi"))`, load it, assert `ordinal_systems == ("massey", "rpi")`. [tests/unit/test_model_xgboost.py or test_model_logistic_regression.py]
+  - [ ] [AI-Review][LOW] `EloModel.__init__` calls `_to_elo_config(self._config)` twice — store result in a local variable and reuse. [src/ncaa_eval/model/elo.py:54-62]
+  - [ ] [AI-Review][LOW] `FeatureConfig` not exported from `ncaa_eval.model.__init__.py` despite being a model-level concern. Add to `__all__` for clean public API. [src/ncaa_eval/model/__init__.py]
+  - [ ] [AI-Review][LOW] No test asserts that `run_training()` passes model's custom `feature_config` to `StatefulFeatureServer` (AC3). Current CLI tests only verify backward-compat defaults; a regression where `model.feature_config` is ignored would not be caught. [tests/unit/test_cli_train.py]
 
 ## Dev Notes
 
