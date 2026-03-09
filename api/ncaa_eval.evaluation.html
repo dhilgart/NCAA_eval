@@ -220,6 +220,7 @@
 <li class="toctree-l1 current has-children"><a class="reference internal" href="modules.html">ncaa_eval</a><input aria-label="Toggle navigation of ncaa_eval" checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
 <li class="toctree-l2 current has-children"><a class="reference internal" href="ncaa_eval.html">ncaa_eval package</a><input aria-label="Toggle navigation of ncaa_eval package" checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
 <li class="toctree-l3 has-children"><a class="reference internal" href="ncaa_eval.cli.html">ncaa_eval.cli package</a><input aria-label="Toggle navigation of ncaa_eval.cli package" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.cli.export.html">ncaa_eval.cli.export module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.cli.main.html">ncaa_eval.cli.main module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.cli.train.html">ncaa_eval.cli.train module</a></li>
 </ul>
@@ -227,6 +228,7 @@
 <li class="toctree-l3 current has-children current-page"><a class="current reference internal" href="#">ncaa_eval.evaluation package</a><input aria-label="Toggle navigation of ncaa_eval.evaluation package" checked="" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.backtest.html">ncaa_eval.evaluation.backtest module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.bracket.html">ncaa_eval.evaluation.bracket module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.kaggle_export.html">ncaa_eval.evaluation.kaggle_export module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html">ncaa_eval.evaluation.metrics module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.plotting.html">ncaa_eval.evaluation.plotting module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.providers.html">ncaa_eval.evaluation.providers module</a></li>
@@ -390,6 +392,10 @@
 <li class="toctree-l2"><a class="reference internal" href="ncaa_eval.evaluation.bracket.html#ncaa_eval.evaluation.bracket.N_GAMES"><code class="docutils literal notranslate"><span class="pre">N_GAMES</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="ncaa_eval.evaluation.bracket.html#ncaa_eval.evaluation.bracket.N_ROUNDS"><code class="docutils literal notranslate"><span class="pre">N_ROUNDS</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="ncaa_eval.evaluation.bracket.html#ncaa_eval.evaluation.bracket.build_bracket"><code class="docutils literal notranslate"><span class="pre">build_bracket()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ncaa_eval.evaluation.kaggle_export.html">ncaa_eval.evaluation.kaggle_export module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ncaa_eval.evaluation.kaggle_export.html#ncaa_eval.evaluation.kaggle_export.format_kaggle_submission"><code class="docutils literal notranslate"><span class="pre">format_kaggle_submission()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html">ncaa_eval.evaluation.metrics module</a><ul>
@@ -2027,6 +2033,28 @@ ECE is the weighted average of per-bin <a href="#id48"><span class="problematic"
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="ncaa_eval.evaluation.format_kaggle_submission">
+<span class="sig-prename descclassname"><span class="pre">ncaa_eval.evaluation.</span></span><span class="sig-name descname"><span class="pre">format_kaggle_submission</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">season</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">team_ids</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prob_matrix</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/evaluation/kaggle_export.html#format_kaggle_submission"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.evaluation.format_kaggle_submission" title="Link to this definition">¶</a></dt>
+<dd><p>Format a probability matrix as a Kaggle submission CSV string.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>season</strong> – Tournament season year (e.g. 2025).</p></li>
+<li><p><strong>team_ids</strong> – Team IDs corresponding to matrix rows/columns.</p></li>
+<li><p><strong>prob_matrix</strong> – n×n pairwise probability matrix where <code class="docutils literal notranslate"><span class="pre">P[i,j]</span></code>
+is P(team_ids[i] beats team_ids[j]).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>CSV string with header <code class="docutils literal notranslate"><span class="pre">ID,Pred</span></code> and C(n,2) data rows.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the matrix shape doesn’t match the team count.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="ncaa_eval.evaluation.get_scoring">
 <span class="sig-prename descclassname"><span class="pre">ncaa_eval.evaluation.</span></span><span class="sig-name descname"><span class="pre">get_scoring</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">type</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/evaluation/scoring.html#get_scoring"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.evaluation.get_scoring" title="Link to this definition">¶</a></dt>
 <dd><p>Return the scoring class registered under <em>name</em>.</p>
@@ -2652,6 +2680,7 @@ test year; <code class="docutils literal notranslate"><span class="pre">test</sp
 <li><a class="reference internal" href="#ncaa_eval.evaluation.compute_most_likely_bracket"><code class="docutils literal notranslate"><span class="pre">compute_most_likely_bracket()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.expected_calibration_error"><code class="docutils literal notranslate"><span class="pre">expected_calibration_error()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.feature_cols"><code class="docutils literal notranslate"><span class="pre">feature_cols()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.evaluation.format_kaggle_submission"><code class="docutils literal notranslate"><span class="pre">format_kaggle_submission()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.get_scoring"><code class="docutils literal notranslate"><span class="pre">get_scoring()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.list_scoring_display_names"><code class="docutils literal notranslate"><span class="pre">list_scoring_display_names()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.list_scorings"><code class="docutils literal notranslate"><span class="pre">list_scorings()</span></code></a></li>

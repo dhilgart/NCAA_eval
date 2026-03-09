@@ -5,7 +5,7 @@
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../genindex.html"><link rel="search" title="Search" href="../../../search.html">
 
     <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
-        <title>ncaa_eval.utils.logger - ncaa_eval 0.9.0 documentation</title>
+        <title>ncaa_eval.cli.export - ncaa_eval 0.9.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=d111a655" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=7bdb33bb" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?v=8dab3a3b" />
@@ -310,148 +310,124 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <h1>Source code for ncaa_eval.utils.logger</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Structured logging with configurable verbosity levels.</span>
+          <h1>Source code for ncaa_eval.cli.export</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Kaggle submission export orchestration.</span>
 
-<span class="sd">Provides project-wide logging configuration using Python&#39;s standard</span>
-<span class="sd">`logging` module. Four verbosity levels map to standard (and one custom)</span>
-<span class="sd">Python log levels:</span>
-
-<span class="sd">    ========  ==============  =====</span>
-<span class="sd">    Project   Python level    Value</span>
-<span class="sd">    ========  ==============  =====</span>
-<span class="sd">    QUIET     WARNING          30</span>
-<span class="sd">    NORMAL    INFO             20</span>
-<span class="sd">    VERBOSE   VERBOSE (custom) 15</span>
-<span class="sd">    DEBUG     DEBUG            10</span>
-<span class="sd">    ========  ==============  =====</span>
-
-<span class="sd">Usage:</span>
-<span class="sd">    Configure once at application startup, then obtain named loggers</span>
-<span class="sd">    anywhere in the codebase::</span>
-
-<span class="sd">        &gt;&gt;&gt; from ncaa_eval.utils.logger import configure_logging, get_logger</span>
-<span class="sd">        &gt;&gt;&gt; configure_logging(&quot;VERBOSE&quot;)</span>
-<span class="sd">        &gt;&gt;&gt; log = get_logger(&quot;ingest&quot;)</span>
-<span class="sd">        &gt;&gt;&gt; log.info(&quot;Loading data...&quot;)</span>
-
-<span class="sd">    The verbosity can also be controlled via the `NCAA_EVAL_LOG_LEVEL`</span>
-<span class="sd">    environment variable (case-insensitive).  An explicit `level` argument</span>
-<span class="sd">    to `configure_logging` takes precedence over the environment variable,</span>
-<span class="sd">    which in turn takes precedence over the default (`NORMAL`).</span>
+<span class="sd">Loads a trained model, builds a pairwise probability matrix for all</span>
+<span class="sd">teams in a season, and writes a Kaggle-format CSV.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
-<span class="c1"># ---------------------------------------------------------------------------</span>
-<span class="c1"># Custom VERBOSE level (between INFO=20 and DEBUG=10)</span>
-<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">rich.console</span><span class="w"> </span><span class="kn">import</span> <span class="n">Console</span>
 
-<span class="n">VERBOSE</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">15</span>
-<span class="sd">&quot;&quot;&quot;Custom log level between INFO and DEBUG for detailed operational output.&quot;&quot;&quot;</span>
-
-<span class="n">logging</span><span class="o">.</span><span class="n">addLevelName</span><span class="p">(</span><span class="n">VERBOSE</span><span class="p">,</span> <span class="s2">&quot;VERBOSE&quot;</span><span class="p">)</span>
-
-<span class="c1"># ---------------------------------------------------------------------------</span>
-<span class="c1"># Convenience aliases for all project verbosity levels</span>
-<span class="c1"># ---------------------------------------------------------------------------</span>
-
-<span class="n">QUIET</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">WARNING</span>
-<span class="sd">&quot;&quot;&quot;Project verbosity that suppresses routine output (maps to WARNING=30).&quot;&quot;&quot;</span>
-
-<span class="n">NORMAL</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span>
-<span class="sd">&quot;&quot;&quot;Default project verbosity (maps to INFO=20).&quot;&quot;&quot;</span>
-
-<span class="n">DEBUG</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span>
-<span class="sd">&quot;&quot;&quot;Full diagnostic output (maps to DEBUG=10).&quot;&quot;&quot;</span>
-
-<span class="c1"># ---------------------------------------------------------------------------</span>
-<span class="c1"># Internal mapping from project level names to numeric values</span>
-<span class="c1"># ---------------------------------------------------------------------------</span>
-
-<span class="n">_LEVEL_MAP</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;QUIET&quot;</span><span class="p">:</span> <span class="n">QUIET</span><span class="p">,</span>
-    <span class="s2">&quot;NORMAL&quot;</span><span class="p">:</span> <span class="n">NORMAL</span><span class="p">,</span>
-    <span class="s2">&quot;VERBOSE&quot;</span><span class="p">:</span> <span class="n">VERBOSE</span><span class="p">,</span>
-    <span class="s2">&quot;DEBUG&quot;</span><span class="p">:</span> <span class="n">DEBUG</span><span class="p">,</span>
-<span class="p">}</span>
-
-<span class="n">_ROOT_LOGGER_NAME</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;ncaa_eval&quot;</span>
-<span class="n">_LOG_FORMAT</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%(asctime)s</span><span class="s2"> | </span><span class="si">%(name)s</span><span class="s2"> | </span><span class="si">%(levelname)-8s</span><span class="s2"> | </span><span class="si">%(message)s</span><span class="s2">&quot;</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.evaluation.bracket</span><span class="w"> </span><span class="kn">import</span> <span class="n">MatchupContext</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.evaluation.kaggle_export</span><span class="w"> </span><span class="kn">import</span> <span class="n">KAGGLE_NEUTRAL_DAY_NUM</span><span class="p">,</span> <span class="n">format_kaggle_submission</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.evaluation.providers</span><span class="w"> </span><span class="kn">import</span> <span class="n">EloProvider</span><span class="p">,</span> <span class="n">build_probability_matrix</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.ingest</span><span class="w"> </span><span class="kn">import</span> <span class="n">ParquetRepository</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.model.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">StatefulModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.model.tracking</span><span class="w"> </span><span class="kn">import</span> <span class="n">RunStore</span>
 
 
-<div class="viewcode-block" id="configure_logging">
-<a class="viewcode-back" href="../../../api/ncaa_eval.utils.logger.html#ncaa_eval.utils.configure_logging">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">configure_logging</span><span class="p">(</span><span class="n">level</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Configure project-wide logging with the given verbosity level.</span>
+<div class="viewcode-block" id="build_kaggle_submission">
+<a class="viewcode-back" href="../../../api/ncaa_eval.cli.export.html#ncaa_eval.cli.export.build_kaggle_submission">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_kaggle_submission</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">run_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">season</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load a model and return a Kaggle submission CSV string.</span>
 
-<span class="sd">    Resolution order:</span>
-
-<span class="sd">    1. Explicit `level` argument (if not ``None``).</span>
-<span class="sd">    2. ``NCAA_EVAL_LOG_LEVEL`` environment variable.</span>
-<span class="sd">    3. ``&quot;NORMAL&quot;`` default.</span>
+<span class="sd">    Pure orchestration: loads the model, collects all team IDs for the</span>
+<span class="sd">    season, builds the all-pairs probability matrix, and formats the CSV.</span>
+<span class="sd">    No I/O side-effects — callers decide where to write the result.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        level: One of ``&quot;QUIET&quot;``, ``&quot;NORMAL&quot;``, ``&quot;VERBOSE&quot;``, or</span>
-<span class="sd">            ``&quot;DEBUG&quot;`` (case-insensitive).  ``None`` means fall through</span>
-<span class="sd">            to the environment variable or default.</span>
-
-<span class="sd">    Raises:</span>
-<span class="sd">        ValueError: If the resolved level name is not recognised.</span>
-
-<span class="sd">    Example:</span>
-<span class="sd">        &gt;&gt;&gt; from ncaa_eval.utils.logger import configure_logging, get_logger</span>
-<span class="sd">        &gt;&gt;&gt; configure_logging(&quot;VERBOSE&quot;)</span>
-<span class="sd">        &gt;&gt;&gt; log = get_logger(&quot;ingest&quot;)</span>
-<span class="sd">        &gt;&gt;&gt; log.info(&quot;Loading data...&quot;)</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">resolved</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">level</span> <span class="k">if</span> <span class="n">level</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;NCAA_EVAL_LOG_LEVEL&quot;</span><span class="p">,</span> <span class="s2">&quot;NORMAL&quot;</span><span class="p">)</span>
-    <span class="n">resolved_upper</span> <span class="o">=</span> <span class="n">resolved</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
-
-    <span class="k">if</span> <span class="n">resolved_upper</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_LEVEL_MAP</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Unknown log level </span><span class="si">{</span><span class="n">resolved</span><span class="si">!r}</span><span class="s2">. Valid levels: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">_LEVEL_MAP</span><span class="p">))</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-    <span class="n">numeric_level</span> <span class="o">=</span> <span class="n">_LEVEL_MAP</span><span class="p">[</span><span class="n">resolved_upper</span><span class="p">]</span>
-
-    <span class="n">root</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">_ROOT_LOGGER_NAME</span><span class="p">)</span>
-    <span class="n">root</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">numeric_level</span><span class="p">)</span>
-
-    <span class="c1"># Remove existing handlers to prevent duplicates on re-call.</span>
-    <span class="k">for</span> <span class="n">handler</span> <span class="ow">in</span> <span class="n">root</span><span class="o">.</span><span class="n">handlers</span><span class="p">[:]:</span>
-        <span class="n">root</span><span class="o">.</span><span class="n">removeHandler</span><span class="p">(</span><span class="n">handler</span><span class="p">)</span>
-
-    <span class="n">handler</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">)</span>
-    <span class="n">handler</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">numeric_level</span><span class="p">)</span>
-    <span class="n">handler</span><span class="o">.</span><span class="n">setFormatter</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">Formatter</span><span class="p">(</span><span class="n">_LOG_FORMAT</span><span class="p">))</span>
-    <span class="n">root</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">handler</span><span class="p">)</span>
-
-    <span class="c1"># Prevent double-logging via the Python root logger.</span>
-    <span class="n">root</span><span class="o">.</span><span class="n">propagate</span> <span class="o">=</span> <span class="kc">False</span></div>
-
-
-
-<div class="viewcode-block" id="get_logger">
-<a class="viewcode-back" href="../../../api/ncaa_eval.utils.logger.html#ncaa_eval.utils.get_logger">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">get_logger</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">logging</span><span class="o">.</span><span class="n">Logger</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a logger under the ``ncaa_eval`` hierarchy.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        name: Dot-separated path appended to the root ``ncaa_eval`` logger</span>
-<span class="sd">            (e.g. ``&quot;transform.features&quot;`` yields ``ncaa_eval.transform.features``).</span>
+<span class="sd">        run_id: Model run identifier.</span>
+<span class="sd">        season: Tournament season year (e.g. 2025).</span>
+<span class="sd">        data_dir: Path to the local data directory.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        A `logging.Logger` instance.</span>
+<span class="sd">        CSV string with ``ID,Pred`` header and C(n,2) data rows.</span>
 
-<span class="sd">    Example:</span>
-<span class="sd">        &gt;&gt;&gt; log = get_logger(&quot;transform.features&quot;)</span>
-<span class="sd">        &gt;&gt;&gt; log.info(&quot;Computing features for season %d&quot;, 2025)</span>
+<span class="sd">    Raises:</span>
+<span class="sd">        FileNotFoundError: If the run, model, or season games cannot be loaded.</span>
+<span class="sd">        TypeError: If the model type is not supported for Kaggle export.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_ROOT_LOGGER_NAME</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+    <span class="n">store</span> <span class="o">=</span> <span class="n">RunStore</span><span class="p">(</span><span class="n">base_path</span><span class="o">=</span><span class="n">data_dir</span><span class="p">)</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">store</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="n">run_id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;No model found for run </span><span class="si">{</span><span class="n">run_id</span><span class="si">!r}</span><span class="s2">&quot;</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">StatefulModel</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;Kaggle export currently supports stateful (Elo) models only. &quot;</span>
+            <span class="s2">&quot;Stateless model export requires a feature server and is not yet implemented.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="n">repo</span> <span class="o">=</span> <span class="n">ParquetRepository</span><span class="p">(</span><span class="n">base_path</span><span class="o">=</span><span class="n">data_dir</span><span class="p">)</span>
+    <span class="n">games</span> <span class="o">=</span> <span class="n">repo</span><span class="o">.</span><span class="n">get_games</span><span class="p">(</span><span class="n">season</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">games</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;No games found for season </span><span class="si">{</span><span class="n">season</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="n">team_id_set</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">games</span><span class="p">:</span>
+        <span class="n">team_id_set</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">w_team_id</span><span class="p">)</span>
+        <span class="n">team_id_set</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">l_team_id</span><span class="p">)</span>
+    <span class="n">team_ids</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">team_id_set</span><span class="p">)</span>
+
+    <span class="n">provider</span> <span class="o">=</span> <span class="n">EloProvider</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+    <span class="n">context</span> <span class="o">=</span> <span class="n">MatchupContext</span><span class="p">(</span><span class="n">season</span><span class="o">=</span><span class="n">season</span><span class="p">,</span> <span class="n">day_num</span><span class="o">=</span><span class="n">KAGGLE_NEUTRAL_DAY_NUM</span><span class="p">,</span> <span class="n">is_neutral</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">prob_matrix</span> <span class="o">=</span> <span class="n">build_probability_matrix</span><span class="p">(</span><span class="n">provider</span><span class="p">,</span> <span class="n">team_ids</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">format_kaggle_submission</span><span class="p">(</span><span class="n">season</span><span class="p">,</span> <span class="n">team_ids</span><span class="p">,</span> <span class="n">prob_matrix</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="run_export">
+<a class="viewcode-back" href="../../../api/ncaa_eval.cli.export.html#ncaa_eval.cli.export.run_export">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">run_export</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">run_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">season</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">data_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">output</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">console</span><span class="p">:</span> <span class="n">Console</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load a model and produce a Kaggle submission CSV.</span>
+
+<span class="sd">    Thin CLI wrapper around ``build_kaggle_submission`` that handles</span>
+<span class="sd">    progress output and writing to a file or stdout.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        run_id: Model run identifier.</span>
+<span class="sd">        season: Tournament season year (e.g. 2025).</span>
+<span class="sd">        data_dir: Path to the local data directory.</span>
+<span class="sd">        output: File path to write the CSV. ``None`` means stdout.</span>
+<span class="sd">        console: Rich Console instance for status output.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The CSV string.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        FileNotFoundError: If the run or model cannot be loaded.</span>
+<span class="sd">        TypeError: If the model type is not supported for export.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">con</span> <span class="o">=</span> <span class="n">console</span> <span class="ow">or</span> <span class="n">Console</span><span class="p">()</span>
+    <span class="n">con</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Building Kaggle submission for season </span><span class="si">{</span><span class="n">season</span><span class="si">}</span><span class="s2">...&quot;</span><span class="p">)</span>
+
+    <span class="n">csv_str</span> <span class="o">=</span> <span class="n">build_kaggle_submission</span><span class="p">(</span><span class="n">run_id</span><span class="o">=</span><span class="n">run_id</span><span class="p">,</span> <span class="n">season</span><span class="o">=</span><span class="n">season</span><span class="p">,</span> <span class="n">data_dir</span><span class="o">=</span><span class="n">data_dir</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">output</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">output</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">csv_str</span><span class="p">)</span>
+        <span class="n">con</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[green]Kaggle submission written to </span><span class="si">{</span><span class="n">output</span><span class="si">}</span><span class="s2">[/green]&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Write raw CSV to stdout (no Rich formatting) so the output is</span>
+        <span class="c1"># pipe-safe: `ncaa_eval export ... | gzip &gt; submission.csv.gz`</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">csv_str</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">csv_str</span></div>
 
 </pre></div>
         </article>

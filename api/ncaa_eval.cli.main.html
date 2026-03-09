@@ -3,7 +3,7 @@
   <head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="ncaa_eval.cli.train module" href="ncaa_eval.cli.train.html"><link rel="prev" title="ncaa_eval.cli package" href="ncaa_eval.cli.html">
+<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="ncaa_eval.cli.train module" href="ncaa_eval.cli.train.html"><link rel="prev" title="ncaa_eval.cli.export module" href="ncaa_eval.cli.export.html">
 
     <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
         <title>ncaa_eval.cli.main module - ncaa_eval 0.9.0 documentation</title>
@@ -220,6 +220,7 @@
 <li class="toctree-l1 current has-children"><a class="reference internal" href="modules.html">ncaa_eval</a><input aria-label="Toggle navigation of ncaa_eval" checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
 <li class="toctree-l2 current has-children"><a class="reference internal" href="ncaa_eval.html">ncaa_eval package</a><input aria-label="Toggle navigation of ncaa_eval package" checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
 <li class="toctree-l3 current has-children"><a class="reference internal" href="ncaa_eval.cli.html">ncaa_eval.cli package</a><input aria-label="Toggle navigation of ncaa_eval.cli package" checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.cli.export.html">ncaa_eval.cli.export module</a></li>
 <li class="toctree-l4 current current-page"><a class="current reference internal" href="#">ncaa_eval.cli.main module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.cli.train.html">ncaa_eval.cli.train module</a></li>
 </ul>
@@ -227,6 +228,7 @@
 <li class="toctree-l3 has-children"><a class="reference internal" href="ncaa_eval.evaluation.html">ncaa_eval.evaluation package</a><input aria-label="Toggle navigation of ncaa_eval.evaluation package" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.backtest.html">ncaa_eval.evaluation.backtest module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.bracket.html">ncaa_eval.evaluation.bracket module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.kaggle_export.html">ncaa_eval.evaluation.kaggle_export module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html">ncaa_eval.evaluation.metrics module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.plotting.html">ncaa_eval.evaluation.plotting module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.providers.html">ncaa_eval.evaluation.providers module</a></li>
@@ -319,6 +321,15 @@
 <span id="ncaa-eval-cli-main-module"></span><h1>ncaa_eval.cli.main module<a class="headerlink" href="#module-ncaa_eval.cli.main" title="Link to this heading">¶</a></h1>
 <p>Typer CLI application for NCAA_eval training.</p>
 <dl class="py function">
+<dt class="sig sig-object py" id="ncaa_eval.cli.main.export">
+<span class="sig-prename descclassname"><span class="pre">ncaa_eval.cli.main.</span></span><span class="sig-name descname"><span class="pre">export</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">season</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/cli/main.html#export"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.cli.main.export" title="Link to this definition">¶</a></dt>
+<dd><p>Export model predictions as a Kaggle submission CSV.</p>
+<p>Generates a CSV with all pairwise matchup probabilities for men’s
+D1 teams in the target season, formatted for Kaggle March Machine
+Learning Mania competition submission.</p>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="ncaa_eval.cli.main.train">
 <span class="sig-prename descclassname"><span class="pre">ncaa_eval.cli.main.</span></span><span class="sig-name descname"><span class="pre">train</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_year</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_year</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">&lt;typer.models.OptionInfo</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/cli/main.html#train"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.cli.main.train" title="Link to this definition">¶</a></dt>
 <dd><p>Train a model on NCAA basketball data and persist run artifacts.</p>
@@ -343,14 +354,14 @@ validation), then delegates to <code class="docutils literal notranslate"><span 
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="ncaa_eval.cli.html">
+          <a class="prev-page" href="ncaa_eval.cli.export.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">ncaa_eval.cli package</div>
+                <div class="title">ncaa_eval.cli.export module</div>
                 
               </div>
             </a>
@@ -385,6 +396,7 @@ validation), then delegates to <code class="docutils literal notranslate"><span 
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">ncaa_eval.cli.main module</a><ul>
+<li><a class="reference internal" href="#ncaa_eval.cli.main.export"><code class="docutils literal notranslate"><span class="pre">export()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.cli.main.train"><code class="docutils literal notranslate"><span class="pre">train()</span></code></a></li>
 </ul>
 </li>

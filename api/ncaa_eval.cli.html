@@ -3,7 +3,7 @@
   <head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="ncaa_eval.cli.main module" href="ncaa_eval.cli.main.html"><link rel="prev" title="ncaa_eval package" href="ncaa_eval.html">
+<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="ncaa_eval.cli.export module" href="ncaa_eval.cli.export.html"><link rel="prev" title="ncaa_eval package" href="ncaa_eval.html">
 
     <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
         <title>ncaa_eval.cli package - ncaa_eval 0.9.0 documentation</title>
@@ -220,6 +220,7 @@
 <li class="toctree-l1 current has-children"><a class="reference internal" href="modules.html">ncaa_eval</a><input aria-label="Toggle navigation of ncaa_eval" checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
 <li class="toctree-l2 current has-children"><a class="reference internal" href="ncaa_eval.html">ncaa_eval package</a><input aria-label="Toggle navigation of ncaa_eval package" checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
 <li class="toctree-l3 current has-children current-page"><a class="current reference internal" href="#">ncaa_eval.cli package</a><input aria-label="Toggle navigation of ncaa_eval.cli package" checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.cli.export.html">ncaa_eval.cli.export module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.cli.main.html">ncaa_eval.cli.main module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.cli.train.html">ncaa_eval.cli.train module</a></li>
 </ul>
@@ -227,6 +228,7 @@
 <li class="toctree-l3 has-children"><a class="reference internal" href="ncaa_eval.evaluation.html">ncaa_eval.evaluation package</a><input aria-label="Toggle navigation of ncaa_eval.evaluation package" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.backtest.html">ncaa_eval.evaluation.backtest module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.bracket.html">ncaa_eval.evaluation.bracket module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.kaggle_export.html">ncaa_eval.evaluation.kaggle_export module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html">ncaa_eval.evaluation.metrics module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.plotting.html">ncaa_eval.evaluation.plotting module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.providers.html">ncaa_eval.evaluation.providers module</a></li>
@@ -321,7 +323,13 @@
 <h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">¶</a></h2>
 <div class="toctree-wrapper compound">
 <ul>
+<li class="toctree-l1"><a class="reference internal" href="ncaa_eval.cli.export.html">ncaa_eval.cli.export module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ncaa_eval.cli.export.html#ncaa_eval.cli.export.build_kaggle_submission"><code class="docutils literal notranslate"><span class="pre">build_kaggle_submission()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ncaa_eval.cli.export.html#ncaa_eval.cli.export.run_export"><code class="docutils literal notranslate"><span class="pre">run_export()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="ncaa_eval.cli.main.html">ncaa_eval.cli.main module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ncaa_eval.cli.main.html#ncaa_eval.cli.main.export"><code class="docutils literal notranslate"><span class="pre">export()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="ncaa_eval.cli.main.html#ncaa_eval.cli.main.train"><code class="docutils literal notranslate"><span class="pre">train()</span></code></a></li>
 </ul>
 </li>
@@ -343,12 +351,12 @@
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="ncaa_eval.cli.main.html">
+          <a class="next-page" href="ncaa_eval.cli.export.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">ncaa_eval.cli.main module</div>
+                <div class="title">ncaa_eval.cli.export module</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>

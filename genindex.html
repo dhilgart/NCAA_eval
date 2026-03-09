@@ -218,6 +218,7 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="api/modules.html">ncaa_eval</a><input aria-label="Toggle navigation of ncaa_eval" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l2 has-children"><a class="reference internal" href="api/ncaa_eval.html">ncaa_eval package</a><input aria-label="Toggle navigation of ncaa_eval package" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l3 has-children"><a class="reference internal" href="api/ncaa_eval.cli.html">ncaa_eval.cli package</a><input aria-label="Toggle navigation of ncaa_eval.cli package" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.cli.export.html">ncaa_eval.cli.export module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.cli.main.html">ncaa_eval.cli.main module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.cli.train.html">ncaa_eval.cli.train module</a></li>
 </ul>
@@ -225,6 +226,7 @@
 <li class="toctree-l3 has-children"><a class="reference internal" href="api/ncaa_eval.evaluation.html">ncaa_eval.evaluation package</a><input aria-label="Toggle navigation of ncaa_eval.evaluation package" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.evaluation.backtest.html">ncaa_eval.evaluation.backtest module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.evaluation.bracket.html">ncaa_eval.evaluation.bracket module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.evaluation.kaggle_export.html">ncaa_eval.evaluation.kaggle_export module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.evaluation.metrics.html">ncaa_eval.evaluation.metrics module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.evaluation.plotting.html">ncaa_eval.evaluation.plotting module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.evaluation.providers.html">ncaa_eval.evaluation.providers module</a></li>
@@ -426,14 +428,14 @@
           <li><a href="api/ncaa_eval.evaluation.html#id35">(ncaa_eval.evaluation.ReliabilityData attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.ReliabilityData.bin_edges">[1]</a>
 </li>
         </ul></li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="api/ncaa_eval.evaluation.simulation.html#id21">bracket_distributions (ncaa_eval.evaluation.simulation.SimulationResult attribute)</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.SimulationResult.bracket_distributions">[1]</a>
 
         <ul>
           <li><a href="api/ncaa_eval.evaluation.html#id40">(ncaa_eval.evaluation.SimulationResult attribute)</a>, <a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.SimulationResult.bracket_distributions">[1]</a>
 </li>
         </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.BracketDistribution">BracketDistribution (class in ncaa_eval.evaluation)</a>
 
         <ul>
@@ -476,6 +478,8 @@
           <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.GraphTransformer.build_graph">(ncaa_eval.transform.GraphTransformer method)</a>
 </li>
         </ul></li>
+        <li><a href="api/ncaa_eval.cli.export.html#ncaa_eval.cli.export.build_kaggle_submission">build_kaggle_submission() (in module ncaa_eval.cli.export)</a>
+</li>
         <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.build_probability_matrix">build_probability_matrix() (in module ncaa_eval.evaluation)</a>
 
         <ul>
@@ -910,6 +914,8 @@
           <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.EloFeatureEngine.expected_score">(ncaa_eval.transform.EloFeatureEngine static method)</a>
 </li>
         </ul></li>
+        <li><a href="api/ncaa_eval.cli.main.html#ncaa_eval.cli.main.export">export() (in module ncaa_eval.cli.main)</a>
+</li>
     </ul></td>
   </tr></table>
 </section>
@@ -1050,6 +1056,12 @@
 
         <ul>
           <li><a href="api/ncaa_eval.evaluation.backtest.html#ncaa_eval.evaluation.backtest.FoldResult">(class in ncaa_eval.evaluation.backtest)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.format_kaggle_submission">format_kaggle_submission() (in module ncaa_eval.evaluation)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.kaggle_export.html#ncaa_eval.evaluation.kaggle_export.format_kaggle_submission">(in module ncaa_eval.evaluation.kaggle_export)</a>
 </li>
         </ul></li>
         <li><a href="api/ncaa_eval.evaluation.metrics.html#id2">fraction_of_positives (ncaa_eval.evaluation.metrics.ReliabilityData attribute)</a>, <a href="api/ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.ReliabilityData.fraction_of_positives">[1]</a>
@@ -1674,8 +1686,6 @@
           <li><a href="api/ncaa_eval.model.xgboost_model.html#ncaa_eval.model.xgboost_model.XGBoostModelConfig.model_config">(ncaa_eval.model.xgboost_model.XGBoostModelConfig attribute)</a>
 </li>
         </ul></li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="api/ncaa_eval.model.base.html#ncaa_eval.model.base.ModelConfig.model_name">model_name (ncaa_eval.model.base.ModelConfig attribute)</a>
 
         <ul>
@@ -1688,6 +1698,8 @@
           <li><a href="api/ncaa_eval.model.xgboost_model.html#ncaa_eval.model.xgboost_model.XGBoostModelConfig.model_name">(ncaa_eval.model.xgboost_model.XGBoostModelConfig attribute)</a>
 </li>
         </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="api/ncaa_eval.model.tracking.html#ncaa_eval.model.tracking.ModelRun.model_type">model_type (ncaa_eval.model.tracking.ModelRun attribute)</a>
 </li>
         <li><a href="api/ncaa_eval.model.html#ncaa_eval.model.ModelConfig">ModelConfig (class in ncaa_eval.model)</a>
@@ -1708,6 +1720,8 @@
 </li>
           <li><a href="api/ncaa_eval.cli.html#module-ncaa_eval.cli">ncaa_eval.cli</a>
 </li>
+          <li><a href="api/ncaa_eval.cli.export.html#module-ncaa_eval.cli.export">ncaa_eval.cli.export</a>
+</li>
           <li><a href="api/ncaa_eval.cli.main.html#module-ncaa_eval.cli.main">ncaa_eval.cli.main</a>
 </li>
           <li><a href="api/ncaa_eval.cli.train.html#module-ncaa_eval.cli.train">ncaa_eval.cli.train</a>
@@ -1717,6 +1731,8 @@
           <li><a href="api/ncaa_eval.evaluation.backtest.html#module-ncaa_eval.evaluation.backtest">ncaa_eval.evaluation.backtest</a>
 </li>
           <li><a href="api/ncaa_eval.evaluation.bracket.html#module-ncaa_eval.evaluation.bracket">ncaa_eval.evaluation.bracket</a>
+</li>
+          <li><a href="api/ncaa_eval.evaluation.kaggle_export.html#module-ncaa_eval.evaluation.kaggle_export">ncaa_eval.evaluation.kaggle_export</a>
 </li>
           <li><a href="api/ncaa_eval.evaluation.metrics.html#module-ncaa_eval.evaluation.metrics">ncaa_eval.evaluation.metrics</a>
 </li>
@@ -1872,6 +1888,13 @@
 </li>
         </ul></li>
         <li>
+    ncaa_eval.cli.export
+
+        <ul>
+          <li><a href="api/ncaa_eval.cli.export.html#module-ncaa_eval.cli.export">module</a>
+</li>
+        </ul></li>
+        <li>
     ncaa_eval.cli.main
 
         <ul>
@@ -1904,6 +1927,13 @@
 
         <ul>
           <li><a href="api/ncaa_eval.evaluation.bracket.html#module-ncaa_eval.evaluation.bracket">module</a>
+</li>
+        </ul></li>
+        <li>
+    ncaa_eval.evaluation.kaggle_export
+
+        <ul>
+          <li><a href="api/ncaa_eval.evaluation.kaggle_export.html#module-ncaa_eval.evaluation.kaggle_export">module</a>
 </li>
         </ul></li>
         <li>
@@ -1969,6 +1999,8 @@
           <li><a href="api/ncaa_eval.ingest.connectors.base.html#module-ncaa_eval.ingest.connectors.base">module</a>
 </li>
         </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li>
     ncaa_eval.ingest.connectors.espn
 
@@ -1976,8 +2008,6 @@
           <li><a href="api/ncaa_eval.ingest.connectors.espn.html#module-ncaa_eval.ingest.connectors.espn">module</a>
 </li>
         </ul></li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li>
     ncaa_eval.ingest.connectors.kaggle
 
@@ -2488,6 +2518,8 @@
           <li><a href="api/ncaa_eval.transform.normalization.html#ncaa_eval.transform.normalization.MasseyOrdinalsStore.run_coverage_gate">(ncaa_eval.transform.normalization.MasseyOrdinalsStore method)</a>
 </li>
         </ul></li>
+        <li><a href="api/ncaa_eval.cli.export.html#ncaa_eval.cli.export.run_export">run_export() (in module ncaa_eval.cli.export)</a>
+</li>
         <li><a href="api/ncaa_eval.model.tracking.html#ncaa_eval.model.tracking.ModelRun.run_id">run_id (ncaa_eval.model.tracking.ModelRun attribute)</a>
 
         <ul>

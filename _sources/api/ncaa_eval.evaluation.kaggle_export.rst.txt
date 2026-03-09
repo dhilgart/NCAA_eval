@@ -1,0 +1,7 @@
+ncaa\_eval.evaluation.kaggle\_export module
+===========================================
+
+.. automodule:: ncaa_eval.evaluation.kaggle_export
+   :members:
+   :show-inheritance:
+   :undoc-members:
