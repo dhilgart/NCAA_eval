@@ -9,6 +9,7 @@ from ncaa_eval.evaluation.bracket import (
     MatchupContext,
     build_bracket,
 )
+from ncaa_eval.evaluation.kaggle_export import format_kaggle_submission
 from ncaa_eval.evaluation.metrics import (
     ReliabilityData,
     brier_score,
@@ -78,6 +79,7 @@ __all__ = [
     "FibonacciScoring",
     "FoldResult",
     "feature_cols",
+    "format_kaggle_submission",
     "MatchupContext",
     "MatrixProvider",
     "MostLikelyBracket",
