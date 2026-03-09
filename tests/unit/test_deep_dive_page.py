@@ -199,11 +199,13 @@ class TestFeatureImportance:
         ):
             _dd_mod._render_deep_dive()
 
-        # Verify plotly_chart was called and figure layout has Elo-specific title
+        # Verify plotly_chart was called and figure layout has Elo-specific title and axis
         assert mock_st.plotly_chart.call_count >= 2
         fig_calls = [call[0][0] for call in mock_st.plotly_chart.call_args_list]
         titles = [fig.layout.title.text for fig in fig_calls if hasattr(fig, "layout")]
         assert any("Team Elo Ratings" in (t or "") for t in titles)
+        xaxis_titles = [fig.layout.xaxis.title.text for fig in fig_calls if hasattr(fig, "layout")]
+        assert any("Rating" in (t or "") for t in xaxis_titles)
 
     def test_renders_chart_for_logistic_regression(self) -> None:
         """Story 9.3 AC#2: LogReg model shows '|Coefficient|' chart title."""
@@ -239,11 +241,13 @@ class TestFeatureImportance:
         ):
             _dd_mod._render_deep_dive()
 
-        # Verify figure layout has LogReg-specific title
+        # Verify figure layout has LogReg-specific title and axis label
         assert mock_st.plotly_chart.call_count >= 2
         fig_calls = [call[0][0] for call in mock_st.plotly_chart.call_args_list]
         titles = [fig.layout.title.text for fig in fig_calls if hasattr(fig, "layout")]
         assert any("Coefficient" in (t or "") for t in titles)
+        xaxis_titles = [fig.layout.xaxis.title.text for fig in fig_calls if hasattr(fig, "layout")]
+        assert any("Absolute Coefficient" in (t or "") for t in xaxis_titles)
 
     def test_shows_info_when_no_importances(self) -> None:
         mock_st = MagicMock()
