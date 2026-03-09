@@ -71,7 +71,6 @@ class FeatureConfig:
         matchup_deltas: Whether to compute team_A − team_B deltas for matchup features.
         gender_scope: ``"M"`` for men's, ``"W"`` for women's.
         dataset_scope: ``"kaggle"`` for Kaggle-only games, ``"all"`` for Kaggle + ESPN enrichment.
-        calibration_method: ``"isotonic"``, ``"sigmoid"``, or ``None`` to skip calibration.
     """
 
     sequential_windows: tuple[int, ...] = (5, 10, 20)
@@ -83,7 +82,6 @@ class FeatureConfig:
     matchup_deltas: bool = True
     gender_scope: GenderScope = field(default="M")
     dataset_scope: DatasetScope = field(default="kaggle")
-    calibration_method: CalibrationMethod | None = "isotonic"
     elo_enabled: bool = False
     elo_config: EloConfig | None = field(default=None)
 

@@ -14,6 +14,7 @@ from ncaa_eval.model import get_model, list_models
 from ncaa_eval.model.base import StatefulModel
 from ncaa_eval.model.elo import EloModel, EloModelConfig
 from ncaa_eval.transform.elo import EloFeatureEngine
+from ncaa_eval.transform.feature_serving import FeatureConfig
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -554,3 +555,78 @@ class TestGetConfig:
         cfg = model.get_config()
         assert cfg.model_name == "elo"
         assert cfg.initial_rating == 1500.0
+
+
+# ---------------------------------------------------------------------------
+# Story 9.2: feature_config as model-level concern
+# ---------------------------------------------------------------------------
+
+
+class TestFeatureConfig:
+    """Story 9.2: EloModel sets minimal FeatureConfig with elo_enabled."""
+
+    def test_feature_config_present(self) -> None:
+        """AC1: EloModel exposes feature_config attribute."""
+        model = EloModel()
+        assert isinstance(model.feature_config, FeatureConfig)
+
+    def test_elo_enabled_true(self) -> None:
+        """AC8: Elo feature_config has elo_enabled=True."""
+        model = EloModel()
+        assert model.feature_config.elo_enabled is True
+
+    def test_minimal_feature_set(self) -> None:
+        """AC8: Elo feature_config has no batch ratings, graph, or ordinals."""
+        model = EloModel()
+        fc = model.feature_config
+        assert fc.sequential_windows == ()
+        assert fc.batch_rating_types == ()
+        assert fc.graph_features_enabled is False
+        assert fc.ordinal_composite is None
+
+    def test_elo_config_matches_model_config(self) -> None:
+        """AC8: feature_config.elo_config matches the model's EloModelConfig."""
+        cfg = EloModelConfig(k_early=40.0, initial_rating=1600.0)
+        model = EloModel(cfg)
+        assert model.feature_config.elo_config is not None
+        assert model.feature_config.elo_config.k_early == 40.0
+        assert model.feature_config.elo_config.initial_rating == 1600.0
+
+
+class TestFeatureConfigSaveLoad:
+    """Story 9.2: feature_config sidecar serialization for EloModel."""
+
+    def test_save_writes_feature_config_json(self, tmp_path: Path) -> None:
+        """AC4: save() writes feature_config.json sidecar."""
+        model = EloModel()
+        model._engine.set_ratings({1: 1550.0})
+        model._engine.set_game_counts({1: 5})
+        save_dir = tmp_path / "elo_model"
+        model.save(save_dir)
+        assert (save_dir / "feature_config.json").exists()
+        data = json.loads((save_dir / "feature_config.json").read_text())
+        assert data["elo_enabled"] is True
+
+    def test_load_reads_feature_config(self, tmp_path: Path) -> None:
+        """AC5: load() reconstructs FeatureConfig from sidecar."""
+        model = EloModel()
+        model._engine.set_ratings({1: 1550.0})
+        model._engine.set_game_counts({1: 5})
+        save_dir = tmp_path / "elo_model"
+        model.save(save_dir)
+
+        loaded = EloModel.load(save_dir)
+        assert loaded.feature_config.elo_enabled is True
+        assert loaded.feature_config.batch_rating_types == ()
+
+    def test_load_without_sidecar_uses_defaults(self, tmp_path: Path) -> None:
+        """AC5 backward compat: load() without sidecar keeps defaults."""
+        model = EloModel()
+        model._engine.set_ratings({1: 1550.0})
+        model._engine.set_game_counts({1: 5})
+        save_dir = tmp_path / "elo_model"
+        model.save(save_dir)
+        (save_dir / "feature_config.json").unlink()
+
+        loaded = EloModel.load(save_dir)
+        assert loaded.feature_config.elo_enabled is True

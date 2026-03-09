@@ -1,6 +1,6 @@
 # Story 9.2: Feature Config as Model-Level Concern
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -48,58 +48,57 @@ so that **my model always receives inputs in the correct format, I can experimen
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Relocate `calibration_method` from `FeatureConfig` to `ModelConfig` (AC: #7)
-  - [ ] 1.1 Remove `calibration_method` field from `FeatureConfig` in `src/ncaa_eval/transform/feature_serving.py`
-  - [ ] 1.2 Remove `CalibrationMethod` import/export from `FeatureConfig` if it becomes unused there (keep type alias in transform module if still needed elsewhere)
-  - [ ] 1.3 Add `calibration_method: CalibrationMethod | None = None` field to `ModelConfig` in `src/ncaa_eval/model/base.py`
-  - [ ] 1.4 Update any code that reads `FeatureConfig.calibration_method` to read from `ModelConfig` instead
-  - [ ] 1.5 Update tests that construct `FeatureConfig` with `calibration_method` kwarg
-  - [ ] 1.6 Update `__init__.py` exports if `CalibrationMethod` needs to be exported from `model` module
+- [x] Task 1: Relocate `calibration_method` from `FeatureConfig` to `ModelConfig` (AC: #7)
+  - [x] 1.1 Remove `calibration_method` field from `FeatureConfig` in `src/ncaa_eval/transform/feature_serving.py`
+  - [x] 1.2 Keep `CalibrationMethod` type alias in transform module (still needed for `ModelConfig`)
+  - [x] 1.3 Add `calibration_method: CalibrationMethod | None = None` field to `ModelConfig` in `src/ncaa_eval/model/base.py`
+  - [x] 1.4 No code reads `FeatureConfig.calibration_method` — field was vestigial
+  - [x] 1.5 Update tests that construct `FeatureConfig` with `calibration_method` kwarg
+  - [x] 1.6 `CalibrationMethod` imported from `feature_serving` into `base.py`
 
-- [ ] Task 2: Add `feature_config` attribute to `Model` ABC (AC: #1)
-  - [ ] 2.1 Add `feature_config: FeatureConfig` as a declared attribute on `Model` base class (not abstract — subclasses set it in `__init__`)
-  - [ ] 2.2 Add `FeatureConfig` import to `src/ncaa_eval/model/base.py`
+- [x] Task 2: Add `feature_config` attribute to `Model` ABC (AC: #1)
+  - [x] 2.1 Add `feature_config: FeatureConfig` as a declared attribute on `Model` base class
+  - [x] 2.2 Add `FeatureConfig` import to `src/ncaa_eval/model/base.py`
 
-- [ ] Task 3: Add `feature_names_` convention to stateless models (AC: #6)
-  - [ ] 3.1 `XGBoostModel` already stores `self._feature_names: list[str]` — rename to public `feature_names_` (sklearn convention) and set it in `fit()`
-  - [ ] 3.2 `LogisticRegressionModel` — add `self.feature_names_: list[str] = []` init, set in `fit()`
+- [x] Task 3: Add `feature_names_` convention to stateless models (AC: #6)
+  - [x] 3.1 `XGBoostModel`: renamed `self._feature_names` → `self.feature_names_` (sklearn convention)
+  - [x] 3.2 `LogisticRegressionModel`: added `self.feature_names_: list[str] = []` init, set in `fit()`
 
-- [ ] Task 4: Refactor `XGBoostModel.__init__` to accept feature kwargs (AC: #1, #2)
-  - [ ] 4.1 Add feature-relevant kwargs: `batch_rating_types`, `graph_features_enabled`, `ordinal_composite`, `sequential_windows`, `elo_enabled` etc. with defaults matching current `_setup_feature_server()` defaults
-  - [ ] 4.2 Construct `self.feature_config = FeatureConfig(...)` from those kwargs
-  - [ ] 4.3 Keep existing `config: XGBoostModelConfig | None` parameter for hyperparams
+- [x] Task 4: Refactor `XGBoostModel.__init__` to accept feature kwargs (AC: #1, #2)
+  - [x] 4.1 Added keyword-only args: `batch_rating_types`, `graph_features_enabled`, `ordinal_composite` with defaults matching current hardcoded values
+  - [x] 4.2 Construct `self.feature_config = FeatureConfig(...)` from those kwargs
+  - [x] 4.3 Keep existing `config: XGBoostModelConfig | None` parameter for hyperparams
 
-- [ ] Task 5: Refactor `EloModel.__init__` to set minimal `feature_config` (AC: #8)
-  - [ ] 5.1 Set `self.feature_config = FeatureConfig(sequential_windows=(), graph_features_enabled=False, batch_rating_types=(), ordinal_composite=None, elo_enabled=True, elo_config=...)` in `__init__`
+- [x] Task 5: Refactor `EloModel.__init__` to set minimal `feature_config` (AC: #8)
+  - [x] 5.1 Set `self.feature_config = FeatureConfig(sequential_windows=(), graph_features_enabled=False, batch_rating_types=(), ordinal_composite=None, elo_enabled=True, elo_config=...)`
 
-- [ ] Task 6: Refactor `LogisticRegressionModel.__init__` to accept feature kwargs (AC: #1, #2)
-  - [ ] 6.1 Same pattern as XGBoostModel — accept feature kwargs, construct `FeatureConfig`
+- [x] Task 6: Refactor `LogisticRegressionModel.__init__` to accept feature kwargs (AC: #1, #2)
+  - [x] 6.1 Same pattern as XGBoostModel — accept feature kwargs, construct `FeatureConfig`
 
-- [ ] Task 7: Serialize `feature_config` in `save()` / `load()` (AC: #4, #5)
-  - [ ] 7.1 `XGBoostModel.save()` — write `feature_config.json` sidecar via `dataclasses.asdict()` + `json.dumps()`
-  - [ ] 7.2 `XGBoostModel.load()` — read sidecar and reconstruct `FeatureConfig`
-  - [ ] 7.3 `EloModel.save()` — same sidecar pattern
-  - [ ] 7.4 `EloModel.load()` — same reconstruction
-  - [ ] 7.5 `LogisticRegressionModel.save()` / `.load()` — same pattern
-  - [ ] 7.6 Handle backward compatibility: if `feature_config.json` is missing on `load()`, use the model's default `FeatureConfig`
+- [x] Task 7: Serialize `feature_config` in `save()` / `load()` (AC: #4, #5)
+  - [x] 7.1 Created shared `_feature_config_io.py` helper (DRY — avoids triplicating logic)
+  - [x] 7.2 `XGBoostModel.save()` / `.load()` — uses shared helpers
+  - [x] 7.3 `EloModel.save()` / `.load()` — uses shared helpers
+  - [x] 7.4 `LogisticRegressionModel.save()` / `.load()` — uses shared helpers
+  - [x] 7.5 Backward compatibility: if `feature_config.json` is missing on `load()`, default `FeatureConfig` preserved
 
-- [ ] Task 8: Refactor `_setup_feature_server()` and `run_training()` (AC: #3, #9)
-  - [ ] 8.1 Change `_setup_feature_server(data_dir)` → `_setup_feature_server(data_dir, feature_config)` — accept `FeatureConfig` parameter
-  - [ ] 8.2 In `run_training()`, read `model.feature_config` and pass to `_setup_feature_server(data_dir, model.feature_config)`
-  - [ ] 8.3 Verify CLI `ncaa-eval train` still works unchanged (models carry their own default configs)
+- [x] Task 8: Refactor `_setup_feature_server()` and `run_training()` (AC: #3, #9)
+  - [x] 8.1 Changed `_setup_feature_server(data_dir)` → `_setup_feature_server(data_dir, feature_config)`
+  - [x] 8.2 `run_training()` reads `model.feature_config` and passes to `_setup_feature_server()`
+  - [x] 8.3 CLI behavior unchanged — models carry default configs matching previous hardcoded values
 
-- [ ] Task 9: Update tests (all ACs)
-  - [ ] 9.1 Update existing model unit tests for new `feature_config` attribute
-  - [ ] 9.2 Add tests: model instantiation → `feature_config` present with correct values
-  - [ ] 9.3 Add tests: custom feature kwargs → `FeatureConfig` reflects overrides
-  - [ ] 9.4 Add tests: `save()` writes `feature_config.json`, `load()` reads it back
-  - [ ] 9.5 Add tests: backward compat — `load()` without sidecar uses defaults
-  - [ ] 9.6 Add tests: `feature_names_` set after `fit()` on stateless models
-  - [ ] 9.7 Add tests: `calibration_method` on `ModelConfig`, not on `FeatureConfig`
-  - [ ] 9.8 Update training pipeline tests for new `_setup_feature_server` signature
-  - [ ] 9.9 Run full test suite: `pytest`
-  - [ ] 9.10 Run type checks: `mypy --strict src/ncaa_eval tests`
-  - [ ] 9.11 Run linter: `ruff check .`
+- [x] Task 9: Update tests (all ACs)
+  - [x] 9.1 Updated existing model unit tests for new `feature_config` attribute
+  - [x] 9.2 Added tests: model instantiation → `feature_config` present with correct values (all 3 models)
+  - [x] 9.3 Added tests: custom feature kwargs → `FeatureConfig` reflects overrides (XGBoost, LogReg)
+  - [x] 9.4 Added tests: `save()` writes `feature_config.json`, `load()` reads it back (all 3 models)
+  - [x] 9.5 Added tests: backward compat — `load()` without sidecar uses defaults (all 3 models)
+  - [x] 9.6 Added tests: `feature_names_` set after `fit()` on stateless models (XGBoost, LogReg)
+  - [x] 9.7 Updated test: `calibration_method` on `ModelConfig`, not on `FeatureConfig`
+  - [x] 9.8 Training pipeline tests pass with new `_setup_feature_server` signature (existing CLI tests cover AC #9)
+  - [x] 9.9 Full test suite: 964 passed, 1 failed (check-manifest — expected, new file not in VCS), 1 skipped
+  - [x] 9.10 Type checks: `mypy --strict` passes on all 94 source files
+  - [x] 9.11 Linter: `ruff check .` passes
 
 ## Dev Notes
 
@@ -243,10 +242,52 @@ Recent commits show the project is stable on main with all epics 1-8 done and 9.
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+- `instance._feature_names` in `xgboost_model.py` `load()` wasn't caught by `replace_all` (only matched `self.` prefix) — required manual fix
+- `dict[str, object]` type on `_feature_config_io.py:_deserialize_feature_config` caused mypy `arg-type` error on `tuple(data[key])` — fixed by using `dict[str, Any]`
+
 ### Completion Notes List
 
+- Created shared `_feature_config_io.py` helper module to avoid triplicating FeatureConfig serialization logic across 3 model classes (DRY principle from Story 9.1 review learnings)
+- `CalibrationMethod` type alias stays in `feature_serving.py` (still importable from transform layer) — only the field was relocated to `ModelConfig`
+- `FeatureConfig` is a frozen dataclass with nested `EloConfig` — deserialization pops `elo_config` and reconstructs it separately, converts list→tuple for frozen fields
+- Backward compatibility: all 3 model `load()` methods gracefully handle missing `feature_config.json` by keeping the model's constructor-default `FeatureConfig`
+- No circular imports: `base.py` imports from `feature_serving.py` (confirmed at runtime)
+- Test count: 964 passed (up from 946 baseline), +18 new tests for Story 9.2
+
+### Change Log
+
+- `src/ncaa_eval/transform/feature_serving.py` — Removed `calibration_method` field from `FeatureConfig`
+- `src/ncaa_eval/model/base.py` — Added `feature_config: FeatureConfig` to `Model` ABC, added `calibration_method` to `ModelConfig`
+- `src/ncaa_eval/model/_feature_config_io.py` — **NEW** shared FeatureConfig serialization helpers
+- `src/ncaa_eval/model/xgboost_model.py` — Added feature kwargs, `feature_config`, renamed `_feature_names` → `feature_names_`, sidecar save/load
+- `src/ncaa_eval/model/elo.py` — Added minimal `feature_config` (elo_enabled=True), sidecar save/load
+- `src/ncaa_eval/model/logistic_regression.py` — Added feature kwargs, `feature_config`, `feature_names_`, sidecar save/load
+- `src/ncaa_eval/cli/train.py` — Refactored `_setup_feature_server()` to accept `FeatureConfig` parameter from model
+- `tests/unit/test_feature_serving.py` — Removed `calibration_method` references, updated test to use `ModelConfig`
+- `tests/unit/test_model_xgboost.py` — Added `TestFeatureConfig` (3 tests), `TestFeatureConfigSaveLoad` (3 tests)
+- `tests/unit/test_model_elo.py` — Added `TestFeatureConfig` (4 tests), `TestFeatureConfigSaveLoad` (3 tests)
+- `tests/unit/test_model_logistic_regression.py` — Added `TestFeatureConfig` (3 tests), `TestFeatureConfigSaveLoad` (4 tests)
+- `tests/integration/test_feature_serving_integration.py` — Removed `calibration_method=None` kwargs
+- `tests/integration/test_elo_integration.py` — Removed `calibration_method=None` kwargs
+
 ### File List
+
+- `src/ncaa_eval/transform/feature_serving.py`
+- `src/ncaa_eval/model/base.py`
+- `src/ncaa_eval/model/_feature_config_io.py` (new)
+- `src/ncaa_eval/model/xgboost_model.py`
+- `src/ncaa_eval/model/elo.py`
+- `src/ncaa_eval/model/logistic_regression.py`
+- `src/ncaa_eval/cli/train.py`
+- `tests/unit/test_feature_serving.py`
+- `tests/unit/test_model_xgboost.py`
+- `tests/unit/test_model_elo.py`
+- `tests/unit/test_model_logistic_regression.py`
+- `tests/integration/test_feature_serving_integration.py`
+- `tests/integration/test_elo_integration.py`
+- `_bmad-output/implementation-artifacts/9-2-feature-config-as-model-level-concern.md`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml`

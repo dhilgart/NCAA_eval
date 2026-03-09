@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import numpy as np
@@ -11,6 +12,7 @@ from hypothesis import given, settings, strategies as st
 
 from ncaa_eval.model import get_model, list_models
 from ncaa_eval.model.xgboost_model import XGBoostModel, XGBoostModelConfig
+from ncaa_eval.transform.feature_serving import FeatureConfig
 
 
 def _make_train_data(n: int = 200, seed: int = 42) -> tuple[pd.DataFrame, pd.Series]:
@@ -342,3 +344,82 @@ class TestEarlyStopping:
         assert best_iteration < 500, (
             f"Expected early stopping before 500 iterations, got best_iteration={best_iteration}"
         )
+
+
+# -----------------------------------------------------------------------
+# Story 9.2: Feature config and feature_names_ tests
+# -----------------------------------------------------------------------
+
+
+class TestFeatureConfig:
+    """Story 9.2: feature_config attribute on XGBoostModel."""
+
+    def test_default_feature_config(self) -> None:
+        """AC1: Model exposes feature_config derived from constructor kwargs."""
+        model = XGBoostModel()
+        assert isinstance(model.feature_config, FeatureConfig)
+        assert model.feature_config.batch_rating_types == ("srs",)
+        assert model.feature_config.graph_features_enabled is False
+        assert model.feature_config.ordinal_composite is None
+
+    def test_custom_feature_kwargs(self) -> None:
+        """AC2: Feature-relevant kwargs threaded into FeatureConfig."""
+        model = XGBoostModel(
+            batch_rating_types=("srs", "ridge"),
+            graph_features_enabled=True,
+            ordinal_composite="simple_average",
+        )
+        assert model.feature_config.batch_rating_types == ("srs", "ridge")
+        assert model.feature_config.graph_features_enabled is True
+        assert model.feature_config.ordinal_composite == "simple_average"
+
+    def test_feature_names_set_after_fit(self) -> None:
+        """AC6: feature_names_ contains ordered list of feature columns after fit."""
+        X, y = _make_train_data()
+        model = XGBoostModel(XGBoostModelConfig(n_estimators=5, early_stopping_rounds=2))
+        assert model.feature_names_ == []
+        model.fit(X, y)
+        assert model.feature_names_ == ["feat_a", "feat_b"]
+
+
+class TestFeatureConfigSaveLoad:
+    """Story 9.2: feature_config sidecar serialization."""
+
+    def test_save_writes_feature_config_json(self, tmp_path: Path) -> None:
+        """AC4: save() writes feature_config.json sidecar."""
+        X, y = _make_train_data()
+        model = XGBoostModel(XGBoostModelConfig(n_estimators=5, early_stopping_rounds=2))
+        model.fit(X, y)
+        save_dir = tmp_path / "xgb_model"
+        model.save(save_dir)
+        assert (save_dir / "feature_config.json").exists()
+        data = json.loads((save_dir / "feature_config.json").read_text())
+        assert data["batch_rating_types"] == ["srs"]
+
+    def test_load_reads_feature_config(self, tmp_path: Path) -> None:
+        """AC5: load() reconstructs FeatureConfig from sidecar."""
+        X, y = _make_train_data()
+        model = XGBoostModel(
+            XGBoostModelConfig(n_estimators=5, early_stopping_rounds=2),
+            batch_rating_types=("srs", "ridge"),
+        )
+        model.fit(X, y)
+        save_dir = tmp_path / "xgb_model"
+        model.save(save_dir)
+
+        loaded = XGBoostModel.load(save_dir)
+        assert loaded.feature_config.batch_rating_types == ("srs", "ridge")
+
+    def test_load_without_sidecar_uses_defaults(self, tmp_path: Path) -> None:
+        """AC5 backward compat: load() without sidecar uses default FeatureConfig."""
+        X, y = _make_train_data()
+        model = XGBoostModel(XGBoostModelConfig(n_estimators=5, early_stopping_rounds=2))
+        model.fit(X, y)
+        save_dir = tmp_path / "xgb_model"
+        model.save(save_dir)
+        # Remove sidecar to simulate old artifact
+        (save_dir / "feature_config.json").unlink()
+
+        loaded = XGBoostModel.load(save_dir)
+        # Should use default FeatureConfig (from constructor defaults)
+        assert loaded.feature_config.batch_rating_types == ("srs",)

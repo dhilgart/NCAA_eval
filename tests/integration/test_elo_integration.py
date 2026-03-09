@@ -64,7 +64,6 @@ def _elo_feature_config() -> FeatureConfig:
         batch_rating_types=(),
         ordinal_composite=None,
         matchup_deltas=True,
-        calibration_method=None,
         elo_enabled=True,
     )
 
@@ -273,7 +272,6 @@ class TestEloFeatureServingRoundTrip:
             batch_rating_types=(),
             ordinal_composite=None,
             matchup_deltas=True,
-            calibration_method=None,
             elo_enabled=False,
         )
         server = StatefulFeatureServer(config=cfg, data_server=ds)

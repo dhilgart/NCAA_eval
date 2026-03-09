@@ -14,9 +14,11 @@ from pathlib import Path
 from typing import Any, Literal, Self
 
 from ncaa_eval.ingest.schema import Game
+from ncaa_eval.model._feature_config_io import load_feature_config, save_feature_config
 from ncaa_eval.model.base import ModelConfig, StatefulModel
 from ncaa_eval.model.registry import register_model
 from ncaa_eval.transform.elo import EloConfig, EloFeatureEngine
+from ncaa_eval.transform.feature_serving import FeatureConfig
 
 
 class EloModelConfig(ModelConfig):
@@ -50,6 +52,14 @@ class EloModel(StatefulModel):
         """
         self._config = config or EloModelConfig()
         self._engine = EloFeatureEngine(self._to_elo_config(self._config))
+        self.feature_config = FeatureConfig(
+            sequential_windows=(),
+            graph_features_enabled=False,
+            batch_rating_types=(),
+            ordinal_composite=None,
+            elo_enabled=True,
+            elo_config=self._to_elo_config(self._config),
+        )
 
     # ------------------------------------------------------------------
     # StatefulModel abstract hooks
@@ -122,11 +132,12 @@ class EloModel(StatefulModel):
     # ------------------------------------------------------------------
 
     def save(self, path: Path) -> None:
-        """JSON-dump config and state to *path* directory.
+        """JSON-dump config, state, and feature config to *path* directory.
 
         Creates the output directory, JSON-dumps the Pydantic config, then
         JSON-dumps the state dict (ratings and game counts) after coercing
-        numeric keys to strings for JSON compatibility.
+        numeric keys to strings for JSON compatibility.  Also writes the
+        ``feature_config.json`` sidecar.
         """
         path.mkdir(parents=True, exist_ok=True)
         (path / "config.json").write_text(self._config.model_dump_json())
@@ -137,6 +148,7 @@ class EloModel(StatefulModel):
             "game_counts": {str(k): v for k, v in state["game_counts"].items()},
         }
         (path / "state.json").write_text(json.dumps(serialisable))
+        save_feature_config(self.feature_config, path)
 
     @classmethod
     def load(cls, path: Path) -> Self:
@@ -162,6 +174,9 @@ class EloModel(StatefulModel):
             "game_counts": {int(k): v for k, v in raw["game_counts"].items()},
         }
         instance.set_state(state)
+        loaded_fc = load_feature_config(path)
+        if loaded_fc is not None:
+            instance.feature_config = loaded_fc
         return instance
 
     # ------------------------------------------------------------------
