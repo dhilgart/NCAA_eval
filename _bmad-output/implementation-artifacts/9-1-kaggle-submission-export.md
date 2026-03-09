@@ -1,6 +1,6 @@
 # Story 9.1: Kaggle Submission Export
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -30,26 +30,26 @@ The epic states "2,278 possible team matchups" — this is incorrect. The Kaggle
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Core export function (AC: #1, #2, #3, #4, #5)
-  - [ ] 1.1 Create `src/ncaa_eval/evaluation/kaggle_export.py` with pure function `format_kaggle_submission(season, team_ids, prob_matrix) -> str`
-  - [ ] 1.2 Generate all C(n,2) pairwise `YYYY_LowerID_HigherID` rows
-  - [ ] 1.3 Look up P(lower_id beats higher_id) from the probability matrix
-  - [ ] 1.4 Return CSV string with header `ID,Pred`
+- [x] Task 1: Core export function (AC: #1, #2, #3, #4, #5)
+  - [x] 1.1 Create `src/ncaa_eval/evaluation/kaggle_export.py` with pure function `format_kaggle_submission(season, team_ids, prob_matrix) -> str`
+  - [x] 1.2 Generate all C(n,2) pairwise `YYYY_LowerID_HigherID` rows
+  - [x] 1.3 Look up P(lower_id beats higher_id) from the probability matrix
+  - [x] 1.4 Return CSV string with header `ID,Pred`
 
-- [ ] Task 2: CLI command (AC: #6)
-  - [ ] 2.1 Add `export` command to `src/ncaa_eval/cli/main.py` via Typer
-  - [ ] 2.2 Options: `--run-id` (required), `--season` (required), `--data-dir`, `--output` (default stdout)
-  - [ ] 2.3 Load model from `RunStore`, build probability matrix, call `format_kaggle_submission`, write output
+- [x] Task 2: CLI command (AC: #6)
+  - [x] 2.1 Add `export` command to `src/ncaa_eval/cli/main.py` via Typer
+  - [x] 2.2 Options: `--run-id` (required), `--season` (required), `--data-dir`, `--output` (default stdout)
+  - [x] 2.3 Load model from `RunStore`, build probability matrix, call `format_kaggle_submission`, write output
 
-- [ ] Task 3: Dashboard integration (AC: #6)
-  - [ ] 3.1 Add "Export Kaggle Submission" `st.download_button` to `dashboard/pages/2_Presentation.py`
-  - [ ] 3.2 Wire button to `format_kaggle_submission` using the existing `sim_data.prob_matrix` and bracket team data
+- [x] Task 3: Dashboard integration (AC: #6)
+  - [x] 3.1 Add "Export Kaggle Submission" `st.download_button` to `dashboard/pages/2_Presentation.py`
+  - [x] 3.2 Wire button to `format_kaggle_submission` using full all-team probability matrix (not 64-team bracket)
 
-- [ ] Task 4: Unit tests (AC: all)
-  - [ ] 4.1 Test `format_kaggle_submission` with a small synthetic matrix (e.g., 4 teams → 6 rows)
-  - [ ] 4.2 Verify CSV header, ID format (lower ID first), probability values, row count = C(n,2)
-  - [ ] 4.3 Test CLI `export` command end-to-end (mock RunStore)
-  - [ ] 4.4 Test edge case: team ID ordering correctness for all pairs
+- [x] Task 4: Unit tests (AC: all)
+  - [x] 4.1 Test `format_kaggle_submission` with a small synthetic matrix (e.g., 4 teams → 6 rows)
+  - [x] 4.2 Verify CSV header, ID format (lower ID first), probability values, row count = C(n,2)
+  - [x] 4.3 Test CLI `export` command end-to-end (mock RunStore)
+  - [x] 4.4 Test edge case: team ID ordering correctness for all pairs
 
 ## Dev Notes
 
@@ -170,8 +170,30 @@ The heavy lifting (model loading, matrix building) should be in a separate orche
 
 ### Agent Model Used
 
+Claude Opus 4.6
+
 ### Debug Log References
+
+- Pre-commit ruff-format auto-fixed formatting in test file on first commit attempt (resolved by re-staging)
 
 ### Completion Notes List
 
+- **Task 1:** Created pure function `format_kaggle_submission()` in `src/ncaa_eval/evaluation/kaggle_export.py`. Uses `itertools.combinations` on sorted team IDs to emit all C(n,2) pairs in Kaggle `YYYY_LowerID_HigherID` format. Matrix shape validation included. Exported via `__init__.py`.
+- **Task 2:** Created `src/ncaa_eval/cli/export.py` with `run_export()` orchestration function. Added `export` command to `main.py` with `--run-id`, `--season`, `--data-dir`, `--output` options. Supports Elo (stateful) models; stateless models raise a clear error with guidance. Collects all team IDs from season games via `ParquetRepository.get_games()`.
+- **Task 3:** Added "Export Kaggle Submission" download button to `dashboard/pages/2_Presentation.py`. Builds full probability matrix for all ~364 teams (option 2 per Dev Notes recommendation). Uses `@st.cache_data` with `show_spinner` for UX feedback. Gracefully shows info message for non-Elo models.
+- **Task 4:** 9 unit tests for `format_kaggle_submission` (header, row count, ID format, probability values, valid range, complementarity, unsorted IDs, shape mismatch, 2-team edge case). 4 CLI tests (writes CSV, no model error, stateless model error, stdout output).
+- Full test suite: 944 passed, 1 skipped, 0 failures. mypy --strict and ruff clean.
+
 ### File List
+
+- `src/ncaa_eval/evaluation/kaggle_export.py` (new) — Core pure export function
+- `src/ncaa_eval/evaluation/__init__.py` (modified) — Added `format_kaggle_submission` export
+- `src/ncaa_eval/cli/export.py` (new) — CLI export orchestration
+- `src/ncaa_eval/cli/main.py` (modified) — Added `export` Typer command
+- `dashboard/pages/2_Presentation.py` (modified) — Added Kaggle download button
+- `tests/unit/test_kaggle_export.py` (new) — Unit tests for export function
+- `tests/unit/test_cli_export.py` (new) — CLI export command tests
+
+## Change Log
+
+- 2026-03-09: Implemented Kaggle submission export (CLI + dashboard). Pure function generates C(n,2) pairwise matchup CSV in Kaggle format. CLI `export` command supports Elo models. Dashboard button builds full all-team probability matrix.
