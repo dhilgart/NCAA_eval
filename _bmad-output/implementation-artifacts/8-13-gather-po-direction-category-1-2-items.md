@@ -1,6 +1,6 @@
 # Story 8.13: Gather PO Direction on Category 1 & 2 Items
 
-Status: review
+Status: done
 
 ## Story
 
@@ -305,28 +305,29 @@ N/A — no production code changes; planning artifacts only.
 ### Completion Notes List
 
 - All three audit reports reviewed in full (Pass 1: 85+ issues, Pass 2: +8 net, Pass 3: +22 net = 99 total)
-- **Category 1 decisions (16 items):** 3 Implement, 4 Accept-as-is, 9 Defer
-- **Category 2 decisions (24 items):** 2 Fix, 12 Accept-as-is, 8 Defer, 2 Already Resolved
-- **PO Decision Log** created at `_bmad-output/planning-artifacts/po-decision-log-epic8.md` with full rationale for each decision
-- **Epic 10: Audit-Driven Enhancements** created in `epics.md` with 5 stories:
-  - 10.1 Kaggle Submission Export (from audit 1.3)
-  - 10.2 Feature Config CLI Option (from audit 1.6)
-  - 10.3 Feature Importance for All Models (from audit 1.15)
-  - 10.4 Fix Public API Documentation (from audit 2.18)
-  - 10.5 Post-Sync Data Validation (from audit 2.20)
-- **Sprint status** updated with Epic 10 and 5 new stories (all `backlog`)
-- **Post-MVP Backlog** expanded with 7 new deferred items (2.12, 2.14, 2.17, 2.21, P2-5, P2-6, plus P3-17 tutorial clarification) following established format from Story 8.12; Cat-3 item 1.8 Fibonacci label was initially added to backlog but removed — Story 8.6 already fixed this (registered `display_name="Fibonacci (2-3-5-8-13-21)"` via `@register_scoring`)
-- Promoted item (1.3 Kaggle Export → Epic 10 Story 10.1) removed from Post-MVP Backlog to avoid duplication
-- Items already resolved identified: 2.11 (Story 8.3), 2.19 (Story 8.4)
+- **Category 1 decisions (16 items):** 6 Implement (1.1, 1.2, 1.3, 1.6, 1.11, 1.15 + P3-17 partial), 4 Accept-as-is (1.7, 1.8 label-only fix, 1.13, 1.14-equiv), 5 Defer (1.4, 1.5, 1.9, 1.10, 1.12); P3-17 Custom (metric registry only)
+- **Category 2 decisions (24 items):** 2 Fix stories created (9.4, 9.5), 21 marked "S — skip" for Story 9.6 review, 1 already resolved (2.11)
+- **PO Decision Log** at `_bmad-output/planning-artifacts/po-decision-log-epic8.md` with 38 explicit PO Decision entries and full decision framework per item
+- **Epic restructure** (PO session 2026-03-09): what was "Epic 10: Audit-Driven Enhancements" became **Epic 9: Audit-Driven Enhancements** (stories 9.1–9.10); new **Epic 10: Ensemble Modeling Framework** (stories 10.1–10.4) promoted from Post-MVP Backlog; **Epic X: Cookiecutter Template** retains original story `9-1-create-cookie-cutter-template`
+- **Epic 9** stories: 9.1 Kaggle Export, 9.2 Feature Config as Model-Level Concern, 9.3 Feature Importance, 9.4 Fix Public API Docs, 9.5 Post-Sync Validation, 9.6 Revisit Skipped Items, 9.7 Game Theory Sliders, 9.8 User-Editable Bracket, 9.9 CLI predict, 9.10 Metric Plugin Registry
+- **Epic 10** stories: 10.1 StackedEnsemble OOF Training, 10.2 Ensemble Inference, 10.3 Dashboard/Registry Integration, 10.4 Ensemble Tutorial Notebook
+- **`specs/ensemble-architecture.md`** created — full design spec for Epic 10 ensemble architecture and Story 9.2 FeatureConfig-as-model-concern pattern
+- **Sprint status** updated: Epic 9 (9.1–9.10 audit stories), Epic 10 (10.1–10.4 ensemble stories), Epic X (cookiecutter)
+- **Post-MVP Backlog** expanded with deferred items from this session; Kaggle Export and other promoted items removed to avoid duplication
+- Items already resolved: 2.11 (Story 8.3), 2.19 (Story 8.4); Fibonacci UI label (1.8) confirmed already fixed by Story 8.6 (`display_name="Fibonacci (2-3-5-8-13-21)"`)
 
 ### Change Log
 
-- 2026-03-05: Story 8.13 completed — PO decisions recorded for all 40 audit items, Epic 10 created with 5 follow-up stories, Post-MVP Backlog updated with 7 new deferred items
-- 2026-03-05: Code review fixes — corrected decision count summaries (Cat-1: 9 Defer/4 Accept, Cat-2: 12 Accept/8 Defer/2 Resolved/2 Fix), removed promoted Kaggle Export from Post-MVP Backlog, added 1 Cat-3 tracking entry (P3-17 tutorial clarification), removed erroneous Fibonacci label entry (Story 8.6 already fixed it)
+- 2026-03-05: Story 8.13 completed — initial PO decision framework documented for all 40 audit items, Epic 10: Audit-Driven Enhancements created with 5 follow-up stories, Post-MVP Backlog updated with 7 new deferred items
+- 2026-03-05: Code review fixes — corrected decision count summaries, removed promoted Kaggle Export from Post-MVP Backlog, added P3-17 tutorial clarification tracking, removed erroneous Fibonacci label entry (Story 8.6 already fixed it)
+- 2026-03-09: PO session — explicit PO Decision confirmations added to all 40 items; 21 Cat-2 items deferred to Story 9.6; 4 additional "Implement" decisions added (1.1 Game Theory Sliders, 1.2 User-Editable Bracket, 1.11 CLI predict, P3-17 metric registry); Ensemble Modeling Framework promoted from Post-MVP Backlog to Epic 10; Audit-Driven stories renumbered from Epic 10 → Epic 9 (9.1–9.10); specs/ensemble-architecture.md created
+- 2026-03-09: Code review pass — reconciled contradictory Follow-up/Recommendation vs PO Decision text; added stories 9.7–9.10 to epics.md; updated sprint-status.yaml to reflect new Epic 9/10/X structure
 
 ### File List
 
-- `_bmad-output/planning-artifacts/po-decision-log-epic8.md` (new)
-- `_bmad-output/planning-artifacts/epics.md` (modified — added Epic 10, 7 new Post-MVP Backlog entries, removed promoted Kaggle Export entry and erroneous Fibonacci label entry already fixed in Story 8.6)
-- `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified — story 8.13 in-progress→review, added Epic 10 entries)
-- `_bmad-output/implementation-artifacts/8-13-gather-po-direction-category-1-2-items.md` (modified — tasks completed, status updated)
+- `_bmad-output/planning-artifacts/po-decision-log-epic8.md` (new — 38 PO Decision entries across all 40 audit items)
+- `_bmad-output/planning-artifacts/epics.md` (modified — Epic 9 Audit-Driven w/ stories 9.1–9.10, Epic 10 Ensemble Framework w/ stories 10.1–10.4, Epic X Cookiecutter, Post-MVP Backlog updated)
+- `_bmad-output/planning-artifacts/template-requirements.md` (modified — FeatureConfig pattern + Stacked Ensemble design pattern added)
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified — Epic 9/10/X structure reflecting PO session restructure)
+- `specs/ensemble-architecture.md` (new — complete ensemble architecture design spec)
+- `_bmad-output/implementation-artifacts/8-13-gather-po-direction-category-1-2-items.md` (modified — tasks completed, status updated, completion notes updated)

@@ -29,15 +29,17 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 | Option | Pros | Cons |
 |--------|------|------|
-| **A. Implement now (Epic 10)** | Fulfills original Epic 7 AC; spike research already done; adds differentiated UX | Medium effort; not critical for core bracket evaluation; delays other higher-value work |
+| **A. Implement now (Epic 9)** | Fulfills original Epic 7 AC; spike research already done; adds differentiated UX | Medium effort; not critical for core bracket evaluation; delays other higher-value work |
 | **B. Defer to post-MVP** | Keeps focus on core evaluation use case; spike is preserved for future use | AC remains unfulfilled; documented feature still missing |
 | **C. Drop entirely** | Removes maintenance burden of stale docs/backlog items | Loses a differentiated feature; wastes spike research investment |
 
-**Recommendation:** B. Defer to post-MVP
+**Recommendation:** B. Defer to post-MVP *(overridden by PO)*
 
-**Rationale:** Spike research is done (7.7) but implementation is medium effort. Not critical for the core bracket evaluation use case. The spike investment is preserved and can be picked up post-MVP. Already tracked in Post-MVP Backlog #11.
+**Rationale:** Spike research is done (7.7). PO elected to implement now given the research is already complete and the feature fulfills the original Epic 7 AC. Removed from Post-MVP Backlog.
 
-**Follow-up:** N/A — remains in Post-MVP Backlog
+**Follow-up:** Story 9.7 — Game Theory Slider Implementation
+
+**PO Decision:** A. Implement now (Epic 9)
 
 ---
 
@@ -51,15 +53,17 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 | Option | Pros | Cons |
 |--------|------|------|
-| **A. Implement now (Epic 10)** | Completes the core user journey (evaluate → edit → submit bracket); highest product value feature | Medium-high effort; requires new `UserOverrideProvider` architecture; non-trivial state management in Streamlit |
+| **A. Implement now (Epic 9)** | Completes the core user journey (evaluate → edit → submit bracket); highest product value feature | Medium-high effort; requires new `UserOverrideProvider` architecture; non-trivial state management in Streamlit |
 | **B. Defer to post-MVP** | Current read-only bracket + Pool Scorer covers the primary "evaluate model's bracket" use case | Core use case (user filling out their own bracket) remains incomplete |
 | **C. Implement a simplified version (lock/unlock picks)** | Lower effort than full edit; still gives users agency over bracket | May feel half-baked; still requires some architectural work |
 
-**Recommendation:** B. Defer to post-MVP
+**Recommendation:** B. Defer to post-MVP *(overridden by PO)*
 
-**Rationale:** Medium effort; the current read-only bracket + Pool Scorer covers the primary use case (evaluate the model's bracket). Editing is a nice-to-have. The project's primary user is the developer, who can interpret model probabilities directly. Already tracked in Post-MVP Backlog #12.
+**Rationale:** PO elected to implement now as this completes the core user journey (evaluate → edit → submit bracket). Architecture design (UserOverrideProvider) captured in `specs/ensemble-architecture.md` context. Removed from Post-MVP Backlog.
 
-**Follow-up:** N/A — remains in Post-MVP Backlog
+**Follow-up:** Story 9.8 — User-Editable Bracket
+
+**PO Decision:** A. Implement now (Epic 9)
 
 ---
 
@@ -73,15 +77,17 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 | Option | Pros | Cons |
 |--------|------|------|
-| **A. Implement now (Epic 10)** | Low effort (~50 lines); directly supports the project's Kaggle March Mania mission; high value/effort ratio | Minor scope addition to Epic 10 |
-| **B. Defer to post-MVP** | Keeps Epic 10 scope minimal | Misses the 2026 March Mania competition window; contradicts project tagline |
+| **A. Implement now (Epic 9)** | Low effort (~50 lines); directly supports the project's Kaggle March Mania mission; high value/effort ratio | Minor scope addition to Epic 9 |
+| **B. Defer to post-MVP** | Keeps Epic 9 scope minimal | Misses the 2026 March Mania competition window; contradicts project tagline |
 | **C. Implement as CLI-only (no dashboard)** | Even lower effort; avoids dashboard changes | Users must use CLI for a common operation |
 
-**Recommendation:** A. Implement now (Epic 10)
+**Recommendation:** A. Implement now (Epic 9)
 
 **Rationale:** Low effort (~50 lines), directly supports the project's Kaggle March Mania mission. High value/effort ratio. The project exists to support Kaggle competition participation, so this is a core feature gap.
 
-**Follow-up:** Create story in Epic 10
+**Follow-up:** Story 9.1 — Kaggle Submission Export
+
+**PO Decision:** A. Implement now (Epic 9)
 
 ---
 
@@ -95,7 +101,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 | Option | Pros | Cons |
 |--------|------|------|
-| **A. Implement now (Epic 10)** | Directly improves Kaggle leaderboard competitiveness; architecturally interesting | High effort; requires training multiple independent models first; complex UX for model selection/weighting |
+| **A. Implement now (Epic 9)** | Directly improves Kaggle leaderboard competitiveness; architecturally interesting | High effort; requires training multiple independent models first; complex UX for model selection/weighting |
 | **B. Defer to post-MVP** | Single-model XGBoost is competitive; keeps scope manageable | Missing a well-known competitive advantage |
 | **C. Implement simple average only** | Lower effort than weighted blending; still captures ensemble benefit | Less flexible; limited competitive advantage over weighted approach |
 
@@ -104,6 +110,8 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 **Rationale:** High effort; requires training multiple independent models first. Single-model XGBoost is competitive for a personal project. Already tracked in Post-MVP Backlog #17.
 
 **Follow-up:** N/A — remains in Post-MVP Backlog
+
+**PO Decision:** B. Defer to post-MVP
 
 ---
 
@@ -117,7 +125,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 | Option | Pros | Cons |
 |--------|------|------|
-| **A. Implement now (Epic 10)** | Dramatically lowers onboarding barrier; enables demos and screenshots; low effort | Adds data files to the repo; sample data may go stale across seasons |
+| **A. Implement now (Epic 9)** | Dramatically lowers onboarding barrier; enables demos and screenshots; low effort | Adds data files to the repo; sample data may go stale across seasons |
 | **B. Defer to post-MVP** | Keeps repo lean; primary user (developer) already has Kaggle setup | High barrier to entry persists for any external users |
 | **C. Generate synthetic data instead of real data** | Avoids any licensing/data-size concerns; deterministic | Less realistic; harder to validate dashboard behavior |
 
@@ -126,6 +134,8 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 **Rationale:** Low effort but the project's primary user is the developer (personal project). Kaggle setup is a one-time cost. Already tracked in Post-MVP Backlog #21.
 
 **Follow-up:** N/A — remains in Post-MVP Backlog
+
+**PO Decision:** B. Defer to post-MVP
 
 ---
 
@@ -147,7 +157,9 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Rationale:** Medium-low effort; users currently must edit source code to experiment with features. A `--feature-config` flag or YAML config path would be a significant usability improvement. YAML approach is more maintainable as feature options grow.
 
-**Follow-up:** Create story in Epic 10
+**Follow-up:** Story 9.2 — Feature Config as Model-Level Concern
+
+**PO Decision:** Custom — embed `feature_config` as a model-level concern rather than a CLI flag. Each model subclass accepts feature-relevant kwargs in `__init__` and constructs its own `FeatureConfig`. `run_training()` reads `model.feature_config`. CLI remains unchanged; library users configure features through model constructor kwargs. This is a prerequisite for the StackedEnsemble (Epic 10). Story 9.2 rewritten accordingly; design captured in `specs/ensemble-architecture.md`.
 
 ---
 
@@ -171,6 +183,8 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A
 
+**PO Decision:** A (leave as-is) — add a docstring note to `serve_season_features()` documenting that output always assigns team_a = winner and stateless model callers should randomize before fitting. Fold into any passing story touching `feature_serving.py`. Note: stateful models do not require winner-first ordering; `_to_games()` uses `y` to reconstruct Game objects correctly regardless of assignment.
+
 ---
 
 ### 1.8 Fibonacci Scoring Values Mismatch
@@ -192,6 +206,8 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 **Rationale:** The code's values (2-3-5-8-13-21) are a better scoring progression for bracket pools than classic Fibonacci (1-1-2-3-5-8) because they avoid the trivial 1-point rounds. The UI label should clarify the actual values. The Cat 3 portion (update UI label to show actual values) should be handled as a Category 3 fix.
 
 **Follow-up:** Cat 3 fix: update UI label to show actual values (e.g., "Fibonacci (2-3-5-8-13-21)")
+
+**PO Decision:** A — keep code values (2-3-5-8-13-21); fix UI label to display actual values.
 
 ---
 
@@ -215,6 +231,8 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A — remains in Post-MVP Backlog
 
+**PO Decision:** C — defer all to post-MVP.
+
 ---
 
 ### 1.10 Candidate Entry Flagging
@@ -237,6 +255,8 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A — remains in Post-MVP Backlog
 
+**PO Decision:** B — defer to post-MVP.
+
 ---
 
 ### 1.11 CLI `predict` Command
@@ -249,15 +269,17 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 | Option | Pros | Cons |
 |--------|------|------|
-| **A. Implement now (Epic 10)** | Enables scripted/automated prediction workflows; useful during tournament | Medium effort; predictions already accessible via dashboard and notebooks |
+| **A. Implement now (Epic 9)** | Enables scripted/automated prediction workflows; useful during tournament | Medium effort; predictions already accessible via dashboard and notebooks |
 | **B. Defer to post-MVP** | Dashboard and notebooks cover the use case for the primary user | CLI-driven workflows not supported |
 | **C. Implement as a minimal "predict from saved model" command** | Lower effort; just loads a saved model and runs inference | Still requires model serialization/loading to work correctly |
 
-**Recommendation:** B. Defer to post-MVP
+**Recommendation:** B. Defer to post-MVP *(overridden by PO)*
 
-**Rationale:** Medium effort; predictions are accessible via the dashboard and notebooks. CLI predict is a convenience feature. Already tracked in Post-MVP Backlog #16.
+**Rationale:** PO elected to implement now. Enables scripted/automated tournament workflows. Removed from Post-MVP Backlog.
 
-**Follow-up:** N/A — remains in Post-MVP Backlog
+**Follow-up:** Story 9.9 — CLI `predict` Command
+
+**PO Decision:** A — implement now in Epic 9. Create story for `ncaa-eval predict <run-id>` command that loads a saved model and runs inference on current-season data.
 
 ---
 
@@ -281,6 +303,8 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A — remains in Post-MVP Backlog
 
+**PO Decision:** C — defer to post-MVP.
+
 ---
 
 ### 1.13 StatefulModel.fit() Interface Mismatch
@@ -302,6 +326,8 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 **Rationale:** The current approach works correctly even if architecturally impure. The `isinstance` check in backtest is a pragmatic solution. Refactoring would touch the core Model ABC contract and risk regressions across all model implementations.
 
 **Follow-up:** N/A
+
+**PO Decision:** B — accept as-is.
 
 ---
 
@@ -325,6 +351,8 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A — remains in Post-MVP Backlog
 
+**PO Decision:** B — defer to post-MVP.
+
 ---
 
 ### 1.15 Feature Importance Only XGBoost
@@ -345,7 +373,9 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Rationale:** Low effort: Elo ratings are inherently interpretable (display team rating values), and LR has `.coef_`. Exposing these as "feature importance" for 2/3 model types significantly improves user understanding.
 
-**Follow-up:** Create story in Epic 10
+**Follow-up:** Story 9.3 — Feature Importance for Elo and Logistic Regression
+
+**PO Decision:** A — implement for all model types. Already captured as Story 9.3.
 
 ---
 
@@ -363,11 +393,13 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 | **B. Accept 2/4 coverage as sufficient** | Model and scoring registries cover the extensibility points users actually need; avoids over-engineering | NFR3 not fully satisfied; tutorial claim is inaccurate |
 | **C. Implement metric registry only, drop feature-generator** | Moderate effort; makes the tutorial accurate; metric registry is simpler | Feature-generator registry still missing from NFR3 |
 
-**Recommendation:** B. Accept 2/4 coverage as sufficient
+**Recommendation:** B. Accept 2/4 coverage as sufficient *(overridden by PO)*
 
-**Rationale:** Model and scoring registries cover the extensibility points users actually need. Metric registry is unnecessary — users can compute custom metrics via standard sklearn/numpy. Feature generator registry is high complexity (leakage prevention). The tutorial claim "How to Add a Custom Metric" should be corrected as a Cat 3 fix.
+**Rationale:** PO elected to implement metric registry (Option C) to satisfy the NFR3 and make the Story 7.9 tutorial accurate. Feature-generator registry remains deferred.
 
-**Follow-up:** Cat 3 fix: correct tutorial claim about custom metrics
+**Follow-up:** Story 9.10 — Custom Metric Plugin Registry; update Story 7.9 tutorial after 9.10 completes
+
+**PO Decision:** Custom — implement metric registry in Epic 9; keep feature-generator registry in Post-MVP Backlog. Update Story 7.9 tutorial to accurately document the metric registry once implemented.
 
 ---
 
@@ -395,6 +427,8 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A
 
+**PO Decision:** B — accept as-is.
+
 ---
 
 ### 2.2 `serving.py` Imports from Ingest
@@ -416,6 +450,8 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 **Rationale:** `ChronologicalDataServer` needs `Repository` and `Game` — this is practical data access, not a layer violation. The import provides type safety for the serving layer's primary data source.
 
 **Follow-up:** N/A
+
+**PO Decision:** S — skip, come back later.
 
 ---
 
@@ -439,6 +475,8 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A
 
+**PO Decision:** S — skip, come back later.
+
 ---
 
 ### 2.4 KaggleConnector Uses `iterrows()`
@@ -461,6 +499,8 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** Remains in Post-MVP Backlog (via 2.17)
 
+**PO Decision:** S — skip, come back later.
+
 ---
 
 ### 2.5 Connector ABC Optional Methods
@@ -481,6 +521,8 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 **Rationale:** The "Header Interface" pattern is common in connector ABCs where subclasses support different capabilities. Switching to protocols/mixins would add complexity for 2 concrete implementations.
 
 **Follow-up:** N/A
+
+**PO Decision:** S — skip, come back later.
 
 ---
 
@@ -504,6 +546,8 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A
 
+**PO Decision:** S — skip, come back later.
+
 ---
 
 ### 2.7 EloModelConfig Duplicates EloConfig
@@ -526,6 +570,8 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A
 
+**PO Decision:** S — skip, come back later.
+
 ---
 
 ### 2.8 Model Registry Global Singleton
@@ -546,6 +592,8 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 **Rationale:** Standard pattern for plugin registries (cf. Flask extensions, pytest plugins). Testing isolation is handled by the existing test fixtures.
 
 **Follow-up:** N/A
+
+**PO Decision:** S — skip, come back later.
 
 ---
 
@@ -568,6 +616,8 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A
 
+**PO Decision:** S — skip, come back later.
+
 ---
 
 ### 2.10 Deferred sklearn Imports
@@ -588,6 +638,8 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 **Rationale:** Python caches module imports after the first call. The overhead is ~0.1ms per call after initial import. This is a non-issue.
 
 **Follow-up:** N/A
+
+**PO Decision:** S — skip, come back later.
 
 ---
 
@@ -627,6 +679,8 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** Add to Post-MVP Backlog
 
+**PO Decision:** S — skip, come back later.
+
 ---
 
 ### 2.13 Dashboard Module-Level `_render_*()` Pattern
@@ -647,6 +701,8 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 **Rationale:** This is standard Streamlit convention. All Streamlit apps work this way — code at module level runs on page navigation. Not a bug.
 
 **Follow-up:** N/A
+
+**PO Decision:** S — skip, come back later.
 
 ---
 
@@ -670,6 +726,8 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** Add to Post-MVP Backlog
 
+**PO Decision:** S — skip, come back later.
+
 ---
 
 ### 2.15 Plotly Adapter API Changed from AC
@@ -691,6 +749,8 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A
 
+**PO Decision:** S — skip, come back later.
+
 ---
 
 ### 2.16 `st.spinner` Instead of `st.progress`
@@ -711,6 +771,8 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 **Rationale:** Already in Post-MVP Backlog #19. `st.spinner` works; `st.progress` is a UX polish.
 
 **Follow-up:** N/A — remains in Post-MVP Backlog
+
+**PO Decision:** S — skip, come back later.
 
 ---
 
@@ -734,6 +796,8 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** Add to Post-MVP Backlog
 
+**PO Decision:** S — skip, come back later.
+
 ---
 
 ### 2.18 Top-Level `__init__.py` Missing Re-exports
@@ -754,7 +818,9 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Rationale:** Adding re-exports would trigger heavy module loading. Better to update the Style Guide to document the actual import paths rather than adding re-exports (which would trigger heavy module loading).
 
-**Follow-up:** Create story in Epic 10
+**Follow-up:** Story 9.4 created (Fix Public API Documentation) — PO to confirm scope in Story 9.6
+
+**PO Decision:** S — skip, come back later.
 
 ---
 
@@ -792,7 +858,9 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Rationale:** Post-sync validation (game count reasonableness, duplicate detection, team reference integrity) would catch silent data corruption. This is a data integrity improvement worth implementing, especially given the ESPN connector's history of issues.
 
-**Follow-up:** Create story in Epic 10
+**Follow-up:** Story 9.5 created (Post-Sync Data Validation) — PO to confirm scope in Story 9.6
+
+**PO Decision:** S — skip, come back later.
 
 ---
 
@@ -814,6 +882,8 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 **Rationale:** Minor code quality issue — two test files share a small helper. Can be consolidated into a shared fixture when either file is next modified.
 
 **Follow-up:** Add to Post-MVP Backlog
+
+**PO Decision:** S — skip, come back later.
 
 ---
 
@@ -837,6 +907,8 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** Add to Post-MVP Backlog
 
+**PO Decision:** S — skip, come back later.
+
 ---
 
 ### P2-6 Dashboard Excluded from Quality Gates
@@ -858,6 +930,8 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 **Rationale:** Streamlit has poor type stubs; strict mypy is impractical. A relaxed mypy config for `dashboard/` could catch basics but is a low-priority improvement.
 
 **Follow-up:** Add to Post-MVP Backlog
+
+**PO Decision:** S — skip, come back later.
 
 ---
 
@@ -881,11 +955,13 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A
 
+**PO Decision:** S — skip, come back later.
+
 ---
 
 ## Follow-up Actions Summary
 
-### Items to Implement (New Stories in Epic 10)
+### Items to Implement (New Stories in Epic 9)
 
 1. **1.3 Kaggle Submission Export** — Low effort, high value. Export bracket to Kaggle MMLM submission format.
 2. **1.6 Feature Config from CLI** — Add `--feature-config` CLI option for training pipeline.
