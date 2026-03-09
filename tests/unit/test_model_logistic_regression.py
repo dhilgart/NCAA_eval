@@ -170,3 +170,75 @@ class TestFeatureConfigSaveLoad:
 
         loaded = LogisticRegressionModel.load(save_dir)
         assert loaded.feature_names_ == ["feat_a", "feat_b"]
+
+
+# ---------------------------------------------------------------------------
+# Story 9.3: Feature importance for LogisticRegressionModel
+# ---------------------------------------------------------------------------
+
+
+class TestFeatureImportance:
+    """Story 9.3: get_feature_importances() for LogisticRegressionModel."""
+
+    def test_returns_none_before_fit(self) -> None:
+        """AC2: Unfitted model returns None (feature_names_ is empty)."""
+        model = LogisticRegressionModel()
+        assert model.get_feature_importances() is None
+
+    def test_returns_tuples_after_fit(self) -> None:
+        """AC2: After fit(), returns list of (feature_name, importance) tuples."""
+        X, y = _make_train_data()
+        model = LogisticRegressionModel()
+        model.fit(X, y)
+        result = model.get_feature_importances()
+        assert result is not None
+        assert isinstance(result, list)
+        assert len(result) == 2
+        assert all(isinstance(t, tuple) and len(t) == 2 for t in result)
+
+    def test_feature_names_match(self) -> None:
+        """AC2: Returned feature names match feature_names_."""
+        X, y = _make_train_data()
+        model = LogisticRegressionModel()
+        model.fit(X, y)
+        result = model.get_feature_importances()
+        assert result is not None
+        names = [name for name, _ in result]
+        assert names == model.feature_names_
+
+    def test_values_are_absolute_coefficients(self) -> None:
+        """AC2: All returned values are non-negative (absolute coefficient magnitudes)."""
+        X, y = _make_train_data()
+        model = LogisticRegressionModel()
+        model.fit(X, y)
+        result = model.get_feature_importances()
+        assert result is not None
+        for _, value in result:
+            assert value >= 0.0
+
+    def test_length_matches_feature_names(self) -> None:
+        """AC2: Length matches len(feature_names_)."""
+        X, y = _make_train_data()
+        model = LogisticRegressionModel()
+        model.fit(X, y)
+        result = model.get_feature_importances()
+        assert result is not None
+        assert len(result) == len(model.feature_names_)
+
+    def test_save_load_preserves_feature_importances(self, tmp_path: Path) -> None:
+        """AC2: save/load round-trip preserves get_feature_importances() behavior."""
+        X, y = _make_train_data()
+        model = LogisticRegressionModel()
+        model.fit(X, y)
+        original = model.get_feature_importances()
+        assert original is not None
+
+        save_dir = tmp_path / "lr_model"
+        model.save(save_dir)
+        loaded = LogisticRegressionModel.load(save_dir)
+        restored = loaded.get_feature_importances()
+        assert restored is not None
+        assert len(restored) == len(original)
+        for (n1, v1), (n2, v2) in zip(original, restored):
+            assert n1 == n2
+            assert abs(v1 - v2) < 1e-10

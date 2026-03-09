@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Literal, Self
 
 import joblib  # type: ignore[import-untyped]
+import numpy as np
 import pandas as pd  # type: ignore[import-untyped]
 from sklearn.linear_model import LogisticRegression  # type: ignore[import-untyped]
 
@@ -93,6 +94,13 @@ class LogisticRegressionModel(Model):
         if loaded_fc is not None:
             instance.feature_config = loaded_fc
         return instance
+
+    def get_feature_importances(self) -> list[tuple[str, float]] | None:
+        """Return absolute coefficient values as feature importance."""
+        if not self.feature_names_:
+            return None
+        coefs = np.abs(self._clf.coef_[0])
+        return list(zip(self.feature_names_, coefs.tolist()))
 
     def get_config(self) -> LogisticRegressionConfig:
         """Return the Pydantic-validated configuration."""

@@ -1,6 +1,6 @@
 # Story 9.3: Feature Importance for Elo and Logistic Regression
 
-Status: ready-for-dev
+Status: in-progress
 
 ## Story
 
@@ -29,11 +29,11 @@ so that **I can understand what drives predictions across Elo, Logistic Regressi
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add `get_feature_importances()` to `LogisticRegressionModel` (AC: #2)
-  - [ ] 1.1 Override `get_feature_importances()` in `logistic_regression.py`
-  - [ ] 1.2 Return `list[tuple[str, float]]` pairing `feature_names_` with `abs(self._clf.coef_[0])`
-  - [ ] 1.3 Return `None` if `feature_names_` is empty (unfitted model)
-  - [ ] 1.4 Add `import numpy as np` (needed for `np.abs`)
+- [x] Task 1: Add `get_feature_importances()` to `LogisticRegressionModel` (AC: #2)
+  - [x] 1.1 Override `get_feature_importances()` in `logistic_regression.py`
+  - [x] 1.2 Return `list[tuple[str, float]]` pairing `feature_names_` with `abs(self._clf.coef_[0])`
+  - [x] 1.3 Return `None` if `feature_names_` is empty (unfitted model)
+  - [x] 1.4 Add `import numpy as np` (needed for `np.abs`)
 
 - [ ] Task 2: Add `get_feature_importances()` to `EloModel` (AC: #3, #4)
   - [ ] 2.1 Override `get_feature_importances()` in `elo.py`
@@ -54,12 +54,12 @@ so that **I can understand what drives predictions across Elo, Logistic Regressi
   - [ ] 4.2 For Elo, the model's `get_feature_importances()` should return data pre-sorted by rating descending, so the dashboard sort still works (highest rated teams first)
   - [ ] 4.3 No changes needed to `load_feature_importances()` itself — the model contract handles it
 
-- [ ] Task 5: Add unit tests for LogisticRegression feature importance (AC: #2)
-  - [ ] 5.1 Test: `get_feature_importances()` returns `None` before `fit()`
-  - [ ] 5.2 Test: after `fit()`, returns `list[tuple[str, float]]` with correct feature names
-  - [ ] 5.3 Test: returned values are absolute coefficient magnitudes (all non-negative)
-  - [ ] 5.4 Test: length matches `len(feature_names_)`
-  - [ ] 5.5 Test: save/load round-trip preserves `get_feature_importances()` behavior
+- [x] Task 5: Add unit tests for LogisticRegression feature importance (AC: #2)
+  - [x] 5.1 Test: `get_feature_importances()` returns `None` before `fit()`
+  - [x] 5.2 Test: after `fit()`, returns `list[tuple[str, float]]` with correct feature names
+  - [x] 5.3 Test: returned values are absolute coefficient magnitudes (all non-negative)
+  - [x] 5.4 Test: length matches `len(feature_names_)`
+  - [x] 5.5 Test: save/load round-trip preserves `get_feature_importances()` behavior
 
 - [ ] Task 6: Add unit tests for Elo interpretability (AC: #3, #4)
   - [ ] 6.1 Test: `get_feature_importances()` returns `None` on fresh model (no ratings)
@@ -228,7 +228,7 @@ def _render_feature_importance(data_dir: str, run_id: str, model_type: str) -> N
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6 (claude-opus-4-6)
 
 ### Debug Log References
 
