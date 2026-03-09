@@ -8,16 +8,56 @@ Carlo score distribution.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import streamlit as st
 import streamlit.components.v1 as components
 
 from dashboard.lib.bracket_renderer import render_bracket_html
 from dashboard.lib.data_loaders import get_data_dir, load_scoring_display_names, load_tourney_seeds
 from dashboard.lib.simulation_helpers import BracketSimulationResult, run_bracket_simulation
+from ncaa_eval.evaluation.kaggle_export import format_kaggle_submission
 from ncaa_eval.evaluation.plotting import (
     plot_advancement_heatmap,
     plot_score_distribution,
 )
+
+
+@st.cache_data(ttl=None, show_spinner="Generating Kaggle submission...")
+def _build_kaggle_csv(data_dir: str, run_id: str, season: int) -> str | None:
+    """Build a full Kaggle submission CSV for all teams in the season.
+
+    Loads the model, collects all team IDs from the season's games,
+    builds an all-pairs probability matrix, and formats the CSV.
+    Returns ``None`` if the model type is not supported.
+    """
+    from ncaa_eval.evaluation.bracket import MatchupContext
+    from ncaa_eval.evaluation.providers import EloProvider, build_probability_matrix
+    from ncaa_eval.ingest.repository import ParquetRepository
+    from ncaa_eval.model.base import StatefulModel
+    from ncaa_eval.model.tracking import RunStore
+
+    path = Path(data_dir)
+    store = RunStore(base_path=path)
+    model = store.load_model(run_id)
+    if model is None or not isinstance(model, StatefulModel):
+        return None
+
+    repo = ParquetRepository(base_path=path)
+    games = repo.get_games(season)
+    if not games:
+        return None
+
+    team_id_set: set[int] = set()
+    for g in games:
+        team_id_set.add(g.w_team_id)
+        team_id_set.add(g.l_team_id)
+    team_ids = sorted(team_id_set)
+
+    provider = EloProvider(model)
+    context = MatchupContext(season=season, day_num=136, is_neutral=True)
+    prob_matrix = build_probability_matrix(provider, team_ids, context)
+    return format_kaggle_submission(season, team_ids, prob_matrix)
 
 
 def _render_results(sim_data: BracketSimulationResult, scoring: str) -> None:
@@ -100,6 +140,24 @@ def _render_results(sim_data: BracketSimulationResult, scoring: str) -> None:
             st.plotly_chart(fig_dist, use_container_width=True)
         else:
             st.info(f"Score distribution not available for scoring rule '{scoring}'.")
+
+    # Kaggle submission export
+    st.subheader("Export")
+    selected_year: int | None = st.session_state.get("selected_year")
+    selected_run_id: str | None = st.session_state.get("selected_run_id")
+    if selected_year and selected_run_id:
+        data_dir = str(get_data_dir())
+        kaggle_csv = _build_kaggle_csv(data_dir, selected_run_id, selected_year)
+        if kaggle_csv is not None:
+            st.download_button(
+                label="Export Kaggle Submission",
+                data=kaggle_csv,
+                file_name=f"submission_{selected_year}_{selected_run_id[:8]}.csv",
+                mime="text/csv",
+                key="kaggle_export_btn",
+            )
+        else:
+            st.info("Kaggle export is available for Elo models only.")
 
 
 def _render_bracket_page() -> None:
