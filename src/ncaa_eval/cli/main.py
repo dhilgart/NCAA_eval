@@ -79,3 +79,31 @@ def train(  # noqa: PLR0913 — Typer CLI options dictate arg count
         output_dir=output_dir,
         model_name=model,
     )
+
+
+@app.command()
+def export(
+    run_id: str = typer.Option(..., "--run-id", help="Model run ID"),
+    season: int = typer.Option(..., "--season", help="Target season year"),
+    data_dir: Path = typer.Option(Path("data/"), "--data-dir", help="Local Parquet data directory"),
+    output: Path | None = typer.Option(None, "--output", help="Output CSV path (default: stdout)"),
+) -> None:
+    """Export model predictions as a Kaggle submission CSV.
+
+    Generates a CSV with all pairwise matchup probabilities for men's
+    D1 teams in the target season, formatted for Kaggle March Machine
+    Learning Mania competition submission.
+    """
+    from ncaa_eval.cli.export import run_export
+
+    try:
+        run_export(
+            run_id=run_id,
+            season=season,
+            data_dir=data_dir,
+            output=output,
+            console=console,
+        )
+    except (FileNotFoundError, TypeError) as exc:
+        console.print(f"[red]Error: {exc}[/red]")
+        raise typer.Exit(code=1)
