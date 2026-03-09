@@ -9,6 +9,7 @@ from ncaa_eval.evaluation.bracket import (
     MatchupContext,
     build_bracket,
 )
+from ncaa_eval.evaluation.kaggle_export import KAGGLE_NEUTRAL_DAY_NUM, format_kaggle_submission
 from ncaa_eval.evaluation.metrics import (
     ReliabilityData,
     brier_score,
@@ -77,7 +78,9 @@ __all__ = [
     "EloProvider",
     "FibonacciScoring",
     "FoldResult",
+    "KAGGLE_NEUTRAL_DAY_NUM",
     "feature_cols",
+    "format_kaggle_submission",
     "MatchupContext",
     "MatrixProvider",
     "MostLikelyBracket",

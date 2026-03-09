@@ -8,6 +8,8 @@ Carlo score distribution.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import streamlit as st
 import streamlit.components.v1 as components
 
@@ -18,6 +20,20 @@ from ncaa_eval.evaluation.plotting import (
     plot_advancement_heatmap,
     plot_score_distribution,
 )
+
+
+@st.cache_data(ttl=None, show_spinner="Generating Kaggle submission...")
+def _build_kaggle_csv(data_dir: str, run_id: str, season: int) -> str | None:
+    """Build a full Kaggle submission CSV for all teams in the season.
+
+    Returns ``None`` if the model type is not supported (non-Elo).
+    """
+    from ncaa_eval.cli.export import build_kaggle_submission
+
+    try:
+        return build_kaggle_submission(run_id=run_id, season=season, data_dir=Path(data_dir))
+    except (FileNotFoundError, TypeError):
+        return None
 
 
 def _render_results(sim_data: BracketSimulationResult, scoring: str) -> None:
@@ -100,6 +116,24 @@ def _render_results(sim_data: BracketSimulationResult, scoring: str) -> None:
             st.plotly_chart(fig_dist, use_container_width=True)
         else:
             st.info(f"Score distribution not available for scoring rule '{scoring}'.")
+
+    # Kaggle submission export
+    st.subheader("Export")
+    selected_year: int | None = st.session_state.get("selected_year")
+    selected_run_id: str | None = st.session_state.get("selected_run_id")
+    if selected_year and selected_run_id:
+        data_dir = str(get_data_dir())
+        kaggle_csv = _build_kaggle_csv(data_dir, selected_run_id, selected_year)
+        if kaggle_csv is not None:
+            st.download_button(
+                label="Export Kaggle Submission",
+                data=kaggle_csv,
+                file_name=f"submission_{selected_year}_{selected_run_id[:8]}.csv",
+                mime="text/csv",
+                key="kaggle_export_btn",
+            )
+        else:
+            st.info("Kaggle export is available for Elo models only.")
 
 
 def _render_bracket_page() -> None:

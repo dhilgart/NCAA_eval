@@ -113,7 +113,7 @@ development_status:
   epic-7-retrospective: optional
 
   # Epic 8: Codebase Improvements & Technical Debt Resolution
-  epic-8: in-progress
+  epic-8: done
   8-1-code-architecture-cleanup-simulation-module-split: done
   8-2-expose-public-apis-eliminate-private-attribute-access: done
   8-3-fix-data-pipeline-resilience-espn-error-handling: done
@@ -130,8 +130,8 @@ development_status:
   epic-8-retrospective: optional
 
   # Epic 9: Audit-Driven Enhancements (PO-approved items from Epic 8 audit)
-  epic-9: backlog
-  9-1-kaggle-submission-export: backlog
+  epic-9: in-progress
+  9-1-kaggle-submission-export: done
   9-2-feature-config-as-model-level-concern: backlog
   9-3-feature-importance-elo-logistic-regression: backlog
   9-4-fix-public-api-documentation: backlog
