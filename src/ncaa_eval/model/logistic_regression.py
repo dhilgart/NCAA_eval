@@ -97,7 +97,7 @@ class LogisticRegressionModel(Model):
 
     def get_feature_importances(self) -> list[tuple[str, float]] | None:
         """Return absolute coefficient values as feature importance."""
-        if not self.feature_names_:
+        if not self.feature_names_ or not hasattr(self._clf, "coef_"):
             return None
         coefs = np.abs(self._clf.coef_[0])
         return list(zip(self.feature_names_, coefs.tolist()))

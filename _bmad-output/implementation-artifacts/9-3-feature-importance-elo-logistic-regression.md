@@ -1,6 +1,6 @@
 # Story 9.3: Feature Importance for Elo and Logistic Regression
 
-Status: review
+Status: done
 
 ## Story
 
@@ -248,16 +248,17 @@ Claude Opus 4.6 (claude-opus-4-6)
 
 ### File List
 
-- `src/ncaa_eval/model/logistic_regression.py` — Added `get_feature_importances()` override, added `import numpy as np`
+- `src/ncaa_eval/model/logistic_regression.py` — Added `get_feature_importances()` override, added `import numpy as np`; code review: added `hasattr(self._clf, "coef_")` guard
 - `src/ncaa_eval/model/elo.py` — Added `get_feature_importances()` override
 - `dashboard/pages/3_Model_Deep_Dive.py` — Model-type-aware chart titles/labels, removed "stateful models" fallback
 - `tests/unit/test_model_logistic_regression.py` — Added `TestFeatureImportance` class (6 tests)
 - `tests/unit/test_model_elo.py` — Added `TestFeatureImportance` class (5 tests)
-- `tests/unit/test_dashboard_filters.py` — Replaced `test_returns_empty_for_elo_model` with `test_returns_ratings_for_elo_model`, added `test_returns_importances_for_logistic_regression`
-- `tests/unit/test_deep_dive_page.py` — Updated `test_shows_info_for_elo_model` → `test_shows_info_when_no_importances`
+- `tests/unit/test_dashboard_filters.py` — Replaced `test_returns_empty_for_elo_model` with `test_returns_ratings_for_elo_model`, added `test_returns_importances_for_logistic_regression`; code review: fixed sort test to use out-of-order input
+- `tests/unit/test_deep_dive_page.py` — Updated `test_shows_info_for_elo_model` → `test_shows_info_when_no_importances`; code review: added `test_renders_chart_for_elo_model`, `test_renders_chart_for_logistic_regression`
 - `_bmad-output/implementation-artifacts/9-3-feature-importance-elo-logistic-regression.md` — Story file updates
-- `_bmad-output/implementation-artifacts/sprint-status.yaml` — Status: ready-for-dev → in-progress → review
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — Status: ready-for-dev → in-progress → review → done
 
 ### Change Log
 
 - 2026-03-09: Implemented feature importance for LogisticRegression (abs coefficients) and Elo (top 50 team ratings). Updated dashboard with model-specific chart titles. 13 new tests added (977 total).
+- 2026-03-09: Code review fixes — added `hasattr(coef_)` guard to LogReg (M1), fixed Elo sort test to use out-of-order input (M2), added Elo and LogReg chart title rendering tests (M3). 2 new tests added (979 total).

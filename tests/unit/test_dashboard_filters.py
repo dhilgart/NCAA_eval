@@ -326,12 +326,13 @@ class TestLoadFeatureImportances:
     @patch("dashboard.lib.data_loaders.Path.exists", return_value=True)
     @patch("dashboard.lib.data_loaders.RunStore")
     def test_returns_ratings_for_elo_model(self, mock_store_cls: MagicMock, mock_exists: MagicMock) -> None:
-        """Story 9.3: Elo model now returns team ratings as feature importances."""
+        """Story 9.3: Elo model now returns team ratings as feature importances, sorted descending."""
         mock_store = MagicMock()
         mock_model = MagicMock()
+        # Deliberately return out-of-order to exercise the sort in load_feature_importances
         mock_model.get_feature_importances.return_value = [
-            ("team_100", 1600.0),
             ("team_200", 1400.0),
+            ("team_100", 1600.0),
         ]
         mock_store.load_model.return_value = mock_model
         mock_store_cls.return_value = mock_store
@@ -340,6 +341,7 @@ class TestLoadFeatureImportances:
 
         result: list[dict[str, object]] = _unwrap(load_feature_importances)("/fake/data", "run-1")
         assert len(result) == 2
+        # After sort descending, team_100 (1600.0) should come first
         assert result[0]["feature"] == "team_100"
         assert result[0]["importance"] == 1600.0
 

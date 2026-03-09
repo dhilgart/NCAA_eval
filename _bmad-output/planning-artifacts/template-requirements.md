@@ -3661,3 +3661,41 @@ def _build_kaggle_csv(...) -> str | None:
 **Key rule:** The shared helper must raise exceptions (not return `None`) for error cases — the CLI and dashboard handle errors differently (CLI exits with code 1; dashboard shows `st.info`). Catch the appropriate exception set in each caller.
 
 **DRY check:** If the same model-loading + repository-querying + matrix-building sequence appears in both a CLI module and a dashboard page, it belongs in a shared function regardless of which came first.
+
+### sklearn Estimator Fit-State Guard: Use `hasattr` Not Just Attribute Truthiness (Discovered Story 9.3 Code Review, 2026-03-09)
+
+When a model wraps a sklearn estimator and exposes a method that accesses a fit-time attribute (e.g., `coef_`, `feature_importances_`, `classes_`), guard against the unfitted case using `hasattr` — not just checking a boolean attribute like `_is_fitted` or a list like `feature_names_`.
+
+**Why:** sklearn sets fit-time attributes _only after_ calling `.fit()`. If the guard only checks a proxy indicator (e.g., `if not self.feature_names_:`), a mismatch is possible — for example, if `feature_names_` is restored from disk before `_clf` is fully loaded, or if a test directly mutates `feature_names_`. Accessing `_clf.coef_` on an unfitted `LogisticRegression` raises `AttributeError`, which is not caught by the typical `(OSError, KeyError)` handler in callers.
+
+```python
+# ❌ Incomplete guard — only checks proxy, not actual estimator state
+def get_feature_importances(self) -> list[tuple[str, float]] | None:
+    if not self.feature_names_:
+        return None
+    coefs = np.abs(self._clf.coef_[0])  # AttributeError if _clf not fitted
+
+# ✅ Correct: guard both proxy AND actual estimator attribute
+def get_feature_importances(self) -> list[tuple[str, float]] | None:
+    if not self.feature_names_ or not hasattr(self._clf, "coef_"):
+        return None
+    coefs = np.abs(self._clf.coef_[0])
+```
+
+**Applies to:** Any model method that accesses sklearn fit-time attributes (`coef_`, `feature_importances_`, `classes_`, `n_features_in_`, etc.). Compare against XGBoost which uses a dedicated `_is_fitted` flag set explicitly in `fit()` — that's equally robust as long as the flag is always set.
+
+### Dashboard Sort Tests Must Use Out-of-Order Input (Discovered Story 9.3 Code Review, 2026-03-09)
+
+When testing a data loading function that sorts its output (e.g., `load_feature_importances` sorts descending by `importance`), always provide deliberately out-of-order mock data. If mock data is already in the expected sorted order, the sort is never exercised and the test is vacuously satisfied.
+
+```python
+# ❌ Weak test: mock already sorted — sort bug would still pass
+mock_model.get_feature_importances.return_value = [("team_100", 1600.0), ("team_200", 1400.0)]
+assert result[0]["importance"] == 1600.0  # passes even if sort is broken
+
+# ✅ Correct: mock in reverse order — sort must work for test to pass
+mock_model.get_feature_importances.return_value = [("team_200", 1400.0), ("team_100", 1600.0)]
+assert result[0]["feature"] == "team_100"  # only passes if sort is applied
+```
+
+**Applies to:** Any test for a function that re-sorts data received from a dependency (model, API, etc.).
