@@ -11,10 +11,15 @@ from ncaa_eval.evaluation.bracket import (
 )
 from ncaa_eval.evaluation.kaggle_export import KAGGLE_NEUTRAL_DAY_NUM, format_kaggle_submission
 from ncaa_eval.evaluation.metrics import (
+    MetricFn,
+    MetricNotFoundError,
     ReliabilityData,
     brier_score,
     expected_calibration_error,
+    get_metric,
+    list_metrics,
     log_loss,
+    register_metric,
     reliability_diagram_data,
     roc_auc,
 )
@@ -91,6 +96,8 @@ __all__ = [
     "format_kaggle_submission",
     "MatchupContext",
     "MatrixProvider",
+    "MetricFn",
+    "MetricNotFoundError",
     "MostLikelyBracket",
     "ProbabilityProvider",
     "ReliabilityData",
@@ -110,7 +117,9 @@ __all__ = [
     "compute_expected_points_seed_diff",
     "compute_most_likely_bracket",
     "expected_calibration_error",
+    "get_metric",
     "get_scoring",
+    "list_metrics",
     "list_scoring_display_names",
     "list_scorings",
     "log_loss",
@@ -121,6 +130,7 @@ __all__ = [
     "plot_reliability_diagram",
     "plot_score_distribution",
     "power_transform",
+    "register_metric",
     "register_scoring",
     "reliability_diagram_data",
     "roc_auc",

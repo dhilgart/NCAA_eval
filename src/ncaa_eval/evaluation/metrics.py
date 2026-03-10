@@ -11,14 +11,80 @@ Provides metric functions for evaluating probabilistic predictions:
 
 All functions accept ``npt.NDArray[np.float64]`` inputs and return ``float``
 scalars or structured data (:class:`ReliabilityData`).
+
+Metric Registry
+---------------
+
+* :func:`register_metric` — decorator to register a metric function
+* :func:`get_metric` — look up a metric by name
+* :func:`list_metrics` — list all registered metric names
+* :class:`MetricNotFoundError` — raised for unknown metric names
 """
 
 from __future__ import annotations
 
 import dataclasses
+from collections.abc import Callable
+from typing import TypeVar
 
 import numpy as np
 import numpy.typing as npt
+
+# ---------------------------------------------------------------------------
+# Metric type alias & registry
+# ---------------------------------------------------------------------------
+
+MetricFn = Callable[[npt.NDArray[np.float64], npt.NDArray[np.float64]], float]
+"""Signature for metric functions: ``(y_true, y_prob) -> float``."""
+
+_MF = TypeVar("_MF", bound=MetricFn)
+
+_METRIC_REGISTRY: dict[str, MetricFn] = {}
+
+
+class MetricNotFoundError(KeyError):
+    """Raised when a requested metric name is not in the registry."""
+
+
+def register_metric(name: str) -> Callable[[_MF], _MF]:
+    """Function decorator that registers a metric function.
+
+    Args:
+        name: Registry key for the metric.
+
+    Returns:
+        Decorator that registers the function and returns it unchanged.
+
+    Raises:
+        ValueError: If *name* is already registered.
+    """
+
+    def decorator(fn: _MF) -> _MF:
+        if name in _METRIC_REGISTRY:
+            msg = f"Metric name {name!r} is already registered"
+            raise ValueError(msg)
+        _METRIC_REGISTRY[name] = fn
+        return fn
+
+    return decorator
+
+
+def get_metric(name: str) -> MetricFn:
+    """Return the metric function registered under *name*.
+
+    Raises:
+        MetricNotFoundError: If *name* is not registered.
+    """
+    try:
+        return _METRIC_REGISTRY[name]
+    except KeyError:
+        msg = f"No metric registered with name {name!r}. Available: {list_metrics()}"
+        raise MetricNotFoundError(msg) from None
+
+
+def list_metrics() -> list[str]:
+    """Return all registered metric names (sorted)."""
+    return sorted(_METRIC_REGISTRY)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -69,6 +135,7 @@ def _validate_inputs(
         raise ValueError(msg)
 
 
+@register_metric("log_loss")
 def log_loss(
     y_true: npt.NDArray[np.float64],
     y_prob: npt.NDArray[np.float64],
@@ -93,6 +160,7 @@ def log_loss(
     return result
 
 
+@register_metric("brier_score")
 def brier_score(
     y_true: npt.NDArray[np.float64],
     y_prob: npt.NDArray[np.float64],
@@ -117,6 +185,7 @@ def brier_score(
     return result
 
 
+@register_metric("roc_auc")
 def roc_auc(
     y_true: npt.NDArray[np.float64],
     y_prob: npt.NDArray[np.float64],
@@ -146,6 +215,7 @@ def roc_auc(
     return result
 
 
+@register_metric("ece")
 def expected_calibration_error(
     y_true: npt.NDArray[np.float64],
     y_prob: npt.NDArray[np.float64],

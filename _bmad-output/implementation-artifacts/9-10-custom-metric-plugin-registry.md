@@ -1,6 +1,6 @@
 # Story 9.10: Custom Metric Plugin Registry
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -32,43 +32,43 @@ so that **I can evaluate models on domain-specific criteria without modifying li
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add metric registry to `src/ncaa_eval/evaluation/metrics.py` (AC: #2, #5, #7, #8)
-  - [ ] 1.1: Define `MetricFn` type alias: `Callable[[npt.NDArray[np.float64], npt.NDArray[np.float64]], float]`
-  - [ ] 1.2: Add module-level `_METRIC_REGISTRY: dict[str, MetricFn] = {}`
-  - [ ] 1.3: Add `MetricNotFoundError(KeyError)` exception class
-  - [ ] 1.4: Implement `register_metric(name: str) -> Callable` decorator (mirrors `register_scoring` pattern from `scoring.py`)
-  - [ ] 1.5: Implement `get_metric(name: str) -> MetricFn` (raises `MetricNotFoundError`)
-  - [ ] 1.6: Implement `list_metrics() -> list[str]` (returns sorted names)
-  - [ ] 1.7: Decorate existing `log_loss`, `brier_score`, `roc_auc`, `expected_calibration_error` with `@register_metric("log_loss")`, `@register_metric("brier_score")`, `@register_metric("roc_auc")`, `@register_metric("ece")`
+- [x] Task 1: Add metric registry to `src/ncaa_eval/evaluation/metrics.py` (AC: #2, #5, #7, #8)
+  - [x] 1.1: Define `MetricFn` type alias: `Callable[[npt.NDArray[np.float64], npt.NDArray[np.float64]], float]`
+  - [x] 1.2: Add module-level `_METRIC_REGISTRY: dict[str, MetricFn] = {}`
+  - [x] 1.3: Add `MetricNotFoundError(KeyError)` exception class
+  - [x] 1.4: Implement `register_metric(name: str) -> Callable` decorator (mirrors `register_scoring` pattern from `scoring.py`)
+  - [x] 1.5: Implement `get_metric(name: str) -> MetricFn` (raises `MetricNotFoundError`)
+  - [x] 1.6: Implement `list_metrics() -> list[str]` (returns sorted names)
+  - [x] 1.7: Decorate existing `log_loss`, `brier_score`, `roc_auc`, `expected_calibration_error` with `@register_metric("log_loss")`, `@register_metric("brier_score")`, `@register_metric("roc_auc")`, `@register_metric("ece")`
 
-- [ ] Task 2: Wire `run_backtest()` to use the registry (AC: #1, #6)
-  - [ ] 2.1: In `backtest.py`, change `DEFAULT_METRICS` from hardcoded `MappingProxyType` to a function `default_metrics()` that returns `{name: get_metric(name) for name in list_metrics()}`
-  - [ ] 2.2: Update `run_backtest()` — when `metric_fns is None`, call `default_metrics()` to get all registered metrics (built-in + user-registered)
-  - [ ] 2.3: Preserve backward compatibility: `DEFAULT_METRICS` can remain as a module-level constant for existing callers who import it, but document that it only contains built-in metrics (users should prefer the registry)
+- [x] Task 2: Wire `run_backtest()` to use the registry (AC: #1, #6)
+  - [x] 2.1: In `backtest.py`, change `DEFAULT_METRICS` from hardcoded `MappingProxyType` to a function `default_metrics()` that returns `{name: get_metric(name) for name in list_metrics()}`
+  - [x] 2.2: Update `run_backtest()` — when `metric_fns is None`, call `default_metrics()` to get all registered metrics (built-in + user-registered)
+  - [x] 2.3: Preserve backward compatibility: `DEFAULT_METRICS` can remain as a module-level constant for existing callers who import it, but document that it only contains built-in metrics (users should prefer the registry)
 
-- [ ] Task 3: Export registry API from `evaluation/__init__.py` (AC: #2)
-  - [ ] 3.1: Add `register_metric`, `get_metric`, `list_metrics`, `MetricNotFoundError`, `MetricFn` to imports and `__all__`
+- [x] Task 3: Export registry API from `evaluation/__init__.py` (AC: #2)
+  - [x] 3.1: Add `register_metric`, `get_metric`, `list_metrics`, `MetricNotFoundError`, `MetricFn` to imports and `__all__`
 
-- [ ] Task 4: Update dashboard to use dynamic metric discovery (AC: #9)
-  - [ ] 4.1: In `dashboard/pages/1_Lab.py`, replace hardcoded `_METRIC_COLS` with dynamic `list_metrics()` call (import from `ncaa_eval.evaluation`)
-  - [ ] 4.2: In `dashboard/pages/3_Model_Deep_Dive.py`, replace hardcoded `_METRIC_COLS` with dynamic `list_metrics()` call
-  - [ ] 4.3: Handle gracefully when registered metrics are not present in DataFrame columns (custom metrics won't have data for old runs) — filter `list_metrics()` to only columns present in the DataFrame
+- [x] Task 4: Update dashboard to use dynamic metric discovery (AC: #9)
+  - [x] 4.1: In `dashboard/pages/1_Lab.py`, replace hardcoded `_METRIC_COLS` with dynamic `list_metrics()` call (import from `ncaa_eval.evaluation`)
+  - [x] 4.2: In `dashboard/pages/3_Model_Deep_Dive.py`, replace hardcoded `_METRIC_COLS` with dynamic `list_metrics()` call
+  - [x] 4.3: Handle gracefully when registered metrics are not present in DataFrame columns (custom metrics won't have data for old runs) — filter `list_metrics()` to only columns present in the DataFrame
 
-- [ ] Task 5: Write unit tests in `tests/unit/test_metric_registry.py` (AC: #1, #5, #6, #7, #8)
-  - [ ] 5.1: Test `list_metrics()` returns all 4 built-in metrics on import
-  - [ ] 5.2: Test `get_metric("log_loss")` returns the `log_loss` function
-  - [ ] 5.3: Test `get_metric("nonexistent")` raises `MetricNotFoundError`
-  - [ ] 5.4: Test `@register_metric("custom")` registers and is discoverable via `list_metrics()`
-  - [ ] 5.5: Test duplicate registration raises `ValueError`
-  - [ ] 5.6: Test `run_backtest` with `metric_fns=None` uses all registered metrics (including custom ones registered before backtest call)
-  - [ ] 5.7: Test `run_backtest` with explicit `metric_fns=` dict still works (backward compatibility)
+- [x] Task 5: Write unit tests in `tests/unit/test_metric_registry.py` (AC: #1, #5, #6, #7, #8)
+  - [x] 5.1: Test `list_metrics()` returns all 4 built-in metrics on import
+  - [x] 5.2: Test `get_metric("log_loss")` returns the `log_loss` function
+  - [x] 5.3: Test `get_metric("nonexistent")` raises `MetricNotFoundError`
+  - [x] 5.4: Test `@register_metric("custom")` registers and is discoverable via `list_metrics()`
+  - [x] 5.5: Test duplicate registration raises `ValueError`
+  - [x] 5.6: Test `run_backtest` with `metric_fns=None` uses all registered metrics (including custom ones registered before backtest call)
+  - [x] 5.7: Test `run_backtest` with explicit `metric_fns=` dict still works (backward compatibility)
 
-- [ ] Task 6: Update tutorial `docs/tutorials/custom-metric.md` (AC: #3)
-  - [ ] 6.1: Add a new Step 3 (after "Use in a Backtest") showing `@register_metric("my_mae")` decorator usage
-  - [ ] 6.2: Show that registered metrics appear automatically in `run_backtest()` without passing `metric_fns`
-  - [ ] 6.3: Show `list_metrics()` output including the custom metric
-  - [ ] 6.4: Note that the `metric_fns=` dict approach still works for ad-hoc metrics that should not be globally registered
-  - [ ] 6.5: Add a note clarifying that custom metrics vs. custom scoring rules are different extension mechanisms
+- [x] Task 6: Update tutorial `docs/tutorials/custom-metric.md` (AC: #3)
+  - [x] 6.1: Add a new Step 3 (after "Use in a Backtest") showing `@register_metric("my_mae")` decorator usage
+  - [x] 6.2: Show that registered metrics appear automatically in `run_backtest()` without passing `metric_fns`
+  - [x] 6.3: Show `list_metrics()` output including the custom metric
+  - [x] 6.4: Note that the `metric_fns=` dict approach still works for ad-hoc metrics that should not be globally registered
+  - [x] 6.5: Add a note clarifying that custom metrics vs. custom scoring rules are different extension mechanisms
 
 ## Dev Notes
 
@@ -278,10 +278,37 @@ Per AC #4, the **feature-generator registry** is explicitly OUT OF SCOPE. Do not
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+- Fixed ruff C901/PLR0912 in `1_Lab.py` by extracting `_style_metric_table()` helper
+- Fixed test collection error in `test_leaderboard_page.py` — test imported removed `_METRIC_COLS` module attribute; updated to use local constant
+
 ### Completion Notes List
 
+- Implemented decorator-based metric registry (`register_metric`, `get_metric`, `list_metrics`, `MetricNotFoundError`, `MetricFn`) in `metrics.py`, mirroring the scoring and model registry patterns exactly
+- All 4 built-in metrics (`log_loss`, `brier_score`, `roc_auc`, `ece`) auto-registered via `@register_metric()` on module import
+- Added `default_metrics()` function in `backtest.py` that returns all registered metrics; `run_backtest(metric_fns=None)` now uses registry-based discovery
+- `DEFAULT_METRICS` constant preserved for backward compatibility
+- Dashboard pages (`1_Lab.py`, `3_Model_Deep_Dive.py`) now use dynamic `_get_metric_cols(df)` with registry + DataFrame intersection
+- 11 new unit tests covering: built-in registration, get/list, duplicate errors, MetricNotFoundError, backtest integration
+- Tutorial updated with new Step 3 showing `@register_metric` usage, `list_metrics()` verification, and note distinguishing custom metrics from custom scoring rules
+- Quality gates: 1112 tests passing, ruff clean, mypy --strict clean (102 files)
+
+### Change Log
+
+- 2026-03-10: Implemented custom metric plugin registry (Story 9.10)
+
 ### File List
+
+- `src/ncaa_eval/evaluation/metrics.py` — MODIFIED (added registry infrastructure + decorators on built-in metrics)
+- `src/ncaa_eval/evaluation/backtest.py` — MODIFIED (added `default_metrics()`, updated `run_backtest` to use registry)
+- `src/ncaa_eval/evaluation/__init__.py` — MODIFIED (exported `register_metric`, `get_metric`, `list_metrics`, `MetricNotFoundError`, `MetricFn`)
+- `dashboard/pages/1_Lab.py` — MODIFIED (replaced hardcoded `_METRIC_COLS`/`_DISPLAY_COLS` with dynamic `_get_metric_cols()`)
+- `dashboard/pages/3_Model_Deep_Dive.py` — MODIFIED (replaced hardcoded `_METRIC_COLS` with dynamic `_get_metric_cols()`)
+- `tests/unit/test_metric_registry.py` — NEW (11 unit tests for registry + backtest integration)
+- `tests/unit/test_leaderboard_page.py` — MODIFIED (updated to use local metric constants instead of removed module attribute)
+- `docs/tutorials/custom-metric.md` — MODIFIED (added Step 3 registry usage, updated summary table)
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — MODIFIED (9-10 status: in-progress → review)
+- `_bmad-output/implementation-artifacts/9-10-custom-metric-plugin-registry.md` — MODIFIED (tasks marked complete, status → review)

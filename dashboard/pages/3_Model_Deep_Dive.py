@@ -18,13 +18,18 @@ from dashboard.lib.data_loaders import (
     load_fold_predictions,
     load_leaderboard_data,
 )
+from ncaa_eval.evaluation import list_metrics
 from ncaa_eval.evaluation.plotting import (
     COLOR_GREEN,
     TEMPLATE,
     plot_reliability_diagram,
 )
 
-_METRIC_COLS = ["log_loss", "brier_score", "roc_auc", "ece"]
+
+def _get_metric_cols(df: pd.DataFrame) -> list[str]:
+    """Return metric column names that exist in both registry and DataFrame."""
+    registered = list_metrics()
+    return [m for m in registered if m in df.columns]
 
 
 def _render_reliability_section(data_dir: str, run_id: str, label: str) -> None:
@@ -75,13 +80,19 @@ def _render_metric_summary(data_dir: str, run_id: str) -> None:
         st.info("No metric summary available for this run.")
         return
 
-    display_cols = ["year"] + _METRIC_COLS
+    metric_cols = _get_metric_cols(run_metrics)
+    display_cols = ["year"] + metric_cols
     display_df = run_metrics[display_cols].sort_values("year").reset_index(drop=True)
-    styled = (
-        display_df.style.background_gradient(cmap="RdYlGn_r", subset=["log_loss", "brier_score", "ece"])
-        .background_gradient(cmap="RdYlGn", subset=["roc_auc"])
-        .format({"log_loss": "{:.4f}", "brier_score": "{:.4f}", "roc_auc": "{:.4f}", "ece": "{:.4f}"})
-    )
+
+    lower_better = [m for m in metric_cols if m != "roc_auc"]
+    higher_better = [m for m in metric_cols if m == "roc_auc"]
+
+    styled = display_df.style
+    if lower_better:
+        styled = styled.background_gradient(cmap="RdYlGn_r", subset=lower_better)
+    if higher_better:
+        styled = styled.background_gradient(cmap="RdYlGn", subset=higher_better)
+    styled = styled.format({m: "{:.4f}" for m in metric_cols})
     st.dataframe(styled, use_container_width=True)
 
 

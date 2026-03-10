@@ -26,8 +26,11 @@ from rich.console import Console
 from rich.table import Table
 
 from ncaa_eval.evaluation.metrics import (
+    MetricFn,
     brier_score,
     expected_calibration_error,
+    get_metric,
+    list_metrics,
     log_loss,
     roc_auc,
 )
@@ -66,6 +69,11 @@ DEFAULT_METRICS: Mapping[
         "ece": expected_calibration_error,
     }
 )
+
+
+def default_metrics() -> dict[str, MetricFn]:
+    """Return all registered metric functions (built-in + user-registered)."""
+    return {name: get_metric(name) for name in list_metrics()}
 
 
 def feature_cols(df: pd.DataFrame) -> list[str]:
@@ -296,7 +304,7 @@ def run_backtest(  # noqa: PLR0913 — REFACTOR Story 8.1
         msg = f"mode must be 'batch' or 'stateful', got {mode!r}"
         raise ValueError(msg)
 
-    resolved_metrics = dict(DEFAULT_METRICS) if metric_fns is None else dict(metric_fns)
+    resolved_metrics = default_metrics() if metric_fns is None else dict(metric_fns)
 
     total_start = time.perf_counter()
 
