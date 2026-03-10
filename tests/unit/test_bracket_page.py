@@ -82,7 +82,9 @@ class TestNoRunSelected:
     def test_shows_info_when_no_run(self) -> None:
         mock_st = MagicMock()
         mock_st.session_state = {}
-        mock_st.columns.return_value = [MagicMock(), MagicMock()]
+        mock_st.columns.side_effect = lambda *a, **kw: [
+            MagicMock() for _ in range(a[0] if isinstance(a[0], int) else len(a[0]))
+        ]
 
         with patch.object(_page_mod, "st", mock_st):
             _page_mod._render_bracket_page()
@@ -96,7 +98,9 @@ class TestNoYearSelected:
     def test_shows_info_when_no_year(self) -> None:
         mock_st = MagicMock()
         mock_st.session_state = {"selected_run_id": "abc123"}
-        mock_st.columns.return_value = [MagicMock(), MagicMock()]
+        mock_st.columns.side_effect = lambda *a, **kw: [
+            MagicMock() for _ in range(a[0] if isinstance(a[0], int) else len(a[0]))
+        ]
 
         with patch.object(_page_mod, "st", mock_st):
             _page_mod._render_bracket_page()
@@ -114,7 +118,9 @@ class TestNoSeedsAvailable:
             "selected_year": 2023,
             "selected_scoring": "standard",
         }
-        mock_st.columns.return_value = [MagicMock(), MagicMock()]
+        mock_st.columns.side_effect = lambda *a, **kw: [
+            MagicMock() for _ in range(a[0] if isinstance(a[0], int) else len(a[0]))
+        ]
 
         with (
             patch.object(_page_mod, "st", mock_st),
@@ -136,7 +142,9 @@ class TestSimulationFails:
             "selected_scoring": "standard",
             "bracket_sim_method": "analytical",
         }
-        mock_st.columns.return_value = [MagicMock(), MagicMock()]
+        mock_st.columns.side_effect = lambda *a, **kw: [
+            MagicMock() for _ in range(a[0] if isinstance(a[0], int) else len(a[0]))
+        ]
         mock_st.selectbox.return_value = "analytical"
 
         with (
@@ -160,7 +168,9 @@ class TestSuccessfulRender:
             "selected_scoring": "standard",
             "bracket_sim_method": "analytical",
         }
-        mock_st.columns.return_value = [MagicMock(), MagicMock()]
+        mock_st.columns.side_effect = lambda *a, **kw: [
+            MagicMock() for _ in range(a[0] if isinstance(a[0], int) else len(a[0]))
+        ]
         # First selectbox call = simulation method, subsequent = pairwise team selectors
         mock_st.selectbox.side_effect = ["analytical", "[1] Duke", "[16] Norfolk St"]
 
@@ -237,7 +247,9 @@ class TestMCModeRender:
             "selected_year": 2023,
             "selected_scoring": "standard",
         }
-        mock_st.columns.return_value = [MagicMock(), MagicMock()]
+        mock_st.columns.side_effect = lambda *a, **kw: [
+            MagicMock() for _ in range(a[0] if isinstance(a[0], int) else len(a[0]))
+        ]
         mock_st.selectbox.side_effect = ["monte_carlo", "[1] Duke", "[16] Norfolk St"]
 
         sim_data = self._make_mc_sim_data()
@@ -270,7 +282,9 @@ class TestMCModeRender:
             "selected_year": 2023,
             "selected_scoring": "fibonacci",  # not in bracket_distributions
         }
-        mock_st.columns.return_value = [MagicMock(), MagicMock()]
+        mock_st.columns.side_effect = lambda *a, **kw: [
+            MagicMock() for _ in range(a[0] if isinstance(a[0], int) else len(a[0]))
+        ]
         mock_st.selectbox.side_effect = ["monte_carlo", "[1] Duke", "[16] Norfolk St"]
 
         # MC result but bracket_distributions only has "standard", not "fibonacci"

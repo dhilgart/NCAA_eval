@@ -1,6 +1,6 @@
 # Story 9.7: Game Theory Slider Implementation
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -33,23 +33,23 @@ so that **I can explore bracket outcomes under different risk strategies without
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `src/ncaa_eval/evaluation/perturbation.py` module (AC: #1, #2, #3)
-  - [ ] 1.1: Define `FIRST_ROUND_SEED_PRIORS: dict[int, float]` mapping `seed_diff → P(higher seed wins)` using historical data: `{15: 0.993, 13: 0.938, 11: 0.854, 9: 0.792, 7: 0.646, 5: 0.625, 3: 0.604, 1: 0.521}`
-  - [ ] 1.2: Implement `slider_to_temperature(slider_value: int) -> float` — maps `[-5, +5]` to `T` via `T = 2^(slider_value / 3)`. Validates input range.
-  - [ ] 1.3: Implement `power_transform(P: npt.NDArray[np.float64], temperature: float) -> npt.NDArray[np.float64]` — applies `p' = p^(1/T) / (p^(1/T) + (1-p)^(1/T))` element-wise. Must preserve diagonal (zeros) and handle `p=0` / `p=1` correctly.
-  - [ ] 1.4: Implement `build_seed_prior_matrix(seed_map: dict[int, int], team_ids: Sequence[int]) -> npt.NDArray[np.float64]` — constructs `(n, n)` seed prior matrix. Uses `FIRST_ROUND_SEED_PRIORS` with linear interpolation for even seed differences. Same-seed matchups get 0.5.
-  - [ ] 1.5: Implement `perturb_probability_matrix(P, seed_map, team_ids, temperature=1.0, seed_weight=0.0) -> npt.NDArray[np.float64]` — applies temperature transform first, then seed blend. Must preserve complementarity, range [0,1], and diagonal zeros. Returns P unchanged when both params are neutral (T=1.0, w=0.0).
-  - [ ] 1.6: Add `from __future__ import annotations` and full type annotations for `mypy --strict` compliance.
+- [x] Task 1: Create `src/ncaa_eval/evaluation/perturbation.py` module (AC: #1, #2, #3)
+  - [x] 1.1: Define `FIRST_ROUND_SEED_PRIORS: dict[int, float]` mapping `seed_diff → P(higher seed wins)` using historical data: `{15: 0.993, 13: 0.938, 11: 0.854, 9: 0.792, 7: 0.646, 5: 0.625, 3: 0.604, 1: 0.521}`
+  - [x] 1.2: Implement `slider_to_temperature(slider_value: int) -> float` — maps `[-5, +5]` to `T` via `T = 2^(slider_value / 3)`. Validates input range.
+  - [x] 1.3: Implement `power_transform(P: npt.NDArray[np.float64], temperature: float) -> npt.NDArray[np.float64]` — applies `p' = p^(1/T) / (p^(1/T) + (1-p)^(1/T))` element-wise. Must preserve diagonal (zeros) and handle `p=0` / `p=1` correctly.
+  - [x] 1.4: Implement `build_seed_prior_matrix(seed_map: dict[int, int], team_ids: Sequence[int]) -> npt.NDArray[np.float64]` — constructs `(n, n)` seed prior matrix. Uses `FIRST_ROUND_SEED_PRIORS` with linear interpolation for even seed differences. Same-seed matchups get 0.5.
+  - [x] 1.5: Implement `perturb_probability_matrix(P, seed_map, team_ids, temperature=1.0, seed_weight=0.0) -> npt.NDArray[np.float64]` — applies temperature transform first, then seed blend. Must preserve complementarity, range [0,1], and diagonal zeros. Returns P unchanged when both params are neutral (T=1.0, w=0.0).
+  - [x] 1.6: Add `from __future__ import annotations` and full type annotations for `mypy --strict` compliance.
 
-- [ ] Task 2: Export perturbation API from `evaluation` package (AC: #1, #2)
-  - [ ] 2.1: Add imports of `perturb_probability_matrix`, `slider_to_temperature`, `build_seed_prior_matrix`, `FIRST_ROUND_SEED_PRIORS`, and `power_transform` to `src/ncaa_eval/evaluation/__init__.py`
-  - [ ] 2.2: Add all five names to `__all__`
+- [x] Task 2: Export perturbation API from `evaluation` package (AC: #1, #2)
+  - [x] 2.1: Add imports of `perturb_probability_matrix`, `slider_to_temperature`, `build_seed_prior_matrix`, `FIRST_ROUND_SEED_PRIORS`, and `power_transform` to `src/ncaa_eval/evaluation/__init__.py`
+  - [x] 2.2: Add all five names to `__all__`
 
-- [ ] Task 3: Integrate sliders into dashboard Presentation page (AC: #1, #2, #3)
-  - [ ] 3.1: Add two slider controls to `dashboard/pages/2_Presentation.py` in a new "Game Theory Sliders" subsection below the existing "Simulation Settings":
+- [x] Task 3: Integrate sliders into dashboard Presentation page (AC: #1, #2, #3)
+  - [x] 3.1: Add two slider controls to `dashboard/pages/2_Presentation.py` in a new "Game Theory Sliders" subsection below the existing "Simulation Settings":
     - Upset Aggression: `st.slider("Upset Aggression", min_value=-5, max_value=5, value=0, step=1, help="Chalk ← → Chaos")` with session key `"bracket_upset_aggression"`
     - Seed-Weight: `st.slider("Seed-Weight", min_value=0, max_value=100, value=0, step=5, format="%d%%", help="Model ← → Seeds")` with session key `"bracket_seed_weight"`
-  - [ ] 3.2: Modify `dashboard/lib/simulation_helpers.py`:
+  - [x] 3.2: Modify `dashboard/lib/simulation_helpers.py`:
     - Add `upset_aggression: int = 0` and `seed_weight_pct: int = 0` parameters to `run_bracket_simulation()` (these become part of the `@st.cache_data` cache key)
     - Build `prob_matrix` via `build_probability_matrix()`, then compute `perturbed_matrix` via `perturb_probability_matrix(prob_matrix, bracket.seed_map, bracket.team_ids, temperature=slider_to_temperature(upset_aggression), seed_weight=seed_weight_pct / 100.0)`
     - Run analytical `simulate_tournament()` with a `MatrixProvider(perturbed_matrix, ...)` to get perturbed `advancement_probs` and `expected_points`
@@ -57,22 +57,22 @@ so that **I can explore bracket outcomes under different risk strategies without
     - Merge the MC fields (`sim_winners`, `bracket_distributions`) into the analytical result, or restructure `BracketSimulationResult` to hold both
     - Use `perturbed_matrix` for `compute_most_likely_bracket()` and as `prob_matrix` in the returned `BracketSimulationResult`
     - **CRITICAL**: The `prob_matrix` stored in `BracketSimulationResult` must be the PERTURBED matrix (P'), since all rendering (bracket tree, heatmap, pairwise selector) uses it
-  - [ ] 3.3: Pass the new slider values from `2_Presentation.py` to `run_bracket_simulation()` call
-  - [ ] 3.4: Add a "Reset Sliders" button that sets both sliders back to neutral (Upset Aggression=0, Seed-Weight=0%)
+  - [x] 3.3: Pass the new slider values from `2_Presentation.py` to `run_bracket_simulation()` call
+  - [x] 3.4: Add a "Reset Sliders" button that sets both sliders back to neutral (Upset Aggression=0, Seed-Weight=0%)
 
-- [ ] Task 4: Update user guide documentation (AC: #4)
-  - [ ] 4.1: Remove the "NOT YET IMPLEMENTED" warning banner from `docs/user-guide.md` (lines 529–533)
-  - [ ] 4.2: Update the slider documentation section to describe the actual 2-slider configuration (Upset Aggression + Seed-Weight) instead of the original 3-slider spec. Reference the mathematical formulas.
-  - [ ] 4.3: Add a brief explanation of what each slider does: "Upset Aggression: Negative = favorites reinforced; Positive = upsets more likely" and "Seed-Weight: 0% = pure model; 100% = pure historical seed rates"
+- [x] Task 4: Update user guide documentation (AC: #4)
+  - [x] 4.1: Remove the "NOT YET IMPLEMENTED" warning banner from `docs/user-guide.md` (lines 529–533)
+  - [x] 4.2: Update the slider documentation section to describe the actual 2-slider configuration (Upset Aggression + Seed-Weight) instead of the original 3-slider spec. Reference the mathematical formulas.
+  - [x] 4.3: Add a brief explanation of what each slider does: "Upset Aggression: Negative = favorites reinforced; Positive = upsets more likely" and "Seed-Weight: 0% = pure model; 100% = pure historical seed rates"
 
-- [ ] Task 5: Add comprehensive tests (AC: all)
-  - [ ] 5.1: Create `tests/unit/test_perturbation.py` with tests for:
+- [x] Task 5: Add comprehensive tests (AC: all)
+  - [x] 5.1: Create `tests/unit/test_perturbation.py` with tests for:
     - `slider_to_temperature()` — boundary values (-5, 0, +5), neutral returns 1.0
     - `power_transform()` — identity at T=1.0, T>1 compresses toward 0.5, T<1 sharpens, preserves complementarity, handles p=0/1/0.5 edge cases, preserves diagonal zeros
     - `build_seed_prior_matrix()` — correct lookups for standard matchups, same-seed returns 0.5, interpolates even seed_diff values
     - `perturb_probability_matrix()` — identity at neutral (T=1, w=0), combined transform produces correct output, complementarity preserved under all slider combinations, diagonal remains zero
-  - [ ] 5.2: Add parametrized tests for the worked examples from the spike research (Section 4 of `specs/research/game-theory-slider-mechanism.md`): verify computed values match documented values for 1v16, 5v12, 8v9, 6v11 at T=0.5/1.0/1.5/2.0/3.0 and w=0.0/0.25/0.5/0.75/1.0
-  - [ ] 5.3: Run full quality gates: `pytest`, `ruff check .`, `mypy --strict src/ncaa_eval tests`
+  - [x] 5.2: Add parametrized tests for the worked examples from the spike research (Section 4 of `specs/research/game-theory-slider-mechanism.md`): verify computed values match documented values for 1v16, 5v12, 8v9, 6v11 at T=0.5/1.0/1.5/2.0/3.0 and w=0.0/0.25/0.5/0.75/1.0
+  - [x] 5.3: Run full quality gates: `pytest`, `ruff check .`, `mypy --strict src/ncaa_eval tests`
 
 ## Dev Notes
 
@@ -263,10 +263,34 @@ For seed differences NOT in the table (even values), use linear interpolation be
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+- Fixed bracket page test failures: existing tests used `mock_st.columns.return_value = [MagicMock(), MagicMock()]` which broke when the new 3-column layout was added for Game Theory Sliders. Updated to use `side_effect` lambda that handles both `int` and `list` arguments.
+
 ### Completion Notes List
 
+- Created `perturbation.py` with 5 public functions + 1 private helper, all fully typed for `mypy --strict`
+- Power transform preserves p=0, p=1, p=0.5, diagonal zeros, and complementarity at all temperature values
+- Seed prior matrix uses linear interpolation for even seed differences; clamping for seed_diff > 15
+- Dashboard integration splits analytical vs MC paths: analytical uses perturbed `MatrixProvider`, MC uses original provider, results merged via new `SimulationResult` construction
+- All 48 unit tests pass including parametrized worked examples from spike research Section 4 (temperature-only, seed-weight-only, and combined T=1.5 + w=0.3)
+- User guide updated: "NOT YET IMPLEMENTED" banner removed, brief slider explanations added
+- 3 pre-existing integration test failures confirmed unrelated (ruff format, nox lint, check-manifest)
+
+### Change Log
+
+- 2026-03-10: Implemented game-theory slider perturbation (Story 9.7) — all 5 tasks complete
+
 ### File List
+
+- `src/ncaa_eval/evaluation/perturbation.py` — **NEW** core perturbation functions
+- `src/ncaa_eval/evaluation/__init__.py` — **MODIFIED** added perturbation exports to public API
+- `dashboard/lib/simulation_helpers.py` — **MODIFIED** added slider params, split analytical/MC paths, perturb matrix
+- `dashboard/pages/2_Presentation.py` — **MODIFIED** added Upset Aggression + Seed-Weight sliders and Reset button
+- `docs/user-guide.md` — **MODIFIED** removed NOT YET IMPLEMENTED banner, added slider descriptions
+- `tests/unit/test_perturbation.py` — **NEW** 48 unit tests for perturbation module
+- `tests/unit/test_bracket_page.py` — **MODIFIED** fixed columns mock for 3-column slider layout
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — **MODIFIED** status updated
+- `_bmad-output/implementation-artifacts/9-7-game-theory-slider-implementation.md` — **MODIFIED** tasks marked complete
