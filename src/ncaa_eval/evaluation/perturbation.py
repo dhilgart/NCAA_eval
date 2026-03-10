@@ -121,11 +121,10 @@ def power_transform(
     q_pow = np.power(1.0 - P, inv_t)
 
     denom = p_pow + q_pow
-    # Where denom == 0 (both p and 1-p are 0 → diagonal), keep original value.
-    safe_denom = np.where(denom == 0.0, 1.0, denom)
-    result = p_pow / safe_denom
+    result: npt.NDArray[np.float64] = np.divide(p_pow, denom)
 
-    # Restore diagonal zeros.
+    # Restore diagonal zeros (diagonal entries have p=0, so p_pow=0 and
+    # denom=1, giving result=0 — explicit restore keeps precision exact).
     np.fill_diagonal(result, diag)
 
     return result

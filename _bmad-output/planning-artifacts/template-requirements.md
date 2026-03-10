@@ -3745,3 +3745,31 @@ When auditing docs for broken import examples, grepping only for `from ncaa_eval
 **Also:** `ncaa_eval.__version__` does not exist. Any doc example asserting it will raise `AttributeError`. The correct smoke test for "package is importable" is just `import ncaa_eval` (import succeeding = no errors).
 
 **Fixed in:** `docs/testing/conventions.md:197` and `docs/testing/execution.md:69`
+
+---
+
+## Story 9.7 Learnings (Game Theory Slider Implementation, 2026-03-10)
+
+### numpy Division: Avoid Dead `np.where` Guard for Non-Zero Denominator
+
+**Pattern:** In `power_transform`, a `safe_denom = np.where(denom == 0.0, 1.0, denom)` guard was written to prevent division-by-zero. However, the denominator `p^(1/T) + (1-p)^(1/T)` is mathematically guaranteed non-zero for all valid probabilities `p ∈ [0,1]` and `T > 0`. The guard was dead code with a misleading comment claiming it handled diagonal zeros (which are actually `p=0`, yielding `denom=1`, not `denom=0`).
+
+**Rule:** When writing numpy guards for "impossible" error conditions, first verify whether the condition can actually occur. A dead guard with a wrong comment is worse than no guard — it actively misleads future maintainers. If the guard is truly needed, add a note proving *when* it would trigger.
+
+**Fix pattern:** Replace `p_pow / np.where(denom == 0.0, 1.0, denom)` with `np.divide(p_pow, denom)` (which also satisfies `mypy --strict`'s `no-any-return` rule — plain `/` on numpy arrays returns `Any`, while `np.divide` returns `NDArray[float64]`).
+
+### Streamlit Slider Test Coverage: Verify Values Flow Through
+
+**Pattern:** Dashboard tests that patch `run_bracket_simulation` entirely (to avoid real data loading) do NOT verify that slider widget values are correctly extracted from Streamlit's widget return values and passed to the simulation function. A slider value regression is invisible.
+
+**Rule:** For Streamlit pages with new slider/input widgets, add at least one test that:
+1. Sets `mock_st.slider.side_effect = [val1, val2, ...]` with specific non-default values
+2. Asserts the mocked simulation function was called with `call_kwargs["slider_param"] == val`
+
+This verifies the critical binding: `slider_value = st.slider(...) → run_simulation(..., slider_value=slider_value)`.
+
+### Parametrize Interpolation Tests Fully
+
+**Pattern:** The initial test suite tested only 2 of 7 even seed-difference interpolation cases (diff=2, diff=4). The remaining 5 (diff=6,8,10,12,14) were untested.
+
+**Rule:** When a function applies linear interpolation across a domain with N tabulated breakpoints, parametrize the interpolation test to cover ALL inter-breakpoint values, not just the first two. This costs one line per case and eliminates silent regressions in the middle of the interpolation table.

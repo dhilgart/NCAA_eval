@@ -1,6 +1,6 @@
 # Story 9.7: Game Theory Slider Implementation
 
-Status: review
+Status: done
 
 ## Story
 
@@ -278,10 +278,12 @@ Claude Opus 4.6
 - All 48 unit tests pass including parametrized worked examples from spike research Section 4 (temperature-only, seed-weight-only, and combined T=1.5 + w=0.3)
 - User guide updated: "NOT YET IMPLEMENTED" banner removed, brief slider explanations added
 - 3 pre-existing integration test failures confirmed unrelated (ruff format, nox lint, check-manifest)
+- Code review fixes: removed dead `safe_denom` guard with misleading comment (replaced with `np.divide`), expanded interpolation tests to cover all 7 even seed differences (diff=2..14), added slider flow test and reset button test to `test_bracket_page.py` (62 total tests)
 
 ### Change Log
 
 - 2026-03-10: Implemented game-theory slider perturbation (Story 9.7) — all 5 tasks complete
+- 2026-03-10: Code review fixes — removed dead safe_denom guard, expanded interpolation tests, added slider flow + reset button tests
 
 ### File List
 

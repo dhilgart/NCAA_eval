@@ -385,15 +385,30 @@ class TestLookupSeedPrior:
     def test_zero_returns_half(self) -> None:
         assert _lookup_seed_prior(0) == 0.5
 
-    def test_interpolation_seed_diff_2(self) -> None:
-        # Between 1 (0.521) and 3 (0.604)
-        expected = 0.521 + 0.5 * (0.604 - 0.521)
-        assert pytest.approx(_lookup_seed_prior(2), abs=1e-6) == expected
-
-    def test_interpolation_seed_diff_4(self) -> None:
-        # Between 3 (0.604) and 5 (0.625)
-        expected = 0.604 + 0.5 * (0.625 - 0.604)
-        assert pytest.approx(_lookup_seed_prior(4), abs=1e-6) == expected
+    @pytest.mark.parametrize(
+        ("seed_diff", "d_low", "p_low", "d_high", "p_high"),
+        [
+            (2, 1, 0.521, 3, 0.604),
+            (4, 3, 0.604, 5, 0.625),
+            (6, 5, 0.625, 7, 0.646),
+            (8, 7, 0.646, 9, 0.792),
+            (10, 9, 0.792, 11, 0.854),
+            (12, 11, 0.854, 13, 0.938),
+            (14, 13, 0.938, 15, 0.993),
+        ],
+        ids=["diff=2", "diff=4", "diff=6", "diff=8", "diff=10", "diff=12", "diff=14"],
+    )
+    def test_interpolation_all_even_diffs(
+        self,
+        seed_diff: int,
+        d_low: int,
+        p_low: float,
+        d_high: int,
+        p_high: float,
+    ) -> None:
+        frac = (seed_diff - d_low) / (d_high - d_low)
+        expected = p_low + frac * (p_high - p_low)
+        assert pytest.approx(_lookup_seed_prior(seed_diff), abs=1e-6) == expected
 
     def test_above_15_clamps(self) -> None:
         assert _lookup_seed_prior(16) == 0.993
