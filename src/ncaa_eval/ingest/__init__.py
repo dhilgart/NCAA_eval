@@ -14,6 +14,7 @@ from ncaa_eval.ingest.connectors import (
 from ncaa_eval.ingest.repository import ParquetRepository, Repository
 from ncaa_eval.ingest.schema import Game, Season, Team
 from ncaa_eval.ingest.sync import SyncEngine, SyncResult
+from ncaa_eval.ingest.validation import ValidationReport, validate_sync
 
 __all__ = [
     "AuthenticationError",
@@ -30,4 +31,6 @@ __all__ = [
     "SyncEngine",
     "SyncResult",
     "Team",
+    "ValidationReport",
+    "validate_sync",
 ]

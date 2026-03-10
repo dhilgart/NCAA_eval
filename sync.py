@@ -18,7 +18,7 @@ from pathlib import Path
 
 import typer
 
-from ncaa_eval.ingest import ParquetRepository, SyncEngine
+from ncaa_eval.ingest import ParquetRepository, SyncEngine, validate_sync
 from ncaa_eval.ingest.connectors import ConnectorError
 
 app = typer.Typer(help="NCAA_eval data sync command")
@@ -72,6 +72,9 @@ def main(
         f"teams: {total_teams}, seasons: {total_seasons}, "
         f"games: {total_games}, cache hits: {total_cached}"
     )
+
+    # Post-sync data validation (non-fatal).
+    validate_sync(repo)
 
 
 if __name__ == "__main__":
