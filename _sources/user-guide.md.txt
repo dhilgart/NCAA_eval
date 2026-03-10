@@ -263,7 +263,7 @@ probabilities against observed win rates:
 | Points on the diagonal | Well-calibrated | No action needed |
 | Points **above** the diagonal | Under-confident — actual win rates exceed predictions | Model could be sharper |
 | Points **below** the diagonal | Over-confident — predictions overstate win likelihood | Model needs calibration |
-| S-shaped curve | Probabilities are too extreme on both ends | Retrain with calibration regularization; temperature scaling via Game Theory Sliders (not yet implemented) |
+| S-shaped curve | Probabilities are too extreme on both ends | Retrain with calibration regularization; use a negative Upset Aggression slider value (chalk mode) to sharpen predictions |
 | Flat line near 0.5 | Model lacks discrimination | Improve features or model architecture |
 
 ```{tip}
@@ -526,13 +526,16 @@ to understand your expected point distribution.
 
 ### Game Theory Sliders
 
-```{warning}
-**NOT YET IMPLEMENTED** — Game Theory Sliders are a planned feature based on
-research from Story 7.7.  They are not yet available in the dashboard.  The
-section below describes the *intended* design for future implementation.
-```
+Two sliders allow you to adjust the bracket strategy without retraining.
+Both sliders update the bracket visualization, advancement heatmap, expected
+points table, and pairwise probabilities in real time.  The Monte Carlo score
+distribution (if enabled) is **not** affected — it represents the model's
+original predictions of tournament outcomes.
 
-Two sliders will allow you to adjust the bracket strategy without retraining:
+- **Upset Aggression:** Negative values reinforce favorites (chalk);
+  positive values make upsets more likely (chaos).
+- **Seed-Weight:** 0% = pure model predictions;
+  100% = pure historical seed win rates.
 
 **Upset Aggression** (range: −5 to +5, default: 0)
 

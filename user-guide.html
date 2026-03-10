@@ -230,6 +230,7 @@
 <li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.evaluation.bracket.html">ncaa_eval.evaluation.bracket module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.evaluation.kaggle_export.html">ncaa_eval.evaluation.kaggle_export module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.evaluation.metrics.html">ncaa_eval.evaluation.metrics module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.evaluation.perturbation.html">ncaa_eval.evaluation.perturbation module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.evaluation.plotting.html">ncaa_eval.evaluation.plotting module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.evaluation.providers.html">ncaa_eval.evaluation.providers module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.evaluation.scoring.html">ncaa_eval.evaluation.scoring module</a></li>
@@ -705,7 +706,7 @@ those games should be wins</p></li>
 </tr>
 <tr class="row-odd"><td><p>S-shaped curve</p></td>
 <td><p>Probabilities are too extreme on both ends</p></td>
-<td><p>Retrain with calibration regularization; temperature scaling via Game Theory Sliders (not yet implemented)</p></td>
+<td><p>Retrain with calibration regularization; use a negative Upset Aggression slider value (chalk mode) to sharpen predictions</p></td>
 </tr>
 <tr class="row-even"><td><p>Flat line near 0.5</p></td>
 <td><p>Model lacks discrimination</p></td>
@@ -1090,13 +1091,17 @@ score across all simulated outcomes</p></li>
 </section>
 <section id="game-theory-sliders">
 <h3>Game Theory Sliders<a class="headerlink" href="#game-theory-sliders" title="Link to this heading">¶</a></h3>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p><strong>NOT YET IMPLEMENTED</strong> — Game Theory Sliders are a planned feature based on
-research from Story 7.7.  They are not yet available in the dashboard.  The
-section below describes the <em>intended</em> design for future implementation.</p>
-</div>
-<p>Two sliders will allow you to adjust the bracket strategy without retraining:</p>
+<p>Two sliders allow you to adjust the bracket strategy without retraining.
+Both sliders update the bracket visualization, advancement heatmap, expected
+points table, and pairwise probabilities in real time.  The Monte Carlo score
+distribution (if enabled) is <strong>not</strong> affected — it represents the model’s
+original predictions of tournament outcomes.</p>
+<ul class="simple">
+<li><p><strong>Upset Aggression:</strong> Negative values reinforce favorites (chalk);
+positive values make upsets more likely (chaos).</p></li>
+<li><p><strong>Seed-Weight:</strong> 0% = pure model predictions;
+100% = pure historical seed win rates.</p></li>
+</ul>
 <p><strong>Upset Aggression</strong> (range: −5 to +5, default: 0)</p>
 <p>Controls whether your bracket picks favor chalk (favorites) or chaos (upsets):</p>
 <div class="table-wrapper colwidths-auto docutils container">

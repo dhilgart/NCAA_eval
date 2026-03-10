@@ -230,6 +230,7 @@
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.bracket.html">ncaa_eval.evaluation.bracket module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.kaggle_export.html">ncaa_eval.evaluation.kaggle_export module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html">ncaa_eval.evaluation.metrics module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.perturbation.html">ncaa_eval.evaluation.perturbation module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.plotting.html">ncaa_eval.evaluation.plotting module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.providers.html">ncaa_eval.evaluation.providers module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.scoring.html">ncaa_eval.evaluation.scoring module</a></li>
@@ -418,6 +419,13 @@
 <li class="toctree-l2"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.log_loss"><code class="docutils literal notranslate"><span class="pre">log_loss()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.reliability_diagram_data"><code class="docutils literal notranslate"><span class="pre">reliability_diagram_data()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.roc_auc"><code class="docutils literal notranslate"><span class="pre">roc_auc()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ncaa_eval.evaluation.perturbation.html">ncaa_eval.evaluation.perturbation module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ncaa_eval.evaluation.perturbation.html#ncaa_eval.evaluation.perturbation.build_seed_prior_matrix"><code class="docutils literal notranslate"><span class="pre">build_seed_prior_matrix()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ncaa_eval.evaluation.perturbation.html#ncaa_eval.evaluation.perturbation.perturb_probability_matrix"><code class="docutils literal notranslate"><span class="pre">perturb_probability_matrix()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ncaa_eval.evaluation.perturbation.html#ncaa_eval.evaluation.perturbation.power_transform"><code class="docutils literal notranslate"><span class="pre">power_transform()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ncaa_eval.evaluation.perturbation.html#ncaa_eval.evaluation.perturbation.slider_to_temperature"><code class="docutils literal notranslate"><span class="pre">slider_to_temperature()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ncaa_eval.evaluation.plotting.html">ncaa_eval.evaluation.plotting module</a><ul>
@@ -1877,6 +1885,26 @@ via the complementarity contract.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="ncaa_eval.evaluation.build_seed_prior_matrix">
+<span class="sig-prename descclassname"><span class="pre">ncaa_eval.evaluation.</span></span><span class="sig-name descname"><span class="pre">build_seed_prior_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed_map</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">team_ids</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/evaluation/perturbation.html#build_seed_prior_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.evaluation.build_seed_prior_matrix" title="Link to this definition">¶</a></dt>
+<dd><p>Build an (n × n) seed prior probability matrix.</p>
+<p><code class="docutils literal notranslate"><span class="pre">S[i,</span> <span class="pre">j]</span> <span class="pre">=</span> <span class="pre">P(team_i</span> <span class="pre">beats</span> <span class="pre">team_j)</span></code> based on historical seed win
+rates keyed by <code class="docutils literal notranslate"><span class="pre">|seed_i</span> <span class="pre">−</span> <span class="pre">seed_j|</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>seed_map</strong> – Maps <code class="docutils literal notranslate"><span class="pre">team_id</span> <span class="pre">→</span> <span class="pre">seed_number</span></code> (1–16).</p></li>
+<li><p><strong>team_ids</strong> – Ordered team IDs matching matrix indices.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Float64 matrix of shape <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">n)</span></code> with diagonal zeros and
+<code class="docutils literal notranslate"><span class="pre">S[i,j]</span> <span class="pre">+</span> <span class="pre">S[j,i]</span> <span class="pre">=</span> <span class="pre">1</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="ncaa_eval.evaluation.compute_advancement_probs">
 <span class="sig-prename descclassname"><span class="pre">ncaa_eval.evaluation.</span></span><span class="sig-name descname"><span class="pre">compute_advancement_probs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bracket</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="ncaa_eval.evaluation.bracket.html#ncaa_eval.evaluation.bracket.BracketStructure" title="ncaa_eval.evaluation.bracket.BracketStructure"><span class="pre">BracketStructure</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">P</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/evaluation/simulation.html#compute_advancement_probs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.evaluation.compute_advancement_probs" title="Link to this definition">¶</a></dt>
 <dd><p>Compute exact advancement probabilities via the Phylourny algorithm.</p>
@@ -2105,6 +2133,38 @@ is P(team_ids[i] beats team_ids[j]).</p></li>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="ncaa_eval.evaluation.perturb_probability_matrix">
+<span class="sig-prename descclassname"><span class="pre">ncaa_eval.evaluation.</span></span><span class="sig-name descname"><span class="pre">perturb_probability_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">P</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed_map</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">team_ids</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed_weight</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/evaluation/perturbation.html#perturb_probability_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.evaluation.perturb_probability_matrix" title="Link to this definition">¶</a></dt>
+<dd><p>Apply game-theory slider perturbation to a pairwise probability matrix.</p>
+<p>Applies two independent transformations in sequence:</p>
+<ol class="arabic simple">
+<li><p>Temperature scaling: <code class="docutils literal notranslate"><span class="pre">p'</span> <span class="pre">=</span> <span class="pre">p^(1/T)</span> <span class="pre">/</span> <span class="pre">(p^(1/T)</span> <span class="pre">+</span> <span class="pre">(1-p)^(1/T))</span></code></p></li>
+<li><p>Seed blend: <code class="docutils literal notranslate"><span class="pre">p''</span> <span class="pre">=</span> <span class="pre">(1-w)*p'</span> <span class="pre">+</span> <span class="pre">w*p_seed_prior</span></code></p></li>
+</ol>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>P</strong> – Square probability matrix where <code class="docutils literal notranslate"><span class="pre">P[i,j]</span></code> is the probability
+that team <em>i</em> beats team <em>j</em>.  Must satisfy
+<code class="docutils literal notranslate"><span class="pre">P[i,j]</span> <span class="pre">+</span> <span class="pre">P[j,i]</span> <span class="pre">=</span> <span class="pre">1</span></code> and <code class="docutils literal notranslate"><span class="pre">P[i,i]</span> <span class="pre">=</span> <span class="pre">0</span></code>.</p></li>
+<li><p><strong>seed_map</strong> – Maps <code class="docutils literal notranslate"><span class="pre">team_id</span> <span class="pre">→</span> <span class="pre">seed_number</span></code> (1–16).</p></li>
+<li><p><strong>team_ids</strong> – Ordered team IDs matching matrix indices.</p></li>
+<li><p><strong>temperature</strong> – Controls upset/chalk spectrum.  T &gt; 1 = more upsets,
+T &lt; 1 = more chalk, T = 1 = neutral.</p></li>
+<li><p><strong>seed_weight</strong> – Controls model/seed blend.  0 = pure model,
+1 = pure seed prior.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Perturbed matrix of same shape satisfying complementarity.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If <em>temperature</em> ≤ 0 or <em>seed_weight</em> not in <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="ncaa_eval.evaluation.plot_advancement_heatmap">
 <span class="sig-prename descclassname"><span class="pre">ncaa_eval.evaluation.</span></span><span class="sig-name descname"><span class="pre">plot_advancement_heatmap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.SimulationResult" title="ncaa_eval.evaluation.simulation.SimulationResult"><span class="pre">SimulationResult</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">team_labels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Figure</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/evaluation/plotting.html#plot_advancement_heatmap"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.evaluation.plot_advancement_heatmap" title="Link to this definition">¶</a></dt>
 <dd><p>Heatmap of per-team advancement probabilities by round.</p>
@@ -2196,6 +2256,38 @@ and percentile values.</p></li>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Interactive Plotly Figure with histogram bars and vertical
 percentile lines at 5th, 25th, 50th, 75th, and 95th.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ncaa_eval.evaluation.power_transform">
+<span class="sig-prename descclassname"><span class="pre">ncaa_eval.evaluation.</span></span><span class="sig-name descname"><span class="pre">power_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">P</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/evaluation/perturbation.html#power_transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.evaluation.power_transform" title="Link to this definition">¶</a></dt>
+<dd><p>Apply power/temperature scaling to a probability matrix.</p>
+<p>Computes <code class="docutils literal notranslate"><span class="pre">p'</span> <span class="pre">=</span> <span class="pre">p^(1/T)</span> <span class="pre">/</span> <span class="pre">(p^(1/T)</span> <span class="pre">+</span> <span class="pre">(1-p)^(1/T))</span></code> element-wise.</p>
+<dl class="simple">
+<dt>Properties:</dt><dd><ul class="simple">
+<li><p>T=1.0: identity (p’ = p).</p></li>
+<li><p>T&gt;1: compresses probabilities toward 0.5 (more upsets).</p></li>
+<li><p>T&lt;1: sharpens probabilities away from 0.5 (more chalk).</p></li>
+<li><p>Preserves p=0, p=1, p=0.5 as fixed points.</p></li>
+<li><p>Preserves diagonal zeros.</p></li>
+<li><p>Preserves complementarity: <code class="docutils literal notranslate"><span class="pre">p'[i,j]</span> <span class="pre">+</span> <span class="pre">p'[j,i]</span> <span class="pre">=</span> <span class="pre">1</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>P</strong> – Square probability matrix with diagonal zeros.</p></li>
+<li><p><strong>temperature</strong> – Temperature T &gt; 0.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Transformed matrix with same shape and dtype.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If <em>temperature</em> is not positive.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2403,6 +2495,23 @@ expected points, and score distributions.</p>
 </dd>
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>ValueError</strong> – If <code class="docutils literal notranslate"><span class="pre">n_simulations</span> <span class="pre">&lt;</span> <span class="pre">100</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ncaa_eval.evaluation.slider_to_temperature">
+<span class="sig-prename descclassname"><span class="pre">ncaa_eval.evaluation.</span></span><span class="sig-name descname"><span class="pre">slider_to_temperature</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">slider_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/evaluation/perturbation.html#slider_to_temperature"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.evaluation.slider_to_temperature" title="Link to this definition">¶</a></dt>
+<dd><p>Map an integer slider value to a temperature parameter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>slider_value</strong> – Integer in <code class="docutils literal notranslate"><span class="pre">[-5,</span> <span class="pre">+5]</span></code>.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">T</span> <span class="pre">=</span> <span class="pre">2^(slider_value</span> <span class="pre">/</span> <span class="pre">3)</span></code>.  T=1.0 at slider_value=0 (neutral).</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If <em>slider_value</em> is outside <code class="docutils literal notranslate"><span class="pre">[-5,</span> <span class="pre">+5]</span></code>.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2674,6 +2783,7 @@ test year; <code class="docutils literal notranslate"><span class="pre">test</sp
 <li><a class="reference internal" href="#ncaa_eval.evaluation.brier_score"><code class="docutils literal notranslate"><span class="pre">brier_score()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.build_bracket"><code class="docutils literal notranslate"><span class="pre">build_bracket()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.build_probability_matrix"><code class="docutils literal notranslate"><span class="pre">build_probability_matrix()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.evaluation.build_seed_prior_matrix"><code class="docutils literal notranslate"><span class="pre">build_seed_prior_matrix()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.compute_advancement_probs"><code class="docutils literal notranslate"><span class="pre">compute_advancement_probs()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.compute_bracket_distribution"><code class="docutils literal notranslate"><span class="pre">compute_bracket_distribution()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.compute_expected_points"><code class="docutils literal notranslate"><span class="pre">compute_expected_points()</span></code></a></li>
@@ -2686,11 +2796,13 @@ test year; <code class="docutils literal notranslate"><span class="pre">test</sp
 <li><a class="reference internal" href="#ncaa_eval.evaluation.list_scoring_display_names"><code class="docutils literal notranslate"><span class="pre">list_scoring_display_names()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.list_scorings"><code class="docutils literal notranslate"><span class="pre">list_scorings()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.log_loss"><code class="docutils literal notranslate"><span class="pre">log_loss()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.evaluation.perturb_probability_matrix"><code class="docutils literal notranslate"><span class="pre">perturb_probability_matrix()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.plot_advancement_heatmap"><code class="docutils literal notranslate"><span class="pre">plot_advancement_heatmap()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.plot_backtest_summary"><code class="docutils literal notranslate"><span class="pre">plot_backtest_summary()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.plot_metric_comparison"><code class="docutils literal notranslate"><span class="pre">plot_metric_comparison()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.plot_reliability_diagram"><code class="docutils literal notranslate"><span class="pre">plot_reliability_diagram()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.plot_score_distribution"><code class="docutils literal notranslate"><span class="pre">plot_score_distribution()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.evaluation.power_transform"><code class="docutils literal notranslate"><span class="pre">power_transform()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.register_scoring"><code class="docutils literal notranslate"><span class="pre">register_scoring()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.reliability_diagram_data"><code class="docutils literal notranslate"><span class="pre">reliability_diagram_data()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.roc_auc"><code class="docutils literal notranslate"><span class="pre">roc_auc()</span></code></a></li>
@@ -2699,6 +2811,7 @@ test year; <code class="docutils literal notranslate"><span class="pre">test</sp
 <li><a class="reference internal" href="#ncaa_eval.evaluation.scoring_from_config"><code class="docutils literal notranslate"><span class="pre">scoring_from_config()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.simulate_tournament"><code class="docutils literal notranslate"><span class="pre">simulate_tournament()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.simulate_tournament_mc"><code class="docutils literal notranslate"><span class="pre">simulate_tournament_mc()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.evaluation.slider_to_temperature"><code class="docutils literal notranslate"><span class="pre">slider_to_temperature()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.walk_forward_splits"><code class="docutils literal notranslate"><span class="pre">walk_forward_splits()</span></code></a></li>
 </ul>
 </li>

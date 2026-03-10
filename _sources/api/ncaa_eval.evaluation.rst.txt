@@ -11,6 +11,7 @@ Submodules
    ncaa_eval.evaluation.bracket
    ncaa_eval.evaluation.kaggle_export
    ncaa_eval.evaluation.metrics
+   ncaa_eval.evaluation.perturbation
    ncaa_eval.evaluation.plotting
    ncaa_eval.evaluation.providers
    ncaa_eval.evaluation.scoring
