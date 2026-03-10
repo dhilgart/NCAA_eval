@@ -3727,3 +3727,15 @@ assert any("Rating" in (t or "") for t in xaxis_titles)
 ```
 
 **Applies to:** Any Plotly chart dispatch test where different `model_type` values produce different axis labels.
+
+### Doc Import Audit Scope: Use `import ncaa_eval` AND `from ncaa_eval` Patterns (Discovered Story 9.4 Code Review, 2026-03-09)
+
+When auditing docs for broken import examples, grepping only for `from ncaa_eval` misses bare `import ncaa_eval` statements that access non-existent attributes (e.g., `assert ncaa_eval.__version__`). The root `ncaa_eval` package does not define `__version__` — it only has a docstring and `from __future__ import annotations`.
+
+**Rule:** Doc import audits must search for BOTH patterns:
+1. `from ncaa_eval` — to catch submodule imports
+2. `import ncaa_eval` — to catch bare module imports and any attribute access that follows
+
+**Also:** `ncaa_eval.__version__` does not exist. Any doc example asserting it will raise `AttributeError`. The correct smoke test for "package is importable" is just `import ncaa_eval` (import succeeding = no errors).
+
+**Fixed in:** `docs/testing/conventions.md:197` and `docs/testing/execution.md:69`
