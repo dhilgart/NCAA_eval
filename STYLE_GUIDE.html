@@ -504,8 +504,8 @@ during code review (PR checklist).</p></li>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.model_selection</span><span class="w"> </span><span class="kn">import</span> <span class="n">TimeSeriesSplit</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.features</span><span class="w"> </span><span class="kn">import</span> <span class="n">rolling_efficiency</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.models.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelBase</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.model</span><span class="w"> </span><span class="kn">import</span> <span class="n">Model</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.transform</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_rolling_stats</span>
 </pre></div>
 </div>
 </section>
@@ -1421,7 +1421,11 @@ must include a rationale (Section 3, Lint Suppression Policy).</p></li>
 <li><p><strong>Mirror <code class="docutils literal notranslate"><span class="pre">src/</span></code> in <code class="docutils literal notranslate"><span class="pre">tests/</span></code>.</strong> <code class="docutils literal notranslate"><span class="pre">src/ncaa_eval/model/elo.py</span></code> is tested by
 <code class="docutils literal notranslate"><span class="pre">tests/unit/test_elo.py</span></code> (or <code class="docutils literal notranslate"><span class="pre">tests/integration/test_elo_integration.py</span></code>).</p></li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">__init__.py</span></code> re-exports.</strong> Public symbols should be importable from the
-package level: <code class="docutils literal notranslate"><span class="pre">from</span> <span class="pre">ncaa_eval</span> <span class="pre">import</span> <span class="pre">EloModel</span></code>.</p></li>
+<em>submodule</em> level (e.g., <code class="docutils literal notranslate"><span class="pre">from</span> <span class="pre">ncaa_eval.model</span> <span class="pre">import</span> <span class="pre">Model,</span> <span class="pre">get_model</span></code>).
+The root <code class="docutils literal notranslate"><span class="pre">ncaa_eval</span></code> package does not re-export anything. Concrete model
+classes self-register via <code class="docutils literal notranslate"><span class="pre">&#64;register_model</span></code> and are accessed through the
+registry (<code class="docutils literal notranslate"><span class="pre">get_model(&quot;elo&quot;)</span></code>) or direct import
+(<code class="docutils literal notranslate"><span class="pre">from</span> <span class="pre">ncaa_eval.model.elo</span> <span class="pre">import</span> <span class="pre">EloModel</span></code>).</p></li>
 <li><p><strong>No circular imports.</strong> If two modules need each other, extract shared types
 into a third module.</p></li>
 <li><p><strong>Configuration lives in <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code>.</strong> Do not create separate config files

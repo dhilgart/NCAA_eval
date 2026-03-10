@@ -65,8 +65,7 @@ Smoke tests are a **curated subset** of tests designed for speed. Individual smo
 @pytest.mark.smoke
 def test_import_package():
     """Verify package can be imported without errors."""
-    import ncaa_eval
-    assert ncaa_eval.__version__
+    import ncaa_eval  # noqa: F401 — import itself is the assertion
 
 # Smoke-eligible: Fast unit test (sanity check)
 @pytest.mark.smoke
