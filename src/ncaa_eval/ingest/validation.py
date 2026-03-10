@@ -190,12 +190,14 @@ def _check_team_references(repo: Repository) -> list[ValidationResult]:
             orphans[str(s.year)] = sorted(season_orphans)
 
     if orphans:
-        total = sum(len(v) for v in orphans.values())
+        unique_orphan_ids = {tid for ids in orphans.values() for tid in ids}
         return [
             ValidationResult(
                 check_name="team_references",
                 passed=False,
-                message=f"{total} orphan team ID(s) found across {len(orphans)} season(s)",
+                message=(
+                    f"{len(unique_orphan_ids)} unique orphan team ID(s) found across {len(orphans)} season(s)"
+                ),
                 details={"orphans_per_season": orphans},
             )
         ]
@@ -218,6 +220,7 @@ def validate_sync(repo: Repository) -> ValidationReport:
     """Run all post-sync validation checks and return a report.
 
     This function is **non-fatal** — it never raises on validation failures.
+    Unexpected I/O errors (e.g., corrupt Parquet) may still propagate.
     The caller is responsible for logging results.
     """
     results: list[ValidationResult] = []

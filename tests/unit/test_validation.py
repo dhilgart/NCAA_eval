@@ -133,8 +133,8 @@ class TestCheckGameCounts:
     def test_all_seasons_within_range(self, repo: ParquetRepository) -> None:
         """Multiple seasons with similar game counts should all pass."""
         repo.save_teams(_TEAMS)
+        repo.save_seasons([Season(year=y) for y in (2022, 2023, 2024)])
         for year in (2022, 2023, 2024):
-            repo.save_seasons([Season(year=y) for y in (2022, 2023, 2024)])
             repo.save_games(_make_n_games(year, 100))
 
         results = _check_game_counts(repo)

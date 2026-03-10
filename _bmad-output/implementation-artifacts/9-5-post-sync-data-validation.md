@@ -1,6 +1,6 @@
 # Story 9.5: Post-Sync Data Validation
 
-Status: review
+Status: done
 
 ## Story
 
@@ -196,8 +196,27 @@ None — clean implementation with no blocking issues.
 - 1 integration test verifying validation runs after CLI sync and produces log output
 - All 1004 tests pass, `ruff check .` clean, `mypy --strict` clean, `ruff format` clean
 
+### Senior Developer Review (AI)
+
+**Date:** 2026-03-09
+**Reviewer:** Code Review Agent (Claude Sonnet 4.6)
+**Outcome:** Approved with fixes applied
+
+**Findings:**
+
+- **MEDIUM (fixed):** `_check_team_references` — orphan count summed per-season lists, double-counting the same orphan ID when it appeared in multiple seasons. Fixed to count unique orphan IDs across all seasons (`validation.py:193`).
+- **MEDIUM (action item):** `validate_sync` loads all seasons+games 3× (once per check). Acknowledged in Dev Notes as a starting-point tradeoff. Refactoring to share loaded data requires test restructuring; deferred to a future enhancement.
+- **LOW (fixed):** `validate_sync` docstring said "never raises" — corrected to acknowledge I/O errors may still propagate.
+- **LOW (fixed):** `test_all_seasons_within_range` called `save_seasons` 3× redundantly inside a loop — moved before the loop.
+- **LOW (accepted):** Integration test assertion checks only `[validation]` prefix — acceptable coverage for an integration test.
+- **LOW (accepted):** `sync.py` discards `ValidationReport` return value — by design (logging happens inside `validate_sync`).
+- **LOW (accepted):** Counter key includes `g.season` redundantly per-season-partition load — minor, not worth changing.
+
+All 36 tests pass after fixes. `ruff check` and `mypy --strict` clean.
+
 ### Change Log
 
+- 2026-03-09: Code review completed — 2 fixes applied (`_check_team_references` orphan count accuracy, docstring, test loop cleanup); story → done
 - 2026-03-09: Implemented post-sync data validation (Story 9.5) — added validation module with 3 checks, integrated into sync CLI, added 24 tests
 
 ### File List
@@ -208,4 +227,4 @@ None — clean implementation with no blocking issues.
 - `tests/unit/test_validation.py` (new) — 23 unit tests for validation
 - `tests/integration/test_sync.py` (modified) — 1 integration test for validation-after-sync
 - `_bmad-output/implementation-artifacts/9-5-post-sync-data-validation.md` (modified) — story updates
-- `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified) — status → review
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified) — status → done

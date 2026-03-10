@@ -716,6 +716,12 @@ class MyModelConfig(BaseModel):
 - ✅ **Documentation-first approach** - Defining testing strategy (Story 1.3) before implementation (Story 1.5) ensures alignment and prevents rework
 - ✅ **Adversarial code review workflow** - Finding 3-10 specific issues per review ensures thorough validation and catches gaps
 
+**Story 9.5 - Post-Sync Data Validation (2026-03-09):**
+- ✅ **Non-fatal validation gate pattern** — Post-operation validation using a `ValidationReport` with per-check `passed: bool` results decouples data quality visibility from pipeline correctness. The validation function logs internally (INFO summary + WARNING per failure) and returns the report; the caller simply invokes it and ignores the return value. This pattern is broadly reusable: validate after any I/O operation without blocking the happy path.
+- ✅ **Frozen Pydantic models for result objects** — Using `ConfigDict(frozen=True)` on `ValidationResult`/`ValidationReport` prevents accidental mutation and communicates immutable semantics clearly. Mutable default `dict[str, Any] = {}` is safe in Pydantic v2 (new instance per object, unlike Python dataclasses).
+- ✅ **Known anomaly special-casing in validation** — COVID 2020 exclusion from median calculation shows the pattern: document the exception as a named constant (`_COVID_SEASON: int = 2020`) with a comment, exclude from the baseline but still validate so real anomalies still get flagged.
+- ⚠️ **Orphan count semantics: count unique IDs, not appearances** — When reporting cross-season orphan IDs, counting `sum(len(per_season_list))` double-counts the same ID appearing in multiple seasons. Always count `len({id for ids in per_season.values() for id in ids})` (unique set) for the summary message. (Discovered in code review.)
+
 ### What Didn't Work
 
 **Story 1.4 - Code Quality Toolchain (2026-02-17 Human Review):**
