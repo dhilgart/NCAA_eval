@@ -1,6 +1,6 @@
 # Story 9.8: User-Editable Bracket
 
-Status: ready-for-dev
+Status: in-progress
 
 ## Story
 
@@ -36,19 +36,19 @@ So that **I can score my own picks against historical results and evaluate the m
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create bracket override state management module (AC: #1, #3, #4, #5)
-  - [ ] 1.1: Create `dashboard/lib/bracket_overrides.py` with:
+- [x] Task 1: Create bracket override state management module (AC: #1, #3, #4, #5)
+  - [x] 1.1: Create `dashboard/lib/bracket_overrides.py` with:
     - `BracketOverrides` — a dict-like container mapping `game_index → winner_team_index` stored in `st.session_state["bracket_overrides"]`
     - `get_overrides() -> dict[int, int]` — return current overrides from session state (empty dict if none)
     - `set_override(game_index: int, winner_index: int) -> None` — add/update a single override
     - `clear_overrides() -> None` — remove all overrides from session state
     - `apply_overrides(most_likely: MostLikelyBracket, overrides: dict[int, int], bracket: BracketStructure, prob_matrix: npt.NDArray[np.float64]) -> MostLikelyBracket` — produce a new `MostLikelyBracket` that incorporates user overrides and cascades downstream effects
-  - [ ] 1.2: In `apply_overrides()`, implement downstream cascade logic:
+  - [x] 1.2: In `apply_overrides()`, implement downstream cascade logic:
     - Start from the model's `most_likely.winners` tuple
     - For each override, replace the winner at that game_index
     - Cascade: if an override changes game G's winner, recompute all downstream games that depended on G's winner (the feeder game for a later round)
     - Recompute `champion_team_id` and `log_likelihood` from the final bracket
-  - [ ] 1.3: Add override invalidation key: store `(run_id, year, scoring, upset_aggression, seed_weight_pct)` alongside overrides in session state. When any of these change, auto-clear overrides.
+  - [x] 1.3: Add override invalidation key: store `(run_id, year, scoring, upset_aggression, seed_weight_pct)` alongside overrides in session state. When any of these change, auto-clear overrides.
 
 - [ ] Task 2: Make bracket tree interactive with clickable matchups (AC: #1)
   - [ ] 2.1: Modify `dashboard/lib/bracket_renderer.py` — `render_bracket_html()` to support an interactive mode:
@@ -335,12 +335,19 @@ Option 3 is cleanest — it separates "which bracket to score" from "what simula
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
 ### Completion Notes List
 
+- Task 1: Created `dashboard/lib/bracket_overrides.py` with `get_overrides()`, `set_override()`, `clear_overrides()`, `check_invalidation()`, and `apply_overrides()`. Cascade logic processes games in round-major order, re-resolving downstream games when upstream overrides change participants. Stale overrides (where the overridden winner is no longer a valid participant) fall back to model predictions. Log-likelihood is recomputed for the final bracket.
+
 ### Change Log
 
+- 2026-03-10: Task 1 — Created bracket override state management module with cascade logic and invalidation
+
 ### File List
+
+- `dashboard/lib/bracket_overrides.py` (NEW)
+- `tests/unit/test_bracket_overrides.py` (NEW)
