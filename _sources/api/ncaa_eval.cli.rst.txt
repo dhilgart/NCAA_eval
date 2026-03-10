@@ -9,6 +9,7 @@ Submodules
 
    ncaa_eval.cli.export
    ncaa_eval.cli.main
+   ncaa_eval.cli.predict
    ncaa_eval.cli.train
 
 Module contents

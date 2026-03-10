@@ -220,6 +220,7 @@
 <li class="toctree-l3 has-children"><a class="reference internal" href="api/ncaa_eval.cli.html">ncaa_eval.cli package</a><input aria-label="Toggle navigation of ncaa_eval.cli package" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.cli.export.html">ncaa_eval.cli.export module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.cli.main.html">ncaa_eval.cli.main module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.cli.predict.html">ncaa_eval.cli.predict module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.cli.train.html">ncaa_eval.cli.train module</a></li>
 </ul>
 </li>
@@ -487,6 +488,8 @@
 </li>
         </ul></li>
         <li><a href="api/ncaa_eval.cli.export.html#ncaa_eval.cli.export.build_kaggle_submission">build_kaggle_submission() (in module ncaa_eval.cli.export)</a>
+</li>
+        <li><a href="api/ncaa_eval.cli.predict.html#ncaa_eval.cli.predict.build_predictions">build_predictions() (in module ncaa_eval.cli.predict)</a>
 </li>
         <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.build_probability_matrix">build_probability_matrix() (in module ncaa_eval.evaluation)</a>
 
@@ -1090,6 +1093,8 @@
           <li><a href="api/ncaa_eval.evaluation.kaggle_export.html#ncaa_eval.evaluation.kaggle_export.format_kaggle_submission">(in module ncaa_eval.evaluation.kaggle_export)</a>
 </li>
         </ul></li>
+        <li><a href="api/ncaa_eval.cli.predict.html#ncaa_eval.cli.predict.format_predictions_csv">format_predictions_csv() (in module ncaa_eval.cli.predict)</a>
+</li>
         <li><a href="api/ncaa_eval.evaluation.metrics.html#id2">fraction_of_positives (ncaa_eval.evaluation.metrics.ReliabilityData attribute)</a>, <a href="api/ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.ReliabilityData.fraction_of_positives">[1]</a>
 
         <ul>
@@ -1762,6 +1767,8 @@
 </li>
           <li><a href="api/ncaa_eval.cli.main.html#module-ncaa_eval.cli.main">ncaa_eval.cli.main</a>
 </li>
+          <li><a href="api/ncaa_eval.cli.predict.html#module-ncaa_eval.cli.predict">ncaa_eval.cli.predict</a>
+</li>
           <li><a href="api/ncaa_eval.cli.train.html#module-ncaa_eval.cli.train">ncaa_eval.cli.train</a>
 </li>
           <li><a href="api/ncaa_eval.evaluation.html#module-ncaa_eval.evaluation">ncaa_eval.evaluation</a>
@@ -1941,6 +1948,13 @@
 
         <ul>
           <li><a href="api/ncaa_eval.cli.main.html#module-ncaa_eval.cli.main">module</a>
+</li>
+        </ul></li>
+        <li>
+    ncaa_eval.cli.predict
+
+        <ul>
+          <li><a href="api/ncaa_eval.cli.predict.html#module-ncaa_eval.cli.predict">module</a>
 </li>
         </ul></li>
         <li>
@@ -2412,6 +2426,8 @@
         </ul></li>
         <li><a href="api/ncaa_eval.model.tracking.html#ncaa_eval.model.tracking.Prediction.pred_win_prob">pred_win_prob (ncaa_eval.model.tracking.Prediction attribute)</a>
 </li>
+        <li><a href="api/ncaa_eval.cli.main.html#ncaa_eval.cli.main.predict">predict() (in module ncaa_eval.cli.main)</a>
+</li>
         <li><a href="api/ncaa_eval.model.base.html#ncaa_eval.model.base.StatefulModel.predict_matchup">predict_matchup() (ncaa_eval.model.base.StatefulModel method)</a>
 
         <ul>
@@ -2544,14 +2560,14 @@
           <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.EloFeatureEngine.reset_game_counts">(ncaa_eval.transform.EloFeatureEngine method)</a>
 </li>
         </ul></li>
-    </ul></td>
-    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="api/ncaa_eval.ingest.validation.html#ncaa_eval.ingest.validation.ValidationReport.results">results (ncaa_eval.ingest.validation.ValidationReport attribute)</a>
 
         <ul>
           <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.ValidationReport.results">(ncaa_eval.ingest.ValidationReport attribute)</a>
 </li>
         </ul></li>
+    </ul></td>
+    <td style="width: 33%; vertical-align: top;"><ul>
         <li><a href="api/ncaa_eval.evaluation.bracket.html#id1">right (ncaa_eval.evaluation.bracket.BracketNode attribute)</a>, <a href="api/ncaa_eval.evaluation.bracket.html#ncaa_eval.evaluation.bracket.BracketNode.right">[1]</a>
 
         <ul>
@@ -2602,6 +2618,8 @@
           <li><a href="api/ncaa_eval.model.tracking.html#ncaa_eval.model.tracking.Prediction.run_id">(ncaa_eval.model.tracking.Prediction attribute)</a>
 </li>
         </ul></li>
+        <li><a href="api/ncaa_eval.cli.predict.html#ncaa_eval.cli.predict.run_predict">run_predict() (in module ncaa_eval.cli.predict)</a>
+</li>
         <li><a href="api/ncaa_eval.cli.train.html#ncaa_eval.cli.train.run_training">run_training() (in module ncaa_eval.cli.train)</a>
 </li>
         <li><a href="api/ncaa_eval.model.tracking.html#ncaa_eval.model.tracking.RunStore">RunStore (class in ncaa_eval.model.tracking)</a>

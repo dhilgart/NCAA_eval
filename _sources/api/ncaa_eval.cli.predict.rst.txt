@@ -1,0 +1,7 @@
+ncaa\_eval.cli.predict module
+=============================
+
+.. automodule:: ncaa_eval.cli.predict
+   :members:
+   :show-inheritance:
+   :undoc-members:

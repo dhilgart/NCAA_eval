@@ -5,7 +5,7 @@
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../genindex.html"><link rel="search" title="Search" href="../../../search.html">
 
     <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
-        <title>ncaa_eval.cli.export - ncaa_eval 0.9.0 documentation</title>
+        <title>ncaa_eval.cli.predict - ncaa_eval 0.9.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=d111a655" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=7bdb33bb" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?v=8dab3a3b" />
@@ -313,63 +313,45 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <h1>Source code for ncaa_eval.cli.export</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Kaggle submission export orchestration.</span>
+          <h1>Source code for ncaa_eval.cli.predict</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Prediction orchestration for CLI predict command.</span>
 
-<span class="sd">Loads a trained model, builds a pairwise probability matrix for all</span>
-<span class="sd">teams in a season, and writes a Kaggle-format CSV.</span>
+<span class="sd">Loads a trained model, generates win-probability predictions for a target</span>
+<span class="sd">season, and formats output as CSV. Supports both stateful (Elo) and</span>
+<span class="sd">stateless (XGBoost, LogisticRegression) model types.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">csv</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">io</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>  <span class="c1"># type: ignore[import-untyped]</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rich.console</span><span class="w"> </span><span class="kn">import</span> <span class="n">Console</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.cli.train</span><span class="w"> </span><span class="kn">import</span> <span class="n">_setup_feature_server</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.evaluation.bracket</span><span class="w"> </span><span class="kn">import</span> <span class="n">MatchupContext</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.evaluation.kaggle_export</span><span class="w"> </span><span class="kn">import</span> <span class="n">KAGGLE_NEUTRAL_DAY_NUM</span><span class="p">,</span> <span class="n">format_kaggle_submission</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.evaluation.kaggle_export</span><span class="w"> </span><span class="kn">import</span> <span class="n">KAGGLE_NEUTRAL_DAY_NUM</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.evaluation.providers</span><span class="w"> </span><span class="kn">import</span> <span class="n">EloProvider</span><span class="p">,</span> <span class="n">build_probability_matrix</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.ingest</span><span class="w"> </span><span class="kn">import</span> <span class="n">ParquetRepository</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.model.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">StatefulModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.model.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">Model</span><span class="p">,</span> <span class="n">StatefulModel</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.model.tracking</span><span class="w"> </span><span class="kn">import</span> <span class="n">RunStore</span>
 
 
-<div class="viewcode-block" id="build_kaggle_submission">
-<a class="viewcode-back" href="../../../api/ncaa_eval.cli.export.html#ncaa_eval.cli.export.build_kaggle_submission">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">build_kaggle_submission</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">run_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">season</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load a model and return a Kaggle submission CSV string.</span>
-
-<span class="sd">    Pure orchestration: loads the model, collects all team IDs for the</span>
-<span class="sd">    season, builds the all-pairs probability matrix, and formats the CSV.</span>
-<span class="sd">    No I/O side-effects — callers decide where to write the result.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        run_id: Model run identifier.</span>
-<span class="sd">        season: Tournament season year (e.g. 2025).</span>
-<span class="sd">        data_dir: Path to the local data directory.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_build_stateful_predictions</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">StatefulModel</span><span class="p">,</span>
+    <span class="n">season</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">repo</span><span class="p">:</span> <span class="n">ParquetRepository</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build pairwise predictions for a stateful (Elo) model.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        CSV string with ``ID,Pred`` header and C(n,2) data rows.</span>
-
-<span class="sd">    Raises:</span>
-<span class="sd">        FileNotFoundError: If the run, model, or season games cannot be loaded.</span>
-<span class="sd">        TypeError: If the model type is not supported for Kaggle export.</span>
+<span class="sd">        List of ``(season, team_a_id, team_b_id, pred_win_prob)`` tuples</span>
+<span class="sd">        for all C(n,2) team pairs where ``team_a_id &lt; team_b_id``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">store</span> <span class="o">=</span> <span class="n">RunStore</span><span class="p">(</span><span class="n">base_path</span><span class="o">=</span><span class="n">data_dir</span><span class="p">)</span>
-    <span class="n">model</span> <span class="o">=</span> <span class="n">store</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="n">run_id</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;No model found for run </span><span class="si">{</span><span class="n">run_id</span><span class="si">!r}</span><span class="s2">&quot;</span>
-        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">StatefulModel</span><span class="p">):</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="s2">&quot;Kaggle export currently supports stateful (Elo) models only. &quot;</span>
-            <span class="s2">&quot;Stateless model export requires a feature server and is not yet implemented.&quot;</span>
-        <span class="p">)</span>
-        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-    <span class="n">repo</span> <span class="o">=</span> <span class="n">ParquetRepository</span><span class="p">(</span><span class="n">base_path</span><span class="o">=</span><span class="n">data_dir</span><span class="p">)</span>
     <span class="n">games</span> <span class="o">=</span> <span class="n">repo</span><span class="o">.</span><span class="n">get_games</span><span class="p">(</span><span class="n">season</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">games</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;No games found for season </span><span class="si">{</span><span class="n">season</span><span class="si">}</span><span class="s2">&quot;</span>
@@ -384,13 +366,124 @@
     <span class="n">provider</span> <span class="o">=</span> <span class="n">EloProvider</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
     <span class="n">context</span> <span class="o">=</span> <span class="n">MatchupContext</span><span class="p">(</span><span class="n">season</span><span class="o">=</span><span class="n">season</span><span class="p">,</span> <span class="n">day_num</span><span class="o">=</span><span class="n">KAGGLE_NEUTRAL_DAY_NUM</span><span class="p">,</span> <span class="n">is_neutral</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">prob_matrix</span> <span class="o">=</span> <span class="n">build_probability_matrix</span><span class="p">(</span><span class="n">provider</span><span class="p">,</span> <span class="n">team_ids</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">format_kaggle_submission</span><span class="p">(</span><span class="n">season</span><span class="p">,</span> <span class="n">team_ids</span><span class="p">,</span> <span class="n">prob_matrix</span><span class="p">)</span></div>
+
+    <span class="n">rows</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">team_ids</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+            <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">season</span><span class="p">,</span> <span class="n">team_ids</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">team_ids</span><span class="p">[</span><span class="n">j</span><span class="p">],</span> <span class="nb">float</span><span class="p">(</span><span class="n">prob_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">])))</span>
+    <span class="k">return</span> <span class="n">rows</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_build_stateless_predictions</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span>
+    <span class="n">run_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">season</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">data_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">store</span><span class="p">:</span> <span class="n">RunStore</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build game-level predictions for a stateless model.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        List of ``(season, team_a_id, team_b_id, pred_win_prob)`` tuples</span>
+<span class="sd">        for all games in the season dataset.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">feat_names</span> <span class="o">=</span> <span class="n">store</span><span class="o">.</span><span class="n">load_feature_names</span><span class="p">(</span><span class="n">run_id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">feat_names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;No feature names saved for run </span><span class="si">{</span><span class="n">run_id</span><span class="si">!r}</span><span class="s2">&quot;</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="n">feature_config</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">feature_config</span>
+    <span class="n">server</span> <span class="o">=</span> <span class="n">_setup_feature_server</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">feature_config</span><span class="p">)</span>
+
+    <span class="n">df</span> <span class="o">=</span> <span class="n">server</span><span class="o">.</span><span class="n">serve_season_features</span><span class="p">(</span><span class="n">season</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;batch&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">df</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;No game data found for season </span><span class="si">{</span><span class="n">season</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="n">probs</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="n">feat_names</span><span class="p">])</span>
+
+    <span class="n">rows</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">prob</span> <span class="ow">in</span> <span class="n">probs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">row</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="n">season</span><span class="p">,</span>
+                <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;team_a_id&quot;</span><span class="p">]),</span>
+                <span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;team_b_id&quot;</span><span class="p">]),</span>
+                <span class="nb">float</span><span class="p">(</span><span class="nb">min</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">prob</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">)),</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">rows</span>
+
+
+<div class="viewcode-block" id="format_predictions_csv">
+<a class="viewcode-back" href="../../../api/ncaa_eval.cli.predict.html#ncaa_eval.cli.predict.format_predictions_csv">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">format_predictions_csv</span><span class="p">(</span><span class="n">rows</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Format prediction rows as a CSV string.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        rows: List of ``(season, team_a_id, team_b_id, pred_win_prob)`` tuples.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        CSV string with header ``season,team_a_id,team_b_id,pred_win_prob``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">buf</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">StringIO</span><span class="p">()</span>
+    <span class="n">writer</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">writer</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+    <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">([</span><span class="s2">&quot;season&quot;</span><span class="p">,</span> <span class="s2">&quot;team_a_id&quot;</span><span class="p">,</span> <span class="s2">&quot;team_b_id&quot;</span><span class="p">,</span> <span class="s2">&quot;pred_win_prob&quot;</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">season</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">prob</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
+        <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">([</span><span class="n">season</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">prob</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">buf</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span></div>
 
 
 
-<div class="viewcode-block" id="run_export">
-<a class="viewcode-back" href="../../../api/ncaa_eval.cli.export.html#ncaa_eval.cli.export.run_export">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">run_export</span><span class="p">(</span>
+<div class="viewcode-block" id="build_predictions">
+<a class="viewcode-back" href="../../../api/ncaa_eval.cli.predict.html#ncaa_eval.cli.predict.build_predictions">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">build_predictions</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">run_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">season</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load a model and return a predictions CSV string.</span>
+
+<span class="sd">    Orchestration layer: loads the model and season data from disk, routes</span>
+<span class="sd">    to the appropriate prediction path (stateful or stateless), and formats</span>
+<span class="sd">    the result as a CSV string.  Callers decide where to write the output.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        run_id: Model run identifier.</span>
+<span class="sd">        season: Target season year (e.g. 2025).</span>
+<span class="sd">        data_dir: Path to the local data directory.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        CSV string with ``season,team_a_id,team_b_id,pred_win_prob`` header.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        FileNotFoundError: If the run, model, or season data cannot be loaded.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">store</span> <span class="o">=</span> <span class="n">RunStore</span><span class="p">(</span><span class="n">base_path</span><span class="o">=</span><span class="n">data_dir</span><span class="p">)</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">store</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="n">run_id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;No model found for run </span><span class="si">{</span><span class="n">run_id</span><span class="si">!r}</span><span class="s2">&quot;</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="n">repo</span> <span class="o">=</span> <span class="n">ParquetRepository</span><span class="p">(</span><span class="n">base_path</span><span class="o">=</span><span class="n">data_dir</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">StatefulModel</span><span class="p">):</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="n">_build_stateful_predictions</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="n">season</span><span class="o">=</span><span class="n">season</span><span class="p">,</span> <span class="n">repo</span><span class="o">=</span><span class="n">repo</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="n">_build_stateless_predictions</span><span class="p">(</span>
+            <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+            <span class="n">run_id</span><span class="o">=</span><span class="n">run_id</span><span class="p">,</span>
+            <span class="n">season</span><span class="o">=</span><span class="n">season</span><span class="p">,</span>
+            <span class="n">data_dir</span><span class="o">=</span><span class="n">data_dir</span><span class="p">,</span>
+            <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">format_predictions_csv</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="run_predict">
+<a class="viewcode-back" href="../../../api/ncaa_eval.cli.predict.html#ncaa_eval.cli.predict.run_predict">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">run_predict</span><span class="p">(</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">run_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">season</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -398,14 +491,14 @@
     <span class="n">output</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">console</span><span class="p">:</span> <span class="n">Console</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load a model and produce a Kaggle submission CSV.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load a model and produce a predictions CSV.</span>
 
-<span class="sd">    Thin CLI wrapper around ``build_kaggle_submission`` that handles</span>
+<span class="sd">    Thin CLI wrapper around ``build_predictions`` that handles</span>
 <span class="sd">    progress output and writing to a file or stdout.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        run_id: Model run identifier.</span>
-<span class="sd">        season: Tournament season year (e.g. 2025).</span>
+<span class="sd">        season: Target season year (e.g. 2025).</span>
 <span class="sd">        data_dir: Path to the local data directory.</span>
 <span class="sd">        output: File path to write the CSV. ``None`` means stdout.</span>
 <span class="sd">        console: Rich Console instance for status output.</span>
@@ -415,19 +508,21 @@
 
 <span class="sd">    Raises:</span>
 <span class="sd">        FileNotFoundError: If the run or model cannot be loaded.</span>
-<span class="sd">        TypeError: If the model type is not supported for export.</span>
+<span class="sd">        TypeError: If the model lacks a ``feature_config`` attribute</span>
+<span class="sd">            (e.g. a malformed plugin).</span>
+<span class="sd">        AttributeError: If the model subclass did not set ``feature_config``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">con</span> <span class="o">=</span> <span class="n">console</span> <span class="ow">or</span> <span class="n">Console</span><span class="p">()</span>
-    <span class="n">con</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Building Kaggle submission for season </span><span class="si">{</span><span class="n">season</span><span class="si">}</span><span class="s2">...&quot;</span><span class="p">)</span>
+    <span class="c1"># When writing CSV to stdout, route status messages to stderr so the</span>
+    <span class="c1"># output stream stays pipe-safe (no non-CSV lines mixed in).</span>
+    <span class="n">con</span> <span class="o">=</span> <span class="n">console</span> <span class="ow">or</span> <span class="n">Console</span><span class="p">(</span><span class="n">stderr</span><span class="o">=</span><span class="n">output</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">con</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Generating predictions for season </span><span class="si">{</span><span class="n">season</span><span class="si">}</span><span class="s2">...&quot;</span><span class="p">)</span>
 
-    <span class="n">csv_str</span> <span class="o">=</span> <span class="n">build_kaggle_submission</span><span class="p">(</span><span class="n">run_id</span><span class="o">=</span><span class="n">run_id</span><span class="p">,</span> <span class="n">season</span><span class="o">=</span><span class="n">season</span><span class="p">,</span> <span class="n">data_dir</span><span class="o">=</span><span class="n">data_dir</span><span class="p">)</span>
+    <span class="n">csv_str</span> <span class="o">=</span> <span class="n">build_predictions</span><span class="p">(</span><span class="n">run_id</span><span class="o">=</span><span class="n">run_id</span><span class="p">,</span> <span class="n">season</span><span class="o">=</span><span class="n">season</span><span class="p">,</span> <span class="n">data_dir</span><span class="o">=</span><span class="n">data_dir</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">output</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">output</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">csv_str</span><span class="p">)</span>
-        <span class="n">con</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[green]Kaggle submission written to </span><span class="si">{</span><span class="n">output</span><span class="si">}</span><span class="s2">[/green]&quot;</span><span class="p">)</span>
+        <span class="n">con</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[green]Predictions written to </span><span class="si">{</span><span class="n">output</span><span class="si">}</span><span class="s2">[/green]&quot;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="c1"># Write raw CSV to stdout (no Rich formatting) so the output is</span>
-        <span class="c1"># pipe-safe: `ncaa_eval export ... | gzip &gt; submission.csv.gz`</span>
         <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">csv_str</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">csv_str</span></div>

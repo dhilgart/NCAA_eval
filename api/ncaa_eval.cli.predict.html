@@ -3,10 +3,10 @@
   <head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="ncaa_eval.ingest.validation module" href="ncaa_eval.ingest.validation.html"><link rel="prev" title="ncaa_eval.ingest.schema module" href="ncaa_eval.ingest.schema.html">
+<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="ncaa_eval.cli.train module" href="ncaa_eval.cli.train.html"><link rel="prev" title="ncaa_eval.cli.main module" href="ncaa_eval.cli.main.html">
 
     <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
-        <title>ncaa_eval.ingest.sync module - ncaa_eval 0.9.0 documentation</title>
+        <title>ncaa_eval.cli.predict module - ncaa_eval 0.9.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d111a655" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
@@ -219,10 +219,10 @@
 <ul class="current">
 <li class="toctree-l1 current has-children"><a class="reference internal" href="modules.html">ncaa_eval</a><input aria-label="Toggle navigation of ncaa_eval" checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
 <li class="toctree-l2 current has-children"><a class="reference internal" href="ncaa_eval.html">ncaa_eval package</a><input aria-label="Toggle navigation of ncaa_eval package" checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
-<li class="toctree-l3 has-children"><a class="reference internal" href="ncaa_eval.cli.html">ncaa_eval.cli package</a><input aria-label="Toggle navigation of ncaa_eval.cli package" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l3 current has-children"><a class="reference internal" href="ncaa_eval.cli.html">ncaa_eval.cli package</a><input aria-label="Toggle navigation of ncaa_eval.cli package" checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.cli.export.html">ncaa_eval.cli.export module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.cli.main.html">ncaa_eval.cli.main module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.cli.predict.html">ncaa_eval.cli.predict module</a></li>
+<li class="toctree-l4 current current-page"><a class="current reference internal" href="#">ncaa_eval.cli.predict module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.cli.train.html">ncaa_eval.cli.train module</a></li>
 </ul>
 </li>
@@ -239,7 +239,7 @@
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.splitter.html">ncaa_eval.evaluation.splitter module</a></li>
 </ul>
 </li>
-<li class="toctree-l3 current has-children"><a class="reference internal" href="ncaa_eval.ingest.html">ncaa_eval.ingest package</a><input aria-label="Toggle navigation of ncaa_eval.ingest package" checked="" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l3 has-children"><a class="reference internal" href="ncaa_eval.ingest.html">ncaa_eval.ingest package</a><input aria-label="Toggle navigation of ncaa_eval.ingest package" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l4 has-children"><a class="reference internal" href="ncaa_eval.ingest.connectors.html">ncaa_eval.ingest.connectors package</a><input aria-label="Toggle navigation of ncaa_eval.ingest.connectors package" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="ncaa_eval.ingest.connectors.base.html">ncaa_eval.ingest.connectors.base module</a></li>
 <li class="toctree-l5"><a class="reference internal" href="ncaa_eval.ingest.connectors.espn.html">ncaa_eval.ingest.connectors.espn module</a></li>
@@ -249,7 +249,7 @@
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.fuzzy.html">ncaa_eval.ingest.fuzzy module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.repository.html">ncaa_eval.ingest.repository module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.schema.html">ncaa_eval.ingest.schema module</a></li>
-<li class="toctree-l4 current current-page"><a class="current reference internal" href="#">ncaa_eval.ingest.sync module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.sync.html">ncaa_eval.ingest.sync module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.validation.html">ncaa_eval.ingest.validation module</a></li>
 </ul>
 </li>
@@ -302,7 +302,7 @@
         </a>
         <div class="content-icon-container">
           <div class="view-this-page">
-  <a class="muted-link" href="../_sources/api/ncaa_eval.ingest.sync.rst.txt" title="View this page">
+  <a class="muted-link" href="../_sources/api/ncaa_eval.cli.predict.rst.txt" title="View this page">
     <svg><use href="#svg-eye"></use></svg>
     <span class="visually-hidden">View this page</span>
   </a>
@@ -320,110 +320,78 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="module-ncaa_eval.ingest.sync">
-<span id="ncaa-eval-ingest-sync-module"></span><h1>ncaa_eval.ingest.sync module<a class="headerlink" href="#module-ncaa_eval.ingest.sync" title="Link to this heading">¶</a></h1>
-<p>Sync engine for fetching NCAA data and persisting it with smart caching.</p>
-<p><cite>SyncEngine</cite> orchestrates data retrieval from configured connectors (Kaggle,
-ESPN) and stores results via a <cite>Repository</cite>. Parquet-level caching prevents
-redundant fetches on subsequent runs.</p>
-<dl class="py class">
-<dt class="sig sig-object py" id="ncaa_eval.ingest.sync.SyncEngine">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ncaa_eval.ingest.sync.</span></span><span class="sig-name descname"><span class="pre">SyncEngine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repository</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="ncaa_eval.ingest.repository.html#ncaa_eval.ingest.repository.Repository" title="ncaa_eval.ingest.repository.Repository"><span class="pre">Repository</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ncaa_eval/ingest/sync.html#SyncEngine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.sync.SyncEngine" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Orchestrates data sync from external sources into the local repository.</p>
+          <section id="module-ncaa_eval.cli.predict">
+<span id="ncaa-eval-cli-predict-module"></span><h1>ncaa_eval.cli.predict module<a class="headerlink" href="#module-ncaa_eval.cli.predict" title="Link to this heading">¶</a></h1>
+<p>Prediction orchestration for CLI predict command.</p>
+<p>Loads a trained model, generates win-probability predictions for a target
+season, and formats output as CSV. Supports both stateful (Elo) and
+stateless (XGBoost, LogisticRegression) model types.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="ncaa_eval.cli.predict.build_predictions">
+<span class="sig-prename descclassname"><span class="pre">ncaa_eval.cli.predict.</span></span><span class="sig-name descname"><span class="pre">build_predictions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">season</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/cli/predict.html#build_predictions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.cli.predict.build_predictions" title="Link to this definition">¶</a></dt>
+<dd><p>Load a model and return a predictions CSV string.</p>
+<p>Orchestration layer: loads the model and season data from disk, routes
+to the appropriate prediction path (stateful or stateless), and formats
+the result as a CSV string.  Callers decide where to write the output.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>repository</strong> – Repository instance used for reading and writing data.</p></li>
-<li><p><strong>data_dir</strong> – Root directory for local Parquet files and cached CSVs.</p></li>
+<li><p><strong>run_id</strong> – Model run identifier.</p></li>
+<li><p><strong>season</strong> – Target season year (e.g. 2025).</p></li>
+<li><p><strong>data_dir</strong> – Path to the local data directory.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>CSV string with <code class="docutils literal notranslate"><span class="pre">season,team_a_id,team_b_id,pred_win_prob</span></code> header.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>FileNotFoundError</strong> – If the run, model, or season data cannot be loaded.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ncaa_eval.cli.predict.format_predictions_csv">
+<span class="sig-prename descclassname"><span class="pre">ncaa_eval.cli.predict.</span></span><span class="sig-name descname"><span class="pre">format_predictions_csv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rows</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/cli/predict.html#format_predictions_csv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.cli.predict.format_predictions_csv" title="Link to this definition">¶</a></dt>
+<dd><p>Format prediction rows as a CSV string.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>rows</strong> – List of <code class="docutils literal notranslate"><span class="pre">(season,</span> <span class="pre">team_a_id,</span> <span class="pre">team_b_id,</span> <span class="pre">pred_win_prob)</span></code> tuples.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>CSV string with header <code class="docutils literal notranslate"><span class="pre">season,team_a_id,team_b_id,pred_win_prob</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ncaa_eval.cli.predict.run_predict">
+<span class="sig-prename descclassname"><span class="pre">ncaa_eval.cli.predict.</span></span><span class="sig-name descname"><span class="pre">run_predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">season</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">console</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Console</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/cli/predict.html#run_predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.cli.predict.run_predict" title="Link to this definition">¶</a></dt>
+<dd><p>Load a model and produce a predictions CSV.</p>
+<p>Thin CLI wrapper around <code class="docutils literal notranslate"><span class="pre">build_predictions</span></code> that handles
+progress output and writing to a file or stdout.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>run_id</strong> – Model run identifier.</p></li>
+<li><p><strong>season</strong> – Target season year (e.g. 2025).</p></li>
+<li><p><strong>data_dir</strong> – Path to the local data directory.</p></li>
+<li><p><strong>output</strong> – File path to write the CSV. <code class="docutils literal notranslate"><span class="pre">None</span></code> means stdout.</p></li>
+<li><p><strong>console</strong> – Rich Console instance for status output.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The CSV string.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>FileNotFoundError</strong> – If the run or model cannot be loaded.</p></li>
+<li><p><strong>TypeError</strong> – If the model lacks a <code class="docutils literal notranslate"><span class="pre">feature_config</span></code> attribute
+    (e.g. a malformed plugin).</p></li>
+<li><p><strong>AttributeError</strong> – If the model subclass did not set <code class="docutils literal notranslate"><span class="pre">feature_config</span></code>.</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="ncaa_eval.ingest.sync.SyncEngine.sync_all">
-<span class="sig-name descname"><span class="pre">sync_all</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">force_refresh</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#ncaa_eval.ingest.sync.SyncResult" title="ncaa_eval.ingest.sync.SyncResult"><span class="pre">SyncResult</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/sync.html#SyncEngine.sync_all"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.sync.SyncEngine.sync_all" title="Link to this definition">¶</a></dt>
-<dd><p>Sync all configured sources: Kaggle first, then ESPN.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>force_refresh</strong> – Bypass caches for all sources.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>List of SyncResult, one per source (kaggle, espn).</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="ncaa_eval.ingest.sync.SyncEngine.sync_espn">
-<span class="sig-name descname"><span class="pre">sync_espn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">force_refresh</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ncaa_eval.ingest.sync.SyncResult" title="ncaa_eval.ingest.sync.SyncResult"><span class="pre">SyncResult</span></a></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/sync.html#SyncEngine.sync_espn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.sync.SyncEngine.sync_espn" title="Link to this definition">¶</a></dt>
-<dd><p>Sync the most recent season’s games from ESPN.</p>
-<p>Requires Kaggle data to be synced first (needs team and season
-mappings).  Uses a marker-file cache: if <code class="docutils literal notranslate"><span class="pre">.espn_synced_{year}</span></code>
-exists the season is considered up-to-date unless <em>force_refresh</em>.</p>
-<p>ESPN games are merged with existing Kaggle games for the same
-season partition before saving (because <code class="docutils literal notranslate"><span class="pre">save_games</span></code> overwrites).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>force_refresh</strong> – Bypass marker-file cache and re-fetch from ESPN.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>SyncResult summarising games written and seasons cached.</p>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>RuntimeError</strong> – Kaggle data has not been synced yet.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="ncaa_eval.ingest.sync.SyncEngine.sync_kaggle">
-<span class="sig-name descname"><span class="pre">sync_kaggle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">force_refresh</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ncaa_eval.ingest.sync.SyncResult" title="ncaa_eval.ingest.sync.SyncResult"><span class="pre">SyncResult</span></a></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/sync.html#SyncEngine.sync_kaggle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.sync.SyncEngine.sync_kaggle" title="Link to this definition">¶</a></dt>
-<dd><p>Sync NCAA data from Kaggle with Parquet-level caching.</p>
-<p>Downloads CSVs (if not cached) and converts them to Parquet.
-Skips individual entities whose Parquet files already exist,
-unless <em>force_refresh</em> is <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>force_refresh</strong> – Bypass all caches and re-fetch everything.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>SyncResult summarising teams/seasons/games written and cached.</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="ncaa_eval.ingest.sync.SyncResult">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ncaa_eval.ingest.sync.</span></span><span class="sig-name descname"><span class="pre">SyncResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">teams_written</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seasons_written</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">games_written</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seasons_cached</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ncaa_eval/ingest/sync.html#SyncResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.sync.SyncResult" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Summary of a single source sync operation.</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="ncaa_eval.ingest.sync.SyncResult.games_written">
-<span class="sig-name descname"><span class="pre">games_written</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></span><a class="headerlink" href="#ncaa_eval.ingest.sync.SyncResult.games_written" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="ncaa_eval.ingest.sync.SyncResult.seasons_cached">
-<span class="sig-name descname"><span class="pre">seasons_cached</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></span><a class="headerlink" href="#ncaa_eval.ingest.sync.SyncResult.seasons_cached" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="ncaa_eval.ingest.sync.SyncResult.seasons_written">
-<span class="sig-name descname"><span class="pre">seasons_written</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></span><a class="headerlink" href="#ncaa_eval.ingest.sync.SyncResult.seasons_written" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="ncaa_eval.ingest.sync.SyncResult.source">
-<span class="sig-name descname"><span class="pre">source</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#ncaa_eval.ingest.sync.SyncResult.source" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="ncaa_eval.ingest.sync.SyncResult.teams_written">
-<span class="sig-name descname"><span class="pre">teams_written</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></span><a class="headerlink" href="#ncaa_eval.ingest.sync.SyncResult.teams_written" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
 </dd></dl>
 
 </section>
@@ -433,23 +401,23 @@ unless <em>force_refresh</em> is <code class="docutils literal notranslate"><spa
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="ncaa_eval.ingest.validation.html">
+          <a class="next-page" href="ncaa_eval.cli.train.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">ncaa_eval.ingest.validation module</div>
+                <div class="title">ncaa_eval.cli.train module</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="ncaa_eval.ingest.schema.html">
+          <a class="prev-page" href="ncaa_eval.cli.main.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">ncaa_eval.ingest.schema module</div>
+                <div class="title">ncaa_eval.cli.main module</div>
                 
               </div>
             </a>
@@ -483,21 +451,10 @@ unless <em>force_refresh</em> is <code class="docutils literal notranslate"><spa
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">ncaa_eval.ingest.sync module</a><ul>
-<li><a class="reference internal" href="#ncaa_eval.ingest.sync.SyncEngine"><code class="docutils literal notranslate"><span class="pre">SyncEngine</span></code></a><ul>
-<li><a class="reference internal" href="#ncaa_eval.ingest.sync.SyncEngine.sync_all"><code class="docutils literal notranslate"><span class="pre">SyncEngine.sync_all()</span></code></a></li>
-<li><a class="reference internal" href="#ncaa_eval.ingest.sync.SyncEngine.sync_espn"><code class="docutils literal notranslate"><span class="pre">SyncEngine.sync_espn()</span></code></a></li>
-<li><a class="reference internal" href="#ncaa_eval.ingest.sync.SyncEngine.sync_kaggle"><code class="docutils literal notranslate"><span class="pre">SyncEngine.sync_kaggle()</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#ncaa_eval.ingest.sync.SyncResult"><code class="docutils literal notranslate"><span class="pre">SyncResult</span></code></a><ul>
-<li><a class="reference internal" href="#ncaa_eval.ingest.sync.SyncResult.games_written"><code class="docutils literal notranslate"><span class="pre">SyncResult.games_written</span></code></a></li>
-<li><a class="reference internal" href="#ncaa_eval.ingest.sync.SyncResult.seasons_cached"><code class="docutils literal notranslate"><span class="pre">SyncResult.seasons_cached</span></code></a></li>
-<li><a class="reference internal" href="#ncaa_eval.ingest.sync.SyncResult.seasons_written"><code class="docutils literal notranslate"><span class="pre">SyncResult.seasons_written</span></code></a></li>
-<li><a class="reference internal" href="#ncaa_eval.ingest.sync.SyncResult.source"><code class="docutils literal notranslate"><span class="pre">SyncResult.source</span></code></a></li>
-<li><a class="reference internal" href="#ncaa_eval.ingest.sync.SyncResult.teams_written"><code class="docutils literal notranslate"><span class="pre">SyncResult.teams_written</span></code></a></li>
-</ul>
-</li>
+<li><a class="reference internal" href="#">ncaa_eval.cli.predict module</a><ul>
+<li><a class="reference internal" href="#ncaa_eval.cli.predict.build_predictions"><code class="docutils literal notranslate"><span class="pre">build_predictions()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.cli.predict.format_predictions_csv"><code class="docutils literal notranslate"><span class="pre">format_predictions_csv()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.cli.predict.run_predict"><code class="docutils literal notranslate"><span class="pre">run_predict()</span></code></a></li>
 </ul>
 </li>
 </ul>

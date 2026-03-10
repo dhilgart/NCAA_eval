@@ -222,6 +222,7 @@
 <li class="toctree-l3 has-children"><a class="reference internal" href="api/ncaa_eval.cli.html">ncaa_eval.cli package</a><input aria-label="Toggle navigation of ncaa_eval.cli package" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.cli.export.html">ncaa_eval.cli.export module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.cli.main.html">ncaa_eval.cli.main module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.cli.predict.html">ncaa_eval.cli.predict module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.cli.train.html">ncaa_eval.cli.train module</a></li>
 </ul>
 </li>
@@ -372,6 +373,50 @@ python<span class="w"> </span>-m<span class="w"> </span>ncaa_eval.cli<span class
 </tr>
 </tbody>
 </table>
+</div>
+</li>
+<li><p><strong>Generate predictions</strong> — produce win-probability CSVs from a trained model:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>ncaa_eval.cli<span class="w"> </span>predict<span class="w"> </span>--run-id<span class="w"> </span>&lt;run-id&gt;<span class="w"> </span>--season<span class="w"> </span><span class="m">2025</span>
+python<span class="w"> </span>-m<span class="w"> </span>ncaa_eval.cli<span class="w"> </span>predict<span class="w"> </span>--run-id<span class="w"> </span>&lt;run-id&gt;<span class="w"> </span>--season<span class="w"> </span><span class="m">2025</span><span class="w"> </span>--output<span class="w"> </span>preds.csv
+</pre></div>
+</div>
+<p>Common options:</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Flag</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--run-id</span></code></p></td>
+<td><p><em>(required)</em></p></td>
+<td><p>Model run ID (from the training step output)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--season</span></code></p></td>
+<td><p><em>(required)</em></p></td>
+<td><p>Target season year</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--data-dir</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">data/</span></code></p></td>
+<td><p>Path to synced Parquet files</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--output</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p>Output CSV path (omit to write to stdout)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Stateful models (Elo) produce pairwise probabilities for all C(n,2) team
+combinations.  Stateless models (XGBoost, LogisticRegression) produce
+game-level predictions for every game in the season dataset.</p>
+<p>Output format:</p>
+<div class="highlight-csv notranslate"><div class="highlight"><pre><span></span>season,team_a_id,team_b_id,pred_win_prob
+2025,1101,1102,0.6234
+2025,1101,1103,0.4512
+</pre></div>
 </div>
 </li>
 <li><p><strong>Explore results in the dashboard</strong> — launch the Streamlit app:</p>
