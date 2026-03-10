@@ -1,6 +1,6 @@
 # Story 9.9: CLI `predict` Command
 
-Status: review
+Status: done
 
 ## Story
 
@@ -194,6 +194,19 @@ Claude Opus 4.6
 ### Change Log
 
 - 2026-03-10: Implemented CLI `predict` command (Story 9.9)
+- 2026-03-10: Code review fixes applied (5 issues — 3 High, 2 Medium)
+
+### Code Review Fixes Applied
+
+**H1 — Pipe-safety bug:** `run_predict()` status message contaminated stdout in pipe mode. Fixed by `Console(stderr=output is None)` so progress messages route to stderr when writing CSV to stdout.
+
+**H2 — Dead code:** `_build_stateless_predictions()` contained `is_stateful = isinstance(model, StatefulModel)` which is always `False` (caller guarantees stateless context). Removed the check; `mode="batch"` used directly. Also removed now-unused `from typing import Literal` import.
+
+**H3 — False docstring claim:** `build_predictions()` docstring claimed "pure orchestration, no I/O side-effects" but the function instantiates `RunStore` and `ParquetRepository` (filesystem I/O). Updated docstring to accurately describe the function as an "orchestration layer."
+
+**M1 — Unused mock:** `test_stateless_predict_writes_csv` patched `ParquetRepository` unnecessarily (stateless path doesn't use it directly). Removed the `@patch` decorator and `mock_repo_cls` parameter.
+
+**M2 — Weak test assertions:** `test_stateful_predict_writes_csv_to_stdout` used substring checks. Upgraded to proper CSV parsing with row count and column ordering assertions (compatible with CliRunner's stream-mixing behavior).
 
 ### File List
 
@@ -201,5 +214,6 @@ Claude Opus 4.6
 - `src/ncaa_eval/cli/main.py` — **MODIFIED** — added `predict` Typer command
 - `tests/unit/test_cli_predict.py` — **NEW** — 5 unit tests for predict CLI
 - `docs/user-guide.md` — **MODIFIED** — added predict command to CLI reference
+- `_bmad-output/planning-artifacts/template-requirements.md` — **MODIFIED** — added pipe-safety and dead-code-from-branching learnings
 - `_bmad-output/implementation-artifacts/9-9-cli-predict-command.md` — **MODIFIED** — story status/tasks
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` — **MODIFIED** — story status update

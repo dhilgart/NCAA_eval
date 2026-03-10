@@ -3855,3 +3855,47 @@ if participant_a != orig_a or participant_b != orig_b:
 **Anti-pattern:** In an editable bracket UI, comparing the user's selection against `model_winner` to detect new overrides. When a cascade has already changed a game's winner away from the model's pick, any user who doesn't touch that game still triggers an override (selected_team ≠ model_winner → spurious `set_override()`).
 
 **Rule:** Compare the user's selection against `current_winner_for_game` (the current cascaded winner in the edited bracket), not against `model_winner`. Only fire `set_override()` when the selection differs from the current cascaded winner AND differs from the model winner.
+
+### Pipe-Safe CLI: Status Messages Must Go to `stderr`, Not `stdout` (Discovered Story 9.9 Code Review, 2026-03-10)
+
+When a CLI command writes structured data (CSV, JSON) to stdout, **all** status/progress messages must be routed to stderr. Rich's `Console()` defaults to stdout — creating a `Console()` inside a run-function that sometimes writes data to stdout will contaminate the output stream when `--output` is omitted.
+
+```python
+# ❌ Wrong: status message lands on stdout, breaks pipes
+def run_predict(*, ..., output: Path | None, console: Console | None = None) -> str:
+    con = console or Console()          # defaults to stdout
+    con.print("Generating predictions...")  # THIS line corrupts piped CSV
+    sys.stdout.write(csv_str)           # raw CSV — now prefixed by status line
+
+# ✅ Correct: when output is None (stdout mode), route status to stderr
+def run_predict(*, ..., output: Path | None, console: Console | None = None) -> str:
+    con = console or Console(stderr=output is None)
+    con.print("Generating predictions...")  # goes to stderr in pipe mode
+    sys.stdout.write(csv_str)           # clean CSV only
+```
+
+**CliRunner caveat:** `typer.testing.CliRunner` captures both stdout and stderr into `result.output` indiscriminately (this version of Click's CliRunner has no `mix_stderr=False` option). Tests that check `result.output` for pure CSV will see status lines too. Fix: extract the CSV from `result.output` by scanning for the header line:
+
+```python
+csv_start = result.output.find("season,team_a_id,team_b_id,pred_win_prob")
+csv_text = result.output[csv_start:]
+rows = list(csv.DictReader(io.StringIO(csv_text)))
+```
+
+### Dead Code from Context-Blind Branching: Verify Helper Preconditions (Discovered Story 9.9 Code Review, 2026-03-10)
+
+When a parent function branches on a condition (e.g., `isinstance(model, StatefulModel)`) and dispatches to two separate helpers, each helper already knows which branch it represents. Adding the same `isinstance` check inside the helper is dead code — the condition is permanently resolved by the caller.
+
+```python
+# ❌ Wrong: _build_stateless_predictions is ONLY called when not isinstance(model, StatefulModel)
+def _build_stateless_predictions(*, model: Model, ...) -> ...:
+    is_stateful = isinstance(model, StatefulModel)  # ALWAYS False — dead
+    mode = "stateful" if is_stateful else "batch"   # ALWAYS "batch"
+    df = server.serve_season_features(season, mode=mode)
+
+# ✅ Correct: use the literal that the caller context guarantees
+def _build_stateless_predictions(*, model: Model, ...) -> ...:
+    df = server.serve_season_features(season, mode="batch")
+```
+
+**Rule:** Before adding a runtime check inside a helper, ask: "Is this condition already guaranteed by every caller?" If yes, use the literal value — the check adds confusion, not safety.

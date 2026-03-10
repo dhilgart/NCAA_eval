@@ -11,7 +11,6 @@ import csv
 import io
 import sys
 from pathlib import Path
-from typing import Literal
 
 import pandas as pd  # type: ignore[import-untyped]
 from rich.console import Console
@@ -82,9 +81,7 @@ def _build_stateless_predictions(
     feature_config = model.feature_config
     server = _setup_feature_server(data_dir, feature_config)
 
-    is_stateful = isinstance(model, StatefulModel)
-    mode: Literal["batch", "stateful"] = "stateful" if is_stateful else "batch"
-    df = server.serve_season_features(season, mode=mode)
+    df = server.serve_season_features(season, mode="batch")
     if df.empty:
         msg = f"No game data found for season {season}"
         raise FileNotFoundError(msg)
@@ -125,9 +122,9 @@ def format_predictions_csv(rows: list[tuple[int, int, int, float]]) -> str:
 def build_predictions(*, run_id: str, season: int, data_dir: Path) -> str:
     """Load a model and return a predictions CSV string.
 
-    Pure orchestration: loads the model, generates predictions via the
-    appropriate model path, and formats the CSV.
-    No I/O side-effects — callers decide where to write the result.
+    Orchestration layer: loads the model and season data from disk, routes
+    to the appropriate prediction path (stateful or stateless), and formats
+    the result as a CSV string.  Callers decide where to write the output.
 
     Args:
         run_id: Model run identifier.
@@ -188,7 +185,9 @@ def run_predict(
     Raises:
         FileNotFoundError: If the run or model cannot be loaded.
     """
-    con = console or Console()
+    # When writing CSV to stdout, route status messages to stderr so the
+    # output stream stays pipe-safe (no non-CSV lines mixed in).
+    con = console or Console(stderr=output is None)
     con.print(f"Generating predictions for season {season}...")
 
     csv_str = build_predictions(run_id=run_id, season=season, data_dir=data_dir)

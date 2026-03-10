@@ -143,16 +143,25 @@ class TestCLIPredict:
             ],
         )
         assert result.exit_code == 0, f"CLI failed: {result.output}"
-        assert "season,team_a_id,team_b_id,pred_win_prob" in result.output
-        assert "2025,1101,1102" in result.output
+        # CliRunner merges all output streams; extract CSV lines starting from
+        # the header so status messages (on real stderr) don't interfere.
+        csv_header = "season,team_a_id,team_b_id,pred_win_prob"
+        csv_start = result.output.find(csv_header)
+        assert csv_start != -1, "CSV header not found in output"
+        csv_text = result.output[csv_start:]
+        reader = csv.DictReader(io.StringIO(csv_text))
+        rows = list(reader)
+        # 3 teams → C(3,2) = 3 rows
+        assert len(rows) == 3
+        for row in rows:
+            assert row["season"] == "2025"
+            assert int(row["team_a_id"]) < int(row["team_b_id"])
 
     @patch("ncaa_eval.cli.predict._setup_feature_server")
-    @patch("ncaa_eval.cli.predict.ParquetRepository")
     @patch("ncaa_eval.cli.predict.RunStore")
     def test_stateless_predict_writes_csv(
         self,
         mock_store_cls: MagicMock,
-        mock_repo_cls: MagicMock,
         mock_setup_server: MagicMock,
         tmp_path: Path,
     ) -> None:
