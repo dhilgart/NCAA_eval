@@ -78,6 +78,17 @@ def _make_sim_data() -> _FakeBracketSimResult:
     )
 
 
+def _override_patches() -> list[tuple[object, str, object]]:
+    """Return list of (target, attr, mock) tuples for override function mocks."""
+    return [
+        (_page_mod, "check_invalidation", MagicMock(return_value=False)),
+        (_page_mod, "get_overrides", MagicMock(return_value={})),
+        (_page_mod, "apply_overrides", MagicMock(side_effect=lambda ml, ov, br, pm: ml)),
+        (_page_mod, "clear_overrides", MagicMock()),
+        (_page_mod, "set_override", MagicMock()),
+    ]
+
+
 class TestNoRunSelected:
     def test_shows_info_when_no_run(self) -> None:
         mock_st = MagicMock()
@@ -171,13 +182,21 @@ class TestSuccessfulRender:
         mock_st.columns.side_effect = lambda *a, **kw: [
             MagicMock() for _ in range(a[0] if isinstance(a[0], int) else len(a[0]))
         ]
-        # First selectbox call = simulation method, subsequent = pairwise team selectors
-        mock_st.selectbox.side_effect = ["analytical", "[1] Duke", "[16] Norfolk St"]
+        # selectbox: sim method, pairwise team A, pairwise team B, + 3 edit picks (4-team bracket)
+        mock_st.selectbox.side_effect = [
+            "analytical",
+            "[1] Duke",
+            "[16] Norfolk St",
+            "[1] Duke",  # edit pick game 1
+            "[1] UConn",  # edit pick game 2
+            "[1] Duke",  # edit pick game 3 (championship)
+        ]
 
         sim_data = _make_sim_data()
         mock_heatmap = MagicMock()
         mock_components = MagicMock()
 
+        patches = _override_patches()
         with (
             patch.object(_page_mod, "st", mock_st),
             patch.object(_page_mod, "components", mock_components),
@@ -186,6 +205,11 @@ class TestSuccessfulRender:
             patch.object(_page_mod, "run_bracket_simulation", return_value=sim_data),
             patch.object(_page_mod, "render_bracket_html", return_value="<html></html>"),
             patch.object(_page_mod, "plot_advancement_heatmap", return_value=mock_heatmap),
+            patch.object(*patches[0]),
+            patch.object(*patches[1]),
+            patch.object(*patches[2]),
+            patch.object(*patches[3]),
+            patch.object(*patches[4]),
         ):
             _page_mod._render_bracket_page()
 
@@ -204,8 +228,8 @@ class TestSuccessfulRender:
 
         # Should render pairwise win probability expander (AC #5)
         mock_st.expander.assert_called()
-        expander_title = mock_st.expander.call_args[0][0]
-        assert "Pairwise" in expander_title
+        expander_calls = [call[0][0] for call in mock_st.expander.call_args_list]
+        assert any("Pairwise" in title for title in expander_calls)
 
 
 class TestMCModeRender:
@@ -250,13 +274,21 @@ class TestMCModeRender:
         mock_st.columns.side_effect = lambda *a, **kw: [
             MagicMock() for _ in range(a[0] if isinstance(a[0], int) else len(a[0]))
         ]
-        mock_st.selectbox.side_effect = ["monte_carlo", "[1] Duke", "[16] Norfolk St"]
+        mock_st.selectbox.side_effect = [
+            "monte_carlo",
+            "[1] Duke",
+            "[16] Norfolk St",
+            "[1] Duke",
+            "[1] UConn",
+            "[1] Duke",
+        ]
 
         sim_data = self._make_mc_sim_data()
         mock_dist_fig = MagicMock()
         mock_components = MagicMock()
         mock_plot_score = MagicMock(return_value=mock_dist_fig)
 
+        patches = _override_patches()
         with (
             patch.object(_page_mod, "st", mock_st),
             patch.object(_page_mod, "components", mock_components),
@@ -266,6 +298,11 @@ class TestMCModeRender:
             patch.object(_page_mod, "render_bracket_html", return_value="<html></html>"),
             patch.object(_page_mod, "plot_advancement_heatmap", return_value=MagicMock()),
             patch.object(_page_mod, "plot_score_distribution", mock_plot_score),
+            patch.object(*patches[0]),
+            patch.object(*patches[1]),
+            patch.object(*patches[2]),
+            patch.object(*patches[3]),
+            patch.object(*patches[4]),
         ):
             _page_mod._render_bracket_page()
 
@@ -285,7 +322,14 @@ class TestMCModeRender:
         mock_st.columns.side_effect = lambda *a, **kw: [
             MagicMock() for _ in range(a[0] if isinstance(a[0], int) else len(a[0]))
         ]
-        mock_st.selectbox.side_effect = ["monte_carlo", "[1] Duke", "[16] Norfolk St"]
+        mock_st.selectbox.side_effect = [
+            "monte_carlo",
+            "[1] Duke",
+            "[16] Norfolk St",
+            "[1] Duke",
+            "[1] UConn",
+            "[1] Duke",
+        ]
 
         # MC result but bracket_distributions only has "standard", not "fibonacci"
         n = 4
@@ -314,6 +358,7 @@ class TestMCModeRender:
             team_labels={0: "[1] Duke", 1: "[16] Norfolk St", 2: "[1] UConn", 3: "[16] Wagner"},
         )
 
+        patches = _override_patches()
         with (
             patch.object(_page_mod, "st", mock_st),
             patch.object(_page_mod, "components", MagicMock()),
@@ -322,6 +367,11 @@ class TestMCModeRender:
             patch.object(_page_mod, "run_bracket_simulation", return_value=sim_data),
             patch.object(_page_mod, "render_bracket_html", return_value="<html></html>"),
             patch.object(_page_mod, "plot_advancement_heatmap", return_value=MagicMock()),
+            patch.object(*patches[0]),
+            patch.object(*patches[1]),
+            patch.object(*patches[2]),
+            patch.object(*patches[3]),
+            patch.object(*patches[4]),
         ):
             _page_mod._render_bracket_page()
 
@@ -389,3 +439,138 @@ class TestSliderValuesPassThrough:
         assert mock_st.session_state["bracket_upset_aggression"] == 0
         assert mock_st.session_state["bracket_seed_weight"] == 0
         mock_st.rerun.assert_called_once()
+
+
+class TestOverrideInvalidation:
+    """Verify AC #4: Overrides are cleared when bracket parameters change."""
+
+    def test_override_invalidation_shows_info(self) -> None:
+        mock_st = MagicMock()
+        mock_st.session_state = {
+            "selected_run_id": "abc123",
+            "selected_year": 2023,
+            "selected_scoring": "standard",
+        }
+        mock_st.columns.side_effect = lambda *a, **kw: [
+            MagicMock() for _ in range(a[0] if isinstance(a[0], int) else len(a[0]))
+        ]
+        mock_st.selectbox.side_effect = [
+            "analytical",
+            "[1] Duke",
+            "[16] Norfolk St",
+            "[1] Duke",
+            "[1] UConn",
+            "[1] Duke",
+        ]
+
+        sim_data = _make_sim_data()
+
+        with (
+            patch.object(_page_mod, "st", mock_st),
+            patch.object(_page_mod, "components", MagicMock()),
+            patch.object(_page_mod, "get_data_dir", return_value="/fake/data"),
+            patch.object(_page_mod, "load_tourney_seeds", return_value=[{"seed": "W01"}]),
+            patch.object(_page_mod, "run_bracket_simulation", return_value=sim_data),
+            patch.object(_page_mod, "render_bracket_html", return_value="<html></html>"),
+            patch.object(_page_mod, "plot_advancement_heatmap", return_value=MagicMock()),
+            patch.object(_page_mod, "check_invalidation", return_value=True),
+            patch.object(_page_mod, "get_overrides", return_value={}),
+            patch.object(_page_mod, "apply_overrides", side_effect=lambda ml, ov, br, pm: ml),
+            patch.object(_page_mod, "clear_overrides"),
+            patch.object(_page_mod, "set_override"),
+        ):
+            _page_mod._render_bracket_page()
+
+        mock_st.info.assert_called()
+        info_msgs = [call[0][0] for call in mock_st.info.call_args_list]
+        assert any("overrides" in msg.lower() and "reset" in msg.lower() for msg in info_msgs)
+
+    def test_override_count_displayed(self) -> None:
+        mock_st = MagicMock()
+        mock_st.session_state = {
+            "selected_run_id": "abc123",
+            "selected_year": 2023,
+            "selected_scoring": "standard",
+        }
+        mock_st.columns.side_effect = lambda *a, **kw: [
+            MagicMock() for _ in range(a[0] if isinstance(a[0], int) else len(a[0]))
+        ]
+        # edited bracket: winners=(1, 2, 1) means:
+        # game 0 (0 vs 1): winner=1 "[16] Norfolk St"
+        # game 1 (2 vs 3): winner=2 "[1] UConn"
+        # game 2 (1 vs 2): winner=1 "[16] Norfolk St"
+        mock_st.selectbox.side_effect = [
+            "analytical",
+            "[1] Duke",
+            "[16] Norfolk St",
+            "[16] Norfolk St",  # edit pick game 1: team 0 vs 1
+            "[1] UConn",  # edit pick game 2: team 2 vs 3
+            "[16] Norfolk St",  # edit pick game 3 (champ): team 1 vs 2
+        ]
+
+        sim_data = _make_sim_data()
+        overrides = {0: 1}  # One override
+        edited_ml = _FakeMostLikely(winners=(1, 2, 1), champion_team_id=200, log_likelihood=-2.0)
+
+        with (
+            patch.object(_page_mod, "st", mock_st),
+            patch.object(_page_mod, "components", MagicMock()),
+            patch.object(_page_mod, "get_data_dir", return_value="/fake/data"),
+            patch.object(_page_mod, "load_tourney_seeds", return_value=[{"seed": "W01"}]),
+            patch.object(_page_mod, "run_bracket_simulation", return_value=sim_data),
+            patch.object(_page_mod, "render_bracket_html", return_value="<html></html>"),
+            patch.object(_page_mod, "plot_advancement_heatmap", return_value=MagicMock()),
+            patch.object(_page_mod, "check_invalidation", return_value=False),
+            patch.object(_page_mod, "get_overrides", return_value=overrides),
+            patch.object(_page_mod, "apply_overrides", return_value=edited_ml),
+            patch.object(_page_mod, "clear_overrides"),
+            patch.object(_page_mod, "set_override"),
+        ):
+            _page_mod._render_bracket_page()
+
+        info_msgs = [call[0][0] for call in mock_st.info.call_args_list]
+        assert any("1 of 3" in msg for msg in info_msgs)
+
+    def test_reset_button_shown_when_overrides_exist(self) -> None:
+        mock_st = MagicMock()
+        mock_st.session_state = {
+            "selected_run_id": "abc123",
+            "selected_year": 2023,
+            "selected_scoring": "standard",
+        }
+        mock_st.columns.side_effect = lambda *a, **kw: [
+            MagicMock() for _ in range(a[0] if isinstance(a[0], int) else len(a[0]))
+        ]
+        mock_st.selectbox.side_effect = [
+            "analytical",
+            "[1] Duke",
+            "[16] Norfolk St",
+            "[16] Norfolk St",
+            "[1] UConn",
+            "[1] Duke",
+        ]
+        mock_st.button.return_value = False  # button not clicked
+
+        sim_data = _make_sim_data()
+        overrides = {0: 1}
+
+        with (
+            patch.object(_page_mod, "st", mock_st),
+            patch.object(_page_mod, "components", MagicMock()),
+            patch.object(_page_mod, "get_data_dir", return_value="/fake/data"),
+            patch.object(_page_mod, "load_tourney_seeds", return_value=[{"seed": "W01"}]),
+            patch.object(_page_mod, "run_bracket_simulation", return_value=sim_data),
+            patch.object(_page_mod, "render_bracket_html", return_value="<html></html>"),
+            patch.object(_page_mod, "plot_advancement_heatmap", return_value=MagicMock()),
+            patch.object(_page_mod, "check_invalidation", return_value=False),
+            patch.object(_page_mod, "get_overrides", return_value=overrides),
+            patch.object(_page_mod, "apply_overrides", return_value=sim_data.most_likely),
+            patch.object(_page_mod, "clear_overrides"),
+            patch.object(_page_mod, "set_override"),
+        ):
+            _page_mod._render_bracket_page()
+
+        # Reset button should have been rendered
+        button_calls = [call for call in mock_st.button.call_args_list]
+        button_labels = [call[0][0] if call[0] else call[1].get("label", "") for call in button_calls]
+        assert any("Reset" in label for label in button_labels)

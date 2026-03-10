@@ -11,6 +11,7 @@ import inspect
 
 import streamlit as st
 
+from dashboard.lib.bracket_overrides import apply_overrides, check_invalidation, get_overrides
 from dashboard.lib.data_loaders import get_data_dir, load_scoring_display_names, load_tourney_seeds
 from dashboard.lib.export import export_bracket_csv
 from dashboard.lib.filters import build_custom_scoring, score_chosen_bracket
@@ -67,6 +68,14 @@ def _render_results(
     custom_points: tuple[float, ...],
 ) -> None:
     """Run scoring, display outcome analysis, and offer CSV export."""
+    # Apply user bracket overrides (Story 9.8)
+    overrides = get_overrides()
+    edited_bracket = apply_overrides(sim_data.most_likely, overrides, sim_data.bracket, sim_data.prob_matrix)
+
+    if overrides:
+        n_games = len(edited_bracket.winners)
+        st.info(f"{len(overrides)} of {n_games} picks overridden by user.")
+
     # Determine which scoring rule to use
     if use_custom:
         scoring_rule = build_custom_scoring(custom_points)
@@ -84,8 +93,11 @@ def _render_results(
     rule_name: str = scoring_rule.name
 
     # Score bracket against simulations (cached by sim_data + scoring_key)
+    chosen_winners = edited_bracket.winners if overrides else None
     with st.spinner("Scoring bracket against simulations..."):
-        distributions = score_chosen_bracket(sim_data, [scoring_rule], scoring_key)
+        distributions = score_chosen_bracket(
+            sim_data, [scoring_rule], scoring_key, chosen_winners=chosen_winners
+        )
 
     if rule_name not in distributions:
         st.warning(f"Scoring failed for rule '{rule_name}'.")
@@ -101,10 +113,10 @@ def _render_results(
     display_names = load_scoring_display_names()
     _render_distribution_chart(dist, display_names.get(rule_name, rule_name))
 
-    # CSV export (AC #5)
+    # CSV export (AC #5) — uses edited bracket when overrides exist
     csv_str = export_bracket_csv(
         sim_data.bracket,
-        sim_data.most_likely,
+        edited_bracket,
         sim_data.team_labels,
         sim_data.prob_matrix,
     )
@@ -234,6 +246,10 @@ def _render_pool_scorer_page() -> None:
     # Render results if simulation data is available
     sim_data_cached: BracketSimulationResult | None = st.session_state.get("pool_sim_data")
     cached_key = st.session_state.get("pool_sim_key")
+
+    # Override invalidation check (AC #4) — Pool Scorer has no sliders so pass 0 for both
+    if check_invalidation(selected_run_id, selected_year, scoring, 0, 0):
+        st.info("Bracket parameters changed — user overrides have been reset.")
 
     if sim_data_cached is not None and cached_key == (selected_run_id, selected_year, n_sims):
         _render_results(sim_data_cached, scoring, use_custom, custom_points)

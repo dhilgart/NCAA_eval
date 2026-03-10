@@ -66,6 +66,15 @@ body {
     min-height: 20px;
     border: 1px solid #2a2e3d;
 }
+.team.user-pick {
+    border: 2px solid #d4a017;
+}
+.user-badge {
+    color: #d4a017;
+    font-size: 9px;
+    font-weight: bold;
+    margin-left: 2px;
+}
 .seed {
     color: #888;
     font-size: 11px;
@@ -140,22 +149,28 @@ def _resolve_round_winners(
     prev_teams: list[int],
     round_winners: list[int],
     prob_matrix: npt.NDArray[np.float64],
-) -> list[tuple[int, float]]:
+    overridden_game_indices: frozenset[int] | None = None,
+    game_offset: int = 0,
+) -> list[tuple[int, float, bool]]:
     """Pair previous-round survivors, look up winner probabilities.
 
     Args:
         prev_teams: Team indices from the previous round (or seeds).
         round_winners: Winner team indices for this round's games.
         prob_matrix: Pairwise probability matrix.
+        overridden_game_indices: Flat game indices that are user overrides.
+        game_offset: Offset of first game in this slice within the flat index.
 
     Returns:
-        List of ``(winner_index, win_prob)`` tuples.
+        List of ``(winner_index, win_prob, is_override)`` tuples.
     """
-    result: list[tuple[int, float]] = []
+    overrides = overridden_game_indices or frozenset()
+    result: list[tuple[int, float, bool]] = []
     for g_idx, winner in enumerate(round_winners):
         left = prev_teams[g_idx * 2]
         right = prev_teams[g_idx * 2 + 1]
-        result.append((winner, _winner_prob(winner, left, right, prob_matrix)))
+        is_ovr = (game_offset + g_idx) in overrides
+        result.append((winner, _winner_prob(winner, left, right, prob_matrix), is_ovr))
     return result
 
 
@@ -163,26 +178,35 @@ def _build_region_rounds(
     region_idx: int,
     rounds: list[list[int]],
     prob_matrix: npt.NDArray[np.float64],
-) -> list[list[tuple[int, float]]]:
+    overridden_game_indices: frozenset[int] | None = None,
+) -> list[list[tuple[int, float, bool]]]:
     """Build rounds for one region: seeds + R64 winners through E8 winner.
 
     Returns:
         List of 5 round entries.  Index 0 is the seed row (16 teams,
-        probability=1.0); indices 1-4 are R64, R32, S16, E8 winners.
+        probability=1.0, not overridden); indices 1-4 are R64, R32, S16,
+        E8 winners with override flags.
     """
     start = _REGION_STARTS[region_idx]
     seed_teams = list(range(start, start + 16))
-    region_rounds: list[list[tuple[int, float]]] = [[(t, 1.0) for t in seed_teams]]
+    region_rounds: list[list[tuple[int, float, bool]]] = [[(t, 1.0, False) for t in seed_teams]]
 
-    # Track survivors through 4 intra-region rounds
+    # Track survivors through 4 intra-region rounds.
+    # Compute flat game offsets: R64 has 32 games total (8 per region),
+    # R32 has 16 (4 per region), etc.
     prev: list[int] = seed_teams
     games_per_round = [8, 4, 2, 1]
     round_offsets = [region_idx * g for g in games_per_round]
+
+    # Flat offset within the 63-game array for each round start
+    flat_round_starts = [0, 32, 48, 56]  # R64=0, R32=32, S16=48, E8=56
+
     for r_idx in range(4):
         g = games_per_round[r_idx]
         off = round_offsets[r_idx]
         winners_list = rounds[r_idx][off : off + g]
-        rnd = _resolve_round_winners(prev, winners_list, prob_matrix)
+        flat_offset = flat_round_starts[r_idx] + round_offsets[r_idx]
+        rnd = _resolve_round_winners(prev, winners_list, prob_matrix, overridden_game_indices, flat_offset)
         region_rounds.append(rnd)
         prev = winners_list
 
@@ -197,6 +221,7 @@ def _team_cell(  # noqa: PLR0913 — REFACTOR Story 8.1
     seed_map: Mapping[int, int],
     *,
     is_seed: bool = False,
+    is_override: bool = False,
 ) -> str:
     """Render one team cell as HTML."""
     label = _esc(team_labels.get(team_idx, str(team_idx)))
@@ -204,17 +229,20 @@ def _team_cell(  # noqa: PLR0913 — REFACTOR Story 8.1
     seed = seed_map.get(tid, 0)
     bg = _prob_color(prob) if not is_seed else "#1e2130"
     prob_str = "" if is_seed else f"<span class='prob'>{prob:.0%}</span>"
+    css_class = "team user-pick" if is_override else "team"
+    badge = "<span class='user-badge'>USER</span>" if is_override else ""
     return (
-        f"<div class='team' style='background:{bg};'>"
+        f"<div class='{css_class}' style='background:{bg};'>"
         f"<span class='seed'>{seed}</span>"
         f"<span class='name'>{label}</span>"
+        f"{badge}"
         f"{prob_str}"
         f"</div>"
     )
 
 
 def _render_region_html(  # noqa: PLR0913 — REFACTOR Story 8.1
-    region_rounds: list[list[tuple[int, float]]],
+    region_rounds: list[list[tuple[int, float, bool]]],
     region_name: str,
     bracket_team_ids: tuple[int, ...],
     team_labels: Mapping[int, str],
@@ -226,7 +254,16 @@ def _render_region_html(  # noqa: PLR0913 — REFACTOR Story 8.1
     cols: list[str] = []
     for i, rd in enumerate(region_rounds):
         cells = "".join(
-            _team_cell(t, p, bracket_team_ids, team_labels, seed_map, is_seed=(i == 0)) for t, p in rd
+            _team_cell(
+                t,
+                p,
+                bracket_team_ids,
+                team_labels,
+                seed_map,
+                is_seed=(i == 0),
+                is_override=ovr,
+            )
+            for t, p, ovr in rd
         )
         cols.append(f"<div class='round'>{cells}</div>")
 
@@ -237,17 +274,20 @@ def _render_region_html(  # noqa: PLR0913 — REFACTOR Story 8.1
     return f"<div class='region' data-region='{region_name}'>{inner}</div>"
 
 
-def render_bracket_html(
+def render_bracket_html(  # noqa: PLR0913
     bracket_team_ids: tuple[int, ...],
     most_likely_winners: tuple[int, ...],
     team_labels: Mapping[int, str],
     seed_map: Mapping[int, int],
     prob_matrix: npt.NDArray[np.float64],
+    overridden_games: frozenset[int] | None = None,
 ) -> str:
     """Render a 64-team bracket as a self-contained HTML/CSS string.
 
     The bracket shows the most-likely path through all 6 rounds with
     win probabilities color-coded green (favorites) to red (upsets).
+    Overridden games are highlighted with a golden border and ``USER``
+    badge.
 
     Args:
         bracket_team_ids: 64 team IDs in bracket-position order (leaf order).
@@ -257,10 +297,12 @@ def render_bracket_html(
         team_labels: Mapping of bracket index → display label (e.g. "[1] Duke").
         seed_map: Mapping of team_id → seed number.
         prob_matrix: Pairwise win probability matrix, shape (64, 64).
+        overridden_games: Flat game indices that were user-overridden (optional).
 
     Returns:
         Self-contained HTML string with embedded CSS.
     """
+    ovr = overridden_games or frozenset()
     n_teams = len(bracket_team_ids)
     # Parse winners into per-round lists
     rounds: list[list[int]] = []
@@ -272,7 +314,7 @@ def render_bracket_html(
         games_in_round //= 2
 
     # Build per-region data
-    regions_data = [_build_region_rounds(i, rounds, prob_matrix) for i in range(4)]
+    regions_data = [_build_region_rounds(i, rounds, prob_matrix, ovr) for i in range(4)]
 
     # Final Four and Championship
     f4_winners = rounds[4]
@@ -282,6 +324,11 @@ def render_bracket_html(
     f4_prob_0 = _winner_prob(f4_winners[0], e8_winners[0], e8_winners[1], prob_matrix)
     f4_prob_1 = _winner_prob(f4_winners[1], e8_winners[2], e8_winners[3], prob_matrix)
     champ_prob = _winner_prob(champ_winner, f4_winners[0], f4_winners[1], prob_matrix)
+
+    # Flat game indices for F4 and Championship: 60, 61, 62
+    f4_ovr_0 = 60 in ovr
+    f4_ovr_1 = 61 in ovr
+    champ_ovr = 62 in ovr
 
     # Render regions
     cell_args = (bracket_team_ids, team_labels, seed_map)
@@ -295,10 +342,10 @@ def render_bracket_html(
     center_html = (
         "<div class='center'>"
         "<div class='f4-label'>Final Four</div>"
-        f"{_team_cell(f4_winners[0], f4_prob_0, *cell_args)}"
-        f"{_team_cell(f4_winners[1], f4_prob_1, *cell_args)}"
+        f"{_team_cell(f4_winners[0], f4_prob_0, *cell_args, is_override=f4_ovr_0)}"
+        f"{_team_cell(f4_winners[1], f4_prob_1, *cell_args, is_override=f4_ovr_1)}"
         "<div class='champ-label'>Champion</div>"
-        f"{_team_cell(champ_winner, champ_prob, *cell_args)}"
+        f"{_team_cell(champ_winner, champ_prob, *cell_args, is_override=champ_ovr)}"
         "</div>"
     )
 

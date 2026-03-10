@@ -90,23 +90,27 @@ def score_chosen_bracket(
     sim_data: BracketSimulationResult,
     _scoring_rules: Sequence[ScoringRule],
     scoring_key: str,
+    chosen_winners: tuple[int, ...] | None = None,
 ) -> dict[str, BracketDistribution]:
-    """Score the most-likely bracket against MC simulations.
+    """Score a bracket against MC simulations.
 
     Results are cached via ``@st.cache_data``.  ``_scoring_rules`` is prefixed
     with ``_`` so Streamlit skips hashing the list of rule objects (which are
     not hashable); ``scoring_key`` provides the cache discriminator instead,
     ensuring different rules produce different cache entries.
 
-    Calls :func:`score_bracket_against_sims` with the most-likely bracket's
-    ``winners`` array and the ``sim_result.sim_winners``, then computes
-    distribution statistics for each scoring rule.
+    When ``chosen_winners`` is provided, scores that bracket instead of the
+    model's most-likely bracket.  The ``chosen_winners`` tuple is included in
+    the cache key, so different user edits produce different cache entries.
 
     Args:
         sim_data: Bracket simulation result (must have MC sim_winners).
         _scoring_rules: Scoring rules to evaluate (not hashed by Streamlit).
         scoring_key: Cache-discriminating string (e.g. rule name or custom
             points repr) that uniquely identifies the scoring configuration.
+        chosen_winners: Optional explicit bracket winners to score instead of
+            ``sim_data.most_likely.winners``.  Pass as a tuple (hashable) for
+            Streamlit cache compatibility.
 
     Returns:
         Mapping of ``rule_name → BracketDistribution``.
@@ -120,7 +124,8 @@ def score_chosen_bracket(
         msg = "MC sim_winners required for pool scoring; run simulation in monte_carlo mode"
         raise ValueError(msg)
 
-    chosen = np.array(sim_data.most_likely.winners, dtype=np.int32)
+    winners = chosen_winners if chosen_winners is not None else sim_data.most_likely.winners
+    chosen = np.array(winners, dtype=np.int32)
     raw_scores = score_bracket_against_sims(chosen, sim_winners, _scoring_rules)
 
     return {name: compute_bracket_distribution(scores) for name, scores in raw_scores.items()}

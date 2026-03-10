@@ -3,16 +3,26 @@
 Interactive bracket visualizer showing per-game win probabilities and team
 advancement odds from a trained model.  Renders a 64-team bracket tree,
 advancement probability heatmap, expected-points table, and optional Monte
-Carlo score distribution.
+Carlo score distribution.  Users can override individual game picks via
+an interactive "Edit Picks" section.
 """
 
 from __future__ import annotations
 
+import math
 from pathlib import Path
 
 import streamlit as st
 import streamlit.components.v1 as components
 
+from dashboard.lib.bracket_overrides import (
+    _get_participants,
+    apply_overrides,
+    check_invalidation,
+    clear_overrides,
+    get_overrides,
+    set_override,
+)
 from dashboard.lib.bracket_renderer import render_bracket_html
 from dashboard.lib.data_loaders import get_data_dir, load_scoring_display_names, load_tourney_seeds
 from dashboard.lib.simulation_helpers import BracketSimulationResult, run_bracket_simulation
@@ -20,6 +30,7 @@ from ncaa_eval.evaluation.plotting import (
     plot_advancement_heatmap,
     plot_score_distribution,
 )
+from ncaa_eval.evaluation.simulation import MostLikelyBracket
 
 
 @st.cache_data(ttl=None, show_spinner="Generating Kaggle submission...")
@@ -36,13 +47,25 @@ def _build_kaggle_csv(data_dir: str, run_id: str, season: int) -> str | None:
         return None
 
 
-def _render_results(sim_data: BracketSimulationResult, scoring: str) -> None:
+def _render_results(  # noqa: PLR0912, C901
+    sim_data: BracketSimulationResult,
+    scoring: str,
+    edited_bracket: MostLikelyBracket,
+    overrides: dict[int, int],
+) -> None:
     """Render all bracket visualisation sections from simulation results."""
     display_names = load_scoring_display_names()
     scoring_label = display_names.get(scoring, scoring)
     result = sim_data.sim_result
     bracket = sim_data.bracket
-    most_likely = sim_data.most_likely
+
+    # Use the edited bracket (which equals model bracket when no overrides)
+    most_likely = edited_bracket
+
+    # Override status display
+    if overrides:
+        n_games = len(most_likely.winners)
+        st.info(f"{len(overrides)} of {n_games} picks overridden by user.")
 
     # Champion summary
     champ_label = sim_data.team_labels.get(
@@ -51,13 +74,14 @@ def _render_results(sim_data: BracketSimulationResult, scoring: str) -> None:
     st.success(f"Predicted Champion: **{champ_label}** (log-likelihood: {most_likely.log_likelihood:.2f})")
 
     # Bracket tree
-    st.subheader("Most-Likely Bracket")
+    st.subheader("Bracket" if not overrides else "Bracket (User-Edited)")
     bracket_html = render_bracket_html(
         bracket_team_ids=bracket.team_ids,
         most_likely_winners=most_likely.winners,
         team_labels=sim_data.team_labels,
         seed_map=bracket.seed_map,
         prob_matrix=sim_data.prob_matrix,
+        overridden_games=frozenset(overrides) if overrides else None,
     )
     components.html(bracket_html, height=750, scrolling=True)
 
@@ -136,7 +160,91 @@ def _render_results(sim_data: BracketSimulationResult, scoring: str) -> None:
             st.info("Kaggle export is available for Elo models only.")
 
 
-def _render_bracket_page() -> None:
+_ROUND_LABELS: tuple[str, ...] = ("R64", "R32", "S16", "E8", "F4", "Championship")
+
+
+def _render_edit_picks(  # noqa: C901
+    sim_data: BracketSimulationResult,
+    edited_bracket: MostLikelyBracket,
+    overrides: dict[int, int],
+) -> None:
+    """Render the interactive Edit Picks section with selectboxes per game."""
+    n_games = len(edited_bracket.winners)
+    n_teams = n_games + 1
+    n_rounds = int(math.log2(n_teams))
+
+    with st.expander("Edit Picks", expanded=bool(overrides)):
+        st.caption(
+            "Override model predictions by selecting a different winner for any matchup. "
+            "Changes cascade through later rounds automatically."
+        )
+
+        offset = 0
+        games_in_round = n_teams // 2
+        for round_idx in range(n_rounds):
+            round_label = _ROUND_LABELS[round_idx] if round_idx < len(_ROUND_LABELS) else f"R{round_idx}"
+            st.markdown(f"**{round_label}** ({games_in_round} games)")
+
+            cols_per_row = min(4, games_in_round)
+            for row_start in range(0, games_in_round, cols_per_row):
+                row_end = min(row_start + cols_per_row, games_in_round)
+                cols = st.columns(row_end - row_start)
+                for col_idx, g in enumerate(range(row_start, row_end)):
+                    game_idx = offset + g
+                    team_a, team_b = _get_participants(game_idx, edited_bracket.winners, n_teams)
+                    label_a = sim_data.team_labels.get(team_a, str(team_a))
+                    label_b = sim_data.team_labels.get(team_b, str(team_b))
+
+                    current_winner = edited_bracket.winners[game_idx]
+                    model_winner = sim_data.most_likely.winners[game_idx]
+
+                    options = [label_a, label_b]
+                    team_indices = [team_a, team_b]
+                    current_idx = team_indices.index(current_winner) if current_winner in team_indices else 0
+
+                    # Show model's pick if different from current
+                    model_label = sim_data.team_labels.get(model_winner, str(model_winner))
+                    help_text = f"Model: {model_label}" if game_idx in overrides else None
+
+                    with cols[col_idx]:
+                        selected = st.selectbox(
+                            f"Game {game_idx + 1}",
+                            options=options,
+                            index=current_idx,
+                            key=f"edit_game_{game_idx}",
+                            help=help_text,
+                        )
+
+                        if selected is not None:
+                            sel_idx = options.index(selected)
+                            selected_team = team_indices[sel_idx]
+                            # Compare against the current cascaded winner (not model winner)
+                            # to avoid spurious overrides when a cascade already produced
+                            # a different winner from the model prediction.
+                            current_winner_for_game = edited_bracket.winners[game_idx]
+                            if selected_team != current_winner_for_game:
+                                if selected_team != model_winner:
+                                    # User explicitly chose a non-model winner
+                                    set_override(game_idx, selected_team)
+                                else:
+                                    # User chose model winner — remove any existing override
+                                    current_overrides = get_overrides()
+                                    current_overrides.pop(game_idx, None)
+                                    st.session_state["bracket_overrides"] = current_overrides
+                                st.rerun()
+                            elif game_idx in overrides and selected_team == model_winner:
+                                # Current cascaded winner matches selection and equals model —
+                                # stale override entry should be removed
+                                current_overrides = get_overrides()
+                                del current_overrides[game_idx]
+                                st.session_state["bracket_overrides"] = current_overrides
+                                st.rerun()
+
+            offset += games_in_round
+            games_in_round //= 2
+
+
+def _render_bracket_page() -> None:  # noqa: C901
     """Render the Bracket Visualizer page."""
     # Breadcrumbs
     col_nav, col_bc = st.columns([1, 3])
@@ -243,7 +351,24 @@ def _render_bracket_page() -> None:
         )
         return
 
-    _render_results(sim_data, scoring)
+    # Override invalidation check (AC #4)
+    if check_invalidation(selected_run_id, selected_year, scoring, upset_aggression, seed_weight_pct):
+        st.info("Bracket parameters changed — user overrides have been reset.")
+
+    # Apply overrides (AC #1)
+    overrides = get_overrides()
+    edited_bracket = apply_overrides(sim_data.most_likely, overrides, sim_data.bracket, sim_data.prob_matrix)
+
+    # Reset button (AC #3)
+    if overrides:
+        if st.button("Reset to Model Predictions", key="reset_overrides"):
+            clear_overrides()
+            st.rerun()
+
+    _render_results(sim_data, scoring, edited_bracket, overrides)
+
+    # Interactive edit picks section (AC #1)
+    _render_edit_picks(sim_data, edited_bracket, overrides)
 
 
 _render_bracket_page()
