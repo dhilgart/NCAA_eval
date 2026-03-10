@@ -137,7 +137,7 @@ development_status:
   9-4-fix-public-api-documentation: done
   9-5-post-sync-data-validation: done
   9-6-revisit-skipped-audit-decisions: backlog
-  9-7-game-theory-slider-implementation: backlog
+  9-7-game-theory-slider-implementation: ready-for-dev
   9-8-user-editable-bracket: backlog
   9-9-cli-predict-command: backlog
   9-10-custom-metric-plugin-registry: backlog
