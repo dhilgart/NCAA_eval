@@ -1,6 +1,6 @@
 # PO Decision Log — Epic 8 Audit Items
 
-Date: 2026-03-05
+Date: 2026-03-09 (updated: skip decisions resolved)
 
 ## Summary
 

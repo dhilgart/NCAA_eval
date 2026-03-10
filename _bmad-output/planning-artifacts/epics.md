@@ -1697,3 +1697,12 @@ Story 7.9 tutorial documents "How to Add a Custom Metric" via function injection
 - **Effort:** Low — add a clarifying note or sidebar to the tutorial (~5 lines)
 - **Distinctness:** Documentation clarity improvement; prevents confusion about which extension mechanism applies to metrics vs. scoring rules
 - **Source:** Codebase audit item P3-17; `docs/tutorials/custom-metric.md`; PO decision: metric/feature-generator registries deferred, clarify tutorial distinction
+
+### `serve_season_features()` Label-Assignment Docstring Note (Origin: Audit item 1.7 / po-decision-log-epic8.md, 2026-03-09)
+
+Add a docstring note to `serve_season_features()` in `src/ncaa_eval/transform/feature_serving.py` documenting that the function always assigns `team_a = winner` in output, so **stateless model callers must randomize team_a/team_b assignment before fitting** to avoid label-mean bias. Stateful models do not require this — `_to_games()` uses `y` to reconstruct `Game` objects regardless of team ordering.
+
+- **Effort:** Trivial — ~4 lines added to an existing docstring
+- **Distinctness:** Documentation clarity; prevents user confusion about training label distribution (label mean = 1.0 by design for stateless models pre-randomization)
+- **Source:** Codebase audit item 1.7 PO decision; `src/ncaa_eval/transform/feature_serving.py:523`
+- **Deferred because:** PO directed to "fold into any passing story touching `feature_serving.py`" — not a standalone task

@@ -1,6 +1,6 @@
 # Story 9.6: Revisit Skipped Audit Decisions
 
-Status: review
+Status: done
 
 ## Story
 
@@ -192,9 +192,11 @@ N/A — no code implementation, no debugging needed.
 ### Change Log
 
 - 2026-03-09: Resolved all 20 "S — skip" items in `po-decision-log-epic8.md` (10 Accept-as-is, 8 Defer, 2 Already Resolved + 1 bonus). Updated Decision Counts and Follow-up Actions Summary. Story status → review.
+- 2026-03-09: Code review (Claude Sonnet 4.6) — 0 critical, 3 medium, 4 low findings. Fixed: (1) updated document date header in decision log (L4), (2) added 1.7 docstring note to Post-MVP Backlog in `epics.md` so untracked action item is not lost (M3). No story-blocking issues. Story status → done.
 
 ### File List
 
-- `_bmad-output/planning-artifacts/po-decision-log-epic8.md` (modified — 20 skip decisions resolved, counts updated, summary rewritten)
-- `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified — story status ready-for-dev → in-progress → review)
-- `_bmad-output/implementation-artifacts/9-6-revisit-skipped-audit-decisions.md` (modified — tasks marked complete, Dev Agent Record filled)
+- `_bmad-output/planning-artifacts/po-decision-log-epic8.md` (modified — 20 skip decisions resolved, counts updated, summary rewritten; date header updated during review)
+- `_bmad-output/planning-artifacts/epics.md` (modified during review — added Post-MVP Backlog entry for 1.7 docstring note)
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified — story status ready-for-dev → in-progress → review → done)
+- `_bmad-output/implementation-artifacts/9-6-revisit-skipped-audit-decisions.md` (modified — tasks marked complete, Dev Agent Record filled, review notes added)
