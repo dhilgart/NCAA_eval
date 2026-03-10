@@ -217,7 +217,6 @@ def run_bracket_simulation(  # noqa: PLR0913
             context=context,
             scoring_rules=[scoring_rule],
             method="analytical",
-            n_simulations=n_simulations,
         )
 
         # MC simulation uses ORIGINAL provider (unperturbed "reality")

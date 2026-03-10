@@ -413,3 +413,48 @@ class TestLookupSeedPrior:
     def test_above_15_clamps(self) -> None:
         assert _lookup_seed_prior(16) == 0.993
         assert _lookup_seed_prior(20) == 0.993
+
+
+# ---------------------------------------------------------------------------
+# Slider → temperature → perturb_probability_matrix integration
+# ---------------------------------------------------------------------------
+
+
+class TestSliderToPerturbIntegration:
+    """End-to-end: slider values wire through temperature into a valid perturbed matrix."""
+
+    _SEED_MAP = {100: 1, 200: 16, 300: 5, 400: 12}
+    _TEAM_IDS = [100, 200, 300, 400]
+
+    def _assert_valid_perturbed_matrix(self, result: np.ndarray, P: np.ndarray, msg: str) -> None:
+        n = result.shape[0]
+        assert not np.any(np.isnan(result)), f"{msg}: NaN values found"
+        assert not np.any(np.isinf(result)), f"{msg}: Inf values found"
+        assert np.all(result >= 0.0), f"{msg}: values below 0"
+        assert np.all(result <= 1.0), f"{msg}: values above 1"
+        np.testing.assert_array_equal(np.diag(result), np.zeros(n), err_msg=f"{msg}: diagonal non-zero")
+        for i in range(n):
+            for j in range(i + 1, n):
+                assert pytest.approx(float(result[i, j] + result[j, i]), abs=1e-10) == 1.0, (
+                    f"{msg}: complementarity violated at ({i},{j})"
+                )
+
+    @pytest.mark.parametrize("slider_val", [-5, -3, 0, 3, 5])
+    def test_temperature_boundary_values_produce_valid_matrix(self, slider_val: int) -> None:
+        """Boundary slider values must produce valid, complementary, bounded matrices."""
+        P = _make_prob_matrix([0.99, 0.65, 0.52, 0.40, 0.75, 0.60])
+        temperature = slider_to_temperature(slider_val)
+        result = perturb_probability_matrix(
+            P, self._SEED_MAP, self._TEAM_IDS, temperature=temperature, seed_weight=0.0
+        )
+        self._assert_valid_perturbed_matrix(result, P, f"slider={slider_val}, T={temperature:.4f}")
+
+    @pytest.mark.parametrize(("slider_val", "seed_weight"), [(-5, 1.0), (5, 1.0), (-5, 0.5), (5, 0.5)])
+    def test_combined_boundary_slider_values(self, slider_val: int, seed_weight: float) -> None:
+        """Extreme slider combinations must not produce NaN/Inf or violate constraints."""
+        P = _make_prob_matrix([0.99, 0.65, 0.52, 0.40, 0.75, 0.60])
+        temperature = slider_to_temperature(slider_val)
+        result = perturb_probability_matrix(
+            P, self._SEED_MAP, self._TEAM_IDS, temperature=temperature, seed_weight=seed_weight
+        )
+        self._assert_valid_perturbed_matrix(result, P, f"slider={slider_val}, w={seed_weight}")

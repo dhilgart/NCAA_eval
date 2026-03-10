@@ -3773,3 +3773,51 @@ This verifies the critical binding: `slider_value = st.slider(...) → run_simul
 **Pattern:** The initial test suite tested only 2 of 7 even seed-difference interpolation cases (diff=2, diff=4). The remaining 5 (diff=6,8,10,12,14) were untested.
 
 **Rule:** When a function applies linear interpolation across a domain with N tabulated breakpoints, parametrize the interpolation test to cover ALL inter-breakpoint values, not just the first two. This costs one line per case and eliminates silent regressions in the middle of the interpolation table.
+
+### Vectorize N×N Matrix Construction With Broadcasting + np.vectorize (Discovered Story 9.7 Code Review, 2026-03-10)
+
+**Anti-pattern:** Building an (n×n) probability matrix with a nested Python loop:
+```python
+for i in range(n):
+    for j in range(i + 1, n):
+        seed_diff = abs(seeds[i] - seeds[j])
+        p = lookup(seed_diff)
+        S[i, j] = p if seeds[i] < seeds[j] else 1.0 - p
+```
+
+**Rule:** Whenever an (n×n) matrix can be derived purely from element-wise functions of row and column indices (seeds, IDs, etc.), use NumPy broadcasting to vectorize the construction. The project style guide (Section 6.2) mandates no loops over matrices.
+
+**Vectorized pattern:**
+```python
+seeds = np.array([seed_map.get(tid, 0) for tid in team_ids])
+diff_matrix = np.abs(seeds[:, None] - seeds[None, :])        # (n, n) all-pairs diff
+p_higher = np.vectorize(lookup_fn)(diff_matrix)               # (n, n) P(higher seed wins)
+higher_mask = seeds[:, None] < seeds[None, :]                  # True where row is higher seed
+lower_mask  = seeds[:, None] > seeds[None, :]
+S = np.where(higher_mask, p_higher, np.where(lower_mask, 1.0 - p_higher, p_higher))
+np.fill_diagonal(S, 0.0)
+```
+
+**Note:** `np.vectorize` is a convenience wrapper, not a speed optimization (it still loops internally). For large n, consider precomputing a lookup array indexed by diff. For n=64, `np.vectorize` is fast enough (< 1ms) and produces clean, readable code.
+
+### Always Warn When Lookup Keys Fall Back to Defaults (Discovered Story 9.7 Code Review, 2026-03-10)
+
+**Anti-pattern:** `seed_map.get(tid, 0)` silently falls back to `seed=0` if a team is missing from the map. When `seed_diff=0`, the prior returns 0.5 (coin flip), which is mathematically valid but data-masking — a caller error that surfaces as incorrect probabilities.
+
+**Rule:** Whenever a map lookup falls back to a non-error default that can silently produce wrong results, add a `logger.warning()` listing the missing keys. The warning cost is zero for the happy path and invaluable for debugging malformed data.
+
+```python
+missing = [tid for tid in team_ids if tid not in seed_map]
+if missing:
+    logger.warning("Missing %d team(s) from seed_map — defaulting to seed=0: %s", len(missing), missing[:10])
+```
+
+**Applies to:** Any function that builds matrices from ID→attribute lookups (seed_map, team_name_map, etc.).
+
+### Do Not Pass Ignored Parameters To Cached Functions That Affect The Cache Key (Discovered Story 9.7 Code Review, 2026-03-10)
+
+See also the earlier entry: "**`@st.cache_data` key includes ALL parameters — normalize method-independent params before caching**" (Story 7.5).
+
+**Story 9.7 instance:** The analytical `simulate_tournament` call inside the `@st.cache_data`-decorated `run_bracket_simulation` passed `n_simulations=n_simulations` even though the analytical method ignores it. While `n_simulations` is already part of the outer function's cache key (correct for MC), passing it to the inner analytical call is misleading and documents an implicit assumption that the inner call might use it.
+
+**Rule:** When calling a function with `method="analytical"`, do not pass `n_simulations`. Omit parameters that are documented as "ignored" for the current branch — explicit omission is more readable than silently passing a dead argument.

@@ -263,7 +263,7 @@ probabilities against observed win rates:
 | Points on the diagonal | Well-calibrated | No action needed |
 | Points **above** the diagonal | Under-confident — actual win rates exceed predictions | Model could be sharper |
 | Points **below** the diagonal | Over-confident — predictions overstate win likelihood | Model needs calibration |
-| S-shaped curve | Probabilities are too extreme on both ends | Retrain with calibration regularization; temperature scaling via Game Theory Sliders (not yet implemented) |
+| S-shaped curve | Probabilities are too extreme on both ends | Retrain with calibration regularization; use a negative Upset Aggression slider value (chalk mode) to sharpen predictions |
 | Flat line near 0.5 | Model lacks discrimination | Improve features or model architecture |
 
 ```{tip}

@@ -284,6 +284,7 @@ Claude Opus 4.6
 
 - 2026-03-10: Implemented game-theory slider perturbation (Story 9.7) — all 5 tasks complete
 - 2026-03-10: Code review fixes — removed dead safe_denom guard, expanded interpolation tests, added slider flow + reset button tests
+- 2026-03-10: Code review (round 2) — fixed stale "not yet implemented" ref in user-guide.md:266, vectorized build_seed_prior_matrix, added seed_map fallback warning, removed dead n_simulations arg from analytical call, added 9 slider→perturb boundary integration tests (71 total)
 
 ### File List
 
@@ -294,5 +295,6 @@ Claude Opus 4.6
 - `docs/user-guide.md` — **MODIFIED** removed NOT YET IMPLEMENTED banner, added slider descriptions
 - `tests/unit/test_perturbation.py` — **NEW** 48 unit tests for perturbation module
 - `tests/unit/test_bracket_page.py` — **MODIFIED** fixed columns mock for 3-column slider layout
+- `tests/unit/test_perturbation.py` — **MODIFIED** added 9 slider→perturb boundary integration tests (class TestSliderToPerturbIntegration)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` — **MODIFIED** status updated
 - `_bmad-output/implementation-artifacts/9-7-game-theory-slider-implementation.md` — **MODIFIED** tasks marked complete

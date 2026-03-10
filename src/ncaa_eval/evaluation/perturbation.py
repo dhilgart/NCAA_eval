@@ -16,10 +16,13 @@ Both transformations preserve complementarity:
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Sequence
 
 import numpy as np
 import numpy.typing as npt
+
+logger = logging.getLogger(__name__)
 
 # Historical first-round win rates by seed difference (higher seed wins).
 # Derived from NCAA tournament results through 2023.
@@ -147,28 +150,38 @@ def build_seed_prior_matrix(
         Float64 matrix of shape ``(n, n)`` with diagonal zeros and
         ``S[i,j] + S[j,i] = 1``.
     """
-    n = len(team_ids)
-    S = np.zeros((n, n), dtype=np.float64)
     seeds = np.array([seed_map.get(tid, 0) for tid in team_ids], dtype=np.int32)
 
-    for i in range(n):
-        for j in range(i + 1, n):
-            seed_diff = abs(int(seeds[i]) - int(seeds[j]))
-            p_higher_wins = _lookup_seed_prior(seed_diff)
-            # Determine which team is the higher seed (lower seed number).
-            if seeds[i] < seeds[j]:
-                # team i is the higher seed → P(i wins) = p_higher_wins
-                S[i, j] = p_higher_wins
-                S[j, i] = 1.0 - p_higher_wins
-            elif seeds[i] > seeds[j]:
-                # team j is the higher seed → P(j wins) = p_higher_wins
-                S[i, j] = 1.0 - p_higher_wins
-                S[j, i] = p_higher_wins
-            else:
-                # Same seed → coin flip.
-                S[i, j] = 0.5
-                S[j, i] = 0.5
-    return S
+    missing = [tid for tid in team_ids if tid not in seed_map]
+    if missing:
+        logger.warning(
+            "build_seed_prior_matrix: %d team(s) missing from seed_map — "
+            "treating as seed=0 (same-seed coin flip): %s",
+            len(missing),
+            missing[:10],
+        )
+
+    # Vectorized seed-diff matrix: (n, n) with abs(seed_i - seed_j).
+    diff_matrix = np.abs(seeds[:, None] - seeds[None, :]).astype(np.int32)
+
+    # Vectorize the scalar lookup over all pairwise seed differences.
+    # np.vectorize applies _lookup_seed_prior element-wise on the diff matrix
+    # to produce P(higher_seed wins) for each (i, j) pair.
+    _vec_lookup = np.vectorize(_lookup_seed_prior)
+    p_higher_wins: npt.NDArray[np.float64] = _vec_lookup(diff_matrix).astype(np.float64)
+
+    # Build S[i, j] = P(team_i beats team_j):
+    # - If seeds[i] < seeds[j]: team i is higher seed → S[i,j] = p_higher_wins[i,j]
+    # - If seeds[i] > seeds[j]: team j is higher seed → S[i,j] = 1 - p_higher_wins[i,j]
+    # - If seeds[i] == seeds[j]: coin flip → S[i,j] = 0.5 (already from _lookup at diff=0)
+    higher_seed_mask = seeds[:, None] < seeds[None, :]  # True where i is higher seed
+    lower_seed_mask = seeds[:, None] > seeds[None, :]  # True where j is higher seed
+
+    S = np.where(
+        higher_seed_mask, p_higher_wins, np.where(lower_seed_mask, 1.0 - p_higher_wins, p_higher_wins)
+    )
+    np.fill_diagonal(S, 0.0)
+    return S.astype(np.float64)
 
 
 def perturb_probability_matrix(
