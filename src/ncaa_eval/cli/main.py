@@ -104,6 +104,38 @@ def export(
             output=output,
             console=console,
         )
+    except (FileNotFoundError, TypeError, AttributeError) as exc:
+        console.print(f"[red]Error: {exc}[/red]")
+        raise typer.Exit(code=1)
+
+
+@app.command()
+def predict(
+    run_id: str = typer.Option(..., "--run-id", help="Model run ID"),
+    season: int = typer.Option(..., "--season", help="Target season year"),
+    data_dir: Path = typer.Option(Path("data/"), "--data-dir", help="Local Parquet data directory"),
+    output: Path | None = typer.Option(None, "--output", help="Output CSV path (default: stdout)"),
+) -> None:
+    """Generate win-probability predictions for a season.
+
+    Produces a CSV with pairwise matchup probabilities (stateful models)
+    or game-level predictions (stateless models) for the target season.
+    """
+    from ncaa_eval.cli.predict import run_predict
+
+    # When writing CSV to stdout, route status messages to stderr so the
+    # output stream stays pipe-safe. Pass a stderr-routed console explicitly
+    # rather than relying on run_predict's fallback (which is bypassed when a
+    # console is provided).
+    predict_console = Console(stderr=True) if output is None else console
+    try:
+        run_predict(
+            run_id=run_id,
+            season=season,
+            data_dir=data_dir,
+            output=output,
+            console=predict_console,
+        )
     except (FileNotFoundError, TypeError) as exc:
         console.print(f"[red]Error: {exc}[/red]")
         raise typer.Exit(code=1)

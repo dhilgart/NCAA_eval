@@ -3855,3 +3855,82 @@ if participant_a != orig_a or participant_b != orig_b:
 **Anti-pattern:** In an editable bracket UI, comparing the user's selection against `model_winner` to detect new overrides. When a cascade has already changed a game's winner away from the model's pick, any user who doesn't touch that game still triggers an override (selected_team ≠ model_winner → spurious `set_override()`).
 
 **Rule:** Compare the user's selection against `current_winner_for_game` (the current cascaded winner in the edited bracket), not against `model_winner`. Only fire `set_override()` when the selection differs from the current cascaded winner AND differs from the model winner.
+
+### Pipe-Safe CLI: Status Messages Must Go to `stderr`, Not `stdout` (Discovered Story 9.9 Code Review, 2026-03-10)
+
+When a CLI command writes structured data (CSV, JSON) to stdout, **all** status/progress messages must be routed to stderr. Rich's `Console()` defaults to stdout — creating a `Console()` inside a run-function that sometimes writes data to stdout will contaminate the output stream when `--output` is omitted.
+
+```python
+# ❌ Wrong: status message lands on stdout, breaks pipes
+def run_predict(*, ..., output: Path | None, console: Console | None = None) -> str:
+    con = console or Console()          # defaults to stdout
+    con.print("Generating predictions...")  # THIS line corrupts piped CSV
+    sys.stdout.write(csv_str)           # raw CSV — now prefixed by status line
+
+# ✅ Correct: when output is None (stdout mode), route status to stderr
+def run_predict(*, ..., output: Path | None, console: Console | None = None) -> str:
+    con = console or Console(stderr=output is None)
+    con.print("Generating predictions...")  # goes to stderr in pipe mode
+    sys.stdout.write(csv_str)           # clean CSV only
+```
+
+**CliRunner caveat:** `typer.testing.CliRunner` captures both stdout and stderr into `result.output` indiscriminately (this version of Click's CliRunner has no `mix_stderr=False` option). Tests that check `result.output` for pure CSV will see status lines too. Fix: extract the CSV from `result.output` by scanning for the header line:
+
+```python
+csv_start = result.output.find("season,team_a_id,team_b_id,pred_win_prob")
+csv_text = result.output[csv_start:]
+rows = list(csv.DictReader(io.StringIO(csv_text)))
+```
+
+### Dead Code from Context-Blind Branching: Verify Helper Preconditions (Discovered Story 9.9 Code Review, 2026-03-10)
+
+When a parent function branches on a condition (e.g., `isinstance(model, StatefulModel)`) and dispatches to two separate helpers, each helper already knows which branch it represents. Adding the same `isinstance` check inside the helper is dead code — the condition is permanently resolved by the caller.
+
+```python
+# ❌ Wrong: _build_stateless_predictions is ONLY called when not isinstance(model, StatefulModel)
+def _build_stateless_predictions(*, model: Model, ...) -> ...:
+    is_stateful = isinstance(model, StatefulModel)  # ALWAYS False — dead
+    mode = "stateful" if is_stateful else "batch"   # ALWAYS "batch"
+    df = server.serve_season_features(season, mode=mode)
+
+# ✅ Correct: use the literal that the caller context guarantees
+def _build_stateless_predictions(*, model: Model, ...) -> ...:
+    df = server.serve_season_features(season, mode="batch")
+```
+
+**Rule:** Before adding a runtime check inside a helper, ask: "Is this condition already guaranteed by every caller?" If yes, use the literal value — the check adds confusion, not safety.
+
+### Pipe-Safe CLI: Caller Must Also Pass Stderr-Routed Console (Discovered Story 9.9 Code Review Round 2, 2026-03-10)
+
+A run-function's `console or Console(stderr=output is None)` fallback is only activated when `console=None`. If the Typer command passes a module-level `Console()` (stdout), the fallback never activates and pipe-safety breaks silently.
+
+```python
+# ❌ Wrong: main.py passes module-level stdout console; run_predict's fallback never fires
+console = Console()  # module-level — stdout
+
+@app.command()
+def predict(..., output: Path | None) -> None:
+    run_predict(..., output=output, console=console)  # always non-None → fallback bypassed
+
+def run_predict(*, output: Path | None, console: Console | None = None) -> str:
+    con = console or Console(stderr=output is None)  # 'console' is never None → dead branch
+    con.print("status...")  # goes to stdout, breaking pipes
+
+# ✅ Correct: caller constructs the right console based on output routing
+@app.command()
+def predict(..., output: Path | None) -> None:
+    predict_console = Console(stderr=True) if output is None else console
+    run_predict(..., output=output, console=predict_console)
+```
+
+**Rule:** Never pass a fixed module-level `Console()` to a run-function that needs conditional stderr routing. Either pass `None` (let the run-function decide), or pass the correctly-configured console from the caller.
+
+**Test gap:** `CliRunner.invoke()` merges stdout + stderr into `result.output` — a test asserting CSV lines are clean will pass even if status messages are contaminating stdout. **Always add a direct call test** (bypassing CliRunner) that monkeypatches `sys.stdout` and asserts every line is valid CSV:
+
+```python
+captured = io.StringIO()
+monkeypatch.setattr(sys, "stdout", captured)
+run_predict(..., output=None)
+lines = captured.getvalue().splitlines()
+assert all(len(line.split(",")) == 4 for line in lines if line.strip())
+```

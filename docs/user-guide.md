@@ -29,7 +29,35 @@ Once you have installed the project and synced data, the typical workflow is:
    | `--output-dir` | `data/` | Where to write run artifacts |
    | `--config` | `None` | JSON file overriding model hyperparameters |
 
-3. **Explore results in the dashboard** — launch the Streamlit app:
+3. **Generate predictions** — produce win-probability CSVs from a trained model:
+
+   ```bash
+   python -m ncaa_eval.cli predict --run-id <run-id> --season 2025
+   python -m ncaa_eval.cli predict --run-id <run-id> --season 2025 --output preds.csv
+   ```
+
+   Common options:
+
+   | Flag | Default | Description |
+   |------|---------|-------------|
+   | `--run-id` | *(required)* | Model run ID (from the training step output) |
+   | `--season` | *(required)* | Target season year |
+   | `--data-dir` | `data/` | Path to synced Parquet files |
+   | `--output` | `None` | Output CSV path (omit to write to stdout) |
+
+   Stateful models (Elo) produce pairwise probabilities for all C(n,2) team
+   combinations.  Stateless models (XGBoost, LogisticRegression) produce
+   game-level predictions for every game in the season dataset.
+
+   Output format:
+
+   ```csv
+   season,team_a_id,team_b_id,pred_win_prob
+   2025,1101,1102,0.6234
+   2025,1101,1103,0.4512
+   ```
+
+4. **Explore results in the dashboard** — launch the Streamlit app:
 
    ```bash
    streamlit run dashboard/app.py
@@ -38,7 +66,7 @@ Once you have installed the project and synced data, the typical workflow is:
    The sidebar lets you select a tournament year, model run, and scoring format.
    All pages update automatically when you change these filters.
 
-4. **Iterate** — retrain with different hyperparameters, compare on the Leaderboard,
+5. **Iterate** — retrain with different hyperparameters, compare on the Leaderboard,
    inspect calibration in Model Deep Dive, and use the Bracket Visualizer and
    Pool Scorer to turn predictions into bracket picks.
 
