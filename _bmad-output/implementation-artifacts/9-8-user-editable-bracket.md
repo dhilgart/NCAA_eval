@@ -1,6 +1,6 @@
 # Story 9.8: User-Editable Bracket
 
-Status: in-progress
+Status: review
 
 ## Story
 
@@ -72,41 +72,25 @@ So that **I can score my own picks against historical results and evaluate the m
     - Show count of user overrides (e.g., "3 of 63 picks overridden")
     - Pass overrides to bracket renderer for visual distinction
 
-- [ ] Task 4: Integrate user-edited bracket into Pool Scorer (AC: #2)
-  - [ ] 4.1: Modify `dashboard/pages/4_Pool_Scorer.py` — `_run_simulation()`:
-    - After simulation, apply user overrides from session state to produce an edited bracket
-    - Store the edited `MostLikelyBracket` in session state alongside `pool_sim_data`
-  - [ ] 4.2: Modify `dashboard/lib/filters.py` — `score_chosen_bracket()`:
-    - Currently uses `sim_data.most_likely.winners` as the chosen bracket
-    - Change to accept an optional `chosen_bracket` parameter (or pass the user-edited `MostLikelyBracket` directly)
-    - When user overrides exist, score the **user's** bracket against MC sims, not the model's most-likely bracket
-  - [ ] 4.3: Modify `_render_results()` in `4_Pool_Scorer.py`:
-    - Pass the user-edited bracket to `export_bracket_csv()` so the CSV export reflects user picks
+- [x] Task 4: Integrate user-edited bracket into Pool Scorer (AC: #2)
+  - [x] 4.1: Modify `dashboard/pages/4_Pool_Scorer.py` — `_render_results()`:
+    - Apply user overrides via `get_overrides()` and `apply_overrides()` in `_render_results()`
+    - Show override count info when overrides exist
+  - [x] 4.2: Modify `dashboard/lib/filters.py` — `score_chosen_bracket()`:
+    - Added optional `chosen_winners: tuple[int, ...] | None` parameter
+    - When provided, scores the user's bracket against MC sims (tuple type for `@st.cache_data` compatibility)
+  - [x] 4.3: Modify `_render_results()` in `4_Pool_Scorer.py`:
+    - Pass edited bracket to `export_bracket_csv()` so CSV export reflects user picks
 
-- [ ] Task 5: Add comprehensive tests (AC: all)
-  - [ ] 5.1: Create `tests/unit/test_bracket_overrides.py`:
-    - `get_overrides()` returns empty dict when no overrides set
-    - `set_override()` stores override correctly
-    - `clear_overrides()` removes all overrides
-    - `apply_overrides()` with no overrides returns original bracket unchanged
-    - `apply_overrides()` with single override replaces correct game winner
-    - `apply_overrides()` cascades downstream — override in R64 forces re-evaluation through R32, S16, etc.
-    - `apply_overrides()` recomputes champion_team_id when championship game overridden
-    - `apply_overrides()` recomputes log_likelihood correctly
-    - Override invalidation: changing run_id/year/sliders clears overrides
-  - [ ] 5.2: Update `tests/unit/test_bracket_page.py`:
-    - Test that overrides appear in rendered output (override count display)
-    - Test "Reset to Model Predictions" button behavior
-    - Test override invalidation on parameter change
-    - Test override flow: click → bracket updates → re-render
-  - [ ] 5.3: Update `tests/unit/test_pool_scorer_page.py`:
-    - Test that user-edited bracket is scored (not model's most-likely)
-    - Test CSV export uses user-edited bracket
-  - [ ] 5.4: Run full quality gates: `pytest`, `ruff check .`, `mypy --strict src/ncaa_eval tests`
+- [x] Task 5: Add comprehensive tests (AC: all)
+  - [x] 5.1: `tests/unit/test_bracket_overrides.py` — 18 tests covering get/set/clear overrides, apply_overrides identity/single/cascade/stale/log_likelihood, check_invalidation
+  - [x] 5.2: `tests/unit/test_bracket_page.py` — 3 new tests for override invalidation, override count display, reset button visibility
+  - [x] 5.3: `tests/unit/test_pool_scorer_page.py` — 3 new tests for override info display, chosen_winners passed to scorer, export uses edited bracket
+  - [x] 5.4: Full quality gates passed: 1092 tests, ruff clean, mypy --strict clean (99 files)
 
-- [ ] Task 6: Update user guide documentation (AC: #1)
-  - [ ] 6.1: Add a "User-Editable Bracket" section to `docs/user-guide.md` under the Bracket Visualizer section
-  - [ ] 6.2: Document: how to override picks, how downstream cascades work, how overrides integrate with Pool Scorer, when overrides are reset
+- [x] Task 6: Update user guide documentation (AC: #1)
+  - [x] 6.1: Added "User-Editable Bracket" subsection to `docs/user-guide.md` under Bracket Visualizer
+  - [x] 6.2: Documented: editing picks, cascade logic, visual distinction, reset behavior, auto-invalidation triggers, Pool Scorer integration
 
 ## Dev Notes
 
@@ -339,17 +323,27 @@ Claude Opus 4.6
 - Task 1: Created `dashboard/lib/bracket_overrides.py` with `get_overrides()`, `set_override()`, `clear_overrides()`, `check_invalidation()`, and `apply_overrides()`. Cascade logic processes games in round-major order, re-resolving downstream games when upstream overrides change participants. Stale overrides (where the overridden winner is no longer a valid participant) fall back to model predictions. Log-likelihood is recomputed for the final bracket.
 - Task 2: Modified `bracket_renderer.py` to accept `overridden_games` frozenset. Overridden cells display golden border (`2px solid #d4a017`) and "USER" badge. Override flag propagated through region/round rendering pipeline.
 - Task 3: Integrated overrides into Bracket Visualizer page. Added `_render_edit_picks()` with per-game selectboxes organized by round. `_render_results()` now displays override count, passes override info to bracket renderer. Reset button shown when overrides exist. Override invalidation on param change shows info message.
+- Task 4: Integrated overrides into Pool Scorer. `_render_results()` applies overrides via `get_overrides()` + `apply_overrides()`, passes `chosen_winners` to `score_chosen_bracket()`, and passes edited bracket to `export_bracket_csv()`. Override count shown when active.
+- Task 5: All tests pass (1092 passed, 1 skipped). 18 unit tests for bracket_overrides, 3 new override tests for bracket_page, 3 new override tests for pool_scorer_page. Full quality gates: ruff clean, mypy --strict clean (99 files).
+- Task 6: Added "User-Editable Bracket" subsection to docs/user-guide.md covering pick editing, cascading, visual distinction, reset, auto-invalidation, and Pool Scorer integration.
 
 ### Change Log
 
 - 2026-03-10: Task 1 — Created bracket override state management module with cascade logic and invalidation
 - 2026-03-10: Task 2 — Added override visual distinction to bracket HTML renderer
 - 2026-03-10: Task 3 — Integrated bracket overrides into Presentation page with interactive edit picks
+- 2026-03-10: Task 4 — Integrated bracket overrides into Pool Scorer page (scoring + CSV export)
+- 2026-03-10: Task 5 — Comprehensive tests passing; full quality gates green
+- 2026-03-10: Task 6 — Added user-editable bracket documentation to user guide
 
 ### File List
 
 - `dashboard/lib/bracket_overrides.py` (NEW)
 - `dashboard/lib/bracket_renderer.py` (MODIFIED)
 - `dashboard/pages/2_Presentation.py` (MODIFIED)
+- `dashboard/pages/4_Pool_Scorer.py` (MODIFIED)
+- `dashboard/lib/filters.py` (MODIFIED)
+- `docs/user-guide.md` (MODIFIED)
 - `tests/unit/test_bracket_overrides.py` (NEW)
 - `tests/unit/test_bracket_page.py` (MODIFIED)
+- `tests/unit/test_pool_scorer_page.py` (MODIFIED)
