@@ -246,6 +246,29 @@ class TestApplyOverridesCascade:
         # Falls back to model: P[1,2]=0.6 > P[2,1]=0.4 → picks team 1
         assert result.winners[2] == 1
 
+    def test_unrelated_half_games_preserved(self) -> None:
+        """Override in one subtree must not change games in the other subtree."""
+        ml = _make_most_likely_8()
+        P = _make_prob_matrix_8()
+
+        bracket = MagicMock()
+        bracket.team_ids = tuple(range(1000, 1008))
+
+        # Override game 0 (R64, first half: 0 vs 1) — pick team 1 instead of 0.
+        # Games 1-3 (R64, second half: 2v3, 4v5, 6v7) are in a different subtree.
+        # Game 5 (R32, feeds from games 2 and 3) is completely unrelated.
+        # Its winner should remain as model predicted (most_likely.winners[5]=4).
+        result = apply_overrides(ml, {0: 1}, bracket, P)
+
+        # Override applied
+        assert result.winners[0] == 1
+        # Game 5 (R32, second half) untouched — model had 4 winning
+        assert result.winners[5] == ml.winners[5]
+        # Games 1-3 (R64 second half) untouched
+        assert result.winners[1] == ml.winners[1]
+        assert result.winners[2] == ml.winners[2]
+        assert result.winners[3] == ml.winners[3]
+
 
 # ---------------------------------------------------------------------------
 # Tests: apply_overrides — log_likelihood

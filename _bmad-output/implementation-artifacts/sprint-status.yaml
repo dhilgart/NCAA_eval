@@ -138,7 +138,7 @@ development_status:
   9-5-post-sync-data-validation: done
   9-6-revisit-skipped-audit-decisions: backlog
   9-7-game-theory-slider-implementation: done
-  9-8-user-editable-bracket: review
+  9-8-user-editable-bracket: done
   9-9-cli-predict-command: backlog
   9-10-custom-metric-plugin-registry: backlog
   epic-9-retrospective: optional

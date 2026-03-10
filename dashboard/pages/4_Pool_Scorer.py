@@ -11,7 +11,7 @@ import inspect
 
 import streamlit as st
 
-from dashboard.lib.bracket_overrides import apply_overrides, get_overrides
+from dashboard.lib.bracket_overrides import apply_overrides, check_invalidation, get_overrides
 from dashboard.lib.data_loaders import get_data_dir, load_scoring_display_names, load_tourney_seeds
 from dashboard.lib.export import export_bracket_csv
 from dashboard.lib.filters import build_custom_scoring, score_chosen_bracket
@@ -246,6 +246,10 @@ def _render_pool_scorer_page() -> None:
     # Render results if simulation data is available
     sim_data_cached: BracketSimulationResult | None = st.session_state.get("pool_sim_data")
     cached_key = st.session_state.get("pool_sim_key")
+
+    # Override invalidation check (AC #4) — Pool Scorer has no sliders so pass 0 for both
+    if check_invalidation(selected_run_id, selected_year, scoring, 0, 0):
+        st.info("Bracket parameters changed — user overrides have been reset.")
 
     if sim_data_cached is not None and cached_key == (selected_run_id, selected_year, n_sims):
         _render_results(sim_data_cached, scoring, use_custom, custom_points)

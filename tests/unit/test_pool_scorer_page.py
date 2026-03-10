@@ -514,3 +514,55 @@ class TestOverrideIntegration:
         mock_export.assert_called_once()
         export_args = mock_export.call_args[0]
         assert export_args[1] == edited_ml
+
+    def test_invalidation_check_called_on_every_render(self) -> None:
+        """Pool Scorer must call check_invalidation() so stale overrides are cleared (AC #4)."""
+        mock_st = MagicMock()
+        mock_st.session_state = {
+            "selected_run_id": "abc123",
+            "selected_year": 2023,
+            "selected_scoring": "standard",
+        }
+        mock_st.columns.side_effect = lambda n: [
+            MagicMock() for _ in range(n if isinstance(n, int) else len(n))
+        ]
+        mock_st.checkbox.return_value = False
+        mock_st.slider.return_value = 10_000
+        mock_st.button.return_value = False
+
+        with (
+            patch.object(_page_mod, "st", mock_st),
+            patch.object(_page_mod, "get_data_dir", return_value="/fake/data"),
+            patch.object(_page_mod, "load_tourney_seeds", return_value=[{"seed": "W01"}]),
+            patch.object(_page_mod, "check_invalidation", return_value=False) as mock_invalidation,
+        ):
+            _page_mod._render_pool_scorer_page()
+
+        # check_invalidation must have been called with the current parameters
+        mock_invalidation.assert_called_once_with("abc123", 2023, "standard", 0, 0)
+
+    def test_invalidation_shows_info_message(self) -> None:
+        """When overrides are invalidated, Pool Scorer shows an info message."""
+        mock_st = MagicMock()
+        mock_st.session_state = {
+            "selected_run_id": "abc123",
+            "selected_year": 2023,
+            "selected_scoring": "standard",
+        }
+        mock_st.columns.side_effect = lambda n: [
+            MagicMock() for _ in range(n if isinstance(n, int) else len(n))
+        ]
+        mock_st.checkbox.return_value = False
+        mock_st.slider.return_value = 10_000
+        mock_st.button.return_value = False
+
+        with (
+            patch.object(_page_mod, "st", mock_st),
+            patch.object(_page_mod, "get_data_dir", return_value="/fake/data"),
+            patch.object(_page_mod, "load_tourney_seeds", return_value=[{"seed": "W01"}]),
+            patch.object(_page_mod, "check_invalidation", return_value=True),
+        ):
+            _page_mod._render_pool_scorer_page()
+
+        info_msgs = [call[0][0] for call in mock_st.info.call_args_list]
+        assert any("overrides" in msg.lower() and "reset" in msg.lower() for msg in info_msgs)

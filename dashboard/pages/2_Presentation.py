@@ -16,6 +16,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 from dashboard.lib.bracket_overrides import (
+    _get_participants,
     apply_overrides,
     check_invalidation,
     clear_overrides,
@@ -162,30 +163,6 @@ def _render_results(  # noqa: PLR0912, C901
 _ROUND_LABELS: tuple[str, ...] = ("R64", "R32", "S16", "E8", "F4", "Championship")
 
 
-def _get_game_participants(
-    game_index: int,
-    winners: tuple[int, ...],
-    n_teams: int,
-) -> tuple[int, int]:
-    """Return the two participant team indices for a game."""
-    n_r64 = n_teams // 2
-    if game_index < n_r64:
-        return game_index * 2, game_index * 2 + 1
-
-    offset = 0
-    games_in_round = n_r64
-    while offset + games_in_round <= game_index:
-        offset += games_in_round
-        games_in_round //= 2
-
-    game_in_round = game_index - offset
-    prev_round_games = games_in_round * 2
-    prev_offset = offset - prev_round_games
-    feeder_a = prev_offset + game_in_round * 2
-    feeder_b = prev_offset + game_in_round * 2 + 1
-    return winners[feeder_a], winners[feeder_b]
-
-
 def _render_edit_picks(  # noqa: C901
     sim_data: BracketSimulationResult,
     edited_bracket: MostLikelyBracket,
@@ -214,7 +191,7 @@ def _render_edit_picks(  # noqa: C901
                 cols = st.columns(row_end - row_start)
                 for col_idx, g in enumerate(range(row_start, row_end)):
                     game_idx = offset + g
-                    team_a, team_b = _get_game_participants(game_idx, edited_bracket.winners, n_teams)
+                    team_a, team_b = _get_participants(game_idx, edited_bracket.winners, n_teams)
                     label_a = sim_data.team_labels.get(team_a, str(team_a))
                     label_b = sim_data.team_labels.get(team_b, str(team_b))
 
@@ -241,12 +218,23 @@ def _render_edit_picks(  # noqa: C901
                         if selected is not None:
                             sel_idx = options.index(selected)
                             selected_team = team_indices[sel_idx]
-                            if selected_team != model_winner:
-                                if game_idx not in overrides or overrides[game_idx] != selected_team:
+                            # Compare against the current cascaded winner (not model winner)
+                            # to avoid spurious overrides when a cascade already produced
+                            # a different winner from the model prediction.
+                            current_winner_for_game = edited_bracket.winners[game_idx]
+                            if selected_team != current_winner_for_game:
+                                if selected_team != model_winner:
+                                    # User explicitly chose a non-model winner
                                     set_override(game_idx, selected_team)
-                                    st.rerun()
-                            elif game_idx in overrides:
-                                # User reverted to model pick — remove override
+                                else:
+                                    # User chose model winner — remove any existing override
+                                    current_overrides = get_overrides()
+                                    current_overrides.pop(game_idx, None)
+                                    st.session_state["bracket_overrides"] = current_overrides
+                                st.rerun()
+                            elif game_idx in overrides and selected_team == model_winner:
+                                # Current cascaded winner matches selection and equals model —
+                                # stale override entry should be removed
                                 current_overrides = get_overrides()
                                 del current_overrides[game_idx]
                                 st.session_state["bracket_overrides"] = current_overrides

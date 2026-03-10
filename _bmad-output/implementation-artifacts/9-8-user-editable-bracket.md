@@ -1,6 +1,6 @@
 # Story 9.8: User-Editable Bracket
 
-Status: review
+Status: done
 
 ## Story
 
@@ -335,6 +335,7 @@ Claude Opus 4.6
 - 2026-03-10: Task 4 — Integrated bracket overrides into Pool Scorer page (scoring + CSV export)
 - 2026-03-10: Task 5 — Comprehensive tests passing; full quality gates green
 - 2026-03-10: Task 6 — Added user-editable bracket documentation to user guide
+- 2026-03-10: Code Review — Fixed 5 issues: H1 (Pool Scorer missing check_invalidation), H2 (apply_overrides over-resolved all R32+ games), M1 (duplicate _get_game_participants removed), M2 (test for cascade isolation added), M3 (spurious override detection in _render_edit_picks)
 
 ### File List
 
@@ -347,3 +348,4 @@ Claude Opus 4.6
 - `tests/unit/test_bracket_overrides.py` (NEW)
 - `tests/unit/test_bracket_page.py` (MODIFIED)
 - `tests/unit/test_pool_scorer_page.py` (MODIFIED)
+- `_bmad-output/planning-artifacts/template-requirements.md` (MODIFIED — code review learnings)

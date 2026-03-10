@@ -3821,3 +3821,37 @@ See also the earlier entry: "**`@st.cache_data` key includes ALL parameters — 
 **Story 9.7 instance:** The analytical `simulate_tournament` call inside the `@st.cache_data`-decorated `run_bracket_simulation` passed `n_simulations=n_simulations` even though the analytical method ignores it. While `n_simulations` is already part of the outer function's cache key (correct for MC), passing it to the inner analytical call is misleading and documents an implicit assumption that the inner call might use it.
 
 **Rule:** When calling a function with `method="analytical"`, do not pass `n_simulations`. Omit parameters that are documented as "ignored" for the current branch — explicit omission is more readable than silently passing a dead argument.
+
+### Override/Cascade Scope Must Match Downstream Dependency Graph (Discovered Story 9.8 Code Review, 2026-03-10)
+
+**Anti-pattern:** When re-resolving override cascades in a bracket tree, naively re-resolving ALL games of round R+1 (when any round-R override exists) produces semantically incorrect results. Unrelated subtrees get re-resolved even though their participants are unchanged, which:
+- Inflates the override count visually
+- Can change results if the cascade model's argmax differs from the simulation's tie-breaking
+
+**Rule:** Only re-resolve a downstream game when its participants actually changed. Gate cascade re-resolution behind an explicit participant-change check:
+```python
+orig_a, orig_b = _get_participants(game_idx, original_winners, n_teams)
+if participant_a != orig_a or participant_b != orig_b:
+    winners[game_idx] = _pick_model_winner(participant_a, participant_b, prob_matrix)
+# else: keep original model winner unchanged
+```
+
+**Applies to:** Any bracket/tree override cascade where games in the same round are in independent subtrees.
+
+### Override Invalidation Must Be Called on EVERY Page That Reads Overrides (Discovered Story 9.8 Code Review, 2026-03-10)
+
+**Anti-pattern:** Calling `check_invalidation()` only on the page that creates overrides (e.g., Visualizer) but not on other pages that consume them (e.g., Pool Scorer). If the user changes run/year on any other page without first visiting the Visualizer, stale overrides from the old configuration are silently applied to the new bracket.
+
+**Rule:** Every Streamlit page that calls `get_overrides()` must also call `check_invalidation()` with the current page's key parameters before using the overrides. For pages without sliders (e.g., Pool Scorer), pass `0` for the slider parameters.
+
+### Shared Bracket-Index Math Belongs in One Module (Discovered Story 9.8 Code Review, 2026-03-10)
+
+**Anti-pattern:** Duplicating the participant-lookup function (`_get_participants` / `_get_game_participants`) across both the library module and the page module. The two implementations have different type signatures (`list[int]` vs `tuple[int, ...]`) and diverge silently over time.
+
+**Rule:** Pure bracket-index math (game → participants, round → offset) belongs in a single `bracket_overrides.py` or `bracket_utils.py` module with a `Sequence[int]` signature that accepts both. Pages import from the library — never reimplement.
+
+### Selectbox Override Detection Must Compare Against Cascaded Winner, Not Model Winner (Discovered Story 9.8 Code Review, 2026-03-10)
+
+**Anti-pattern:** In an editable bracket UI, comparing the user's selection against `model_winner` to detect new overrides. When a cascade has already changed a game's winner away from the model's pick, any user who doesn't touch that game still triggers an override (selected_team ≠ model_winner → spurious `set_override()`).
+
+**Rule:** Compare the user's selection against `current_winner_for_game` (the current cascaded winner in the edited bracket), not against `model_winner`. Only fire `set_override()` when the selection differs from the current cascaded winner AND differs from the model winner.

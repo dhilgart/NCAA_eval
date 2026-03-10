@@ -8,6 +8,7 @@ effects through later tournament rounds.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -72,7 +73,7 @@ def check_invalidation(
 
 def _get_participants(
     game_index: int,
-    winners: list[int],
+    winners: Sequence[int],
     n_teams: int,
 ) -> tuple[int, int]:
     """Determine the two participants in a game.
@@ -139,6 +140,8 @@ def apply_overrides(
 
     # Process games in round-major order (ascending index).
     # For each game, determine participants, then decide winner.
+    # Track which team indices changed from most_likely to drive cascade correctly:
+    # only re-resolve a downstream game when its participants actually changed.
     n_r64 = n_teams // 2
     offset = 0
     games_in_round = n_r64
@@ -156,9 +159,13 @@ def apply_overrides(
                     # Stale override — fall back to model
                     winners[game_idx] = _pick_model_winner(participant_a, participant_b, prob_matrix)
             elif game_idx >= n_r64:
-                # No override: downstream game needs re-resolution if
-                # participants may have changed due to upstream overrides
-                winners[game_idx] = _pick_model_winner(participant_a, participant_b, prob_matrix)
+                # No override: only re-resolve if participants changed from most_likely.
+                # Compute the participants the model originally faced for this game.
+                orig_a, orig_b = _get_participants(game_idx, list(most_likely.winners), n_teams)
+                if participant_a != orig_a or participant_b != orig_b:
+                    # Upstream override altered participants — re-resolve via model argmax.
+                    winners[game_idx] = _pick_model_winner(participant_a, participant_b, prob_matrix)
+                # else: participants unchanged → keep most_likely.winners[game_idx]
             # R64 games without overrides keep their original winner
 
         offset += games_in_round
