@@ -499,6 +499,58 @@ probabilities.
 5. Expand "Pairwise Win Probabilities" to investigate specific matchups
 
 
+#### User-Editable Bracket
+
+You can override the model's picks for any matchup and build your own bracket.
+
+**Editing picks:**
+
+1. Expand the **Edit Picks** section below the bracket visualization
+2. Each game is shown as a selectbox with the two participating teams
+3. Select a different winner to override the model's prediction
+4. Overridden games show the model's original pick in a tooltip ("Model: Team X")
+
+**How cascading works:**
+
+When you override a game, all downstream matchups automatically update:
+
+- The overridden winner advances to the next round
+- Later-round matchups are re-resolved: if the game has its own override and the
+  overridden winner is still a valid participant, the override is kept; otherwise
+  the model's prediction (argmax of pairwise probability) is used
+- The champion, log-likelihood, and bracket tree all reflect your edits
+
+**Visual distinction:**
+
+Overridden games in the bracket tree display a golden border and a "USER" badge,
+making it easy to see which picks are yours vs. the model's.  An info bar shows
+the number of overridden picks (e.g., "3 of 63 picks overridden by user").
+
+**Resetting:**
+
+Click the **Reset to Model Predictions** button (visible when overrides exist) to
+clear all overrides and revert to the model's most-likely bracket.
+
+**When overrides are cleared automatically:**
+
+Overrides are invalidated and cleared whenever you change any parameter that
+affects the underlying bracket probabilities:
+
+- Model run (sidebar)
+- Tournament year (sidebar)
+- Scoring format (sidebar)
+- Upset Aggression slider
+- Seed-Weight slider
+
+An info message confirms when overrides have been reset.
+
+**Pool Scorer integration:**
+
+When you navigate to the Pool Scorer page with overrides active, the Pool Scorer
+scores your user-edited bracket (not the model's) against Monte Carlo
+simulations.  The CSV export also reflects your edits.
+
+
 ### Presentation: Pool Scorer
 
 **Purpose:** Score your bracket against thousands of simulated tournament outcomes

@@ -1064,6 +1064,48 @@ slower)</p></li>
 <li><p>Use the Expected Points table to identify high-value picks</p></li>
 <li><p>Expand “Pairwise Win Probabilities” to investigate specific matchups</p></li>
 </ol>
+<section id="user-editable-bracket">
+<h4>User-Editable Bracket<a class="headerlink" href="#user-editable-bracket" title="Link to this heading">¶</a></h4>
+<p>You can override the model’s picks for any matchup and build your own bracket.</p>
+<p><strong>Editing picks:</strong></p>
+<ol class="arabic simple">
+<li><p>Expand the <strong>Edit Picks</strong> section below the bracket visualization</p></li>
+<li><p>Each game is shown as a selectbox with the two participating teams</p></li>
+<li><p>Select a different winner to override the model’s prediction</p></li>
+<li><p>Overridden games show the model’s original pick in a tooltip (“Model: Team X”)</p></li>
+</ol>
+<p><strong>How cascading works:</strong></p>
+<p>When you override a game, all downstream matchups automatically update:</p>
+<ul class="simple">
+<li><p>The overridden winner advances to the next round</p></li>
+<li><p>Later-round matchups are re-resolved: if the game has its own override and the
+overridden winner is still a valid participant, the override is kept; otherwise
+the model’s prediction (argmax of pairwise probability) is used</p></li>
+<li><p>The champion, log-likelihood, and bracket tree all reflect your edits</p></li>
+</ul>
+<p><strong>Visual distinction:</strong></p>
+<p>Overridden games in the bracket tree display a golden border and a “USER” badge,
+making it easy to see which picks are yours vs. the model’s.  An info bar shows
+the number of overridden picks (e.g., “3 of 63 picks overridden by user”).</p>
+<p><strong>Resetting:</strong></p>
+<p>Click the <strong>Reset to Model Predictions</strong> button (visible when overrides exist) to
+clear all overrides and revert to the model’s most-likely bracket.</p>
+<p><strong>When overrides are cleared automatically:</strong></p>
+<p>Overrides are invalidated and cleared whenever you change any parameter that
+affects the underlying bracket probabilities:</p>
+<ul class="simple">
+<li><p>Model run (sidebar)</p></li>
+<li><p>Tournament year (sidebar)</p></li>
+<li><p>Scoring format (sidebar)</p></li>
+<li><p>Upset Aggression slider</p></li>
+<li><p>Seed-Weight slider</p></li>
+</ul>
+<p>An info message confirms when overrides have been reset.</p>
+<p><strong>Pool Scorer integration:</strong></p>
+<p>When you navigate to the Pool Scorer page with overrides active, the Pool Scorer
+scores your user-edited bracket (not the model’s) against Monte Carlo
+simulations.  The CSV export also reflects your edits.</p>
+</section>
 </section>
 <section id="presentation-pool-scorer">
 <h3>Presentation: Pool Scorer<a class="headerlink" href="#presentation-pool-scorer" title="Link to this heading">¶</a></h3>
@@ -1337,7 +1379,10 @@ commands fail.</p>
 <li><a class="reference internal" href="#dashboard-guide">Dashboard Guide</a><ul>
 <li><a class="reference internal" href="#lab-backtest-leaderboard">Lab: Backtest Leaderboard</a></li>
 <li><a class="reference internal" href="#lab-model-deep-dive">Lab: Model Deep Dive</a></li>
-<li><a class="reference internal" href="#presentation-bracket-visualizer">Presentation: Bracket Visualizer</a></li>
+<li><a class="reference internal" href="#presentation-bracket-visualizer">Presentation: Bracket Visualizer</a><ul>
+<li><a class="reference internal" href="#user-editable-bracket">User-Editable Bracket</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#presentation-pool-scorer">Presentation: Pool Scorer</a></li>
 <li><a class="reference internal" href="#game-theory-sliders">Game Theory Sliders</a></li>
 </ul>
