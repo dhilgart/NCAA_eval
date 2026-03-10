@@ -3,10 +3,10 @@
   <head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="ncaa_eval.ingest.fuzzy module" href="ncaa_eval.ingest.fuzzy.html"><link rel="prev" title="ncaa_eval.ingest.connectors.espn module" href="ncaa_eval.ingest.connectors.espn.html">
+<link rel="index" title="Index" href="../genindex.html"><link rel="search" title="Search" href="../search.html"><link rel="next" title="ncaa_eval.model package" href="ncaa_eval.model.html"><link rel="prev" title="ncaa_eval.ingest.sync module" href="ncaa_eval.ingest.sync.html">
 
     <!-- Generated with Sphinx 9.1.0 and Furo 2025.12.19 -->
-        <title>ncaa_eval.ingest.connectors.kaggle module - ncaa_eval 0.9.0 documentation</title>
+        <title>ncaa_eval.ingest.validation module - ncaa_eval 0.9.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d111a655" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=7bdb33bb" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=8dab3a3b" />
@@ -238,17 +238,17 @@
 </ul>
 </li>
 <li class="toctree-l3 current has-children"><a class="reference internal" href="ncaa_eval.ingest.html">ncaa_eval.ingest package</a><input aria-label="Toggle navigation of ncaa_eval.ingest package" checked="" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
-<li class="toctree-l4 current has-children"><a class="reference internal" href="ncaa_eval.ingest.connectors.html">ncaa_eval.ingest.connectors package</a><input aria-label="Toggle navigation of ncaa_eval.ingest.connectors package" checked="" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
+<li class="toctree-l4 has-children"><a class="reference internal" href="ncaa_eval.ingest.connectors.html">ncaa_eval.ingest.connectors package</a><input aria-label="Toggle navigation of ncaa_eval.ingest.connectors package" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="ncaa_eval.ingest.connectors.base.html">ncaa_eval.ingest.connectors.base module</a></li>
 <li class="toctree-l5"><a class="reference internal" href="ncaa_eval.ingest.connectors.espn.html">ncaa_eval.ingest.connectors.espn module</a></li>
-<li class="toctree-l5 current current-page"><a class="current reference internal" href="#">ncaa_eval.ingest.connectors.kaggle module</a></li>
+<li class="toctree-l5"><a class="reference internal" href="ncaa_eval.ingest.connectors.kaggle.html">ncaa_eval.ingest.connectors.kaggle module</a></li>
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.fuzzy.html">ncaa_eval.ingest.fuzzy module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.repository.html">ncaa_eval.ingest.repository module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.schema.html">ncaa_eval.ingest.schema module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.sync.html">ncaa_eval.ingest.sync module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.validation.html">ncaa_eval.ingest.validation module</a></li>
+<li class="toctree-l4 current current-page"><a class="current reference internal" href="#">ncaa_eval.ingest.validation module</a></li>
 </ul>
 </li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="ncaa_eval.model.html">ncaa_eval.model package</a><input aria-label="Toggle navigation of ncaa_eval.model package" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
@@ -300,7 +300,7 @@
         </a>
         <div class="content-icon-container">
           <div class="view-this-page">
-  <a class="muted-link" href="../_sources/api/ncaa_eval.ingest.connectors.kaggle.rst.txt" title="View this page">
+  <a class="muted-link" href="../_sources/api/ncaa_eval.ingest.validation.rst.txt" title="View this page">
     <svg><use href="#svg-eye"></use></svg>
     <span class="visually-hidden">View this page</span>
   </a>
@@ -318,88 +318,77 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="module-ncaa_eval.ingest.connectors.kaggle">
-<span id="ncaa-eval-ingest-connectors-kaggle-module"></span><h1>ncaa_eval.ingest.connectors.kaggle module<a class="headerlink" href="#module-ncaa_eval.ingest.connectors.kaggle" title="Link to this heading">¶</a></h1>
-<p>Kaggle data source connector for NCAA March Madness competition data.</p>
-<p>Downloads and parses CSV files from the Kaggle March Machine Learning Mania
-competition.  The <code class="docutils literal notranslate"><span class="pre">download()</span></code> method handles the network-dependent download
-step while the <code class="docutils literal notranslate"><span class="pre">fetch_*()</span></code> methods perform pure CSV parsing, making it
-straightforward to test without network access.</p>
+          <section id="module-ncaa_eval.ingest.validation">
+<span id="ncaa-eval-ingest-validation-module"></span><h1>ncaa_eval.ingest.validation module<a class="headerlink" href="#module-ncaa_eval.ingest.validation" title="Link to this heading">¶</a></h1>
+<p>Post-sync data validation checks.</p>
+<p>Validates data quality after sync completes — game counts, duplicates,
+and team reference integrity.  All checks are non-fatal: they produce
+a <a class="reference internal" href="#ncaa_eval.ingest.validation.ValidationReport" title="ncaa_eval.ingest.validation.ValidationReport"><code class="xref py py-class docutils literal notranslate"><span class="pre">ValidationReport</span></code></a> with pass/fail status per check rather than
+raising exceptions.</p>
 <dl class="py class">
-<dt class="sig sig-object py" id="ncaa_eval.ingest.connectors.kaggle.KaggleConnector">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ncaa_eval.ingest.connectors.kaggle.</span></span><span class="sig-name descname"><span class="pre">KaggleConnector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">extract_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">competition</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'march-machine-learning-mania-2025'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ncaa_eval/ingest/connectors/kaggle.html#KaggleConnector"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.connectors.kaggle.KaggleConnector" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="ncaa_eval.ingest.connectors.base.html#ncaa_eval.ingest.connectors.base.Connector" title="ncaa_eval.ingest.connectors.base.Connector"><code class="xref py py-class docutils literal notranslate"><span class="pre">Connector</span></code></a></p>
-<p>Connector for Kaggle March Machine Learning Mania competition data.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>extract_dir</strong> – Local directory where CSV files are downloaded/extracted.</p></li>
-<li><p><strong>competition</strong> – Kaggle competition slug.</p></li>
-</ul>
-</dd>
-</dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="ncaa_eval.ingest.connectors.kaggle.KaggleConnector.download">
-<span class="sig-name descname"><span class="pre">download</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/connectors/kaggle.html#KaggleConnector.download"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.connectors.kaggle.KaggleConnector.download" title="Link to this definition">¶</a></dt>
-<dd><p>Download and extract competition CSV files via the Kaggle API.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>force</strong> – Re-download even if files already exist.</p>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><ul class="simple">
-<li><p><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.AuthenticationError" title="ncaa_eval.ingest.AuthenticationError"><strong>AuthenticationError</strong></a> – Credentials missing or invalid.</p></li>
-<li><p><a class="reference internal" href="ncaa_eval.ingest.html#ncaa_eval.ingest.NetworkError" title="ncaa_eval.ingest.NetworkError"><strong>NetworkError</strong></a> – Download failed due to connection issues.</p></li>
-</ul>
-</dd>
-</dl>
+<dt class="sig sig-object py" id="ncaa_eval.ingest.validation.ValidationReport">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ncaa_eval.ingest.validation.</span></span><span class="sig-name descname"><span class="pre">ValidationReport</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">results</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#ncaa_eval.ingest.validation.ValidationResult" title="ncaa_eval.ingest.validation.ValidationResult"><span class="pre">ValidationResult</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ncaa_eval/ingest/validation.html#ValidationReport"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.validation.ValidationReport" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>Aggregated results from all validation checks.</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.validation.ValidationReport.all_passed">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">all_passed</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#ncaa_eval.ingest.validation.ValidationReport.all_passed" title="Link to this definition">¶</a></dt>
+<dd><p>Return <code class="docutils literal notranslate"><span class="pre">True</span></code> if every check passed.</p>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="ncaa_eval.ingest.connectors.kaggle.KaggleConnector.fetch_games">
-<span class="sig-name descname"><span class="pre">fetch_games</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">season</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Game" title="ncaa_eval.ingest.schema.Game"><span class="pre">Game</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/connectors/kaggle.html#KaggleConnector.fetch_games"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.connectors.kaggle.KaggleConnector.fetch_games" title="Link to this definition">¶</a></dt>
-<dd><p>Parse regular-season and tournament CSVs into Game models.</p>
-<p>Games from <code class="docutils literal notranslate"><span class="pre">MRegularSeasonCompactResults.csv</span></code> have
-<code class="docutils literal notranslate"><span class="pre">is_tournament=False</span></code>; games from <code class="docutils literal notranslate"><span class="pre">MNCAATourneyCompactResults.csv</span></code>
-have <code class="docutils literal notranslate"><span class="pre">is_tournament=True</span></code>.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.validation.ValidationReport.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'frozen':</span> <span class="pre">True}</span></span><a class="headerlink" href="#ncaa_eval.ingest.validation.ValidationReport.model_config" title="Link to this definition">¶</a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="ncaa_eval.ingest.connectors.kaggle.KaggleConnector.fetch_seasons">
-<span class="sig-name descname"><span class="pre">fetch_seasons</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Season" title="ncaa_eval.ingest.schema.Season"><span class="pre">Season</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/connectors/kaggle.html#KaggleConnector.fetch_seasons"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.connectors.kaggle.KaggleConnector.fetch_seasons" title="Link to this definition">¶</a></dt>
-<dd><p>Parse <code class="docutils literal notranslate"><span class="pre">MSeasons.csv</span></code> into Season models.</p>
-<p>Reads MSeasons.csv, validates required columns, then constructs
-Season models from each row’s season year.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.validation.ValidationReport.results">
+<span class="sig-name descname"><span class="pre">results</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#ncaa_eval.ingest.validation.ValidationResult" title="ncaa_eval.ingest.validation.ValidationResult"><span class="pre">ValidationResult</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#ncaa_eval.ingest.validation.ValidationReport.results" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="ncaa_eval.ingest.connectors.kaggle.KaggleConnector.fetch_team_spellings">
-<span class="sig-name descname"><span class="pre">fetch_team_spellings</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/connectors/kaggle.html#KaggleConnector.fetch_team_spellings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.connectors.kaggle.KaggleConnector.fetch_team_spellings" title="Link to this definition">¶</a></dt>
-<dd><p>Parse <code class="docutils literal notranslate"><span class="pre">MTeamSpellings.csv</span></code> into a spelling → TeamID mapping.</p>
-<p>Returns every alternate spelling (lower-cased) for each team, which
-provides much wider coverage than the canonical names in MTeams.csv
-when resolving ESPN team name strings to Kaggle IDs.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.validation.ValidationResult">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ncaa_eval.ingest.validation.</span></span><span class="sig-name descname"><span class="pre">ValidationResult</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">passed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">message</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">details</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ncaa_eval/ingest/validation.html#ValidationResult"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.validation.ValidationResult" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>Result of a single validation check.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.validation.ValidationResult.check_name">
+<span class="sig-name descname"><span class="pre">check_name</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#ncaa_eval.ingest.validation.ValidationResult.check_name" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.validation.ValidationResult.details">
+<span class="sig-name descname"><span class="pre">details</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#ncaa_eval.ingest.validation.ValidationResult.details" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.validation.ValidationResult.message">
+<span class="sig-name descname"><span class="pre">message</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></span><a class="headerlink" href="#ncaa_eval.ingest.validation.ValidationResult.message" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.validation.ValidationResult.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'frozen':</span> <span class="pre">True}</span></span><a class="headerlink" href="#ncaa_eval.ingest.validation.ValidationResult.model_config" title="Link to this definition">¶</a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="ncaa_eval.ingest.connectors.kaggle.KaggleConnector.fetch_teams">
-<span class="sig-name descname"><span class="pre">fetch_teams</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Team" title="ncaa_eval.ingest.schema.Team"><span class="pre">Team</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/connectors/kaggle.html#KaggleConnector.fetch_teams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.connectors.kaggle.KaggleConnector.fetch_teams" title="Link to this definition">¶</a></dt>
-<dd><p>Parse <code class="docutils literal notranslate"><span class="pre">MTeams.csv</span></code> into Team models.</p>
-<p>Reads MTeams.csv, validates required columns, then constructs Team
-models from each row’s TeamID and TeamName.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.validation.ValidationResult.passed">
+<span class="sig-name descname"><span class="pre">passed</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#ncaa_eval.ingest.validation.ValidationResult.passed" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="ncaa_eval.ingest.connectors.kaggle.KaggleConnector.load_day_zeros">
-<span class="sig-name descname"><span class="pre">load_day_zeros</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">date</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/connectors/kaggle.html#KaggleConnector.load_day_zeros"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.connectors.kaggle.KaggleConnector.load_day_zeros" title="Link to this definition">¶</a></dt>
-<dd><p>Load and cache the season → DayZero mapping.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Mapping of season year to the date of Day 0 for that season.</p>
-</dd>
-</dl>
-</dd></dl>
-
+<dl class="py function">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.validation.validate_sync">
+<span class="sig-prename descclassname"><span class="pre">ncaa_eval.ingest.validation.</span></span><span class="sig-name descname"><span class="pre">validate_sync</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="ncaa_eval.ingest.repository.html#ncaa_eval.ingest.repository.Repository" title="ncaa_eval.ingest.repository.Repository"><span class="pre">Repository</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#ncaa_eval.ingest.validation.ValidationReport" title="ncaa_eval.ingest.validation.ValidationReport"><span class="pre">ValidationReport</span></a></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/validation.html#validate_sync"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.validation.validate_sync" title="Link to this definition">¶</a></dt>
+<dd><p>Run all post-sync validation checks and return a report.</p>
+<p>This function is <strong>non-fatal</strong> — it never raises on validation failures.
+Unexpected I/O errors (e.g., corrupt Parquet) may still propagate.
+The caller is responsible for logging results.</p>
 </dd></dl>
 
 </section>
@@ -409,23 +398,23 @@ models from each row’s TeamID and TeamName.</p>
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="ncaa_eval.ingest.fuzzy.html">
+          <a class="next-page" href="ncaa_eval.model.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">ncaa_eval.ingest.fuzzy module</div>
+                <div class="title">ncaa_eval.model package</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="ncaa_eval.ingest.connectors.espn.html">
+          <a class="prev-page" href="ncaa_eval.ingest.sync.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">ncaa_eval.ingest.connectors.espn module</div>
+                <div class="title">ncaa_eval.ingest.sync module</div>
                 
               </div>
             </a>
@@ -459,16 +448,22 @@ models from each row’s TeamID and TeamName.</p>
         <div class="toc-tree-container">
           <div class="toc-tree">
             <ul>
-<li><a class="reference internal" href="#">ncaa_eval.ingest.connectors.kaggle module</a><ul>
-<li><a class="reference internal" href="#ncaa_eval.ingest.connectors.kaggle.KaggleConnector"><code class="docutils literal notranslate"><span class="pre">KaggleConnector</span></code></a><ul>
-<li><a class="reference internal" href="#ncaa_eval.ingest.connectors.kaggle.KaggleConnector.download"><code class="docutils literal notranslate"><span class="pre">KaggleConnector.download()</span></code></a></li>
-<li><a class="reference internal" href="#ncaa_eval.ingest.connectors.kaggle.KaggleConnector.fetch_games"><code class="docutils literal notranslate"><span class="pre">KaggleConnector.fetch_games()</span></code></a></li>
-<li><a class="reference internal" href="#ncaa_eval.ingest.connectors.kaggle.KaggleConnector.fetch_seasons"><code class="docutils literal notranslate"><span class="pre">KaggleConnector.fetch_seasons()</span></code></a></li>
-<li><a class="reference internal" href="#ncaa_eval.ingest.connectors.kaggle.KaggleConnector.fetch_team_spellings"><code class="docutils literal notranslate"><span class="pre">KaggleConnector.fetch_team_spellings()</span></code></a></li>
-<li><a class="reference internal" href="#ncaa_eval.ingest.connectors.kaggle.KaggleConnector.fetch_teams"><code class="docutils literal notranslate"><span class="pre">KaggleConnector.fetch_teams()</span></code></a></li>
-<li><a class="reference internal" href="#ncaa_eval.ingest.connectors.kaggle.KaggleConnector.load_day_zeros"><code class="docutils literal notranslate"><span class="pre">KaggleConnector.load_day_zeros()</span></code></a></li>
+<li><a class="reference internal" href="#">ncaa_eval.ingest.validation module</a><ul>
+<li><a class="reference internal" href="#ncaa_eval.ingest.validation.ValidationReport"><code class="docutils literal notranslate"><span class="pre">ValidationReport</span></code></a><ul>
+<li><a class="reference internal" href="#ncaa_eval.ingest.validation.ValidationReport.all_passed"><code class="docutils literal notranslate"><span class="pre">ValidationReport.all_passed</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.validation.ValidationReport.model_config"><code class="docutils literal notranslate"><span class="pre">ValidationReport.model_config</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.validation.ValidationReport.results"><code class="docutils literal notranslate"><span class="pre">ValidationReport.results</span></code></a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.validation.ValidationResult"><code class="docutils literal notranslate"><span class="pre">ValidationResult</span></code></a><ul>
+<li><a class="reference internal" href="#ncaa_eval.ingest.validation.ValidationResult.check_name"><code class="docutils literal notranslate"><span class="pre">ValidationResult.check_name</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.validation.ValidationResult.details"><code class="docutils literal notranslate"><span class="pre">ValidationResult.details</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.validation.ValidationResult.message"><code class="docutils literal notranslate"><span class="pre">ValidationResult.message</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.validation.ValidationResult.model_config"><code class="docutils literal notranslate"><span class="pre">ValidationResult.model_config</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.validation.ValidationResult.passed"><code class="docutils literal notranslate"><span class="pre">ValidationResult.passed</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.validation.validate_sync"><code class="docutils literal notranslate"><span class="pre">validate_sync()</span></code></a></li>
 </ul>
 </li>
 </ul>

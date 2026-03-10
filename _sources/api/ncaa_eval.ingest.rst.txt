@@ -19,6 +19,7 @@ Submodules
    ncaa_eval.ingest.repository
    ncaa_eval.ingest.schema
    ncaa_eval.ingest.sync
+   ncaa_eval.ingest.validation
 
 Module contents
 ---------------

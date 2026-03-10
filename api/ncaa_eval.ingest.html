@@ -248,6 +248,7 @@
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.repository.html">ncaa_eval.ingest.repository module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.schema.html">ncaa_eval.ingest.schema module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.sync.html">ncaa_eval.ingest.sync module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.ingest.validation.html">ncaa_eval.ingest.validation module</a></li>
 </ul>
 </li>
 <li class="toctree-l3 has-children"><a class="reference internal" href="ncaa_eval.model.html">ncaa_eval.model package</a><input aria-label="Toggle navigation of ncaa_eval.model package" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
@@ -448,6 +449,24 @@
 <li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.sync.html#ncaa_eval.ingest.sync.SyncResult.teams_written"><code class="docutils literal notranslate"><span class="pre">SyncResult.teams_written</span></code></a></li>
 </ul>
 </li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ncaa_eval.ingest.validation.html">ncaa_eval.ingest.validation module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ncaa_eval.ingest.validation.html#ncaa_eval.ingest.validation.ValidationReport"><code class="docutils literal notranslate"><span class="pre">ValidationReport</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.validation.html#ncaa_eval.ingest.validation.ValidationReport.all_passed"><code class="docutils literal notranslate"><span class="pre">ValidationReport.all_passed</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.validation.html#ncaa_eval.ingest.validation.ValidationReport.model_config"><code class="docutils literal notranslate"><span class="pre">ValidationReport.model_config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.validation.html#ncaa_eval.ingest.validation.ValidationReport.results"><code class="docutils literal notranslate"><span class="pre">ValidationReport.results</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ncaa_eval.ingest.validation.html#ncaa_eval.ingest.validation.ValidationResult"><code class="docutils literal notranslate"><span class="pre">ValidationResult</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.validation.html#ncaa_eval.ingest.validation.ValidationResult.check_name"><code class="docutils literal notranslate"><span class="pre">ValidationResult.check_name</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.validation.html#ncaa_eval.ingest.validation.ValidationResult.details"><code class="docutils literal notranslate"><span class="pre">ValidationResult.details</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.validation.html#ncaa_eval.ingest.validation.ValidationResult.message"><code class="docutils literal notranslate"><span class="pre">ValidationResult.message</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.validation.html#ncaa_eval.ingest.validation.ValidationResult.model_config"><code class="docutils literal notranslate"><span class="pre">ValidationResult.model_config</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.ingest.validation.html#ncaa_eval.ingest.validation.ValidationResult.passed"><code class="docutils literal notranslate"><span class="pre">ValidationResult.passed</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ncaa_eval.ingest.validation.html#ncaa_eval.ingest.validation.validate_sync"><code class="docutils literal notranslate"><span class="pre">validate_sync()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -936,6 +955,39 @@ unless <em>force_refresh</em> is <code class="docutils literal notranslate"><spa
 
 </dd></dl>
 
+<dl class="py class">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.ValidationReport">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ncaa_eval.ingest.</span></span><span class="sig-name descname"><span class="pre">ValidationReport</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">results</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ncaa_eval.ingest.validation.html#ncaa_eval.ingest.validation.ValidationResult" title="ncaa_eval.ingest.validation.ValidationResult"><span class="pre">ValidationResult</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ncaa_eval/ingest/validation.html#ValidationReport"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.ValidationReport" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseModel</span></code></p>
+<p>Aggregated results from all validation checks.</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.ValidationReport.all_passed">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">all_passed</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></span><a class="headerlink" href="#ncaa_eval.ingest.ValidationReport.all_passed" title="Link to this definition">¶</a></dt>
+<dd><p>Return <code class="docutils literal notranslate"><span class="pre">True</span></code> if every check passed.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.ValidationReport.model_config">
+<span class="sig-name descname"><span class="pre">model_config</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'frozen':</span> <span class="pre">True}</span></span><a class="headerlink" href="#ncaa_eval.ingest.ValidationReport.model_config" title="Link to this definition">¶</a></dt>
+<dd><p>Configuration for the model, should be a dictionary conforming to [<cite>ConfigDict</cite>][pydantic.config.ConfigDict].</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.ValidationReport.results">
+<span class="sig-name descname"><span class="pre">results</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ncaa_eval.ingest.validation.html#ncaa_eval.ingest.validation.ValidationResult" title="ncaa_eval.ingest.validation.ValidationResult"><span class="pre">ValidationResult</span></a><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#ncaa_eval.ingest.ValidationReport.results" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ncaa_eval.ingest.validate_sync">
+<span class="sig-prename descclassname"><span class="pre">ncaa_eval.ingest.</span></span><span class="sig-name descname"><span class="pre">validate_sync</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="ncaa_eval.ingest.repository.html#ncaa_eval.ingest.repository.Repository" title="ncaa_eval.ingest.repository.Repository"><span class="pre">Repository</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="ncaa_eval.ingest.validation.html#ncaa_eval.ingest.validation.ValidationReport" title="ncaa_eval.ingest.validation.ValidationReport"><span class="pre">ValidationReport</span></a></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/validation.html#validate_sync"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.validate_sync" title="Link to this definition">¶</a></dt>
+<dd><p>Run all post-sync validation checks and return a report.</p>
+<p>This function is <strong>non-fatal</strong> — it never raises on validation failures.
+Unexpected I/O errors (e.g., corrupt Parquet) may still propagate.
+The caller is responsible for logging results.</p>
+</dd></dl>
+
 </section>
 </section>
 
@@ -1080,6 +1132,13 @@ unless <em>force_refresh</em> is <code class="docutils literal notranslate"><spa
 <li><a class="reference internal" href="#ncaa_eval.ingest.Team.team_name"><code class="docutils literal notranslate"><span class="pre">Team.team_name</span></code></a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.ValidationReport"><code class="docutils literal notranslate"><span class="pre">ValidationReport</span></code></a><ul>
+<li><a class="reference internal" href="#ncaa_eval.ingest.ValidationReport.all_passed"><code class="docutils literal notranslate"><span class="pre">ValidationReport.all_passed</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.ValidationReport.model_config"><code class="docutils literal notranslate"><span class="pre">ValidationReport.model_config</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.ValidationReport.results"><code class="docutils literal notranslate"><span class="pre">ValidationReport.results</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ncaa_eval.ingest.validate_sync"><code class="docutils literal notranslate"><span class="pre">validate_sync()</span></code></a></li>
 </ul>
 </li>
 </ul>
