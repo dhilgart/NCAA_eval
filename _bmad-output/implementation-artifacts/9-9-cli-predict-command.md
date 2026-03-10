@@ -1,6 +1,6 @@
 # Story 9.9: CLI `predict` Command
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -26,25 +26,25 @@ so that **I can get predictions without launching the dashboard or running a not
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `src/ncaa_eval/cli/predict.py` orchestration module (AC: #1, #2, #3, #5)
-  - [ ] 1.1: Implement `run_predict()` function following the same thin-orchestration pattern as `export.py:run_export()`
-  - [ ] 1.2: Implement stateful model path — load model, collect team IDs from season games via `ParquetRepository`, build pairwise probability matrix via `EloProvider` + `build_probability_matrix()`, format as CSV
-  - [ ] 1.3: Implement stateless model path — load model, load `feature_names` from `RunStore.load_feature_names()`, set up `StatefulFeatureServer` from `model.feature_config`, serve features for the season, call `model.predict_proba()`, format as CSV
-  - [ ] 1.4: Implement `format_predictions_csv()` helper that produces the `season,team_a_id,team_b_id,pred_win_prob` CSV string
+- [x] Task 1: Create `src/ncaa_eval/cli/predict.py` orchestration module (AC: #1, #2, #3, #5)
+  - [x] 1.1: Implement `run_predict()` function following the same thin-orchestration pattern as `export.py:run_export()`
+  - [x] 1.2: Implement stateful model path — load model, collect team IDs from season games via `ParquetRepository`, build pairwise probability matrix via `EloProvider` + `build_probability_matrix()`, format as CSV
+  - [x] 1.3: Implement stateless model path — load model, load `feature_names` from `RunStore.load_feature_names()`, set up `StatefulFeatureServer` from `model.feature_config`, serve features for the season, call `model.predict_proba()`, format as CSV
+  - [x] 1.4: Implement `format_predictions_csv()` helper that produces the `season,team_a_id,team_b_id,pred_win_prob` CSV string
 
-- [ ] Task 2: Register `predict` command in `src/ncaa_eval/cli/main.py` (AC: #1, #4, #6)
-  - [ ] 2.1: Add `predict` command to the Typer `app` with options: `--run-id` (required), `--season` (required), `--data-dir` (default `data/`), `--output` (optional Path)
-  - [ ] 2.2: Wire error handling for `FileNotFoundError` / `TypeError` → exit code 1 (same pattern as `export` command)
+- [x] Task 2: Register `predict` command in `src/ncaa_eval/cli/main.py` (AC: #1, #4, #6)
+  - [x] 2.1: Add `predict` command to the Typer `app` with options: `--run-id` (required), `--season` (required), `--data-dir` (default `data/`), `--output` (optional Path)
+  - [x] 2.2: Wire error handling for `FileNotFoundError` / `TypeError` → exit code 1 (same pattern as `export` command)
 
-- [ ] Task 3: Write unit tests in `tests/unit/test_cli_predict.py` (AC: #1–#6)
-  - [ ] 3.1: Test stateful model predict writes valid CSV to file
-  - [ ] 3.2: Test stateful model predict writes CSV to stdout when no `--output`
-  - [ ] 3.3: Test stateless model predict writes valid CSV with game-level rows
-  - [ ] 3.4: Test nonexistent run-id exits with error code 1
-  - [ ] 3.5: Test missing season data exits with error
+- [x] Task 3: Write unit tests in `tests/unit/test_cli_predict.py` (AC: #1–#6)
+  - [x] 3.1: Test stateful model predict writes valid CSV to file
+  - [x] 3.2: Test stateful model predict writes CSV to stdout when no `--output`
+  - [x] 3.3: Test stateless model predict writes valid CSV with game-level rows
+  - [x] 3.4: Test nonexistent run-id exits with error code 1
+  - [x] 3.5: Test missing season data exits with error
 
-- [ ] Task 4: Update documentation (AC: #7)
-  - [ ] 4.1: Add `predict` command to `docs/user-guide.md` CLI reference section
+- [x] Task 4: Update documentation (AC: #7)
+  - [x] 4.1: Add `predict` command to `docs/user-guide.md` CLI reference section
 
 ## Dev Notes
 
@@ -174,8 +174,32 @@ Recent commits all follow `feat(scope): description (Story X.Y)` pattern. Storie
 
 ### Agent Model Used
 
+Claude Opus 4.6
+
 ### Debug Log References
+
+- Fixed ruff import sorting (I001) after moving `_setup_feature_server` import to module level
+- Fixed mypy `[attr-defined]` errors by changing `model: object` → `model: Model` in `_build_stateless_predictions()`
+- Fixed ruff format spacing in tuple append expression
+- Added `type: ignore[import-untyped]` for pandas import in test file
 
 ### Completion Notes List
 
+- Implemented `predict.py` with `build_predictions()` (pure) and `run_predict()` (CLI wrapper), supporting both stateful (Elo pairwise matrix) and stateless (game-level) model paths
+- Registered `predict` command in `main.py` with `--run-id`, `--season`, `--data-dir`, `--output` options; error handling mirrors `export` command
+- 5 unit tests covering: stateful CSV to file, stateful CSV to stdout, stateless CSV, nonexistent run-id error, missing season data error
+- Added `predict` command to `docs/user-guide.md` Getting Started section with option table and output format example
+- All 1101 tests pass (1097 unit + 4 integration), ruff clean, mypy --strict clean (101 files)
+
+### Change Log
+
+- 2026-03-10: Implemented CLI `predict` command (Story 9.9)
+
 ### File List
+
+- `src/ncaa_eval/cli/predict.py` — **NEW** — prediction orchestration module
+- `src/ncaa_eval/cli/main.py` — **MODIFIED** — added `predict` Typer command
+- `tests/unit/test_cli_predict.py` — **NEW** — 5 unit tests for predict CLI
+- `docs/user-guide.md` — **MODIFIED** — added predict command to CLI reference
+- `_bmad-output/implementation-artifacts/9-9-cli-predict-command.md` — **MODIFIED** — story status/tasks
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — **MODIFIED** — story status update
