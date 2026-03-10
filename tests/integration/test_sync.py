@@ -470,3 +470,38 @@ def test_cli_espn_dependency_guard(tmp_path: Path) -> None:
     result = runner.invoke(sync_module.app, ["--source", "espn", "--dest", str(tmp_path)])
     assert result.exit_code == 1
     assert "kaggle" in result.output.lower() or "kaggle" in (result.stderr or "").lower()
+
+
+# ---------------------------------------------------------------------------
+# Test 9.5: Validation runs after sync
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.integration
+@pytest.mark.no_mutation
+@patch("ncaa_eval.ingest.sync.KaggleConnector")
+def test_validation_runs_after_sync(
+    mock_cls: MagicMock, tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    """validate_sync is called after sync and logs results."""
+    instance = mock_cls.return_value
+    instance.download.return_value = None
+    instance.fetch_teams.return_value = _TEAMS
+    instance.fetch_seasons.return_value = [Season(year=2024)]
+    instance.fetch_games.return_value = _make_games(_GAMES_2024)
+
+    project_root = str(Path(__file__).parent.parent.parent)
+    if project_root not in sys.path:
+        sys.path.insert(0, project_root)
+
+    from typer.testing import CliRunner
+
+    import sync as sync_module
+
+    runner = CliRunner()
+    with caplog.at_level("INFO", logger="ncaa_eval.ingest.validation"):
+        result = runner.invoke(sync_module.app, ["--source", "kaggle", "--dest", str(tmp_path)])
+
+    assert result.exit_code == 0, result.output
+    # Validation should have logged a summary line
+    assert any("[validation]" in rec.message for rec in caplog.records)

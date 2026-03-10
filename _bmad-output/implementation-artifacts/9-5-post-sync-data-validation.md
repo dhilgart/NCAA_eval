@@ -1,6 +1,6 @@
 # Story 9.5: Post-Sync Data Validation
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -21,37 +21,37 @@ so that **I can detect data quality issues (missing games, duplicates, team refe
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create `ValidationResult` dataclass and `validate_sync` function (AC: #1)
-  - [ ] 1.1: Create `src/ncaa_eval/ingest/validation.py` with a `ValidationResult` Pydantic model containing `check_name: str`, `passed: bool`, `message: str`, `details: dict[str, Any]`
-  - [ ] 1.2: Create `ValidationReport` Pydantic model aggregating multiple `ValidationResult` items, with `all_passed: bool` property
-  - [ ] 1.3: Implement `validate_sync(repo: Repository) -> ValidationReport` — top-level function that runs all three checks and returns results
-  - [ ] 1.4: Export `validate_sync` and `ValidationReport` from `ncaa_eval.ingest.__init__.py` / `__all__`
+- [x] Task 1: Create `ValidationResult` dataclass and `validate_sync` function (AC: #1)
+  - [x] 1.1: Create `src/ncaa_eval/ingest/validation.py` with a `ValidationResult` Pydantic model containing `check_name: str`, `passed: bool`, `message: str`, `details: dict[str, Any]`
+  - [x] 1.2: Create `ValidationReport` Pydantic model aggregating multiple `ValidationResult` items, with `all_passed: bool` property
+  - [x] 1.3: Implement `validate_sync(repo: Repository) -> ValidationReport` — top-level function that runs all three checks and returns results
+  - [x] 1.4: Export `validate_sync` and `ValidationReport` from `ncaa_eval.ingest.__init__.py` / `__all__`
 
-- [ ] Task 2: Implement game count validation check (AC: #1 — game count)
-  - [ ] 2.1: Implement `_check_game_counts(repo: Repository) -> list[ValidationResult]` — loads all seasons, counts games per season, compares against expected range
-  - [ ] 2.2: Compute historical average from loaded data dynamically (median of all seasons' game counts) rather than hardcoding a constant — this handles dataset evolution gracefully
-  - [ ] 2.3: Flag any season where `count < median * 0.9` or `count > median * 1.1` (±10% threshold)
-  - [ ] 2.4: Special-case season 2020 (COVID) — skip or annotate as known anomaly (no tournament, shortened season)
+- [x] Task 2: Implement game count validation check (AC: #1 — game count)
+  - [x] 2.1: Implement `_check_game_counts(repo: Repository) -> list[ValidationResult]` — loads all seasons, counts games per season, compares against expected range
+  - [x] 2.2: Compute historical average from loaded data dynamically (median of all seasons' game counts) rather than hardcoding a constant — this handles dataset evolution gracefully
+  - [x] 2.3: Flag any season where `count < median * 0.9` or `count > median * 1.1` (±10% threshold)
+  - [x] 2.4: Special-case season 2020 (COVID) — skip or annotate as known anomaly (no tournament, shortened season)
 
-- [ ] Task 3: Implement duplicate game detection (AC: #1 — duplicates)
-  - [ ] 3.1: Implement `_check_duplicate_games(repo: Repository) -> list[ValidationResult]` — loads games per season, checks for duplicates by `(season, day_num, w_team_id, l_team_id)` tuple
-  - [ ] 3.2: Report duplicate count per season, include example duplicate pairs in details
-  - [ ] 3.3: The 2025 Kaggle+ESPN duplicate issue (4,545 doubled games) will be detected and reported — this is expected and validates the check works
+- [x] Task 3: Implement duplicate game detection (AC: #1 — duplicates)
+  - [x] 3.1: Implement `_check_duplicate_games(repo: Repository) -> list[ValidationResult]` — loads games per season, checks for duplicates by `(season, day_num, w_team_id, l_team_id)` tuple
+  - [x] 3.2: Report duplicate count per season, include example duplicate pairs in details
+  - [x] 3.3: The 2025 Kaggle+ESPN duplicate issue (4,545 doubled games) will be detected and reported — this is expected and validates the check works
 
-- [ ] Task 4: Implement team reference integrity check (AC: #1 — team references)
-  - [ ] 4.1: Implement `_check_team_references(repo: Repository) -> list[ValidationResult]` — loads teams, then checks every game's `w_team_id` and `l_team_id` against known team IDs
-  - [ ] 4.2: Report orphan team IDs (game references a team not in the teams table) with counts and affected seasons
+- [x] Task 4: Implement team reference integrity check (AC: #1 — team references)
+  - [x] 4.1: Implement `_check_team_references(repo: Repository) -> list[ValidationResult]` — loads teams, then checks every game's `w_team_id` and `l_team_id` against known team IDs
+  - [x] 4.2: Report orphan team IDs (game references a team not in the teams table) with counts and affected seasons
 
-- [ ] Task 5: Integrate validation into sync pipeline (AC: #1)
-  - [ ] 5.1: In `sync.py` (project-root CLI), call `validate_sync(repo)` after sync completes
-  - [ ] 5.2: Log validation summary at INFO level — pass/fail per check with counts
-  - [ ] 5.3: Log individual warnings at WARNING level for each failed check
-  - [ ] 5.4: Ensure validation failures do NOT raise exceptions or exit with non-zero code — sync always completes successfully
+- [x] Task 5: Integrate validation into sync pipeline (AC: #1)
+  - [x] 5.1: In `sync.py` (project-root CLI), call `validate_sync(repo)` after sync completes
+  - [x] 5.2: Log validation summary at INFO level — pass/fail per check with counts
+  - [x] 5.3: Log individual warnings at WARNING level for each failed check
+  - [x] 5.4: Ensure validation failures do NOT raise exceptions or exit with non-zero code — sync always completes successfully
 
-- [ ] Task 6: Add comprehensive tests (AC: all)
-  - [ ] 6.1: Unit tests in `tests/unit/test_validation.py` — test each check function with controlled data (known duplicates, missing teams, abnormal counts)
-  - [ ] 6.2: Integration test in `tests/integration/test_sync.py` — add a test verifying validation runs after sync and produces expected results
-  - [ ] 6.3: Run full test suite: `pytest`, `ruff check .`, `mypy --strict src/ncaa_eval tests`
+- [x] Task 6: Add comprehensive tests (AC: all)
+  - [x] 6.1: Unit tests in `tests/unit/test_validation.py` — test each check function with controlled data (known duplicates, missing teams, abnormal counts)
+  - [x] 6.2: Integration test in `tests/integration/test_sync.py` — add a test verifying validation runs after sync and produces expected results
+  - [x] 6.3: Run full test suite: `pytest`, `ruff check .`, `mypy --strict src/ncaa_eval tests`
 
 ## Dev Notes
 
@@ -177,10 +177,35 @@ Story 8.3 (ESPN retry logic) decoupled `SyncEngine` from Typer and generalized d
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+None — clean implementation with no blocking issues.
+
 ### Completion Notes List
 
+- Implemented `ValidationResult` and `ValidationReport` as frozen Pydantic models in `src/ncaa_eval/ingest/validation.py`
+- `validate_sync(repo)` runs three checks: game counts (±10% of median), duplicate games, team reference integrity
+- Game count check excludes COVID 2020 from median calculation but still validates it (flags as expected anomaly)
+- Duplicate detection uses `(season, day_num, w_team_id, l_team_id)` tuple key via `Counter`
+- Team reference check validates all `w_team_id`/`l_team_id` against known teams
+- Logging: INFO summary line + WARNING for each failed check (via `get_logger("ingest.validation")`)
+- Integrated into `sync.py` CLI — `validate_sync(repo)` called after sync completes, non-fatal
+- 23 unit tests covering all checks (pass, fail, edge cases: empty repo, single season, COVID, multiple failures)
+- 1 integration test verifying validation runs after CLI sync and produces log output
+- All 1004 tests pass, `ruff check .` clean, `mypy --strict` clean, `ruff format` clean
+
+### Change Log
+
+- 2026-03-09: Implemented post-sync data validation (Story 9.5) — added validation module with 3 checks, integrated into sync CLI, added 24 tests
+
 ### File List
+
+- `src/ncaa_eval/ingest/validation.py` (new) — validation checks and result models
+- `src/ncaa_eval/ingest/__init__.py` (modified) — export `validate_sync`, `ValidationReport`
+- `sync.py` (modified) — call `validate_sync(repo)` after sync
+- `tests/unit/test_validation.py` (new) — 23 unit tests for validation
+- `tests/integration/test_sync.py` (modified) — 1 integration test for validation-after-sync
+- `_bmad-output/implementation-artifacts/9-5-post-sync-data-validation.md` (modified) — story updates
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified) — status → review

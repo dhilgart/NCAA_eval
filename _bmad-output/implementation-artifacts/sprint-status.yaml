@@ -135,7 +135,7 @@ development_status:
   9-2-feature-config-as-model-level-concern: done
   9-3-feature-importance-elo-logistic-regression: done
   9-4-fix-public-api-documentation: done
-  9-5-post-sync-data-validation: ready-for-dev
+  9-5-post-sync-data-validation: review
   9-6-revisit-skipped-audit-decisions: backlog
   9-7-game-theory-slider-implementation: backlog
   9-8-user-editable-bracket: backlog
