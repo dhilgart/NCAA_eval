@@ -192,6 +192,36 @@ def _render_bracket_page() -> None:
                 key="bracket_n_sims",
             )
 
+    # Game Theory Sliders
+    st.subheader("Game Theory Sliders")
+    slider_col1, slider_col2, slider_col3 = st.columns([2, 2, 1])
+    with slider_col1:
+        upset_aggression: int = st.slider(
+            "Upset Aggression",
+            min_value=-5,
+            max_value=5,
+            value=0,
+            step=1,
+            help="Chalk \u2190 \u2192 Chaos",
+            key="bracket_upset_aggression",
+        )
+    with slider_col2:
+        seed_weight_pct: int = st.slider(
+            "Seed-Weight",
+            min_value=0,
+            max_value=100,
+            value=0,
+            step=5,
+            format="%d%%",
+            help="Model \u2190 \u2192 Seeds",
+            key="bracket_seed_weight",
+        )
+    with slider_col3:
+        if st.button("Reset Sliders", key="reset_sliders"):
+            st.session_state["bracket_upset_aggression"] = 0
+            st.session_state["bracket_seed_weight"] = 0
+            st.rerun()
+
     # Run simulation
     spinner_msg = "Running tournament simulation..." if method == "monte_carlo" else "Computing bracket..."
     with st.spinner(spinner_msg):
@@ -202,6 +232,8 @@ def _render_bracket_page() -> None:
             scoring_name=scoring,
             method=method,
             n_simulations=n_sims,
+            upset_aggression=upset_aggression,
+            seed_weight_pct=seed_weight_pct,
         )
 
     if sim_data is None:

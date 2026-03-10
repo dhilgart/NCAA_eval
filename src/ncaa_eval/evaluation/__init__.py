@@ -18,6 +18,13 @@ from ncaa_eval.evaluation.metrics import (
     reliability_diagram_data,
     roc_auc,
 )
+from ncaa_eval.evaluation.perturbation import (
+    FIRST_ROUND_SEED_PRIORS,
+    build_seed_prior_matrix,
+    perturb_probability_matrix,
+    power_transform,
+    slider_to_temperature,
+)
 from ncaa_eval.evaluation.plotting import (
     COLOR_GREEN,
     COLOR_NEUTRAL,
@@ -67,6 +74,7 @@ from ncaa_eval.evaluation.splitter import CVFold, walk_forward_splits
 __all__ = [
     "BacktestResult",
     "BracketDistribution",
+    "FIRST_ROUND_SEED_PRIORS",
     "BracketNode",
     "BracketStructure",
     "COLOR_GREEN",
@@ -95,6 +103,7 @@ __all__ = [
     "brier_score",
     "build_bracket",
     "build_probability_matrix",
+    "build_seed_prior_matrix",
     "compute_advancement_probs",
     "compute_bracket_distribution",
     "compute_expected_points",
@@ -105,11 +114,13 @@ __all__ = [
     "list_scoring_display_names",
     "list_scorings",
     "log_loss",
+    "perturb_probability_matrix",
     "plot_advancement_heatmap",
     "plot_backtest_summary",
     "plot_metric_comparison",
     "plot_reliability_diagram",
     "plot_score_distribution",
+    "power_transform",
     "register_scoring",
     "reliability_diagram_data",
     "roc_auc",
@@ -118,5 +129,6 @@ __all__ = [
     "scoring_from_config",
     "simulate_tournament",
     "simulate_tournament_mc",
+    "slider_to_temperature",
     "walk_forward_splits",
 ]

@@ -82,7 +82,9 @@ class TestNoRunSelected:
     def test_shows_info_when_no_run(self) -> None:
         mock_st = MagicMock()
         mock_st.session_state = {}
-        mock_st.columns.return_value = [MagicMock(), MagicMock()]
+        mock_st.columns.side_effect = lambda *a, **kw: [
+            MagicMock() for _ in range(a[0] if isinstance(a[0], int) else len(a[0]))
+        ]
 
         with patch.object(_page_mod, "st", mock_st):
             _page_mod._render_bracket_page()
@@ -96,7 +98,9 @@ class TestNoYearSelected:
     def test_shows_info_when_no_year(self) -> None:
         mock_st = MagicMock()
         mock_st.session_state = {"selected_run_id": "abc123"}
-        mock_st.columns.return_value = [MagicMock(), MagicMock()]
+        mock_st.columns.side_effect = lambda *a, **kw: [
+            MagicMock() for _ in range(a[0] if isinstance(a[0], int) else len(a[0]))
+        ]
 
         with patch.object(_page_mod, "st", mock_st):
             _page_mod._render_bracket_page()
@@ -114,7 +118,9 @@ class TestNoSeedsAvailable:
             "selected_year": 2023,
             "selected_scoring": "standard",
         }
-        mock_st.columns.return_value = [MagicMock(), MagicMock()]
+        mock_st.columns.side_effect = lambda *a, **kw: [
+            MagicMock() for _ in range(a[0] if isinstance(a[0], int) else len(a[0]))
+        ]
 
         with (
             patch.object(_page_mod, "st", mock_st),
@@ -136,7 +142,9 @@ class TestSimulationFails:
             "selected_scoring": "standard",
             "bracket_sim_method": "analytical",
         }
-        mock_st.columns.return_value = [MagicMock(), MagicMock()]
+        mock_st.columns.side_effect = lambda *a, **kw: [
+            MagicMock() for _ in range(a[0] if isinstance(a[0], int) else len(a[0]))
+        ]
         mock_st.selectbox.return_value = "analytical"
 
         with (
@@ -160,7 +168,9 @@ class TestSuccessfulRender:
             "selected_scoring": "standard",
             "bracket_sim_method": "analytical",
         }
-        mock_st.columns.return_value = [MagicMock(), MagicMock()]
+        mock_st.columns.side_effect = lambda *a, **kw: [
+            MagicMock() for _ in range(a[0] if isinstance(a[0], int) else len(a[0]))
+        ]
         # First selectbox call = simulation method, subsequent = pairwise team selectors
         mock_st.selectbox.side_effect = ["analytical", "[1] Duke", "[16] Norfolk St"]
 
@@ -237,7 +247,9 @@ class TestMCModeRender:
             "selected_year": 2023,
             "selected_scoring": "standard",
         }
-        mock_st.columns.return_value = [MagicMock(), MagicMock()]
+        mock_st.columns.side_effect = lambda *a, **kw: [
+            MagicMock() for _ in range(a[0] if isinstance(a[0], int) else len(a[0]))
+        ]
         mock_st.selectbox.side_effect = ["monte_carlo", "[1] Duke", "[16] Norfolk St"]
 
         sim_data = self._make_mc_sim_data()
@@ -270,7 +282,9 @@ class TestMCModeRender:
             "selected_year": 2023,
             "selected_scoring": "fibonacci",  # not in bracket_distributions
         }
-        mock_st.columns.return_value = [MagicMock(), MagicMock()]
+        mock_st.columns.side_effect = lambda *a, **kw: [
+            MagicMock() for _ in range(a[0] if isinstance(a[0], int) else len(a[0]))
+        ]
         mock_st.selectbox.side_effect = ["monte_carlo", "[1] Duke", "[16] Norfolk St"]
 
         # MC result but bracket_distributions only has "standard", not "fibonacci"
@@ -315,3 +329,63 @@ class TestMCModeRender:
         mock_st.info.assert_called()
         info_msgs = [call[0][0] for call in mock_st.info.call_args_list]
         assert any("fibonacci" in msg for msg in info_msgs)
+
+
+class TestSliderValuesPassThrough:
+    """Verify slider values from session state flow to run_bracket_simulation."""
+
+    def test_slider_values_passed_to_simulation(self) -> None:
+        mock_st = MagicMock()
+        mock_st.session_state = {
+            "selected_run_id": "abc123",
+            "selected_year": 2023,
+            "selected_scoring": "standard",
+        }
+        mock_st.columns.side_effect = lambda *a, **kw: [
+            MagicMock() for _ in range(a[0] if isinstance(a[0], int) else len(a[0]))
+        ]
+        # Simulate non-neutral slider values
+        mock_st.selectbox.side_effect = ["analytical"]
+        mock_st.slider.side_effect = [3, 25]  # upset_aggression=3, seed_weight_pct=25
+
+        mock_run_sim = MagicMock(return_value=None)
+
+        with (
+            patch.object(_page_mod, "st", mock_st),
+            patch.object(_page_mod, "get_data_dir", return_value="/fake/data"),
+            patch.object(_page_mod, "load_tourney_seeds", return_value=[{"seed": "W01"}]),
+            patch.object(_page_mod, "run_bracket_simulation", mock_run_sim),
+        ):
+            _page_mod._render_bracket_page()
+
+        mock_run_sim.assert_called_once()
+        call_kwargs = mock_run_sim.call_args[1]
+        assert call_kwargs["upset_aggression"] == 3
+        assert call_kwargs["seed_weight_pct"] == 25
+
+    def test_reset_button_resets_session_state(self) -> None:
+        mock_st = MagicMock()
+        mock_st.session_state = {
+            "selected_run_id": "abc123",
+            "selected_year": 2023,
+            "selected_scoring": "standard",
+            "bracket_upset_aggression": 3,
+            "bracket_seed_weight": 50,
+        }
+        mock_st.columns.side_effect = lambda *a, **kw: [
+            MagicMock() for _ in range(a[0] if isinstance(a[0], int) else len(a[0]))
+        ]
+        mock_st.selectbox.return_value = "analytical"
+        mock_st.slider.side_effect = [3, 50]  # current non-neutral values
+        mock_st.button.return_value = True  # simulate button click
+
+        with (
+            patch.object(_page_mod, "st", mock_st),
+            patch.object(_page_mod, "get_data_dir", return_value="/fake/data"),
+            patch.object(_page_mod, "load_tourney_seeds", return_value=[{"seed": "W01"}]),
+        ):
+            _page_mod._render_bracket_page()
+
+        assert mock_st.session_state["bracket_upset_aggression"] == 0
+        assert mock_st.session_state["bracket_seed_weight"] == 0
+        mock_st.rerun.assert_called_once()

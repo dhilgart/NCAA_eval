@@ -16,6 +16,10 @@ import numpy.typing as npt
 import streamlit as st
 
 from dashboard.lib.data_loaders import _load_team_names_uncached
+from ncaa_eval.evaluation.perturbation import (
+    perturb_probability_matrix,
+    slider_to_temperature,
+)
 from ncaa_eval.evaluation.simulation import (
     BracketStructure,
     EloProvider,
@@ -122,11 +126,16 @@ def run_bracket_simulation(  # noqa: PLR0913
     scoring_name: str,
     method: str = "analytical",
     n_simulations: int = 10_000,
+    upset_aggression: int = 0,
+    seed_weight_pct: int = 0,
 ) -> BracketSimulationResult | None:
     """Orchestrate bracket construction, model loading, and simulation.
 
     Builds a 64-team bracket from seeds, loads the trained model, computes
-    pairwise probabilities, and runs the tournament simulation.
+    pairwise probabilities, and runs the tournament simulation.  When
+    game-theory sliders are non-neutral, the analytical path (advancement
+    probabilities, expected points, most-likely bracket) uses perturbed
+    probabilities while Monte Carlo simulation uses the original model.
 
     Args:
         data_dir: String path to the project data directory.
@@ -135,6 +144,8 @@ def run_bracket_simulation(  # noqa: PLR0913
         scoring_name: Scoring rule name (e.g. ``"standard"``).
         method: ``"analytical"`` or ``"monte_carlo"``.
         n_simulations: Number of MC simulations (ignored for analytical).
+        upset_aggression: Upset Aggression slider value in ``[-5, +5]``.
+        seed_weight_pct: Seed-Weight slider value in ``[0, 100]``.
 
     Returns:
         :class:`BracketSimulationResult` or ``None`` on failure.
@@ -185,23 +196,59 @@ def run_bracket_simulation(  # noqa: PLR0913
         # Context for tournament games (neutral site, R64 tip-off day)
         context = MatchupContext(season=season, day_num=_ROUND_OF_64_DAY_NUM, is_neutral=True)
 
-        sim_result = simulate_tournament(
-            bracket=bracket,
-            probability_provider=provider,
-            context=context,
-            scoring_rules=[scoring_rule],
-            method=method,
-            n_simulations=n_simulations,
+        # Build the base probability matrix
+        prob_matrix = build_probability_matrix(provider, bracket.team_ids, context)
+
+        # Apply game-theory slider perturbation
+        temperature = slider_to_temperature(upset_aggression)
+        perturbed_matrix = perturb_probability_matrix(
+            prob_matrix,
+            bracket.seed_map,
+            bracket.team_ids,
+            temperature=temperature,
+            seed_weight=seed_weight_pct / 100.0,
         )
 
-        prob_matrix = build_probability_matrix(provider, bracket.team_ids, context)
-        most_likely = compute_most_likely_bracket(bracket, prob_matrix)
+        # Analytical simulation uses PERTURBED probabilities
+        perturbed_provider = MatrixProvider(perturbed_matrix, list(bracket.team_ids))
+        sim_result = simulate_tournament(
+            bracket=bracket,
+            probability_provider=perturbed_provider,
+            context=context,
+            scoring_rules=[scoring_rule],
+            method="analytical",
+        )
+
+        # MC simulation uses ORIGINAL provider (unperturbed "reality")
+        if method == "monte_carlo":
+            mc_result = simulate_tournament(
+                bracket=bracket,
+                probability_provider=provider,
+                context=context,
+                scoring_rules=[scoring_rule],
+                method="monte_carlo",
+                n_simulations=n_simulations,
+            )
+            # Merge MC fields into the analytical result
+            sim_result = SimulationResult(
+                season=sim_result.season,
+                advancement_probs=sim_result.advancement_probs,
+                expected_points=sim_result.expected_points,
+                method="monte_carlo",
+                n_simulations=mc_result.n_simulations,
+                confidence_intervals=mc_result.confidence_intervals,
+                score_distribution=mc_result.score_distribution,
+                bracket_distributions=mc_result.bracket_distributions,
+                sim_winners=mc_result.sim_winners,
+            )
+
+        most_likely = compute_most_likely_bracket(bracket, perturbed_matrix)
 
         return BracketSimulationResult(
             sim_result=sim_result,
             bracket=bracket,
             most_likely=most_likely,
-            prob_matrix=prob_matrix,
+            prob_matrix=perturbed_matrix,
             team_labels=team_labels,
         )
     except (OSError, ValueError, KeyError, TypeError) as exc:
