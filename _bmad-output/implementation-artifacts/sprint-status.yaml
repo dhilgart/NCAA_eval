@@ -140,7 +140,7 @@ development_status:
   9-7-game-theory-slider-implementation: done
   9-8-user-editable-bracket: done
   9-9-cli-predict-command: done
-  9-10-custom-metric-plugin-registry: backlog
+  9-10-custom-metric-plugin-registry: ready-for-dev
   epic-9-retrospective: optional
 
   # Epic 10: Ensemble Modeling Framework
