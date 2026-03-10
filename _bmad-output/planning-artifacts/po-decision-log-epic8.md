@@ -10,8 +10,8 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 - `codebase-audit-pass3-addendum.md` (Pass 3)
 
 **Decision Counts:**
-- Category 1: 9 Defer, 4 Accept-as-is, 3 Implement
-- Category 2: 12 Accept-as-is, 8 Defer, 2 Already Resolved, 2 Fix
+- Category 1: 6 Defer, 2 Accept-as-is, 8 Implement (incl. 2 Custom)
+- Category 2: 11 Accept-as-is, 8 Defer, 5 Already Resolved
 
 ---
 
@@ -451,7 +451,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** B — accept as-is. Practical data access; `Repository` and `Game` are stable types that the serving layer legitimately needs. Not a real layer violation.
 
 ---
 
@@ -475,7 +475,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** B — accept as-is. Domain integrity via Pydantic validation on every record is more valuable than the minor performance cost. Per-row construction catches bad data early.
 
 ---
 
@@ -499,7 +499,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** Remains in Post-MVP Backlog (via 2.17)
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** Defer to Post-MVP. Not a performance bottleneck — runs once per sync. Code quality improvement, not urgent. Already tracked via 2.17 in Post-MVP Backlog.
 
 ---
 
@@ -522,7 +522,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** B — accept as-is. Only 2 concrete implementations; switching to protocols/mixins would be over-engineering. The "Header Interface" pattern is pragmatic at this scale.
 
 ---
 
@@ -546,7 +546,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** B — accept as-is. Import convenience outweighs startup time for an interactive dashboard/CLI tool. Users benefit from clean imports without knowing submodule layout. Personal project values convenience.
 
 ---
 
@@ -570,7 +570,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** B — accept as-is. Pydantic model serves serialization/validation; frozen dataclass serves runtime immutability. Different purposes justify the duplication. Consolidating would couple model serialization to runtime config.
 
 ---
 
@@ -593,7 +593,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** B — accept as-is. Standard pattern for plugin registries (cf. Flask extensions, pytest plugins). Testing isolation is handled by existing test fixtures.
 
 ---
 
@@ -616,7 +616,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** B — accept as-is. Well-established Python pattern for circular dependency resolution. The alternative (restructuring module dependencies) would be a significant refactor for minimal benefit.
 
 ---
 
@@ -639,7 +639,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** B — accept as-is. Python caches module imports after the first call. Negligible overhead (~0.1ms). Avoids loading sklearn for non-metric use cases.
 
 ---
 
@@ -679,7 +679,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** Add to Post-MVP Backlog
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** Defer to Post-MVP. Fragile but stable since Epic 7. Low risk, low priority. Added to Post-MVP Backlog.
 
 ---
 
@@ -702,7 +702,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** B — accept as-is. Standard Streamlit convention. All Streamlit apps work this way — code at module level runs on page navigation. Not a bug.
 
 ---
 
@@ -726,7 +726,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** Add to Post-MVP Backlog
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** Defer to Post-MVP. Works currently; address if/when Streamlit breaks it. Added to Post-MVP Backlog.
 
 ---
 
@@ -749,7 +749,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** B — accept as-is. Standalone functions are a deliberate, documented design decision chosen over methods for composability. Accept the documented deviation from Epic AC.
 
 ---
 
@@ -772,7 +772,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A — remains in Post-MVP Backlog
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** Defer to Post-MVP. UX polish, not functional. Already in Post-MVP Backlog #19.
 
 ---
 
@@ -796,7 +796,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** Add to Post-MVP Backlog
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** Defer to Post-MVP. Code quality improvements, not functional bugs. Connector works correctly. Added to Post-MVP Backlog.
 
 ---
 
@@ -820,7 +820,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** Story 9.4 created (Fix Public API Documentation) — PO to confirm scope in Story 9.6
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** Already Resolved. Story 9.4 (Fix Public API Documentation) already updated the Style Guide to document actual import paths. Work is done.
 
 ---
 
@@ -860,7 +860,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** Story 9.5 created (Post-Sync Data Validation) — PO to confirm scope in Story 9.6
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** Already Resolved. Story 9.5 (Post-Sync Data Validation) already implemented post-sync validation checks. Work is done.
 
 ---
 
@@ -883,7 +883,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** Add to Post-MVP Backlog
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** Defer to Post-MVP. Minor code quality issue. Consolidate opportunistically when either file is next modified. Added to Post-MVP Backlog.
 
 ---
 
@@ -907,7 +907,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** Add to Post-MVP Backlog
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** Defer to Post-MVP. Needs baseline coverage measurement before setting a threshold. Added to Post-MVP Backlog.
 
 ---
 
@@ -931,7 +931,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** Add to Post-MVP Backlog
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** Defer to Post-MVP. Streamlit has poor type stubs; strict mypy is impractical. Added to Post-MVP Backlog.
 
 ---
 
@@ -955,34 +955,48 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** Already Resolved. Story 8.12 already added a historical-document banner. The spec served its purpose during initial design — no further action needed.
 
 ---
 
 ## Follow-up Actions Summary
 
-### Items to Implement (New Stories in Epic 9)
+### Items Implemented (Stories in Epic 9) — ALL COMPLETE
 
-1. **1.3 Kaggle Submission Export** — Low effort, high value. Export bracket to Kaggle MMLM submission format.
-2. **1.6 Feature Config from CLI** — Add `--feature-config` CLI option for training pipeline.
-3. **1.15 Feature Importance for All Models** — Expose Elo ratings and LR coefficients as feature importance.
-4. **2.18 Fix `__init__.py` Public API Documentation** — Update Style Guide to document actual import paths (not re-exports).
-5. **2.20 Post-Sync Data Validation** — Add validation checks after data sync.
+1. **1.1 Game Theory Sliders** → Story 9.7 (in backlog)
+2. **1.2 User-Editable Bracket** → Story 9.8 (in backlog)
+3. **1.3 Kaggle Submission Export** → Story 9.1 (done)
+4. **1.6 Feature Config as Model-Level Concern** → Story 9.2 (done)
+5. **1.8 Fibonacci Scoring Label** → Cat 3 fix (done in Story 8.8)
+6. **1.11 CLI `predict` Command** → Story 9.9 (in backlog)
+7. **1.15 Feature Importance for All Models** → Story 9.3 (done)
+8. **P3-17 Custom Metric Plugin Registry** → Story 9.10 (in backlog)
 
-### Items to Add to Post-MVP Backlog
+### Items Deferred to Post-MVP Backlog
 
+**Category 1 (confirmed in Post-MVP Backlog):**
+- 1.4, 1.5, 1.9, 1.10, 1.12, 1.14
+
+**Category 2 (newly added or confirmed in Post-MVP Backlog — Story 9.6):**
+- **2.4** KaggleConnector `iterrows()` — via 2.17
 - **2.12** `get_data_dir()` path fragility
 - **2.14** Undocumented Streamlit API usage
+- **2.16** `st.spinner` vs `st.progress` — already in Post-MVP Backlog #19
 - **2.17** Story 2.3 open AI-review follow-ups (Pandera + iterrows)
 - **2.21** `_make_season_df` test helper duplication
 - **P2-5** Coverage threshold enforcement
 - **P2-6** Dashboard quality gate inclusion
 
-### Items Confirmed as Already in Post-MVP Backlog (No Change)
+### Items Accepted As-Is (no action needed)
 
-1.1, 1.2, 1.4, 1.5, 1.9, 1.10, 1.11, 1.12, 1.14, 2.4 (via 2.17), 2.16
+**Category 1:** 1.7, 1.13
+**Category 2 (Story 9.6):** 2.2, 2.3, 2.5, 2.6, 2.7, 2.8, 2.9, 2.10, 2.13, 2.15
+**Category 2 (Story 8.13):** 2.1
 
 ### Already Resolved Items
 
 - **2.11** — Fixed in Story 8.3 (ESPN exception handling)
+- **2.18** — Fixed in Story 9.4 (public API documentation)
 - **2.19** — Fixed in Story 8.4 (game theory slider docs)
+- **2.20** — Implemented in Story 9.5 (post-sync data validation)
+- **P3-20** — Resolved in Story 8.12 (historical-document banner)

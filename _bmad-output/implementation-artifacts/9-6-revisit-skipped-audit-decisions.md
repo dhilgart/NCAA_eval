@@ -1,6 +1,6 @@
 # Story 9.6: Revisit Skipped Audit Decisions
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -53,27 +53,27 @@ so that **no potential improvements are permanently lost and each item receives 
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Present skipped items to PO for batch review (AC: #1)
-  - [ ] 1.1: Load `po-decision-log-epic8.md` and identify all 20 items with "S — skip" status
-  - [ ] 1.2: For each item, present the original context, options, and recommendation to the PO
-  - [ ] 1.3: Record PO decision for each item (Implement / Defer to Post-MVP / Accept as-is)
+- [x] Task 1: Present skipped items to PO for batch review (AC: #1)
+  - [x] 1.1: Load `po-decision-log-epic8.md` and identify all 20 items with "S — skip" status
+  - [x] 1.2: For each item, present the original context, options, and recommendation to the PO
+  - [x] 1.3: Record PO decision for each item (Implement / Defer to Post-MVP / Accept as-is)
 
-- [ ] Task 2: Process "Implement" decisions (AC: #2)
-  - [ ] 2.1: For each "Implement" decision, create a new story entry in `epics.md` under Epic 9 (or confirm existing coverage)
-  - [ ] 2.2: Add corresponding story key to `sprint-status.yaml` with status `backlog`
-  - [ ] 2.3: Update the item's entry in `po-decision-log-epic8.md` with the PO decision and follow-up story reference
+- [x] Task 2: Process "Implement" decisions (AC: #2)
+  - [x] 2.1: For each "Implement" decision, create a new story entry in `epics.md` under Epic 9 (or confirm existing coverage)
+  - [x] 2.2: Add corresponding story key to `sprint-status.yaml` with status `backlog`
+  - [x] 2.3: Update the item's entry in `po-decision-log-epic8.md` with the PO decision and follow-up story reference
 
-- [ ] Task 3: Process "Defer to Post-MVP" decisions (AC: #3)
-  - [ ] 3.1: For each "Defer" decision, verify the item exists in the Post-MVP Backlog of `epics.md` (add if missing)
-  - [ ] 3.2: Update the item's entry in `po-decision-log-epic8.md` replacing "S — skip" with the defer decision and rationale
+- [x] Task 3: Process "Defer to Post-MVP" decisions (AC: #3)
+  - [x] 3.1: For each "Defer" decision, verify the item exists in the Post-MVP Backlog of `epics.md` (add if missing)
+  - [x] 3.2: Update the item's entry in `po-decision-log-epic8.md` replacing "S — skip" with the defer decision and rationale
 
-- [ ] Task 4: Process "Accept as-is" decisions (AC: #4)
-  - [ ] 4.1: For each "Accept" decision, update the item's entry in `po-decision-log-epic8.md` replacing "S — skip" with accept-as-is and rationale
+- [x] Task 4: Process "Accept as-is" decisions (AC: #4)
+  - [x] 4.1: For each "Accept" decision, update the item's entry in `po-decision-log-epic8.md` replacing "S — skip" with accept-as-is and rationale
 
-- [ ] Task 5: Finalize decision log and verify completeness (AC: #5)
-  - [ ] 5.1: Verify ALL 20 skipped items now have a final decision (no "S — skip" remaining)
-  - [ ] 5.2: Update the Decision Counts summary at the top of `po-decision-log-epic8.md`
-  - [ ] 5.3: Run a grep/search to confirm zero "skip, come back later" entries remain
+- [x] Task 5: Finalize decision log and verify completeness (AC: #5)
+  - [x] 5.1: Verify ALL 20 skipped items now have a final decision (no "S — skip" remaining)
+  - [x] 5.2: Update the Decision Counts summary at the top of `po-decision-log-epic8.md`
+  - [x] 5.3: Run a grep/search to confirm zero "skip, come back later" entries remain
 
 ## Dev Notes
 
@@ -173,6 +173,28 @@ Claude Opus 4.6
 
 ### Debug Log References
 
+N/A — no code implementation, no debugging needed.
+
 ### Completion Notes List
 
+- Reviewed all 20 "S — skip" items from `po-decision-log-epic8.md`
+- **10 items → Accept as-is**: 2.2, 2.3, 2.5, 2.6, 2.7, 2.8, 2.9, 2.10, 2.13, 2.15 (architecture/design decisions that are pragmatic and well-justified)
+- **8 items → Defer to Post-MVP**: 2.4, 2.12, 2.14, 2.16, 2.17, 2.21, P2-5, P2-6 (code quality improvements, not functional bugs; all confirmed present in Post-MVP Backlog)
+- **2 items → Already Resolved**: 2.18 (fixed by Story 9.4), P3-20 (fixed by Story 8.12)
+- **Bonus**: Also resolved 2.20 (was "S — skip" but Story 9.5 implemented the work)
+- **No "Implement" decisions** — all 20 skipped items were architecture decisions, code quality improvements, or already resolved
+- Updated Decision Counts summary to reflect final totals: Cat 1 (8 Implement, 6 Defer, 2 Accept-as-is), Cat 2 (11 Accept-as-is, 8 Defer, 5 Already Resolved)
+- Updated Follow-up Actions Summary with comprehensive disposition breakdown
+- Verified zero "S — skip" entries remaining via grep
+- No changes to `epics.md` needed — all Defer items already present in Post-MVP Backlog
+- No changes to `sprint-status.yaml` needed (beyond marking this story in-progress → review) — no new stories created
+
+### Change Log
+
+- 2026-03-09: Resolved all 20 "S — skip" items in `po-decision-log-epic8.md` (10 Accept-as-is, 8 Defer, 2 Already Resolved + 1 bonus). Updated Decision Counts and Follow-up Actions Summary. Story status → review.
+
 ### File List
+
+- `_bmad-output/planning-artifacts/po-decision-log-epic8.md` (modified — 20 skip decisions resolved, counts updated, summary rewritten)
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified — story status ready-for-dev → in-progress → review)
+- `_bmad-output/implementation-artifacts/9-6-revisit-skipped-audit-decisions.md` (modified — tasks marked complete, Dev Agent Record filled)
