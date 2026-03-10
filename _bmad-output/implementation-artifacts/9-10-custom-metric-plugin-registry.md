@@ -1,6 +1,6 @@
 # Story 9.10: Custom Metric Plugin Registry
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -299,6 +299,7 @@ Claude Opus 4.6
 ### Change Log
 
 - 2026-03-10: Implemented custom metric plugin registry (Story 9.10)
+- 2026-03-10: Code review fixes — guarded KPI cards against missing metric columns; extracted `get_metric_cols` to shared `dashboard/lib/data_loaders.py`; added `run_backtest` integration tests for AC#6 (tasks 5.6, 5.7); exported `default_metrics` from public API
 
 ### File List
 
@@ -310,5 +311,9 @@ Claude Opus 4.6
 - `tests/unit/test_metric_registry.py` — NEW (11 unit tests for registry + backtest integration)
 - `tests/unit/test_leaderboard_page.py` — MODIFIED (updated to use local metric constants instead of removed module attribute)
 - `docs/tutorials/custom-metric.md` — MODIFIED (added Step 3 registry usage, updated summary table)
+- `dashboard/lib/data_loaders.py` — MODIFIED (added shared `get_metric_cols()` helper; review fix)
+- `dashboard/pages/1_Lab.py` — MODIFIED (KPI card guard + import shared `get_metric_cols`; review fix)
+- `dashboard/pages/3_Model_Deep_Dive.py` — MODIFIED (import shared `get_metric_cols`; review fix)
+- `src/ncaa_eval/evaluation/__init__.py` — MODIFIED (exported `default_metrics`; review fix)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` — MODIFIED (9-10 status: in-progress → review)
 - `_bmad-output/implementation-artifacts/9-10-custom-metric-plugin-registry.md` — MODIFIED (tasks marked complete, status → review)

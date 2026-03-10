@@ -13,23 +13,17 @@ import streamlit as st
 
 from dashboard.lib.data_loaders import (
     get_data_dir,
+    get_metric_cols as _get_metric_cols,
     load_available_runs,
     load_feature_importances,
     load_fold_predictions,
     load_leaderboard_data,
 )
-from ncaa_eval.evaluation import list_metrics
 from ncaa_eval.evaluation.plotting import (
     COLOR_GREEN,
     TEMPLATE,
     plot_reliability_diagram,
 )
-
-
-def _get_metric_cols(df: pd.DataFrame) -> list[str]:
-    """Return metric column names that exist in both registry and DataFrame."""
-    registered = list_metrics()
-    return [m for m in registered if m in df.columns]
 
 
 def _render_reliability_section(data_dir: str, run_id: str, label: str) -> None:

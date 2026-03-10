@@ -9,14 +9,12 @@ from __future__ import annotations
 import pandas as pd  # type: ignore[import-untyped]
 import streamlit as st
 
-from dashboard.lib.data_loaders import get_data_dir, load_available_runs, load_leaderboard_data
-from ncaa_eval.evaluation import list_metrics
-
-
-def _get_metric_cols(df: pd.DataFrame) -> list[str]:
-    """Return metric column names that exist in both registry and DataFrame."""
-    registered = list_metrics()
-    return [m for m in registered if m in df.columns]
+from dashboard.lib.data_loaders import (
+    get_data_dir,
+    get_metric_cols as _get_metric_cols,
+    load_available_runs,
+    load_leaderboard_data,
+)
 
 
 def _style_metric_table(df: pd.DataFrame, metric_cols: list[str]) -> pd.io.formats.style.Styler:
@@ -80,7 +78,9 @@ def _render_leaderboard() -> None:
     def _fmt(v: float) -> str:
         return f"{v:.4f}" if v == v else "N/A"  # NaN check: NaN != NaN
 
-    if len(display_df) >= 1:
+    _BUILTIN_KPI_COLS = ("log_loss", "brier_score", "roc_auc", "ece")
+    _builtins_present = all(m in display_df.columns for m in _BUILTIN_KPI_COLS)
+    if len(display_df) >= 1 and _builtins_present:
         best_ll = display_df["log_loss"].min()
         best_bs = display_df["brier_score"].min()
         best_auc = display_df["roc_auc"].max()

@@ -3,10 +3,15 @@
 from __future__ import annotations
 
 from collections.abc import Generator
+from pathlib import Path
+from typing import Self
+from unittest.mock import MagicMock
 
 import numpy as np
 import numpy.typing as npt
+import pandas as pd  # type: ignore[import-untyped]
 import pytest
+from rich.console import Console
 
 from ncaa_eval.evaluation.metrics import (
     _METRIC_REGISTRY,
@@ -139,3 +144,122 @@ class TestBacktestIntegration:
 
         # DEFAULT_METRICS constant still exists and contains the 4 built-ins
         assert set(DEFAULT_METRICS.keys()) == {"log_loss", "brier_score", "roc_auc", "ece"}
+
+    def test_run_backtest_metric_fns_none_uses_registry(self) -> None:
+        """run_backtest(metric_fns=None) picks up custom registered metrics (AC #6)."""
+        from ncaa_eval.evaluation.backtest import run_backtest
+        from ncaa_eval.model.base import Model, ModelConfig
+
+        class _FakeModel(Model):
+            def fit(self, X: pd.DataFrame, y: pd.Series) -> None:
+                pass
+
+            def predict_proba(self, X: pd.DataFrame) -> pd.Series:
+                return pd.Series(0.5, index=X.index)
+
+            def save(self, path: Path) -> None:
+                pass
+
+            @classmethod
+            def load(cls, path: Path) -> Self:
+                return cls()
+
+            def get_config(self) -> ModelConfig:
+                return ModelConfig(model_name="fake")
+
+        @register_metric("registry_test_metric")
+        def _registry_metric(
+            y_true: npt.NDArray[np.float64],
+            y_prob: npt.NDArray[np.float64],
+        ) -> float:
+            return 99.0
+
+        seasons = [2010, 2011, 2012]
+        n = 20
+        rng = np.random.default_rng(0)
+        base_df = pd.DataFrame(
+            {
+                "game_id": [f"g{i}" for i in range(n)],
+                "season": 2010,
+                "day_num": list(range(n)),
+                "date": pd.date_range("2010-01-01", periods=n, freq="D"),
+                "team_a_id": rng.integers(1000, 2000, size=n),
+                "team_b_id": rng.integers(2000, 3000, size=n),
+                "is_tournament": [False] * 17 + [True] * 3,
+                "loc_encoding": rng.choice([1, -1, 0], size=n).astype(float),
+                "team_a_won": rng.choice([True, False], size=n),
+                "elo_diff": rng.normal(0, 50, size=n),
+            }
+        )
+        server = MagicMock()
+        server.serve_season_features.side_effect = lambda year, mode="batch": base_df.assign(season=year)
+
+        result = run_backtest(
+            _FakeModel(),
+            server,
+            seasons=seasons,
+            n_jobs=1,
+            metric_fns=None,
+            console=Console(quiet=True),
+        )
+
+        assert "registry_test_metric" in result.summary.columns
+
+    def test_run_backtest_explicit_metric_fns_used(self) -> None:
+        """run_backtest(metric_fns={...}) uses only the provided metrics (AC #6 backward compat)."""
+        from ncaa_eval.evaluation.backtest import run_backtest
+        from ncaa_eval.model.base import Model, ModelConfig
+
+        class _FakeModel(Model):
+            def fit(self, X: pd.DataFrame, y: pd.Series) -> None:
+                pass
+
+            def predict_proba(self, X: pd.DataFrame) -> pd.Series:
+                return pd.Series(0.5, index=X.index)
+
+            def save(self, path: Path) -> None:
+                pass
+
+            @classmethod
+            def load(cls, path: Path) -> Self:
+                return cls()
+
+            def get_config(self) -> ModelConfig:
+                return ModelConfig(model_name="fake")
+
+        def _const(
+            y_true: npt.NDArray[np.float64],
+            y_prob: npt.NDArray[np.float64],
+        ) -> float:
+            return 0.42
+
+        seasons = [2010, 2011, 2012]
+        n = 20
+        rng = np.random.default_rng(1)
+        base_df = pd.DataFrame(
+            {
+                "game_id": [f"g{i}" for i in range(n)],
+                "season": 2010,
+                "day_num": list(range(n)),
+                "date": pd.date_range("2010-01-01", periods=n, freq="D"),
+                "team_a_id": rng.integers(1000, 2000, size=n),
+                "team_b_id": rng.integers(2000, 3000, size=n),
+                "is_tournament": [False] * 17 + [True] * 3,
+                "loc_encoding": rng.choice([1, -1, 0], size=n).astype(float),
+                "team_a_won": rng.choice([True, False], size=n),
+                "elo_diff": rng.normal(0, 50, size=n),
+            }
+        )
+        server = MagicMock()
+        server.serve_season_features.side_effect = lambda year, mode="batch": base_df.assign(season=year)
+
+        result = run_backtest(
+            _FakeModel(),
+            server,
+            seasons=seasons,
+            n_jobs=1,
+            metric_fns={"const": _const},
+            console=Console(quiet=True),
+        )
+
+        assert list(result.summary.columns) == ["const", "elapsed_seconds"]

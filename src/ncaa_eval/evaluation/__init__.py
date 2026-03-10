@@ -2,7 +2,13 @@
 
 from __future__ import annotations
 
-from ncaa_eval.evaluation.backtest import BacktestResult, FoldResult, feature_cols, run_backtest
+from ncaa_eval.evaluation.backtest import (
+    BacktestResult,
+    FoldResult,
+    default_metrics,
+    feature_cols,
+    run_backtest,
+)
 from ncaa_eval.evaluation.bracket import (
     BracketNode,
     BracketStructure,
@@ -87,6 +93,7 @@ __all__ = [
     "COLOR_RED",
     "CVFold",
     "CustomScoring",
+    "default_metrics",
     "DictScoring",
     "EloProvider",
     "FibonacciScoring",
