@@ -11,6 +11,7 @@ import inspect
 
 import streamlit as st
 
+from dashboard.lib.bracket_overrides import apply_overrides, get_overrides
 from dashboard.lib.data_loaders import get_data_dir, load_scoring_display_names, load_tourney_seeds
 from dashboard.lib.export import export_bracket_csv
 from dashboard.lib.filters import build_custom_scoring, score_chosen_bracket
@@ -67,6 +68,14 @@ def _render_results(
     custom_points: tuple[float, ...],
 ) -> None:
     """Run scoring, display outcome analysis, and offer CSV export."""
+    # Apply user bracket overrides (Story 9.8)
+    overrides = get_overrides()
+    edited_bracket = apply_overrides(sim_data.most_likely, overrides, sim_data.bracket, sim_data.prob_matrix)
+
+    if overrides:
+        n_games = len(edited_bracket.winners)
+        st.info(f"{len(overrides)} of {n_games} picks overridden by user.")
+
     # Determine which scoring rule to use
     if use_custom:
         scoring_rule = build_custom_scoring(custom_points)
@@ -84,8 +93,11 @@ def _render_results(
     rule_name: str = scoring_rule.name
 
     # Score bracket against simulations (cached by sim_data + scoring_key)
+    chosen_winners = edited_bracket.winners if overrides else None
     with st.spinner("Scoring bracket against simulations..."):
-        distributions = score_chosen_bracket(sim_data, [scoring_rule], scoring_key)
+        distributions = score_chosen_bracket(
+            sim_data, [scoring_rule], scoring_key, chosen_winners=chosen_winners
+        )
 
     if rule_name not in distributions:
         st.warning(f"Scoring failed for rule '{rule_name}'.")
@@ -101,10 +113,10 @@ def _render_results(
     display_names = load_scoring_display_names()
     _render_distribution_chart(dist, display_names.get(rule_name, rule_name))
 
-    # CSV export (AC #5)
+    # CSV export (AC #5) — uses edited bracket when overrides exist
     csv_str = export_bracket_csv(
         sim_data.bracket,
-        sim_data.most_likely,
+        edited_bracket,
         sim_data.team_labels,
         sim_data.prob_matrix,
     )

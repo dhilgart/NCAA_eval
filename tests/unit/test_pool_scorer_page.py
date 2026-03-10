@@ -197,6 +197,8 @@ class TestSuccessfulRender:
                 "export_bracket_csv",
                 return_value="game_number,round\n1,R64\n",
             ),
+            patch.object(_page_mod, "get_overrides", return_value={}),
+            patch.object(_page_mod, "apply_overrides", return_value=sim_data.most_likely),
         ):
             mock_get_scoring.return_value = MagicMock(return_value=mock_scoring_rule)
             _page_mod._render_pool_scorer_page()
@@ -261,6 +263,8 @@ class TestCustomScoringPath:
                 "export_bracket_csv",
                 return_value="game_number,round\n1,R64\n",
             ),
+            patch.object(_page_mod, "get_overrides", return_value={}),
+            patch.object(_page_mod, "apply_overrides", return_value=sim_data.most_likely),
         ):
             _page_mod._render_pool_scorer_page()
 
@@ -372,3 +376,141 @@ class TestNoSimWinners:
         mock_st.error.assert_called()
         error_msgs = [call[0][0] for call in mock_st.error.call_args_list]
         assert any("sim_winners" in msg.lower() for msg in error_msgs)
+
+
+class TestOverrideIntegration:
+    """Pool Scorer applies bracket overrides from session state (Story 9.8)."""
+
+    def test_override_info_displayed_when_overrides_exist(self) -> None:
+        sim_data = _make_sim_data()
+        dist = _make_distribution()
+        mock_dist_fig = MagicMock()
+        mock_scoring_rule = MagicMock()
+        mock_scoring_rule.name = "standard"
+
+        # Edited bracket with game 0 overridden: team 1 wins instead of team 0
+        edited_ml = _FakeMostLikely(winners=(1, 2, 2), champion_team_id=300, log_likelihood=-2.0)
+
+        mock_st = MagicMock()
+        mock_st.session_state = {
+            "selected_run_id": "abc123",
+            "selected_year": 2023,
+            "selected_scoring": "standard",
+            "pool_sim_data": sim_data,
+            "pool_sim_key": ("abc123", 2023, 10_000),
+            "pool_use_custom": False,
+        }
+        mock_st.columns.side_effect = lambda n: [
+            MagicMock() for _ in range(n if isinstance(n, int) else len(n))
+        ]
+        mock_st.checkbox.return_value = False
+        mock_st.slider.return_value = 10_000
+        mock_st.button.return_value = False
+
+        with (
+            patch.object(_page_mod, "st", mock_st),
+            patch.object(_page_mod, "get_data_dir", return_value="/fake/data"),
+            patch.object(_page_mod, "load_tourney_seeds", return_value=[{"seed": "W01"}]),
+            patch.object(_page_mod, "score_chosen_bracket", return_value={"standard": dist}),
+            patch.object(_page_mod, "get_scoring") as mock_get_scoring,
+            patch.object(_page_mod, "plot_score_distribution", return_value=mock_dist_fig),
+            patch.object(_page_mod, "export_bracket_csv", return_value="game_number,round\n1,R64\n"),
+            patch.object(_page_mod, "get_overrides", return_value={0: 1}),
+            patch.object(_page_mod, "apply_overrides", return_value=edited_ml),
+        ):
+            mock_get_scoring.return_value = MagicMock(return_value=mock_scoring_rule)
+            _page_mod._render_pool_scorer_page()
+
+        # Override count info should be displayed
+        info_msgs = [call[0][0] for call in mock_st.info.call_args_list]
+        assert any("1 of 3 picks overridden" in msg for msg in info_msgs)
+
+    def test_chosen_winners_passed_to_score_chosen_bracket(self) -> None:
+        sim_data = _make_sim_data()
+        dist = _make_distribution()
+        mock_dist_fig = MagicMock()
+        mock_scoring_rule = MagicMock()
+        mock_scoring_rule.name = "standard"
+
+        edited_ml = _FakeMostLikely(winners=(1, 2, 2), champion_team_id=300, log_likelihood=-2.0)
+
+        mock_st = MagicMock()
+        mock_st.session_state = {
+            "selected_run_id": "abc123",
+            "selected_year": 2023,
+            "selected_scoring": "standard",
+            "pool_sim_data": sim_data,
+            "pool_sim_key": ("abc123", 2023, 10_000),
+            "pool_use_custom": False,
+        }
+        mock_st.columns.side_effect = lambda n: [
+            MagicMock() for _ in range(n if isinstance(n, int) else len(n))
+        ]
+        mock_st.checkbox.return_value = False
+        mock_st.slider.return_value = 10_000
+        mock_st.button.return_value = False
+
+        with (
+            patch.object(_page_mod, "st", mock_st),
+            patch.object(_page_mod, "get_data_dir", return_value="/fake/data"),
+            patch.object(_page_mod, "load_tourney_seeds", return_value=[{"seed": "W01"}]),
+            patch.object(_page_mod, "score_chosen_bracket", return_value={"standard": dist}) as mock_score,
+            patch.object(_page_mod, "get_scoring") as mock_get_scoring,
+            patch.object(_page_mod, "plot_score_distribution", return_value=mock_dist_fig),
+            patch.object(_page_mod, "export_bracket_csv", return_value="game_number,round\n1,R64\n"),
+            patch.object(_page_mod, "get_overrides", return_value={0: 1}),
+            patch.object(_page_mod, "apply_overrides", return_value=edited_ml),
+        ):
+            mock_get_scoring.return_value = MagicMock(return_value=mock_scoring_rule)
+            _page_mod._render_pool_scorer_page()
+
+        # score_chosen_bracket should receive chosen_winners from edited bracket
+        mock_score.assert_called_once()
+        call_kwargs = mock_score.call_args[1]
+        assert call_kwargs["chosen_winners"] == (1, 2, 2)
+
+    def test_export_uses_edited_bracket(self) -> None:
+        sim_data = _make_sim_data()
+        dist = _make_distribution()
+        mock_dist_fig = MagicMock()
+        mock_scoring_rule = MagicMock()
+        mock_scoring_rule.name = "standard"
+
+        edited_ml = _FakeMostLikely(winners=(1, 2, 2), champion_team_id=300, log_likelihood=-2.0)
+
+        mock_st = MagicMock()
+        mock_st.session_state = {
+            "selected_run_id": "abc123",
+            "selected_year": 2023,
+            "selected_scoring": "standard",
+            "pool_sim_data": sim_data,
+            "pool_sim_key": ("abc123", 2023, 10_000),
+            "pool_use_custom": False,
+        }
+        mock_st.columns.side_effect = lambda n: [
+            MagicMock() for _ in range(n if isinstance(n, int) else len(n))
+        ]
+        mock_st.checkbox.return_value = False
+        mock_st.slider.return_value = 10_000
+        mock_st.button.return_value = False
+
+        with (
+            patch.object(_page_mod, "st", mock_st),
+            patch.object(_page_mod, "get_data_dir", return_value="/fake/data"),
+            patch.object(_page_mod, "load_tourney_seeds", return_value=[{"seed": "W01"}]),
+            patch.object(_page_mod, "score_chosen_bracket", return_value={"standard": dist}),
+            patch.object(_page_mod, "get_scoring") as mock_get_scoring,
+            patch.object(_page_mod, "plot_score_distribution", return_value=mock_dist_fig),
+            patch.object(
+                _page_mod, "export_bracket_csv", return_value="game_number,round\n1,R64\n"
+            ) as mock_export,
+            patch.object(_page_mod, "get_overrides", return_value={0: 1}),
+            patch.object(_page_mod, "apply_overrides", return_value=edited_ml),
+        ):
+            mock_get_scoring.return_value = MagicMock(return_value=mock_scoring_rule)
+            _page_mod._render_pool_scorer_page()
+
+        # export_bracket_csv should receive the edited bracket, not sim_data.most_likely
+        mock_export.assert_called_once()
+        export_args = mock_export.call_args[0]
+        assert export_args[1] == edited_ml
