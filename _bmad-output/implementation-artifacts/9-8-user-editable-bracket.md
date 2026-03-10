@@ -58,17 +58,17 @@ So that **I can score my own picks against historical results and evaluate the m
   - [x] 2.2: Visually distinguish overridden matchups (e.g., golden/yellow border, "USER" badge, or different background color) so the user can see which picks are their own vs. the model's.
   - [x] 2.3: Show the model's original pick alongside the user's override (e.g., strikethrough on the model's pick or a small "Model: [team]" label).
 
-- [ ] Task 3: Integrate overrides into Bracket Visualizer page (AC: #1, #3, #4)
-  - [ ] 3.1: Modify `dashboard/pages/2_Presentation.py` — `_render_bracket_page()`:
+- [x] Task 3: Integrate overrides into Bracket Visualizer page (AC: #1, #3, #4)
+  - [x] 3.1: Modify `dashboard/pages/2_Presentation.py` — `_render_bracket_page()`:
     - After `run_bracket_simulation()` returns, check for override invalidation (compare current params against stored invalidation key)
     - If invalidated, clear overrides and show `st.info("Bracket parameters changed — user overrides have been reset.")`
     - Get current overrides via `get_overrides()`
     - Apply overrides to produce a user-edited `MostLikelyBracket` via `apply_overrides()`
     - Pass the user-edited bracket to `_render_results()` instead of the model's `most_likely`
-  - [ ] 3.2: Add "Reset to Model Predictions" button (AC: #3):
+  - [x] 3.2: Add "Reset to Model Predictions" button (AC: #3):
     - Only show when overrides exist (non-empty dict)
     - On click: `clear_overrides()` + `st.rerun()`
-  - [ ] 3.3: Update `_render_results()` to accept and display override status:
+  - [x] 3.3: Update `_render_results()` to accept and display override status:
     - Show count of user overrides (e.g., "3 of 63 picks overridden")
     - Pass overrides to bracket renderer for visual distinction
 
@@ -338,14 +338,18 @@ Claude Opus 4.6
 
 - Task 1: Created `dashboard/lib/bracket_overrides.py` with `get_overrides()`, `set_override()`, `clear_overrides()`, `check_invalidation()`, and `apply_overrides()`. Cascade logic processes games in round-major order, re-resolving downstream games when upstream overrides change participants. Stale overrides (where the overridden winner is no longer a valid participant) fall back to model predictions. Log-likelihood is recomputed for the final bracket.
 - Task 2: Modified `bracket_renderer.py` to accept `overridden_games` frozenset. Overridden cells display golden border (`2px solid #d4a017`) and "USER" badge. Override flag propagated through region/round rendering pipeline.
+- Task 3: Integrated overrides into Bracket Visualizer page. Added `_render_edit_picks()` with per-game selectboxes organized by round. `_render_results()` now displays override count, passes override info to bracket renderer. Reset button shown when overrides exist. Override invalidation on param change shows info message.
 
 ### Change Log
 
 - 2026-03-10: Task 1 — Created bracket override state management module with cascade logic and invalidation
 - 2026-03-10: Task 2 — Added override visual distinction to bracket HTML renderer
+- 2026-03-10: Task 3 — Integrated bracket overrides into Presentation page with interactive edit picks
 
 ### File List
 
 - `dashboard/lib/bracket_overrides.py` (NEW)
 - `dashboard/lib/bracket_renderer.py` (MODIFIED)
+- `dashboard/pages/2_Presentation.py` (MODIFIED)
 - `tests/unit/test_bracket_overrides.py` (NEW)
+- `tests/unit/test_bracket_page.py` (MODIFIED)
