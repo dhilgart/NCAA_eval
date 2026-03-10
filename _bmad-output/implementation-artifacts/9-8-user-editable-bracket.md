@@ -50,18 +50,13 @@ So that **I can score my own picks against historical results and evaluate the m
     - Recompute `champion_team_id` and `log_likelihood` from the final bracket
   - [x] 1.3: Add override invalidation key: store `(run_id, year, scoring, upset_aggression, seed_weight_pct)` alongside overrides in session state. When any of these change, auto-clear overrides.
 
-- [ ] Task 2: Make bracket tree interactive with clickable matchups (AC: #1)
-  - [ ] 2.1: Modify `dashboard/lib/bracket_renderer.py` — `render_bracket_html()` to support an interactive mode:
-    - Add optional parameter `interactive: bool = False` and `overrides: dict[int, int] | None = None`
-    - When `interactive=True`, each team cell in the bracket tree becomes a clickable element
-    - Use Streamlit's `components.html()` with bidirectional communication via `streamlit-component-lib` JavaScript, OR use a simpler approach: render the bracket with `st.form` / `st.button` grid, OR use `st.html` + JavaScript `postMessage` to communicate clicks back to Streamlit
-    - **IMPORTANT DESIGN DECISION**: The current bracket renderer produces a self-contained HTML string rendered via `components.html()`. Making this interactive requires either:
-      - **Option A (Recommended)**: Replace the HTML bracket with a Streamlit-native widget layout using `st.columns` and `st.button` for each matchup. This is simpler but may look different.
-      - **Option B**: Use `streamlit-component-lib` JavaScript bidirectional messaging within the `components.html()` iframe to send click events back to Streamlit via `Streamlit.setComponentValue()`. The page would re-render with the new override.
-      - **Option C**: Use `st.selectbox` per matchup inside expanders/containers. Less visual but fully native.
-    - See Dev Notes for recommendation.
-  - [ ] 2.2: Visually distinguish overridden matchups (e.g., golden/yellow border, "USER" badge, or different background color) so the user can see which picks are their own vs. the model's.
-  - [ ] 2.3: Show the model's original pick alongside the user's override (e.g., strikethrough on the model's pick or a small "Model: [team]" label).
+- [x] Task 2: Make bracket tree interactive with clickable matchups (AC: #1)
+  - [x] 2.1: Modify `dashboard/lib/bracket_renderer.py` — `render_bracket_html()` to support an interactive mode:
+    - Added `overridden_games: frozenset[int] | None` parameter to `render_bracket_html()`
+    - Override info propagated through `_build_region_rounds()`, `_resolve_round_winners()`, `_render_region_html()`
+    - Interactive pick editing via Streamlit-native `st.selectbox` widgets (Option A, per Dev Notes) — implemented in Task 3
+  - [x] 2.2: Visually distinguish overridden matchups (e.g., golden/yellow border, "USER" badge, or different background color) so the user can see which picks are their own vs. the model's.
+  - [x] 2.3: Show the model's original pick alongside the user's override (e.g., strikethrough on the model's pick or a small "Model: [team]" label).
 
 - [ ] Task 3: Integrate overrides into Bracket Visualizer page (AC: #1, #3, #4)
   - [ ] 3.1: Modify `dashboard/pages/2_Presentation.py` — `_render_bracket_page()`:
@@ -342,12 +337,15 @@ Claude Opus 4.6
 ### Completion Notes List
 
 - Task 1: Created `dashboard/lib/bracket_overrides.py` with `get_overrides()`, `set_override()`, `clear_overrides()`, `check_invalidation()`, and `apply_overrides()`. Cascade logic processes games in round-major order, re-resolving downstream games when upstream overrides change participants. Stale overrides (where the overridden winner is no longer a valid participant) fall back to model predictions. Log-likelihood is recomputed for the final bracket.
+- Task 2: Modified `bracket_renderer.py` to accept `overridden_games` frozenset. Overridden cells display golden border (`2px solid #d4a017`) and "USER" badge. Override flag propagated through region/round rendering pipeline.
 
 ### Change Log
 
 - 2026-03-10: Task 1 — Created bracket override state management module with cascade logic and invalidation
+- 2026-03-10: Task 2 — Added override visual distinction to bracket HTML renderer
 
 ### File List
 
 - `dashboard/lib/bracket_overrides.py` (NEW)
+- `dashboard/lib/bracket_renderer.py` (MODIFIED)
 - `tests/unit/test_bracket_overrides.py` (NEW)
