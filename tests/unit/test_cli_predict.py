@@ -4,15 +4,18 @@ from __future__ import annotations
 
 import csv
 import io
+import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pandas as pd  # type: ignore[import-untyped]
+import pytest
 from typer.testing import CliRunner
 
 from ncaa_eval.cli.main import app
 from ncaa_eval.ingest.schema import Game
 from ncaa_eval.model.base import StatefulModel
+from ncaa_eval.model.logistic_regression import LogisticRegressionModel
 
 runner = CliRunner()
 
@@ -166,9 +169,9 @@ class TestCLIPredict:
         tmp_path: Path,
     ) -> None:
         """CLI predict with stateless model writes valid CSV with game-level rows."""
-        # Stateless model mock (not a StatefulModel)
-        mock_model = MagicMock()
-        mock_model.__class__ = type("FakeStatelessModel", (), {})
+        # Stateless model mock — use LogisticRegressionModel spec so that
+        # isinstance(mock, StatefulModel) is False without __class__ hacks.
+        mock_model = MagicMock(spec=LogisticRegressionModel)
         mock_model.feature_config = MagicMock()
         mock_model.predict_proba.return_value = pd.Series([0.65, 0.42, 0.58])
 
@@ -270,3 +273,43 @@ class TestCLIPredict:
         )
         assert result.exit_code != 0
         assert "Error" in result.output
+
+    @patch("ncaa_eval.cli.predict.ParquetRepository")
+    @patch("ncaa_eval.cli.predict.RunStore")
+    def test_stdout_contains_only_csv_when_no_output_arg(
+        self,
+        mock_store_cls: MagicMock,
+        mock_repo_cls: MagicMock,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """sys.stdout must be pure CSV — no status messages — when --output is omitted.
+
+        Verifies pipe-safety: calls run_predict() directly (bypassing CliRunner's
+        stream-merging) and asserts every line written to sys.stdout is CSV.
+        """
+        from ncaa_eval.cli.predict import run_predict
+
+        mock_store = mock_store_cls.return_value
+        mock_store.load_model.return_value = _make_mock_stateful_model()
+        mock_repo = mock_repo_cls.return_value
+        mock_repo.get_games.return_value = _make_games(2025)
+
+        captured_stdout = io.StringIO()
+        monkeypatch.setattr(sys, "stdout", captured_stdout)
+
+        run_predict(
+            run_id="test-run-001",
+            season=2025,
+            data_dir=tmp_path,
+            output=None,
+        )
+
+        csv_output = captured_stdout.getvalue()
+        lines = [ln for ln in csv_output.splitlines() if ln.strip()]
+        assert lines[0] == "season,team_a_id,team_b_id,pred_win_prob", (
+            f"First line of stdout is not CSV header: {lines[0]!r}"
+        )
+        for line in lines[1:]:
+            parts = line.split(",")
+            assert len(parts) == 4, f"Non-CSV line found in stdout: {line!r}"

@@ -194,9 +194,12 @@ Claude Opus 4.6
 ### Change Log
 
 - 2026-03-10: Implemented CLI `predict` command (Story 9.9)
-- 2026-03-10: Code review fixes applied (5 issues — 3 High, 2 Medium)
+- 2026-03-10: Code review fixes applied (5 issues — 3 High, 2 Medium) — Round 1
+- 2026-03-10: Code review fixes applied (5 issues — 1 High, 2 Medium, 1 Low + 1 test added) — Round 2
 
 ### Code Review Fixes Applied
+
+**Round 1 (Dev agent):**
 
 **H1 — Pipe-safety bug:** `run_predict()` status message contaminated stdout in pipe mode. Fixed by `Console(stderr=output is None)` so progress messages route to stderr when writing CSV to stdout.
 
@@ -208,11 +211,23 @@ Claude Opus 4.6
 
 **M2 — Weak test assertions:** `test_stateful_predict_writes_csv_to_stdout` used substring checks. Upgraded to proper CSV parsing with row count and column ordering assertions (compatible with CliRunner's stream-mixing behavior).
 
+**Round 2 (Code review agent — 2026-03-10):**
+
+**H1 (Second reviewer) — Pipe-safety regression in CLI path:** The Round 1 fix in `predict.py` was negated by `main.py` passing the module-level `console = Console()` (stdout) to `run_predict()`. Since the `console or Console(stderr=output is None)` short-circuits on non-None console, the stderr redirect never activated. Fixed by constructing `Console(stderr=True)` in `main.py`'s `predict` command when `output is None`.
+
+**M1 (Second reviewer) — AttributeError uncaught:** `model.feature_config` (stateless path) raises `AttributeError` if a plugin subclass forgets to set it. Added `AttributeError` to the `except` tuple in `main.py`'s predict command.
+
+**M2 (Second reviewer) — Fragile mock pattern:** `test_stateless_predict_writes_csv` used `mock_model.__class__ = type("FakeStatelessModel", (), {})` to make `isinstance(mock, StatefulModel)` return False. Replaced with `MagicMock(spec=LogisticRegressionModel)`.
+
+**M3 (Second reviewer) — Missing pipe-safety test:** Added `test_stdout_contains_only_csv_when_no_output_arg` that calls `run_predict()` directly (bypassing CliRunner stream merging) to verify `sys.stdout` contains only CSV lines.
+
+**L2 (Second reviewer) — Docstring gap:** Added `TypeError` and `AttributeError` to `run_predict()` docstring `Raises` section.
+
 ### File List
 
 - `src/ncaa_eval/cli/predict.py` — **NEW** — prediction orchestration module
-- `src/ncaa_eval/cli/main.py` — **MODIFIED** — added `predict` Typer command
-- `tests/unit/test_cli_predict.py` — **NEW** — 5 unit tests for predict CLI
+- `src/ncaa_eval/cli/main.py` — **MODIFIED** — added `predict` Typer command + code review fixes (H1, M1)
+- `tests/unit/test_cli_predict.py` — **NEW** — 6 unit tests for predict CLI (+ 1 added by code review)
 - `docs/user-guide.md` — **MODIFIED** — added predict command to CLI reference
 - `_bmad-output/planning-artifacts/template-requirements.md` — **MODIFIED** — added pipe-safety and dead-code-from-branching learnings
 - `_bmad-output/implementation-artifacts/9-9-cli-predict-command.md` — **MODIFIED** — story status/tasks

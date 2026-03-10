@@ -184,6 +184,9 @@ def run_predict(
 
     Raises:
         FileNotFoundError: If the run or model cannot be loaded.
+        TypeError: If the model lacks a ``feature_config`` attribute
+            (e.g. a malformed plugin).
+        AttributeError: If the model subclass did not set ``feature_config``.
     """
     # When writing CSV to stdout, route status messages to stderr so the
     # output stream stays pipe-safe (no non-CSV lines mixed in).

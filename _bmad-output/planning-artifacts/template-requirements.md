@@ -3899,3 +3899,38 @@ def _build_stateless_predictions(*, model: Model, ...) -> ...:
 ```
 
 **Rule:** Before adding a runtime check inside a helper, ask: "Is this condition already guaranteed by every caller?" If yes, use the literal value — the check adds confusion, not safety.
+
+### Pipe-Safe CLI: Caller Must Also Pass Stderr-Routed Console (Discovered Story 9.9 Code Review Round 2, 2026-03-10)
+
+A run-function's `console or Console(stderr=output is None)` fallback is only activated when `console=None`. If the Typer command passes a module-level `Console()` (stdout), the fallback never activates and pipe-safety breaks silently.
+
+```python
+# ❌ Wrong: main.py passes module-level stdout console; run_predict's fallback never fires
+console = Console()  # module-level — stdout
+
+@app.command()
+def predict(..., output: Path | None) -> None:
+    run_predict(..., output=output, console=console)  # always non-None → fallback bypassed
+
+def run_predict(*, output: Path | None, console: Console | None = None) -> str:
+    con = console or Console(stderr=output is None)  # 'console' is never None → dead branch
+    con.print("status...")  # goes to stdout, breaking pipes
+
+# ✅ Correct: caller constructs the right console based on output routing
+@app.command()
+def predict(..., output: Path | None) -> None:
+    predict_console = Console(stderr=True) if output is None else console
+    run_predict(..., output=output, console=predict_console)
+```
+
+**Rule:** Never pass a fixed module-level `Console()` to a run-function that needs conditional stderr routing. Either pass `None` (let the run-function decide), or pass the correctly-configured console from the caller.
+
+**Test gap:** `CliRunner.invoke()` merges stdout + stderr into `result.output` — a test asserting CSV lines are clean will pass even if status messages are contaminating stdout. **Always add a direct call test** (bypassing CliRunner) that monkeypatches `sys.stdout` and asserts every line is valid CSV:
+
+```python
+captured = io.StringIO()
+monkeypatch.setattr(sys, "stdout", captured)
+run_predict(..., output=None)
+lines = captured.getvalue().splitlines()
+assert all(len(line.split(",")) == 4 for line in lines if line.strip())
+```

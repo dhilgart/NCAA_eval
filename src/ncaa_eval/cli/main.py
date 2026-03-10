@@ -104,7 +104,7 @@ def export(
             output=output,
             console=console,
         )
-    except (FileNotFoundError, TypeError) as exc:
+    except (FileNotFoundError, TypeError, AttributeError) as exc:
         console.print(f"[red]Error: {exc}[/red]")
         raise typer.Exit(code=1)
 
@@ -123,13 +123,18 @@ def predict(
     """
     from ncaa_eval.cli.predict import run_predict
 
+    # When writing CSV to stdout, route status messages to stderr so the
+    # output stream stays pipe-safe. Pass a stderr-routed console explicitly
+    # rather than relying on run_predict's fallback (which is bypassed when a
+    # console is provided).
+    predict_console = Console(stderr=True) if output is None else console
     try:
         run_predict(
             run_id=run_id,
             season=season,
             data_dir=data_dir,
             output=output,
-            console=console,
+            console=predict_console,
         )
     except (FileNotFoundError, TypeError) as exc:
         console.print(f"[red]Error: {exc}[/red]")
