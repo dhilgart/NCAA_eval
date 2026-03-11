@@ -197,6 +197,7 @@ claude-opus-4-6
 | Date | Change | Author |
 |------|--------|--------|
 | 2026-03-11 | Code review: Fixed 8 issues (1 missing decision, 2 incorrect resolved labels, 4 missing stories, 1 summary count update, 1 recommendation revert, Post-MVP Backlog cleanup) | Code Review Agent |
+| 2026-03-11 | Code review #2: Fixed 3 issues — stale Follow-up Actions Summary (H1), incorrect Cat-1 decision counts (M1), item 2.4 Follow-up field contradiction (M2) | Code Review Agent |
 
 ### File List
 
