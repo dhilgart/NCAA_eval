@@ -9,10 +9,25 @@ from __future__ import annotations
 import pandas as pd  # type: ignore[import-untyped]
 import streamlit as st
 
-from dashboard.lib.data_loaders import get_data_dir, load_available_runs, load_leaderboard_data
+from dashboard.lib.data_loaders import (
+    get_data_dir,
+    get_metric_cols as _get_metric_cols,
+    load_available_runs,
+    load_leaderboard_data,
+)
 
-_METRIC_COLS = ["log_loss", "brier_score", "roc_auc", "ece"]
-_DISPLAY_COLS = ["run_id", "model_type", "year", "log_loss", "brier_score", "roc_auc", "ece"]
+
+def _style_metric_table(df: pd.DataFrame, metric_cols: list[str]) -> pd.io.formats.style.Styler:
+    """Apply background gradient and formatting to a metric DataFrame."""
+    # roc_auc is "higher is better"; all others are "lower is better"
+    lower_better = [m for m in metric_cols if m != "roc_auc"]
+    higher_better = [m for m in metric_cols if m == "roc_auc"]
+    styled = df.style
+    if lower_better:
+        styled = styled.background_gradient(cmap="RdYlGn_r", subset=lower_better)
+    if higher_better:
+        styled = styled.background_gradient(cmap="RdYlGn", subset=higher_better)
+    return styled.format({m: "{:.4f}" for m in metric_cols})
 
 
 def _render_leaderboard() -> None:
@@ -47,20 +62,25 @@ def _render_leaderboard() -> None:
     # -- Apply year filter -----------------------------------------------------
     selected_year = st.session_state.setdefault("selected_year", None)
 
+    metric_cols = _get_metric_cols(df)
+    display_cols = ["run_id", "model_type", "year"] + metric_cols
+
     if selected_year is not None:
         year_df = df[df["year"] == selected_year]
         if year_df.empty:
             st.info(f"No backtest results for {selected_year}")
             return
-        display_df = year_df[_DISPLAY_COLS].copy()
+        display_df = year_df[display_cols].copy()
     else:
-        display_df = df.groupby(["run_id", "model_type"], as_index=False)[_METRIC_COLS].mean()
+        display_df = df.groupby(["run_id", "model_type"], as_index=False)[metric_cols].mean()
 
     # -- Diagnostic KPI cards (st.metric) --------------------------------------
     def _fmt(v: float) -> str:
         return f"{v:.4f}" if v == v else "N/A"  # NaN check: NaN != NaN
 
-    if len(display_df) >= 1:
+    _BUILTIN_KPI_COLS = ("log_loss", "brier_score", "roc_auc", "ece")
+    _builtins_present = all(m in display_df.columns for m in _BUILTIN_KPI_COLS)
+    if len(display_df) >= 1 and _builtins_present:
         best_ll = display_df["log_loss"].min()
         best_bs = display_df["brier_score"].min()
         best_auc = display_df["roc_auc"].max()
@@ -99,26 +119,11 @@ def _render_leaderboard() -> None:
         )
 
     # -- Styled leaderboard table ----------------------------------------------
-    display_df = display_df.sort_values("log_loss", ascending=True).reset_index(drop=True)
+    sort_col = "log_loss" if "log_loss" in metric_cols else (metric_cols[0] if metric_cols else "")
+    if sort_col and sort_col in display_df.columns:
+        display_df = display_df.sort_values(sort_col, ascending=True).reset_index(drop=True)
 
-    styled = (
-        display_df.style.background_gradient(
-            cmap="RdYlGn_r",
-            subset=["log_loss", "brier_score", "ece"],
-        )
-        .background_gradient(
-            cmap="RdYlGn",
-            subset=["roc_auc"],
-        )
-        .format(
-            {
-                "log_loss": "{:.4f}",
-                "brier_score": "{:.4f}",
-                "roc_auc": "{:.4f}",
-                "ece": "{:.4f}",
-            }
-        )
-    )
+    styled = _style_metric_table(display_df, metric_cols)
 
     event = st.dataframe(
         styled,

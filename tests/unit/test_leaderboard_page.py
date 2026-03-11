@@ -8,8 +8,11 @@ from unittest.mock import MagicMock, patch
 import pandas as pd  # type: ignore[import-untyped]
 
 _lab_mod = importlib.import_module("dashboard.pages.1_Lab")
-_METRIC_COLS: list[str] = _lab_mod._METRIC_COLS
-_DISPLAY_COLS: list[str] = _lab_mod._DISPLAY_COLS
+
+# Metric columns are now dynamic (from the metric registry); derive expected
+# values for tests using the same helper the dashboard uses.
+_METRIC_COLS: list[str] = ["brier_score", "ece", "log_loss", "roc_auc"]
+_DISPLAY_COLS: list[str] = ["run_id", "model_type", "year"] + _METRIC_COLS
 
 
 def _sample_data() -> list[dict[str, object]]:

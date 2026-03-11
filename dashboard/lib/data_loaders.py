@@ -15,7 +15,7 @@ from typing import cast
 import pandas as pd  # type: ignore[import-untyped]
 import streamlit as st
 
-from ncaa_eval.evaluation import list_scoring_display_names, list_scorings
+from ncaa_eval.evaluation import list_metrics, list_scoring_display_names, list_scorings
 from ncaa_eval.ingest.repository import ParquetRepository
 from ncaa_eval.model.tracking import RunStore
 from ncaa_eval.transform.normalization import TourneySeedTable
@@ -26,6 +26,15 @@ logger = logging.getLogger(__name__)
 def get_data_dir() -> Path:
     """Resolve the project ``data/`` directory."""
     return Path(__file__).resolve().parent.parent.parent / "data"
+
+
+def get_metric_cols(df: pd.DataFrame) -> list[str]:
+    """Return metric column names that exist in both the registry and the DataFrame.
+
+    Filters ``list_metrics()`` to only those column names present in *df*,
+    so custom metrics (absent from old backtest runs) are not requested.
+    """
+    return [m for m in list_metrics() if m in df.columns]
 
 
 @st.cache_data(ttl=300)

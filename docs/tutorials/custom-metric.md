@@ -155,16 +155,70 @@ Expected output:
 ```
 
 ````{tip}
-To use the default metrics *plus* your custom ones, merge with `DEFAULT_METRICS`:
-
-```python
-from ncaa_eval.evaluation.backtest import DEFAULT_METRICS
-
-my_metrics = {**DEFAULT_METRICS, "mae": mean_absolute_error}
-```
+The `metric_fns=` dict approach is useful for ad-hoc metrics that should not be
+globally registered. For metrics you want available everywhere (backtests,
+dashboard, leaderboard), use the registry approach in Step 3 below.
 ````
 
-### Step 3: Verify Your Metric
+### Step 3: Register for Global Use (Recommended)
+
+Use the `@register_metric` decorator to make your metric available
+automatically in all backtests and the dashboard — no need to pass
+`metric_fns=` every time:
+
+```python
+import numpy as np
+import numpy.typing as npt
+
+from ncaa_eval.evaluation import register_metric
+
+
+@register_metric("my_mae")
+def mean_absolute_error(
+    y_true: npt.NDArray[np.float64],
+    y_prob: npt.NDArray[np.float64],
+) -> float:
+    """Mean Absolute Error between predictions and outcomes."""
+    return float(np.mean(np.abs(y_prob - y_true)))
+```
+
+Once registered, the metric is automatically included when you run a backtest
+with the default metrics (i.e., without passing `metric_fns=`):
+
+```python
+from ncaa_eval.evaluation.backtest import run_backtest
+
+# No metric_fns= needed — all registered metrics (built-in + custom) are used
+result = run_backtest(
+    model=model,
+    feature_server=server,
+    seasons=list(range(2015, 2026)),
+    mode="stateful",
+)
+
+# my_mae appears alongside the built-in metrics
+print(result.summary.columns.tolist())
+# ['brier_score', 'ece', 'log_loss', 'my_mae', 'roc_auc', 'elapsed_seconds']
+```
+
+Verify the registry contents with `list_metrics()`:
+
+```python
+from ncaa_eval.evaluation import list_metrics
+
+print(list_metrics())
+# ['brier_score', 'ece', 'log_loss', 'my_mae', 'roc_auc']
+```
+
+```{note}
+**Custom metrics vs. custom scoring rules** are different extension mechanisms.
+Metrics evaluate model prediction quality (input: predicted probabilities →
+output: a score like log loss). Scoring rules define how bracket points are
+awarded per tournament round (used in simulation). See Part 2 below for
+custom scoring rules.
+```
+
+### Step 4: Verify Your Metric
 
 Test your metric with known inputs to make sure it behaves correctly:
 
@@ -329,7 +383,8 @@ print(list_scorings())
 
 | Extension Point | Contract | Where to Use |
 |----------------|----------|--------------|
-| Custom metric | `(y_true, y_prob) -> float` | `run_backtest(metric_fns=...)` |
+| Custom metric (registered) | `@register_metric("name")` on `(y_true, y_prob) -> float` | Automatic in all backtests and dashboard |
+| Custom metric (ad-hoc) | `(y_true, y_prob) -> float` | `run_backtest(metric_fns=...)` |
 | Custom scoring rule | `ScoringRule` protocol (`.name`, `.points_per_round()`) | `simulate_tournament(scoring_rules=...)` |
 | Dict-based scoring | `DictScoring(points={0: ..., 5: ...})` | Quick custom point schedules |
 
