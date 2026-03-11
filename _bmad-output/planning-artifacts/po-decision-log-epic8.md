@@ -10,8 +10,8 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 - `codebase-audit-pass3-addendum.md` (Pass 3)
 
 **Decision Counts:**
-- Category 1: 9 Defer, 4 Accept-as-is, 3 Implement
-- Category 2: 12 Accept-as-is, 8 Defer, 2 Already Resolved, 2 Fix
+- Category 1: 5 Implement, 6 Defer, 3 Accept-as-is, 2 Custom (16 total)
+- Category 2: 12 Accept-as-is, 3 Defer, 4 Already Resolved, 3 Implement, 2 Implement-with-scope-change (24 total including 2.11 duplicate and 2.19 reclassified)
 
 ---
 
@@ -451,7 +451,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** B — Accept as-is. The "no ingest imports" invariant applies to pure transform modules (normalization, sequential, graph); `serving.py` is architecturally the bridge/adapter between the Repository and transform pipeline, so the coupling is by design. The rule was not written for this module.
 
 ---
 
@@ -475,7 +475,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** B — Accept as-is. Pydantic validation on ingestion is the right place to catch data integrity issues; the performance cost is negligible.
 
 ---
 
@@ -497,9 +497,9 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Rationale:** The `iterrows()` calls in KaggleConnector are not a performance bottleneck — they run during the initial data import, which is a one-time operation per sync. Replacing with vectorized operations is a code quality improvement but not urgent.
 
-**Follow-up:** Remains in Post-MVP Backlog (via 2.17)
+**Follow-up:** Story 9.15 — Document Iterrows Convention Exception for Ingest Layer
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** C — Add explicit exception to the convention. The ingest layer's one-time-per-sync nature makes iterrows acceptable here; document this carve-out so future audits don't re-flag it.
 
 ---
 
@@ -522,7 +522,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** B — Accept as-is. Only 2 concrete implementations; the pattern is common enough and the scale doesn't justify the added complexity of protocols/mixins.
 
 ---
 
@@ -546,7 +546,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** B — Accept as-is. Import convenience wins for an interactive tool; startup time is not a bottleneck users have complained about.
 
 ---
 
@@ -570,7 +570,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** B — Accept as-is. Different purposes (serialization vs. runtime immutability) justify the duplication; consolidating would sacrifice immutability guarantees.
 
 ---
 
@@ -593,7 +593,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** B — Accept as-is. Standard plugin registry pattern; existing test fixtures handle isolation adequately.
 
 ---
 
@@ -616,7 +616,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** B — Accept as-is. Well-established pattern for circular dependency resolution; restructuring would be a significant refactor for no user-visible benefit.
 
 ---
 
@@ -639,7 +639,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** B — Accept as-is. Python caches module imports after first call; overhead is negligible (~0.1ms). The deferred import pattern avoids loading sklearn for non-metric use cases, which is a reasonable trade-off.
 
 ---
 
@@ -679,7 +679,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** Add to Post-MVP Backlog
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** B — Defer to post-MVP. Directory structure has been stable since Epic 7; low risk, low priority.
 
 ---
 
@@ -702,7 +702,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** B — Accept as-is. Standard Streamlit convention; these files are never imported outside of Streamlit's execution model.
 
 ---
 
@@ -726,7 +726,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** Add to Post-MVP Backlog
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** A — Rewrite to use official Streamlit API. Prefer not to rely on undocumented internals; investigate whether the official API now supports this interaction pattern and implement if possible.
 
 ---
 
@@ -749,7 +749,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** B — Accept as-is. Standalone functions are a deliberate, documented design decision chosen for composability; the Epic AC deviation is accepted.
 
 ---
 
@@ -772,7 +772,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A — remains in Post-MVP Backlog
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** A — Implement `st.progress`. Better UX; fulfills the AC. Requires passing a progress callback through the simulation engine.
 
 ---
 
@@ -796,7 +796,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** Add to Post-MVP Backlog
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** C — Implement Pandera schema validation only. Schema validation catches real data issues at the boundary; iterrows is already addressed by the 2.4 carve-out for the ingest layer.
 
 ---
 
@@ -820,7 +820,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** Story 9.4 created (Fix Public API Documentation) — PO to confirm scope in Story 9.6
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** Resolved — Story 9.4 fixed public API documentation and import paths. The Style Guide was updated to document actual import paths, avoiding triggering heavy module loading.
 
 ---
 
@@ -860,7 +860,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** Story 9.5 created (Post-Sync Data Validation) — PO to confirm scope in Story 9.6
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** Resolved — Story 9.5 implemented post-sync data validation with game count, duplicate, and referential integrity checks. Silent data corruption risk from the ESPN connector's history is now mitigated.
 
 ---
 
@@ -883,7 +883,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** Add to Post-MVP Backlog
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** A — Consolidate now into a shared conftest fixture. DRY principle; the helper is small enough that consolidation risk is low.
 
 ---
 
@@ -907,7 +907,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** Add to Post-MVP Backlog
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** C — Defer to post-MVP. Need a coverage baseline measurement before setting a threshold; arbitrary numbers risk blocking legitimate PRs.
 
 ---
 
@@ -931,7 +931,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** Add to Post-MVP Backlog
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** B — Defer to post-MVP. Streamlit's poor type stubs make mypy impractical; low-priority quality improvement.
 
 ---
 
@@ -955,34 +955,42 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** B — Accept as-is. Story 8.12 already added a historical-document banner; the code is the authoritative spec now.
 
 ---
 
 ## Follow-up Actions Summary
 
-### Items to Implement (New Stories in Epic 9)
+> Updated 2026-03-11 (Story 9.6) to reflect final PO decisions for all Category 2 items.
 
-1. **1.3 Kaggle Submission Export** — Low effort, high value. Export bracket to Kaggle MMLM submission format.
-2. **1.6 Feature Config from CLI** — Add `--feature-config` CLI option for training pipeline.
-3. **1.15 Feature Importance for All Models** — Expose Elo ratings and LR coefficients as feature importance.
-4. **2.18 Fix `__init__.py` Public API Documentation** — Update Style Guide to document actual import paths (not re-exports).
-5. **2.20 Post-Sync Data Validation** — Add validation checks after data sync.
+### Items Implemented (Stories in Epic 9)
 
-### Items to Add to Post-MVP Backlog
+1. **1.1 Game Theory Sliders** — Story 9.7 (PO overrode Defer → Implement)
+2. **1.2 User-Editable Bracket** — Story 9.8 (PO overrode Defer → Implement)
+3. **1.3 Kaggle Submission Export** — Story 9.1. Low effort, high value.
+4. **1.6 Feature Config as Model-Level Concern** — Story 9.2 (Custom: model-level kwargs instead of CLI flag)
+5. **1.11 CLI `predict` Command** — Story 9.9 (PO overrode Defer → Implement)
+6. **1.15 Feature Importance for All Models** — Story 9.3. Expose Elo ratings and LR coefficients.
+7. **2.4 Iterrows Convention Exception** — Story 9.15. Document ingest-layer carve-out.
+8. **2.14 Replace Undocumented Streamlit API** — Story 9.11. Rewrite to official API.
+9. **2.16 Implement st.progress for Simulation** — Story 9.12. Replace st.spinner with st.progress.
+10. **2.17 Pandera Schema Validation** — Story 9.14. Implement Pandera only (iterrows per 2.4 carve-out).
+11. **2.18 Fix Public API Documentation** — Story 9.4 (Already Resolved).
+12. **2.20 Post-Sync Data Validation** — Story 9.5 (Already Resolved).
+13. **2.21 Consolidate Test Helper** — Story 9.13. DRY `_make_season_df` into shared conftest.
+14. **P3-17 Custom Metric Plugin Registry** — Story 9.10 (Custom: metric registry only).
+
+### Items Deferred to Post-MVP Backlog
 
 - **2.12** `get_data_dir()` path fragility
-- **2.14** Undocumented Streamlit API usage
-- **2.17** Story 2.3 open AI-review follow-ups (Pandera + iterrows)
-- **2.21** `_make_season_df` test helper duplication
 - **P2-5** Coverage threshold enforcement
 - **P2-6** Dashboard quality gate inclusion
 
 ### Items Confirmed as Already in Post-MVP Backlog (No Change)
 
-1.1, 1.2, 1.4, 1.5, 1.9, 1.10, 1.11, 1.12, 1.14, 2.4 (via 2.17), 2.16
+1.4, 1.5, 1.9, 1.10, 1.12, 1.14
 
-### Already Resolved Items
+### Already Resolved Items (Pre-existing)
 
-- **2.11** — Fixed in Story 8.3 (ESPN exception handling)
-- **2.19** — Fixed in Story 8.4 (game theory slider docs)
+- **2.11** — Fixed in Story 8.3 (ESPN exception handling); duplicate of 3.28
+- **2.19** — Fixed in Story 8.4 (game theory slider docs); reclassified to Cat 3
