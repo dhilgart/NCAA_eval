@@ -471,16 +471,66 @@ See Step 2 below.</p>
 </div>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
-<p>To use the default metrics <em>plus</em> your custom ones, merge with <code class="docutils literal notranslate"><span class="pre">DEFAULT_METRICS</span></code>:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.evaluation.backtest</span><span class="w"> </span><span class="kn">import</span> <span class="n">DEFAULT_METRICS</span>
-
-<span class="n">my_metrics</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">DEFAULT_METRICS</span><span class="p">,</span> <span class="s2">&quot;mae&quot;</span><span class="p">:</span> <span class="n">mean_absolute_error</span><span class="p">}</span>
-</pre></div>
-</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">metric_fns=</span></code> dict approach is useful for ad-hoc metrics that should not be
+globally registered. For metrics you want available everywhere (backtests,
+dashboard, leaderboard), use the registry approach in Step 3 below.</p>
 </div>
 </section>
-<section id="step-3-verify-your-metric">
-<h3>Step 3: Verify Your Metric<a class="headerlink" href="#step-3-verify-your-metric" title="Link to this heading">¶</a></h3>
+<section id="step-3-register-for-global-use-recommended">
+<h3>Step 3: Register for Global Use (Recommended)<a class="headerlink" href="#step-3-register-for-global-use-recommended" title="Link to this heading">¶</a></h3>
+<p>Use the <code class="docutils literal notranslate"><span class="pre">&#64;register_metric</span></code> decorator to make your metric available
+automatically in all backtests and the dashboard — no need to pass
+<code class="docutils literal notranslate"><span class="pre">metric_fns=</span></code> every time:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">npt</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.evaluation</span><span class="w"> </span><span class="kn">import</span> <span class="n">register_metric</span>
+
+
+<span class="nd">@register_metric</span><span class="p">(</span><span class="s2">&quot;my_mae&quot;</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">mean_absolute_error</span><span class="p">(</span>
+    <span class="n">y_true</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
+    <span class="n">y_prob</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Mean Absolute Error between predictions and outcomes.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">y_prob</span> <span class="o">-</span> <span class="n">y_true</span><span class="p">)))</span>
+</pre></div>
+</div>
+<p>Once registered, the metric is automatically included when you run a backtest
+with the default metrics (i.e., without passing <code class="docutils literal notranslate"><span class="pre">metric_fns=</span></code>):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.evaluation.backtest</span><span class="w"> </span><span class="kn">import</span> <span class="n">run_backtest</span>
+
+<span class="c1"># No metric_fns= needed — all registered metrics (built-in + custom) are used</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">run_backtest</span><span class="p">(</span>
+    <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+    <span class="n">feature_server</span><span class="o">=</span><span class="n">server</span><span class="p">,</span>
+    <span class="n">seasons</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">2015</span><span class="p">,</span> <span class="mi">2026</span><span class="p">)),</span>
+    <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;stateful&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># my_mae appears alongside the built-in metrics</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">columns</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+<span class="c1"># [&#39;brier_score&#39;, &#39;ece&#39;, &#39;log_loss&#39;, &#39;my_mae&#39;, &#39;roc_auc&#39;, &#39;elapsed_seconds&#39;]</span>
+</pre></div>
+</div>
+<p>Verify the registry contents with <code class="docutils literal notranslate"><span class="pre">list_metrics()</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.evaluation</span><span class="w"> </span><span class="kn">import</span> <span class="n">list_metrics</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">list_metrics</span><span class="p">())</span>
+<span class="c1"># [&#39;brier_score&#39;, &#39;ece&#39;, &#39;log_loss&#39;, &#39;my_mae&#39;, &#39;roc_auc&#39;]</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><strong>Custom metrics vs. custom scoring rules</strong> are different extension mechanisms.
+Metrics evaluate model prediction quality (input: predicted probabilities →
+output: a score like log loss). Scoring rules define how bracket points are
+awarded per tournament round (used in simulation). See Part 2 below for
+custom scoring rules.</p>
+</div>
+</section>
+<section id="step-4-verify-your-metric">
+<h3>Step 4: Verify Your Metric<a class="headerlink" href="#step-4-verify-your-metric" title="Link to this heading">¶</a></h3>
 <p>Test your metric with known inputs to make sure it behaves correctly:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
@@ -662,15 +712,19 @@ uses a <code class="docutils literal notranslate"><span class="pre">ScoringRule<
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p>Custom metric</p></td>
+<tr class="row-even"><td><p>Custom metric (registered)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&#64;register_metric(&quot;name&quot;)</span></code> on <code class="docutils literal notranslate"><span class="pre">(y_true,</span> <span class="pre">y_prob)</span> <span class="pre">-&gt;</span> <span class="pre">float</span></code></p></td>
+<td><p>Automatic in all backtests and dashboard</p></td>
+</tr>
+<tr class="row-odd"><td><p>Custom metric (ad-hoc)</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">(y_true,</span> <span class="pre">y_prob)</span> <span class="pre">-&gt;</span> <span class="pre">float</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">run_backtest(metric_fns=...)</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p>Custom scoring rule</p></td>
+<tr class="row-even"><td><p>Custom scoring rule</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">ScoringRule</span></code> protocol (<code class="docutils literal notranslate"><span class="pre">.name</span></code>, <code class="docutils literal notranslate"><span class="pre">.points_per_round()</span></code>)</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">simulate_tournament(scoring_rules=...)</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p>Dict-based scoring</p></td>
+<tr class="row-odd"><td><p>Dict-based scoring</p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">DictScoring(points={0:</span> <span class="pre">...,</span> <span class="pre">5:</span> <span class="pre">...})</span></code></p></td>
 <td><p>Quick custom point schedules</p></td>
 </tr>
@@ -751,7 +805,8 @@ uses a <code class="docutils literal notranslate"><span class="pre">ScoringRule<
 <li><a class="reference internal" href="#part-1-custom-metric-function">Part 1: Custom Metric Function</a><ul>
 <li><a class="reference internal" href="#step-1-write-the-metric">Step 1: Write the Metric</a></li>
 <li><a class="reference internal" href="#step-2-use-in-a-backtest">Step 2: Use in a Backtest</a></li>
-<li><a class="reference internal" href="#step-3-verify-your-metric">Step 3: Verify Your Metric</a></li>
+<li><a class="reference internal" href="#step-3-register-for-global-use-recommended">Step 3: Register for Global Use (Recommended)</a></li>
+<li><a class="reference internal" href="#step-4-verify-your-metric">Step 4: Verify Your Metric</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#part-2-custom-tournament-scoring-rule">Part 2: Custom Tournament Scoring Rule</a><ul>

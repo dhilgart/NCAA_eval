@@ -355,6 +355,7 @@
 <li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.backtest.html#id10"><code class="docutils literal notranslate"><span class="pre">FoldResult.year</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="ncaa_eval.evaluation.backtest.html#ncaa_eval.evaluation.backtest.default_metrics"><code class="docutils literal notranslate"><span class="pre">default_metrics()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="ncaa_eval.evaluation.backtest.html#ncaa_eval.evaluation.backtest.feature_cols"><code class="docutils literal notranslate"><span class="pre">feature_cols()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="ncaa_eval.evaluation.backtest.html#ncaa_eval.evaluation.backtest.run_backtest"><code class="docutils literal notranslate"><span class="pre">run_backtest()</span></code></a></li>
 </ul>
@@ -402,6 +403,9 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html">ncaa_eval.evaluation.metrics module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html#metric-registry">Metric Registry</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.MetricFn"><code class="docutils literal notranslate"><span class="pre">MetricFn</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.MetricNotFoundError"><code class="docutils literal notranslate"><span class="pre">MetricNotFoundError</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.ReliabilityData"><code class="docutils literal notranslate"><span class="pre">ReliabilityData</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.ReliabilityData.fraction_of_positives"><code class="docutils literal notranslate"><span class="pre">ReliabilityData.fraction_of_positives</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.ReliabilityData.mean_predicted_value"><code class="docutils literal notranslate"><span class="pre">ReliabilityData.mean_predicted_value</span></code></a></li>
@@ -417,7 +421,10 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.brier_score"><code class="docutils literal notranslate"><span class="pre">brier_score()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.expected_calibration_error"><code class="docutils literal notranslate"><span class="pre">expected_calibration_error()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.get_metric"><code class="docutils literal notranslate"><span class="pre">get_metric()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.list_metrics"><code class="docutils literal notranslate"><span class="pre">list_metrics()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.log_loss"><code class="docutils literal notranslate"><span class="pre">log_loss()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.register_metric"><code class="docutils literal notranslate"><span class="pre">register_metric()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.reliability_diagram_data"><code class="docutils literal notranslate"><span class="pre">reliability_diagram_data()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.roc_auc"><code class="docutils literal notranslate"><span class="pre">roc_auc()</span></code></a></li>
 </ul>
@@ -1354,6 +1361,13 @@ array.</p>
 
 </dd></dl>
 
+<dl class="py exception">
+<dt class="sig sig-object py" id="ncaa_eval.evaluation.MetricNotFoundError">
+<span class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ncaa_eval.evaluation.</span></span><span class="sig-name descname"><span class="pre">MetricNotFoundError</span></span><a class="reference internal" href="../_modules/ncaa_eval/evaluation/metrics.html#MetricNotFoundError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.evaluation.MetricNotFoundError" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">KeyError</span></code></p>
+<p>Raised when a requested metric name is not in the registry.</p>
+</dd></dl>
+
 <dl class="py class">
 <dt class="sig sig-object py" id="ncaa_eval.evaluation.MostLikelyBracket">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ncaa_eval.evaluation.</span></span><span class="sig-name descname"><span class="pre">MostLikelyBracket</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">winners</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">champion_team_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_likelihood</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ncaa_eval/evaluation/simulation.html#MostLikelyBracket"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.evaluation.MostLikelyBracket" title="Link to this definition">¶</a></dt>
@@ -2024,6 +2038,12 @@ through to the championship game (index 62).</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="ncaa_eval.evaluation.default_metrics">
+<span class="sig-prename descclassname"><span class="pre">ncaa_eval.evaluation.</span></span><span class="sig-name descname"><span class="pre">default_metrics</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/evaluation/backtest.html#default_metrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.evaluation.default_metrics" title="Link to this definition">¶</a></dt>
+<dd><p>Return all registered metric functions (built-in + user-registered).</p>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="ncaa_eval.evaluation.expected_calibration_error">
 <span class="sig-prename descclassname"><span class="pre">ncaa_eval.evaluation.</span></span><span class="sig-name descname"><span class="pre">expected_calibration_error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">y_true</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_prob</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_bins</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/evaluation/metrics.html#expected_calibration_error"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.evaluation.expected_calibration_error" title="Link to this definition">¶</a></dt>
 <dd><p>Compute Expected Calibration Error (ECE) using vectorized numpy.</p>
@@ -2085,6 +2105,17 @@ is P(team_ids[i] beats team_ids[j]).</p></li>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="ncaa_eval.evaluation.get_metric">
+<span class="sig-prename descclassname"><span class="pre">ncaa_eval.evaluation.</span></span><span class="sig-name descname"><span class="pre">get_metric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/evaluation/metrics.html#get_metric"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.evaluation.get_metric" title="Link to this definition">¶</a></dt>
+<dd><p>Return the metric function registered under <em>name</em>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#ncaa_eval.evaluation.MetricNotFoundError" title="ncaa_eval.evaluation.MetricNotFoundError"><strong>MetricNotFoundError</strong></a> – If <em>name</em> is not registered.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="ncaa_eval.evaluation.get_scoring">
 <span class="sig-prename descclassname"><span class="pre">ncaa_eval.evaluation.</span></span><span class="sig-name descname"><span class="pre">get_scoring</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">type</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/evaluation/scoring.html#get_scoring"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.evaluation.get_scoring" title="Link to this definition">¶</a></dt>
 <dd><p>Return the scoring class registered under <em>name</em>.</p>
@@ -2093,6 +2124,12 @@ is P(team_ids[i] beats team_ids[j]).</p></li>
 <dd class="field-odd"><p><a class="reference internal" href="#ncaa_eval.evaluation.ScoringNotFoundError" title="ncaa_eval.evaluation.ScoringNotFoundError"><strong>ScoringNotFoundError</strong></a> – If <em>name</em> is not registered.</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ncaa_eval.evaluation.list_metrics">
+<span class="sig-prename descclassname"><span class="pre">ncaa_eval.evaluation.</span></span><span class="sig-name descname"><span class="pre">list_metrics</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/evaluation/metrics.html#list_metrics"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.evaluation.list_metrics" title="Link to this definition">¶</a></dt>
+<dd><p>Return all registered metric names (sorted).</p>
 </dd></dl>
 
 <dl class="py function">
@@ -2289,6 +2326,23 @@ percentile lines at 5th, 25th, 50th, 75th, and 95th.</p>
 </dd>
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>ValueError</strong> – If <em>temperature</em> is not positive.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ncaa_eval.evaluation.register_metric">
+<span class="sig-prename descclassname"><span class="pre">ncaa_eval.evaluation.</span></span><span class="sig-name descname"><span class="pre">register_metric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="pre">_MF</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">_MF</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/evaluation/metrics.html#register_metric"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.evaluation.register_metric" title="Link to this definition">¶</a></dt>
+<dd><p>Function decorator that registers a metric function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> – Registry key for the metric.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Decorator that registers the function and returns it unchanged.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If <em>name</em> is already registered.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2715,6 +2769,7 @@ test year; <code class="docutils literal notranslate"><span class="pre">test</sp
 <li><a class="reference internal" href="#ncaa_eval.evaluation.MatrixProvider.matchup_probability"><code class="docutils literal notranslate"><span class="pre">MatrixProvider.matchup_probability()</span></code></a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#ncaa_eval.evaluation.MetricNotFoundError"><code class="docutils literal notranslate"><span class="pre">MetricNotFoundError</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.MostLikelyBracket"><code class="docutils literal notranslate"><span class="pre">MostLikelyBracket</span></code></a><ul>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.MostLikelyBracket.winners"><code class="docutils literal notranslate"><span class="pre">MostLikelyBracket.winners</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.MostLikelyBracket.champion_team_id"><code class="docutils literal notranslate"><span class="pre">MostLikelyBracket.champion_team_id</span></code></a></li>
@@ -2790,10 +2845,13 @@ test year; <code class="docutils literal notranslate"><span class="pre">test</sp
 <li><a class="reference internal" href="#ncaa_eval.evaluation.compute_expected_points"><code class="docutils literal notranslate"><span class="pre">compute_expected_points()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.compute_expected_points_seed_diff"><code class="docutils literal notranslate"><span class="pre">compute_expected_points_seed_diff()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.compute_most_likely_bracket"><code class="docutils literal notranslate"><span class="pre">compute_most_likely_bracket()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.evaluation.default_metrics"><code class="docutils literal notranslate"><span class="pre">default_metrics()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.expected_calibration_error"><code class="docutils literal notranslate"><span class="pre">expected_calibration_error()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.feature_cols"><code class="docutils literal notranslate"><span class="pre">feature_cols()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.format_kaggle_submission"><code class="docutils literal notranslate"><span class="pre">format_kaggle_submission()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.evaluation.get_metric"><code class="docutils literal notranslate"><span class="pre">get_metric()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.get_scoring"><code class="docutils literal notranslate"><span class="pre">get_scoring()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.evaluation.list_metrics"><code class="docutils literal notranslate"><span class="pre">list_metrics()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.list_scoring_display_names"><code class="docutils literal notranslate"><span class="pre">list_scoring_display_names()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.list_scorings"><code class="docutils literal notranslate"><span class="pre">list_scorings()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.log_loss"><code class="docutils literal notranslate"><span class="pre">log_loss()</span></code></a></li>
@@ -2804,6 +2862,7 @@ test year; <code class="docutils literal notranslate"><span class="pre">test</sp
 <li><a class="reference internal" href="#ncaa_eval.evaluation.plot_reliability_diagram"><code class="docutils literal notranslate"><span class="pre">plot_reliability_diagram()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.plot_score_distribution"><code class="docutils literal notranslate"><span class="pre">plot_score_distribution()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.power_transform"><code class="docutils literal notranslate"><span class="pre">power_transform()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.evaluation.register_metric"><code class="docutils literal notranslate"><span class="pre">register_metric()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.register_scoring"><code class="docutils literal notranslate"><span class="pre">register_scoring()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.reliability_diagram_data"><code class="docutils literal notranslate"><span class="pre">reliability_diagram_data()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.roc_auc"><code class="docutils literal notranslate"><span class="pre">roc_auc()</span></code></a></li>

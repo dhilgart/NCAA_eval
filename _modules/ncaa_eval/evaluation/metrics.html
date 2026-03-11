@@ -327,14 +327,92 @@
 
 <span class="sd">All functions accept ``npt.NDArray[np.float64]`` inputs and return ``float``</span>
 <span class="sd">scalars or structured data (:class:`ReliabilityData`).</span>
+
+<span class="sd">Metric Registry</span>
+<span class="sd">---------------</span>
+
+<span class="sd">* :func:`register_metric` — decorator to register a metric function</span>
+<span class="sd">* :func:`get_metric` — look up a metric by name</span>
+<span class="sd">* :func:`list_metrics` — list all registered metric names</span>
+<span class="sd">* :class:`MetricNotFoundError` — raised for unknown metric names</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">dataclasses</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TypeVar</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">npt</span>
+
+<span class="c1"># ---------------------------------------------------------------------------</span>
+<span class="c1"># Metric type alias &amp; registry</span>
+<span class="c1"># ---------------------------------------------------------------------------</span>
+
+<span class="n">MetricFn</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]],</span> <span class="nb">float</span><span class="p">]</span>
+<span class="sd">&quot;&quot;&quot;Signature for metric functions: ``(y_true, y_prob) -&gt; float``.&quot;&quot;&quot;</span>
+
+<span class="n">_MF</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;_MF&quot;</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="n">MetricFn</span><span class="p">)</span>
+
+<span class="n">_METRIC_REGISTRY</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">MetricFn</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+
+<div class="viewcode-block" id="MetricNotFoundError">
+<a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.MetricNotFoundError">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">MetricNotFoundError</span><span class="p">(</span><span class="ne">KeyError</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Raised when a requested metric name is not in the registry.&quot;&quot;&quot;</span></div>
+
+
+
+<div class="viewcode-block" id="register_metric">
+<a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.register_metric">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">register_metric</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">_MF</span><span class="p">],</span> <span class="n">_MF</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function decorator that registers a metric function.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        name: Registry key for the metric.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Decorator that registers the function and returns it unchanged.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError: If *name* is already registered.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">decorator</span><span class="p">(</span><span class="n">fn</span><span class="p">:</span> <span class="n">_MF</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_MF</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_METRIC_REGISTRY</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Metric name </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2"> is already registered&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="n">_METRIC_REGISTRY</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">fn</span>
+        <span class="k">return</span> <span class="n">fn</span>
+
+    <span class="k">return</span> <span class="n">decorator</span></div>
+
+
+
+<div class="viewcode-block" id="get_metric">
+<a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.get_metric">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_metric</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MetricFn</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the metric function registered under *name*.</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        MetricNotFoundError: If *name* is not registered.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_METRIC_REGISTRY</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;No metric registered with name </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">. Available: </span><span class="si">{</span><span class="n">list_metrics</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">raise</span> <span class="n">MetricNotFoundError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="list_metrics">
+<a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.list_metrics">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">list_metrics</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return all registered metric names (sorted).&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">_METRIC_REGISTRY</span><span class="p">)</span></div>
+
 
 
 <div class="viewcode-block" id="ReliabilityData">
@@ -390,6 +468,7 @@
 
 <div class="viewcode-block" id="log_loss">
 <a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.log_loss">[docs]</a>
+<span class="nd">@register_metric</span><span class="p">(</span><span class="s2">&quot;log_loss&quot;</span><span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">log_loss</span><span class="p">(</span>
     <span class="n">y_true</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
     <span class="n">y_prob</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
@@ -417,6 +496,7 @@
 
 <div class="viewcode-block" id="brier_score">
 <a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.brier_score">[docs]</a>
+<span class="nd">@register_metric</span><span class="p">(</span><span class="s2">&quot;brier_score&quot;</span><span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">brier_score</span><span class="p">(</span>
     <span class="n">y_true</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
     <span class="n">y_prob</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
@@ -444,6 +524,7 @@
 
 <div class="viewcode-block" id="roc_auc">
 <a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.roc_auc">[docs]</a>
+<span class="nd">@register_metric</span><span class="p">(</span><span class="s2">&quot;roc_auc&quot;</span><span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">roc_auc</span><span class="p">(</span>
     <span class="n">y_true</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
     <span class="n">y_prob</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
@@ -476,6 +557,7 @@
 
 <div class="viewcode-block" id="expected_calibration_error">
 <a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.expected_calibration_error">[docs]</a>
+<span class="nd">@register_metric</span><span class="p">(</span><span class="s2">&quot;ece&quot;</span><span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">expected_calibration_error</span><span class="p">(</span>
     <span class="n">y_true</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>
     <span class="n">y_prob</span><span class="p">:</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">],</span>

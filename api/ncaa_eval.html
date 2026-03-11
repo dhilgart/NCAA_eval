@@ -359,6 +359,7 @@
 <li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.backtest.html">ncaa_eval.evaluation.backtest module</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.backtest.html#ncaa_eval.evaluation.backtest.BacktestResult"><code class="docutils literal notranslate"><span class="pre">BacktestResult</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.backtest.html#ncaa_eval.evaluation.backtest.FoldResult"><code class="docutils literal notranslate"><span class="pre">FoldResult</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.backtest.html#ncaa_eval.evaluation.backtest.default_metrics"><code class="docutils literal notranslate"><span class="pre">default_metrics()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.backtest.html#ncaa_eval.evaluation.backtest.feature_cols"><code class="docutils literal notranslate"><span class="pre">feature_cols()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.backtest.html#ncaa_eval.evaluation.backtest.run_backtest"><code class="docutils literal notranslate"><span class="pre">run_backtest()</span></code></a></li>
 </ul>
@@ -377,10 +378,16 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html">ncaa_eval.evaluation.metrics module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html#metric-registry">Metric Registry</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.MetricFn"><code class="docutils literal notranslate"><span class="pre">MetricFn</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.MetricNotFoundError"><code class="docutils literal notranslate"><span class="pre">MetricNotFoundError</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.ReliabilityData"><code class="docutils literal notranslate"><span class="pre">ReliabilityData</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.brier_score"><code class="docutils literal notranslate"><span class="pre">brier_score()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.expected_calibration_error"><code class="docutils literal notranslate"><span class="pre">expected_calibration_error()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.get_metric"><code class="docutils literal notranslate"><span class="pre">get_metric()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.list_metrics"><code class="docutils literal notranslate"><span class="pre">list_metrics()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.log_loss"><code class="docutils literal notranslate"><span class="pre">log_loss()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.register_metric"><code class="docutils literal notranslate"><span class="pre">register_metric()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.reliability_diagram_data"><code class="docutils literal notranslate"><span class="pre">reliability_diagram_data()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.metrics.html#ncaa_eval.evaluation.metrics.roc_auc"><code class="docutils literal notranslate"><span class="pre">roc_auc()</span></code></a></li>
 </ul>
@@ -572,6 +579,7 @@
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.MatrixProvider.matchup_probability"><code class="docutils literal notranslate"><span class="pre">MatrixProvider.matchup_probability()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.MetricNotFoundError"><code class="docutils literal notranslate"><span class="pre">MetricNotFoundError</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.MostLikelyBracket"><code class="docutils literal notranslate"><span class="pre">MostLikelyBracket</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.MostLikelyBracket.winners"><code class="docutils literal notranslate"><span class="pre">MostLikelyBracket.winners</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.MostLikelyBracket.champion_team_id"><code class="docutils literal notranslate"><span class="pre">MostLikelyBracket.champion_team_id</span></code></a></li>
@@ -647,10 +655,13 @@
 <li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.compute_expected_points"><code class="docutils literal notranslate"><span class="pre">compute_expected_points()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.compute_expected_points_seed_diff"><code class="docutils literal notranslate"><span class="pre">compute_expected_points_seed_diff()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.compute_most_likely_bracket"><code class="docutils literal notranslate"><span class="pre">compute_most_likely_bracket()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.default_metrics"><code class="docutils literal notranslate"><span class="pre">default_metrics()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.expected_calibration_error"><code class="docutils literal notranslate"><span class="pre">expected_calibration_error()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.feature_cols"><code class="docutils literal notranslate"><span class="pre">feature_cols()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.format_kaggle_submission"><code class="docutils literal notranslate"><span class="pre">format_kaggle_submission()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.get_metric"><code class="docutils literal notranslate"><span class="pre">get_metric()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.get_scoring"><code class="docutils literal notranslate"><span class="pre">get_scoring()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.list_metrics"><code class="docutils literal notranslate"><span class="pre">list_metrics()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.list_scoring_display_names"><code class="docutils literal notranslate"><span class="pre">list_scoring_display_names()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.list_scorings"><code class="docutils literal notranslate"><span class="pre">list_scorings()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.log_loss"><code class="docutils literal notranslate"><span class="pre">log_loss()</span></code></a></li>
@@ -661,6 +672,7 @@
 <li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.plot_reliability_diagram"><code class="docutils literal notranslate"><span class="pre">plot_reliability_diagram()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.plot_score_distribution"><code class="docutils literal notranslate"><span class="pre">plot_score_distribution()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.power_transform"><code class="docutils literal notranslate"><span class="pre">power_transform()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.register_metric"><code class="docutils literal notranslate"><span class="pre">register_metric()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.register_scoring"><code class="docutils literal notranslate"><span class="pre">register_scoring()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.reliability_diagram_data"><code class="docutils literal notranslate"><span class="pre">reliability_diagram_data()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.html#ncaa_eval.evaluation.roc_auc"><code class="docutils literal notranslate"><span class="pre">roc_auc()</span></code></a></li>
