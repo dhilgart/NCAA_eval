@@ -136,7 +136,7 @@ development_status:
   9-3-feature-importance-elo-logistic-regression: done
   9-4-fix-public-api-documentation: done
   9-5-post-sync-data-validation: done
-  9-6-revisit-skipped-audit-decisions: backlog
+  9-6-revisit-skipped-audit-decisions: ready-for-dev
   9-7-game-theory-slider-implementation: done
   9-8-user-editable-bracket: done
   9-9-cli-predict-command: done
