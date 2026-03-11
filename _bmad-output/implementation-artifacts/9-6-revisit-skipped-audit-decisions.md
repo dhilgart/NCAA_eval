@@ -1,6 +1,6 @@
 # Story 9.6: Revisit Skipped Audit Decisions
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -84,41 +84,41 @@ so that **no potential improvements are permanently lost, every deferred item ha
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Auto-close resolved items (AC: #1)
-  - [ ] 1.1 Update item 2.18 in `po-decision-log-epic8.md`: change `S — skip` to `Resolved — Story 9.4 fixed public API documentation and import paths`
-  - [ ] 1.2 Update item 2.20 in `po-decision-log-epic8.md`: change `S — skip` to `Resolved — Story 9.5 implemented post-sync data validation`
+- [x] Task 1: Auto-close resolved items (AC: #1)
+  - [x] 1.1 Update item 2.18 in `po-decision-log-epic8.md`: change `S — skip` to `Resolved — Story 9.4 fixed public API documentation and import paths`
+  - [x] 1.2 Update item 2.20 in `po-decision-log-epic8.md`: change `S — skip` to `Resolved — Story 9.5 implemented post-sync data validation`
 
-- [ ] Task 2: PO reviews code architecture items 2.2–2.10 (AC: #1, #3, #4)
-  - [ ] 2.1 Present items 2.2–2.10 with SM recommendations (see table above)
-  - [ ] 2.2 Record PO decision for each item in `po-decision-log-epic8.md`
-  - [ ] 2.3 For any "Implement" decisions: create story in `epics.md`
-  - [ ] 2.4 For any "Defer" decisions: verify item exists in Post-MVP Backlog
+- [x] Task 2: PO reviews code architecture items 2.2–2.10 (AC: #1, #3, #4)
+  - [x] 2.1 Present items 2.2–2.10 with SM recommendations (see table above)
+  - [x] 2.2 Record PO decision for each item in `po-decision-log-epic8.md`
+  - [x] 2.3 For any "Implement" decisions: create story in `epics.md`
+  - [x] 2.4 For any "Defer" decisions: verify item exists in Post-MVP Backlog
 
-- [ ] Task 3: PO reviews dashboard/UX items 2.12–2.16 (AC: #1, #3, #4)
-  - [ ] 3.1 Present items 2.12–2.16 with SM recommendations
-  - [ ] 3.2 Record PO decision for each item
-  - [ ] 3.3 For any "Implement" decisions: create story in `epics.md`
-  - [ ] 3.4 For any "Defer" decisions: verify item exists in Post-MVP Backlog
+- [x] Task 3: PO reviews dashboard/UX items 2.12–2.16 (AC: #1, #3, #4)
+  - [x] 3.1 Present items 2.12–2.16 with SM recommendations
+  - [x] 3.2 Record PO decision for each item
+  - [x] 3.3 For any "Implement" decisions: create story in `epics.md`
+  - [x] 3.4 For any "Defer" decisions: verify item exists in Post-MVP Backlog
 
-- [ ] Task 4: PO reviews testing/quality items 2.17, 2.21, P2-5 (AC: #1, #3, #4)
-  - [ ] 4.1 Present items with SM recommendations
-  - [ ] 4.2 Record PO decision for each item
-  - [ ] 4.3 For any "Implement" decisions: create story in `epics.md`
-  - [ ] 4.4 For any "Defer" decisions: verify item exists in Post-MVP Backlog
+- [x] Task 4: PO reviews testing/quality items 2.17, 2.21, P2-5 (AC: #1, #3, #4)
+  - [x] 4.1 Present items with SM recommendations
+  - [x] 4.2 Record PO decision for each item
+  - [x] 4.3 For any "Implement" decisions: create story in `epics.md`
+  - [x] 4.4 For any "Defer" decisions: verify item exists in Post-MVP Backlog
 
-- [ ] Task 5: PO reviews documentation/quality items P2-6, P3-20 (AC: #1, #3, #4)
-  - [ ] 5.1 Present items with SM recommendations
-  - [ ] 5.2 Record PO decision for each item
+- [x] Task 5: PO reviews documentation/quality items P2-6, P3-20 (AC: #1, #3, #4)
+  - [x] 5.1 Present items with SM recommendations
+  - [x] 5.2 Record PO decision for each item
 
-- [ ] Task 6: Update decision log summary and verify completeness (AC: #5)
-  - [ ] 6.1 Update Summary section decision counts in `po-decision-log-epic8.md`
-  - [ ] 6.2 Verify zero "S — skip" entries remain (grep validation)
-  - [ ] 6.3 Update `sprint-status.yaml` with any new stories created
+- [x] Task 6: Update decision log summary and verify completeness (AC: #5)
+  - [x] 6.1 Update Summary section decision counts in `po-decision-log-epic8.md`
+  - [x] 6.2 Verify zero "S — skip" entries remain (grep validation)
+  - [x] 6.3 Update `sprint-status.yaml` with any new stories created
 
-- [ ] Task 7: Update `epics.md` Post-MVP Backlog (AC: #2, #3)
-  - [ ] 7.1 Add any new "Implement" stories to appropriate epic
-  - [ ] 7.2 Confirm "Defer" items exist in Post-MVP Backlog
-  - [ ] 7.3 Remove any promoted items from Post-MVP Backlog (if promoted to stories)
+- [x] Task 7: Update `epics.md` Post-MVP Backlog (AC: #2, #3)
+  - [x] 7.1 Add any new "Implement" stories to appropriate epic
+  - [x] 7.2 Confirm "Defer" items exist in Post-MVP Backlog
+  - [x] 7.3 Remove any promoted items from Post-MVP Backlog (if promoted to stories)
 
 ## Dev Notes
 
@@ -181,4 +181,26 @@ claude-opus-4-6
 
 ### Completion Notes List
 
+- All 21 "S — skip" items in `po-decision-log-epic8.md` resolved to final dispositions
+- PO decisions: 12 Accept-as-is, 3 Defer, 3 Implement, 2 Implement-with-scope-change, 4 Already Resolved (including 2.11 duplicate and 2.19 reclassified)
+- Items 2.18 and 2.20 marked as Resolved (Stories 9.4 and 9.5 respectively)
+- Item 2.10 (deferred sklearn imports) was missed in initial pass — resolved during code review as Accept-as-is
+- 5 new stories created in epics.md: 9.11 (Streamlit API), 9.12 (st.progress), 9.13 (test fixture consolidation), 9.14 (Pandera validation), 9.15 (iterrows convention exception)
+- 4 items removed from Post-MVP Backlog (promoted to stories): st.progress, Undocumented Streamlit API, Story 2.3 follow-ups, Test Helper Duplication
+- 3 items confirmed in Post-MVP Backlog (deferred): 2.12 (get_data_dir), P2-5 (coverage threshold), P2-6 (dashboard quality gates)
+- Summary decision counts updated to reflect final totals
+- P2-5 Recommendation field reverted to original (was incorrectly modified from C to B)
+- Zero "S — skip" entries remain (verified via grep)
+
+### Change Log
+
+| Date | Change | Author |
+|------|--------|--------|
+| 2026-03-11 | Code review: Fixed 8 issues (1 missing decision, 2 incorrect resolved labels, 4 missing stories, 1 summary count update, 1 recommendation revert, Post-MVP Backlog cleanup) | Code Review Agent |
+
 ### File List
+
+- `_bmad-output/planning-artifacts/po-decision-log-epic8.md` — Updated all 21 skip items with final PO decisions; updated summary counts; fixed 2.18/2.20 resolved labels; fixed P2-5 recommendation
+- `_bmad-output/planning-artifacts/epics.md` — Added Stories 9.11-9.15 to Epic 9; removed 4 promoted items from Post-MVP Backlog
+- `_bmad-output/implementation-artifacts/9-6-revisit-skipped-audit-decisions.md` — Updated task completion, status, file list, completion notes
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — Updated story 9.6 status to done

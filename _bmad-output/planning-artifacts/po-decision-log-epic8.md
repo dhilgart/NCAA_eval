@@ -10,8 +10,8 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 - `codebase-audit-pass3-addendum.md` (Pass 3)
 
 **Decision Counts:**
-- Category 1: 9 Defer, 4 Accept-as-is, 3 Implement
-- Category 2: 12 Accept-as-is, 8 Defer, 2 Already Resolved, 2 Fix
+- Category 1: 9 Defer, 4 Accept-as-is, 3 Implement (unchanged; 16 total including P3-17 and custom decisions)
+- Category 2: 12 Accept-as-is, 3 Defer, 4 Already Resolved, 3 Implement, 2 Implement-with-scope-change (24 total including 2.11 duplicate and 2.19 reclassified)
 
 ---
 
@@ -451,7 +451,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** B — Accept as-is. The "no ingest imports" invariant applies to pure transform modules (normalization, sequential, graph); `serving.py` is architecturally the bridge/adapter between the Repository and transform pipeline, so the coupling is by design. The rule was not written for this module.
 
 ---
 
@@ -475,7 +475,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** B — Accept as-is. Pydantic validation on ingestion is the right place to catch data integrity issues; the performance cost is negligible.
 
 ---
 
@@ -499,7 +499,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** Remains in Post-MVP Backlog (via 2.17)
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** C — Add explicit exception to the convention. The ingest layer's one-time-per-sync nature makes iterrows acceptable here; document this carve-out so future audits don't re-flag it.
 
 ---
 
@@ -522,7 +522,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** B — Accept as-is. Only 2 concrete implementations; the pattern is common enough and the scale doesn't justify the added complexity of protocols/mixins.
 
 ---
 
@@ -546,7 +546,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** B — Accept as-is. Import convenience wins for an interactive tool; startup time is not a bottleneck users have complained about.
 
 ---
 
@@ -570,7 +570,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** B — Accept as-is. Different purposes (serialization vs. runtime immutability) justify the duplication; consolidating would sacrifice immutability guarantees.
 
 ---
 
@@ -593,7 +593,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** B — Accept as-is. Standard plugin registry pattern; existing test fixtures handle isolation adequately.
 
 ---
 
@@ -616,7 +616,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** B — Accept as-is. Well-established pattern for circular dependency resolution; restructuring would be a significant refactor for no user-visible benefit.
 
 ---
 
@@ -639,7 +639,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** B — Accept as-is. Python caches module imports after first call; overhead is negligible (~0.1ms). The deferred import pattern avoids loading sklearn for non-metric use cases, which is a reasonable trade-off.
 
 ---
 
@@ -679,7 +679,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** Add to Post-MVP Backlog
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** B — Defer to post-MVP. Directory structure has been stable since Epic 7; low risk, low priority.
 
 ---
 
@@ -702,7 +702,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** B — Accept as-is. Standard Streamlit convention; these files are never imported outside of Streamlit's execution model.
 
 ---
 
@@ -726,7 +726,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** Add to Post-MVP Backlog
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** A — Rewrite to use official Streamlit API. Prefer not to rely on undocumented internals; investigate whether the official API now supports this interaction pattern and implement if possible.
 
 ---
 
@@ -749,7 +749,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** B — Accept as-is. Standalone functions are a deliberate, documented design decision chosen for composability; the Epic AC deviation is accepted.
 
 ---
 
@@ -772,7 +772,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A — remains in Post-MVP Backlog
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** A — Implement `st.progress`. Better UX; fulfills the AC. Requires passing a progress callback through the simulation engine.
 
 ---
 
@@ -796,7 +796,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** Add to Post-MVP Backlog
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** C — Implement Pandera schema validation only. Schema validation catches real data issues at the boundary; iterrows is already addressed by the 2.4 carve-out for the ingest layer.
 
 ---
 
@@ -820,7 +820,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** Story 9.4 created (Fix Public API Documentation) — PO to confirm scope in Story 9.6
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** Resolved — Story 9.4 fixed public API documentation and import paths. The Style Guide was updated to document actual import paths, avoiding triggering heavy module loading.
 
 ---
 
@@ -860,7 +860,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** Story 9.5 created (Post-Sync Data Validation) — PO to confirm scope in Story 9.6
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** Resolved — Story 9.5 implemented post-sync data validation with game count, duplicate, and referential integrity checks. Silent data corruption risk from the ESPN connector's history is now mitigated.
 
 ---
 
@@ -883,7 +883,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** Add to Post-MVP Backlog
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** A — Consolidate now into a shared conftest fixture. DRY principle; the helper is small enough that consolidation risk is low.
 
 ---
 
@@ -907,7 +907,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** Add to Post-MVP Backlog
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** C — Defer to post-MVP. Need a coverage baseline measurement before setting a threshold; arbitrary numbers risk blocking legitimate PRs.
 
 ---
 
@@ -931,7 +931,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** Add to Post-MVP Backlog
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** B — Defer to post-MVP. Streamlit's poor type stubs make mypy impractical; low-priority quality improvement.
 
 ---
 
@@ -955,7 +955,7 @@ This document records the Product Owner's disposition for all Category 1 (PO dir
 
 **Follow-up:** N/A
 
-**PO Decision:** S — skip, come back later.
+**PO Decision:** B — Accept as-is. Story 8.12 already added a historical-document banner; the code is the authoritative spec now.
 
 ---
 

@@ -1272,6 +1272,83 @@ So that **I can evaluate models on domain-specific criteria without modifying li
 
 **Source:** Audit item P3-17; PO decision 2026-03-09 (Custom — implement metric registry only)
 
+### Story 9.11: Replace Undocumented Streamlit API Usage
+
+As a **developer**,
+I want to **replace the undocumented `event.selection.rows` Streamlit API in the leaderboard with the official documented alternative**,
+So that **the dashboard does not break on Streamlit upgrades and all API usage is supported**.
+
+**Acceptance Criteria:**
+
+**Given** the leaderboard page uses `event.selection.rows` with `# type: ignore`
+**When** the developer investigates the official Streamlit selection API
+**Then** the undocumented API call is replaced with the documented equivalent (or a pinned Streamlit version constraint is added if no equivalent exists)
+**And** the `# type: ignore` comment is removed if possible
+**And** the leaderboard selection behavior is preserved
+
+**Source:** Audit item 2.14; PO decision 2026-03-11 (A — Rewrite to use official Streamlit API)
+
+### Story 9.12: Implement st.progress for Simulation
+
+As a **bracket pool participant**,
+I want to **see a numeric progress bar during Monte Carlo simulation instead of a spinner**,
+So that **I know how long the simulation will take and can see it progressing**.
+
+**Acceptance Criteria:**
+
+**Given** the user triggers a Monte Carlo simulation on the Pool Scorer page
+**When** the simulation engine runs 10k+ iterations
+**Then** a `st.progress()` bar displays the current iteration count
+**And** the simulation engine exposes an iteration callback for progress reporting
+**And** the `st.spinner()` is replaced with `st.progress()` for the simulation step
+
+**Source:** Audit item 2.16; PO decision 2026-03-11 (A — Implement st.progress); UX Spec §5.2
+
+### Story 9.13: Consolidate Duplicated Test Helper
+
+As a **developer**,
+I want to **consolidate the duplicated `_make_season_df` helper from `test_evaluation_splitter.py` and `test_evaluation_backtest.py` into a shared conftest fixture**,
+So that **test helpers follow DRY principles and future test files can reuse the fixture**.
+
+**Acceptance Criteria:**
+
+**Given** `_make_season_df` is duplicated in two test files
+**When** the developer moves it to a shared conftest
+**Then** both test files import from the shared fixture
+**And** all existing tests pass without modification
+
+**Source:** Audit item 2.21; PO decision 2026-03-11 (A — Consolidate into shared conftest fixture)
+
+### Story 9.14: Add Pandera Schema Validation to KaggleConnector
+
+As a **developer**,
+I want to **add Pandera schema validation to the KaggleConnector's CSV parsing**,
+So that **data integrity issues are caught at the ingest boundary with clear, structured error messages**.
+
+**Acceptance Criteria:**
+
+**Given** the KaggleConnector parses CSV files into DataFrames
+**When** a CSV file has unexpected columns, types, or value ranges
+**Then** Pandera schema validation catches the issue with a descriptive error
+**And** the iterrows usage is NOT changed (accepted per item 2.4 carve-out for ingest layer)
+
+**Source:** Audit item 2.17; PO decision 2026-03-11 (C — Implement Pandera schema validation only)
+
+### Story 9.15: Document Iterrows Convention Exception for Ingest Layer
+
+As a **developer**,
+I want to **document the explicit exception allowing `iterrows()` in the ingest layer**,
+So that **future audits do not re-flag this as a convention violation and the rationale is clear**.
+
+**Acceptance Criteria:**
+
+**Given** the project convention prohibits `iterrows()` usage
+**When** a developer reads the Style Guide / conventions documentation
+**Then** they find a documented exception for the ingest layer's one-time-per-sync operations
+**And** the rationale (one-time sync cost, Pydantic validation per row) is explained
+
+**Source:** Audit item 2.4; PO decision 2026-03-11 (C — Add explicit exception to convention)
+
 ## Epic 10: Ensemble Modeling Framework
 
 Users can define a stacked ensemble of any base models, train the full stack end-to-end in one call, and generate live bracket predictions — without manually managing out-of-fold alignment, feature server coordination, or meta-learner input construction.
@@ -1555,15 +1632,6 @@ Extend Story 7.6 CSV export to also generate JSON format with nested structure i
 - **Source:** Story 7.6 AC #5 (specifies CSV only)
 - **Deferred because:** Story 7.6 AC required CSV export only; JSON is a natural enhancement for structured data consumers
 
-### st.progress for Simulation (Origin: Story 7.6 / UX Spec §5.2, 2026-02-28)
-
-Display real-time numeric progress bar (`st.progress()`) during Monte Carlo simulation instead of the current `st.spinner()`. Provides iteration count feedback during 1-5 second computation.
-
-- **Effort:** Low — MC engine callback, `st.progress()` wrapper (~50 lines)
-- **Distinctness:** UX polish replacing opaque spinner with quantitative progress
-- **Source:** Story 7.6 AC #4 ("Simulation Progress"); UX Spec §5.2 (progress bar requirement)
-- **Deferred because:** `st.spinner()` already prevents UI freezing; `st.progress()` requires MC engine to expose iteration callback
-
 ### Per-Game Prediction Explainability (Origin: PRD §3.2, 2026-02-28)
 
 For each game in the bracket visualizer, display explainability metrics: feature importance contributions, confidence intervals, and natural language reasoning (e.g., "Elo gap favors team A by +8.5%").
@@ -1644,33 +1712,6 @@ Replace `Path(__file__).resolve().parent.parent.parent / "data"` in `dashboard/l
 - **Distinctness:** Maintenance improvement; prevents breakage if dashboard directory structure changes
 - **Source:** Codebase audit item 2.12; `dashboard/lib/filters.py:56-58`
 - **Deferred because:** Dashboard directory structure has been stable since Epic 7; low risk
-
-### Undocumented Streamlit API Usage (Origin: Audit item 2.14, 2026-03-05)
-
-Replace `event.selection.rows` (undocumented Streamlit dataframe selection API) with documented alternative or add pinned Streamlit version constraint to prevent breakage on upgrade.
-
-- **Effort:** Low — API replacement or version pin (~20 lines)
-- **Distinctness:** Maintenance improvement; prevents breakage on Streamlit upgrades
-- **Source:** Codebase audit item 2.14; `dashboard/pages/1_Lab.py:116-129`
-- **Deferred because:** API works correctly in current Streamlit version; will address if/when Streamlit breaks it
-
-### Story 2.3 Open AI-Review Follow-ups (Origin: Audit item 2.17, 2026-03-05)
-
-Address two deferred code quality items from Story 2.3's AI code review: (1) Add Pandera schema validation to KaggleConnector, (2) Replace `iterrows()` calls with vectorized operations in KaggleConnector.
-
-- **Effort:** Medium — Pandera schema definition + vectorized CSV parsing (~200 lines)
-- **Distinctness:** Code quality improvement; aligns ingest layer with project conventions
-- **Source:** Codebase audit item 2.17; `src/ncaa_eval/ingest/connectors/kaggle.py`
-- **Deferred because:** KaggleConnector works correctly; improvements are quality-of-code, not functional
-
-### Test Helper Duplication: `_make_season_df` (Origin: Audit item 2.21, 2026-03-05)
-
-Consolidate the duplicated `_make_season_df` helper function from `test_evaluation_splitter.py` and `test_evaluation_backtest.py` into a shared conftest fixture.
-
-- **Effort:** Low — move to conftest, update imports (~15 lines)
-- **Distinctness:** Minor test code quality improvement
-- **Source:** Codebase audit item 2.21; `tests/unit/test_evaluation_splitter.py:18`, `tests/unit/test_evaluation_backtest.py:28`
-- **Deferred because:** Duplication is minor; will consolidate when either test file is next modified
 
 ### Coverage Threshold Enforcement (Origin: Audit item P2-5, 2026-03-05)
 
