@@ -748,6 +748,14 @@ configs, not 10,000 game rows).</p></li>
 vectorized equivalent).</p></li>
 <li><p>The loop body involves <strong>side effects</strong> that cannot be vectorized (e.g.,
 writing files per team).</p></li>
+<li><p><strong>Ingest-layer one-time-per-sync operations</strong> — <code class="docutils literal notranslate"><span class="pre">src/ncaa_eval/ingest/connectors/kaggle.py</span></code>
+uses <code class="docutils literal notranslate"><span class="pre">iterrows()</span></code> in <code class="docutils literal notranslate"><span class="pre">load_day_zeros</span></code>, <code class="docutils literal notranslate"><span class="pre">fetch_teams</span></code>, and <code class="docutils literal notranslate"><span class="pre">_parse_games_csv</span></code> for
+per-row data transformation: constructing Pydantic models (<code class="docutils literal notranslate"><span class="pre">Game</span></code>, <code class="docutils literal notranslate"><span class="pre">Team</span></code>) in
+<code class="docutils literal notranslate"><span class="pre">fetch_teams</span></code> and <code class="docutils literal notranslate"><span class="pre">_parse_games_csv</span></code>, and parsing dates with per-row error handling
+in <code class="docutils literal notranslate"><span class="pre">load_day_zeros</span></code>. These run exactly once per <code class="docutils literal notranslate"><span class="pre">sync</span></code> operation and are not in any
+hot path. Pandera schema validation (Story 9.14) guards the DataFrame before iteration
+begins.
+<em>(PO Decision C — Audit item 2.4, 2026-03-11)</em></p></li>
 </ol>
 <p>In these cases, add a brief comment explaining why the loop is necessary.</p>
 </section>

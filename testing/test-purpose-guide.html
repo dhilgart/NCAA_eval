@@ -483,6 +483,14 @@
             <span class="sa">f</span><span class="s2">&quot;Metrics module contains non-vectorized pattern: </span><span class="si">{</span><span class="n">pattern</span><span class="si">}</span><span class="s2">&quot;</span>
 </pre></div>
 </div>
+<blockquote>
+<div><p><strong>Note:</strong> The ingest layer (<code class="docutils literal notranslate"><span class="pre">src/ncaa_eval/ingest/</span></code>) is excluded from the <code class="docutils literal notranslate"><span class="pre">iterrows()</span></code>
+forbidden-pattern check only. <code class="docutils literal notranslate"><span class="pre">iterrows()</span></code> is explicitly permitted there for one-time-per-sync
+data transformation (see Style Guide Section 5, Exception #4). The <code class="docutils literal notranslate"><span class="pre">.itertuples()</span></code> and
+<code class="docutils literal notranslate"><span class="pre">for</span> <span class="pre">row</span> <span class="pre">in</span> <span class="pre">df</span></code> patterns remain prohibited in business-logic and metric-calculation code;
+their use elsewhere (ingest connectors, model prediction loops) is evaluated case-by-case
+against the vectorization mandate.</p>
+</div></blockquote>
 </section>
 <section id="id6">
 <h3>Marker<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
