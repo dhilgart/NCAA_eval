@@ -241,8 +241,8 @@ Claude Opus 4.6
 - `src/ncaa_eval/cli/predict.py` — MODIFIED: Replaced `NotImplementedError` with working ensemble prediction path via `_build_ensemble_predictions()`; added probability clamp
 - `src/ncaa_eval/evaluation/providers.py` — MODIFIED: Added `EnsembleProvider` class implementing `ProbabilityProvider` (AC #5)
 - `src/ncaa_eval/evaluation/__init__.py` — MODIFIED: Export `EnsembleProvider`
-- `tests/unit/test_model_ensemble.py` — MODIFIED: Added `TestMetaColumnOrder` (3 tests), `TestPredictProba` (4 tests), `TestPredictBracket` (2 tests — added missing column ValueError test)
-- `tests/unit/test_cli_predict.py` — MODIFIED: Added `TestEnsemblePredict` (1 test)
+- `tests/unit/test_model_ensemble.py` — MODIFIED: Added `TestMetaColumnOrder` (3 tests), `TestPredictProba` (5 tests incl. empty meta_column_order guard), `TestPredictBracket` (2 tests)
+- `tests/unit/test_cli_predict.py` — MODIFIED: Added `TestEnsemblePredict` (2 tests — routing test + predict_bracket path coverage test)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` — MODIFIED: Story status updated
 - `_bmad-output/planning-artifacts/template-requirements.md` — MODIFIED: Added 3 new patterns from code review
 
@@ -250,3 +250,4 @@ Claude Opus 4.6
 
 - 2026-03-12: Implemented ensemble inference interface — `predict_proba()`, `predict_bracket()`, CLI predict integration, meta_column_order persistence. 9 new tests added. All quality gates pass.
 - 2026-03-12: Code review fixes — Added `EnsembleProvider` (AC #5 completion); fixed tournament-only team discovery in `_discover_team_ids`; fixed non-deterministic set iteration; added context feature length validation; added probability clamp in CLI ensemble path; added `predict_bracket` missing-column ValueError test; added `Raises:` docstring section. 1 additional test. 1164 passed / 0 failed.
+- 2026-03-12: Adversarial code review fixes — Fixed `_build_bracket_contextual_features` to use ensemble's `feature_config` (was silently using default `FeatureConfig()`); added empty `meta_column_order` guard in `predict_proba` and `_assemble_bracket_meta_predictions`; removed redundant `import numpy as np` inside `EnsembleProvider._get_delegate`; added `test_predict_proba_empty_meta_column_order_raises` and `test_build_ensemble_predictions_calls_predict_bracket` tests. 2 additional tests. 1166 passed / 0 failed.

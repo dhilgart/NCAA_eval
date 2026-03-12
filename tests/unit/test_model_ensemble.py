@@ -705,6 +705,24 @@ class TestPredictProba:
         with pytest.raises(ValueError, match="Missing meta-learner input columns.*seed_diff"):
             ensemble.predict_proba(X)
 
+    def test_predict_proba_empty_meta_column_order_raises(self) -> None:
+        """ValueError raised when meta_column_order is empty (untrained ensemble)."""
+        base0 = _make_mock_stateless(["feat_a"], [0.6])
+        base1 = _make_mock_stateless(["feat_b"], [0.4])
+        meta = _make_mock_stateless(["pred_base_0", "pred_base_1"], [0.5])
+
+        ensemble = StackedEnsemble(
+            base_models=[base0, base1],
+            meta_learner=meta,
+            contextual_features=[],
+            # meta_column_order left as default empty list
+        )
+
+        X = pd.DataFrame({"feat_a": [1.0], "feat_b": [3.0]})
+
+        with pytest.raises(ValueError, match="meta_column_order is empty"):
+            ensemble.predict_proba(X)
+
 
 # ── Test: predict_bracket ────────────────────────────────────────────────────
 

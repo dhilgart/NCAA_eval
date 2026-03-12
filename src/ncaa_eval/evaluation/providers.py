@@ -196,8 +196,6 @@ class EnsembleProvider:
     def _get_delegate(self) -> MatrixProvider:
         if self._delegate is None:
             prob_df = self._ensemble.predict_bracket(self._data_dir, self._season)
-            import numpy as np
-
             self._delegate = MatrixProvider(
                 prob_df.to_numpy().astype(np.float64),
                 list(prob_df.index),

@@ -4153,3 +4153,28 @@ for feat, vals in context_features.items():
 ```
 
 Without this guard, `pd.DataFrame(mismatched_arrays)` raises a confusing `ValueError` that doesn't identify which source caused the mismatch.
+
+### Always Pass Scoping Config to Internal Feature Servers (Discovered Story 10.2 Adversarial Review, 2026-03-12)
+
+When a composed model (e.g., `StackedEnsemble`) has helper functions that build internal `FeatureServer` instances, **always pass the ensemble's actual `feature_config`** — never silently fall back to `FeatureConfig()` defaults.
+
+```python
+# ❌ Wrong — ignores ensemble's dataset_scope / gender_scope:
+server = _setup_feature_server(data_dir, FeatureConfig())
+
+# ✅ Correct — honours all scoping decisions made during training:
+server = _setup_feature_server(data_dir, feature_config)  # passed from ensemble
+```
+
+The symptom is silent data poisoning: an ensemble trained on Women's (`gender_scope="W"`) data silently serves Men's data during bracket prediction. Always propagate the config through all helper function signatures.
+
+### Guard Against Empty meta_column_order (Discovered Story 10.2 Adversarial Review, 2026-03-12)
+
+When a model stores learned column order in a field that defaults to empty (`meta_column_order: list[str] = field(default_factory=list)`), add an explicit guard before any indexing that would silently succeed on an empty list:
+
+```python
+if not self.meta_column_order:
+    raise ValueError("meta_column_order is empty — ensemble was not trained or loaded correctly")
+```
+
+Without this guard, `meta_df[[]]` produces a zero-column DataFrame that passes to `meta_learner.predict_proba()` without error, producing meaningless output rather than a clear failure message.

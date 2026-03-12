@@ -288,6 +288,7 @@ def _build_bracket_contextual_features(
     season: int,
     team_ids: list[int],
     contextual_features: list[str],
+    feature_config: FeatureConfig,
 ) -> dict[str, npt.NDArray[np.float64]]:
     """Build contextual feature vectors for all C(n,2) matchups.
 
@@ -301,8 +302,9 @@ def _build_bracket_contextual_features(
 
     n = len(team_ids)
 
-    # Build a feature server to get contextual features
-    server = _setup_feature_server(data_dir, FeatureConfig())
+    # Build a feature server to get contextual features, using the ensemble's
+    # feature_config so dataset_scope and gender_scope are honoured.
+    server = _setup_feature_server(data_dir, feature_config)
     season_df = server.serve_season_features(season, mode="batch")
 
     # Extract per-team contextual profiles
@@ -360,6 +362,9 @@ def _assemble_bracket_meta_predictions(
     meta_df = pd.DataFrame(meta_parts)
 
     # Validate column order
+    if not meta_column_order:
+        msg = "meta_column_order is empty — ensemble was not trained or loaded correctly"
+        raise ValueError(msg)
     missing = [c for c in meta_column_order if c not in meta_df.columns]
     if missing:
         msg = f"Missing meta-learner input columns: {missing}"
@@ -529,6 +534,9 @@ class StackedEnsemble:
         meta_df = pd.DataFrame(meta_parts, index=X.index)
 
         # Validate column order
+        if not self.meta_column_order:
+            msg = "meta_column_order is empty — ensemble was not trained or loaded correctly"
+            raise ValueError(msg)
         missing = [c for c in self.meta_column_order if c not in meta_df.columns]
         if missing:
             msg = f"Missing meta-learner input columns: {missing}"
@@ -569,7 +577,7 @@ class StackedEnsemble:
 
         # Build contextual feature vectors for all C(n,2) pairs
         context_features = _build_bracket_contextual_features(
-            data_dir, season, team_ids, self.contextual_features
+            data_dir, season, team_ids, self.contextual_features, self.feature_config
         )
 
         # Assemble meta-input for upper triangle and predict
