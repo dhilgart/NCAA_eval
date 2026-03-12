@@ -97,7 +97,7 @@ class TestYearFiltering:
             [MagicMock(), MagicMock()],  # breadcrumb columns
             [MagicMock(), MagicMock(), MagicMock(), MagicMock()],  # KPI columns
         ]
-        mock_st.dataframe.return_value = MagicMock(selection=MagicMock(rows=[]))
+        mock_st.dataframe.return_value = {"selection": {"rows": []}}
 
         with (
             patch.object(_lab_mod, "load_leaderboard_data", return_value=_sample_data()),
@@ -119,7 +119,7 @@ class TestYearFiltering:
             [MagicMock(), MagicMock()],  # breadcrumb columns
             [MagicMock(), MagicMock(), MagicMock(), MagicMock()],  # KPI columns
         ]
-        mock_st.dataframe.return_value = MagicMock(selection=MagicMock(rows=[]))
+        mock_st.dataframe.return_value = {"selection": {"rows": []}}
 
         with (
             patch.object(_lab_mod, "load_leaderboard_data", return_value=_sample_data()),

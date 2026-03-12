@@ -1,6 +1,6 @@
 # Story 9.11: Replace Undocumented Streamlit API Usage
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -24,21 +24,21 @@ so that **the dashboard does not break on Streamlit upgrades and all API usage i
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Replace undocumented API with typed, documented equivalent in `1_Lab.py` (AC: #1, #2, #3, #4)
-  - [ ] 1.1: Import `DataframeState` from `streamlit.elements.arrow` (use `TYPE_CHECKING` guard for runtime safety)
-  - [ ] 1.2: Use `typing.cast()` to narrow `st.dataframe()` return from `DeltaGenerator | DataframeState` to `DataframeState` (since `on_select="rerun"` guarantees `DataframeState` return)
-  - [ ] 1.3: Access `event["selection"]["rows"]` using dict-style access (TypedDict supports this with proper mypy typing) — OR use attribute access if mypy resolves correctly after cast
-  - [ ] 1.4: Remove both `# type: ignore[attr-defined]` comments
-  - [ ] 1.5: Verify `mypy --strict dashboard/pages/1_Lab.py` passes cleanly
+- [x] Task 1: Replace undocumented API with typed, documented equivalent in `1_Lab.py` (AC: #1, #2, #3, #4)
+  - [x] 1.1: Import `DataframeState` from `streamlit.elements.arrow` — NOT NEEDED: Streamlit 1.54.0 has `@overload` signatures that automatically narrow `st.dataframe()` return to `DataframeState` when `on_select="rerun"` is passed
+  - [x] 1.2: Use `typing.cast()` — NOT NEEDED: mypy reports `redundant-cast` because the overload already narrows the type
+  - [x] 1.3: Access `event["selection"]["rows"]` using dict-style safe `.get()` access — `event.get("selection", {}).get("rows", [])`
+  - [x] 1.4: Remove both `# type: ignore[attr-defined]` comments
+  - [x] 1.5: Verify `mypy --strict dashboard/pages/1_Lab.py` passes cleanly — confirmed clean
 
-- [ ] Task 2: Update test mocks in `test_leaderboard_page.py` (AC: #5)
-  - [ ] 2.1: Update `mock_st.dataframe.return_value` to use dict-style return matching `DataframeState` TypedDict shape: `{"selection": {"rows": []}}` — OR keep `MagicMock(selection=MagicMock(rows=[]))` if attribute access is used
-  - [ ] 2.2: Run `pytest tests/unit/test_leaderboard_page.py` to confirm all tests pass
+- [x] Task 2: Update test mocks in `test_leaderboard_page.py` (AC: #5)
+  - [x] 2.1: Updated `mock_st.dataframe.return_value` to dict-style return: `{"selection": {"rows": []}}`
+  - [x] 2.2: All 7 tests pass in `tests/unit/test_leaderboard_page.py`
 
-- [ ] Task 3: Run full quality gates (AC: #4, #5)
-  - [ ] 3.1: Run `mypy --strict src/ncaa_eval tests dashboard`
-  - [ ] 3.2: Run `ruff check .`
-  - [ ] 3.3: Run `pytest` (full suite)
+- [x] Task 3: Run full quality gates (AC: #4, #5)
+  - [x] 3.1: `mypy --strict src/ncaa_eval tests dashboard` — clean (118 source files)
+  - [x] 3.2: `ruff check .` — clean
+  - [x] 3.3: `pytest` — 1114 passed, 1 skipped, no regressions
 
 ## Dev Notes
 
@@ -189,12 +189,28 @@ Recent commits follow `feat(scope): description (Story X.Y)` pattern. Stories 9.
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+- mypy initially reported `redundant-cast` when using `typing.cast("DataframeState", ...)` — investigation revealed Streamlit 1.54.0 has `@overload` decorators on `ArrowMixin.dataframe()` that narrow the return type to `DataframeState` when `on_select=Literal["rerun"]` is passed. No cast or TYPE_CHECKING import needed.
+- ruff flagged C901 complexity (11 > 10) when using two-level nested `if` for dict access. Simplified to single-line chained `.get()` to reduce complexity back to 10.
+
 ### Completion Notes List
+
+- Replaced attribute-style access (`event.selection.rows`) with dict-style safe access (`event.get("selection", {}).get("rows", [])`) — proper TypedDict usage
+- Removed both `# type: ignore[attr-defined]` comments
+- No new imports needed — Streamlit's `@overload` signatures already provide full type narrowing
+- Updated test mocks from `MagicMock(selection=MagicMock(rows=[]))` to `{"selection": {"rows": []}}` to match dict-style access
+- Key discovery: The story's Dev Notes suggested cast/TYPE_CHECKING import, but Streamlit's overloads made these unnecessary — simpler solution
 
 ### Change Log
 
+- 2026-03-11: Replaced undocumented attribute-style Streamlit dataframe selection API with typed dict-style access; removed type: ignore comments; updated test mocks (Story 9.11)
+
 ### File List
+
+- `dashboard/pages/1_Lab.py` — MODIFIED: replaced `event.selection.rows` with `event.get("selection", {}).get("rows", [])`, removed `# type: ignore[attr-defined]`
+- `tests/unit/test_leaderboard_page.py` — MODIFIED: updated `mock_st.dataframe.return_value` from MagicMock to dict
+- `_bmad-output/implementation-artifacts/9-11-replace-undocumented-streamlit-api.md` — MODIFIED: task checkboxes, dev agent record, status
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — MODIFIED: story status ready-for-dev → review
