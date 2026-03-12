@@ -15,7 +15,12 @@ from pathlib import Path
 from typing import Literal, cast
 
 import pandas as pd  # type: ignore[import-untyped]
+import pandera.errors
+import pandera.pandas as pa
 
+# pandera.pandas (not bare pandera) avoids the FutureWarning in v0.29+.
+# pandera.errors is imported separately because pandera.pandas does not
+# re-export the errors sub-module.
 from ncaa_eval.ingest.connectors.base import (
     AuthenticationError,
     Connector,
@@ -28,31 +33,56 @@ from ncaa_eval.ingest.schema import Game, Season, Team
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
-# Expected CSV columns (used for schema validation)
+# Pandera schemas for CSV validation
 # ---------------------------------------------------------------------------
 
-_TEAMS_COLUMNS = {"TeamID", "TeamName"}
-_SPELLINGS_COLUMNS = {"TeamNameSpelling", "TeamID"}
-_REGULAR_SEASON_COLUMNS = {
-    "Season",
-    "DayNum",
-    "WTeamID",
-    "LTeamID",
-    "WScore",
-    "LScore",
-    "WLoc",
-    "NumOT",
-}
-_TOURNEY_COLUMNS = _REGULAR_SEASON_COLUMNS
-_SEASONS_COLUMNS = {"Season", "DayZero"}
+_TEAMS_SCHEMA = pa.DataFrameSchema(
+    {
+        "TeamID": pa.Column(int, pa.Check.ge(1)),
+        "TeamName": pa.Column(str, nullable=False),
+    },
+)
+
+_SPELLINGS_SCHEMA = pa.DataFrameSchema(
+    {
+        "TeamNameSpelling": pa.Column(str, nullable=False),
+        "TeamID": pa.Column(int, pa.Check.ge(1)),
+    },
+)
+
+_GAMES_SCHEMA = pa.DataFrameSchema(
+    {
+        "Season": pa.Column(int, pa.Check.ge(1985)),
+        "DayNum": pa.Column(int, pa.Check.ge(0)),
+        "WTeamID": pa.Column(int, pa.Check.ge(1)),
+        "LTeamID": pa.Column(int, pa.Check.ge(1)),
+        "WScore": pa.Column(int, pa.Check.ge(0)),
+        "LScore": pa.Column(int, pa.Check.ge(0)),
+        "WLoc": pa.Column(str, pa.Check.isin(["H", "A", "N"])),
+        "NumOT": pa.Column(int, pa.Check.ge(0)),
+    },
+)
+
+_SEASONS_SCHEMA = pa.DataFrameSchema(
+    {
+        "Season": pa.Column(int, pa.Check.ge(1985)),
+        "DayZero": pa.Column(str, nullable=False),
+    },
+)
 
 
-def _validate_columns(df: pd.DataFrame, expected: set[str], filename: str) -> None:
-    """Raise :class:`DataFormatError` if *df* is missing required columns."""
-    missing = expected - set(df.columns)
-    if missing:
-        msg = f"kaggle: {filename} missing columns: {sorted(missing)}"
-        raise DataFormatError(msg)
+def _validate_schema(
+    df: pd.DataFrame,
+    schema: pa.DataFrameSchema,
+    filename: str,
+) -> None:
+    """Validate *df* against a Pandera schema, wrapping errors in DataFormatError."""
+    try:
+        schema.validate(df)
+    except pandera.errors.SchemaError as exc:
+        raise DataFormatError(
+            f"kaggle: {filename} schema validation failed: {exc}",
+        ) from exc
 
 
 # ---------------------------------------------------------------------------
@@ -152,10 +182,16 @@ class KaggleConnector(Connector):
         if self._day_zeros is not None:
             return self._day_zeros
         df = self._read_csv("MSeasons.csv")
-        _validate_columns(df, _SEASONS_COLUMNS, "MSeasons.csv")
+        _validate_schema(df, _SEASONS_SCHEMA, "MSeasons.csv")
         mapping: dict[int, datetime.date] = {}
         for _, row in df.iterrows():
-            mapping[int(row["Season"])] = datetime.datetime.strptime(str(row["DayZero"]), "%m/%d/%Y").date()
+            day_zero_str = str(row["DayZero"])
+            try:
+                mapping[int(row["Season"])] = datetime.datetime.strptime(day_zero_str, "%m/%d/%Y").date()
+            except ValueError as exc:
+                raise DataFormatError(
+                    f"kaggle: MSeasons.csv DayZero value {day_zero_str!r} does not match expected format MM/DD/YYYY",
+                ) from exc
         self._day_zeros = mapping
         return mapping
 
@@ -168,7 +204,7 @@ class KaggleConnector(Connector):
         models from each row's TeamID and TeamName.
         """
         df = self._read_csv("MTeams.csv")
-        _validate_columns(df, _TEAMS_COLUMNS, "MTeams.csv")
+        _validate_schema(df, _TEAMS_SCHEMA, "MTeams.csv")
         return [Team(team_id=int(row["TeamID"]), team_name=str(row["TeamName"])) for _, row in df.iterrows()]
 
     def fetch_team_spellings(self) -> dict[str, int]:
@@ -179,8 +215,9 @@ class KaggleConnector(Connector):
         when resolving ESPN team name strings to Kaggle IDs.
         """
         df = self._read_csv("MTeamSpellings.csv")
-        _validate_columns(df, _SPELLINGS_COLUMNS, "MTeamSpellings.csv")
-        return dict(zip(df["TeamNameSpelling"].str.lower(), df["TeamID"].astype(int)))
+        _validate_schema(df, _SPELLINGS_SCHEMA, "MTeamSpellings.csv")
+        # Pandera already enforced int dtype; no .astype() needed here.
+        return dict(zip(df["TeamNameSpelling"].str.lower(), df["TeamID"]))
 
     def fetch_games(self, season: int) -> list[Game]:
         """Parse regular-season and tournament CSVs into Game models.
@@ -202,12 +239,11 @@ class KaggleConnector(Connector):
     def fetch_seasons(self) -> list[Season]:
         """Parse ``MSeasons.csv`` into Season models.
 
-        Reads MSeasons.csv, validates required columns, then constructs
-        Season models from each row's season year.
+        Delegates to :meth:`load_day_zeros` (which already reads and validates
+        MSeasons.csv) to avoid a second disk read and Pandera validation pass.
         """
-        df = self._read_csv("MSeasons.csv")
-        _validate_columns(df, _SEASONS_COLUMNS, "MSeasons.csv")
-        return [Season(year=int(row["Season"])) for _, row in df.iterrows()]
+        day_zeros = self.load_day_zeros()
+        return [Season(year=year) for year in day_zeros]
 
     # -- internal parsing ---------------------------------------------------
 
@@ -227,7 +263,7 @@ class KaggleConnector(Connector):
         models.
         """
         df = self._read_csv(filename)
-        _validate_columns(df, _REGULAR_SEASON_COLUMNS, filename)
+        _validate_schema(df, _GAMES_SCHEMA, filename)
         df = df[df["Season"] == season]
         games: list[Game] = []
         for _, row in df.iterrows():
@@ -242,9 +278,6 @@ class KaggleConnector(Connector):
                 game_date = dz + datetime.timedelta(days=day_num)
 
             wloc = str(row["WLoc"])
-            if wloc not in ("H", "A", "N"):
-                msg = f"kaggle: {filename} has unexpected WLoc value: {wloc!r}"
-                raise DataFormatError(msg)
 
             games.append(
                 Game(
