@@ -185,7 +185,13 @@ class KaggleConnector(Connector):
         _validate_schema(df, _SEASONS_SCHEMA, "MSeasons.csv")
         mapping: dict[int, datetime.date] = {}
         for _, row in df.iterrows():
-            mapping[int(row["Season"])] = datetime.datetime.strptime(str(row["DayZero"]), "%m/%d/%Y").date()
+            day_zero_str = str(row["DayZero"])
+            try:
+                mapping[int(row["Season"])] = datetime.datetime.strptime(day_zero_str, "%m/%d/%Y").date()
+            except ValueError as exc:
+                raise DataFormatError(
+                    f"kaggle: MSeasons.csv DayZero value {day_zero_str!r} does not match expected format MM/DD/YYYY",
+                ) from exc
         self._day_zeros = mapping
         return mapping
 

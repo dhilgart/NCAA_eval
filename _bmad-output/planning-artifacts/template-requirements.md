@@ -1249,6 +1249,7 @@ Before writing a custom implementation for any common data engineering concern, 
 - `pa.DataFrameSchema({col: pa.Column(...)}, strict=False)` — `strict=False` allows extra columns beyond the schema; required for subset-column validation functions
 - When a validation function should always verify column existence (even with no constraints), always build the schema: use `pa.Column(checks=checks or None)` instead of early-returning
 - **Avoid double-validation** (Discovered Story 9.14): when one method already reads+validates a CSV and caches results, other methods that need the same data should reuse the cache — not re-read and re-validate the same file. Example: `fetch_seasons()` should delegate to `load_day_zeros()` rather than calling `_read_csv()` + `schema.validate()` independently
+- **Pandera does NOT validate string formats** (Discovered Story 9.14 Code Review): `pa.Column(str, nullable=False)` only checks that a column is of string dtype and non-null — it does NOT validate string content formats (e.g., `"MM/DD/YYYY"` date strings). Any downstream `strptime()` or regex parse on a Pandera-validated string column can still raise a bare `ValueError`. Always wrap format-sensitive string parsing in try/except and re-raise as `DataFormatError` (or your project's boundary exception). Pattern: `try: datetime.strptime(s, fmt) except ValueError as e: raise DataFormatError(...) from e`
 
 ### Keep Story File in Sync with Mid-Story Pivots (Discovered Story 1.8 Code Review Round 2)
 

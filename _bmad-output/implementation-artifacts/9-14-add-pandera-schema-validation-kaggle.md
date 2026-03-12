@@ -171,14 +171,33 @@ Claude Opus 4.6
 - Removed manual WLoc validation (lines 244-247) — now handled by `_GAMES_SCHEMA` `isin` check
 - Added 4 new tests in `TestKaggleConnectorSchemaValidation`: wrong type, negative value, invalid WLoc, negative score
 - Updated `test_fetch_teams_missing_columns` match pattern for Pandera error format
-- All 1127 tests pass, mypy --strict clean, ruff check clean (post-dev; post-review: 1130 tests)
+- All 1127 tests pass, mypy --strict clean, ruff check clean (post-dev; post-review: 1130 tests; post-code-review-2: 1132 tests)
 - iterrows usage untouched per carve-out
 - Code review (2026-03-11): Refactored `fetch_seasons()` to delegate to `load_day_zeros()`; added spellings fixture + 3 tests; removed redundant `.astype(int)`; added import comment
+- Code review 2 (2026-03-11): Fixed H1 — wrapped `strptime` `ValueError` in `DataFormatError` in `load_day_zeros()`; added M1 — 2 seasons schema-violation tests (`test_fetch_seasons_missing_columns`, `test_fetch_seasons_malformed_day_zero`)
 
 ### Change Log
 
 - 2026-03-11: Replaced manual CSV column validation with Pandera schema validation in KaggleConnector (Story 9.14)
 - 2026-03-11: Code review fixes — eliminated duplicate MSeasons.csv validation, added spellings coverage, minor code cleanup
+- 2026-03-11: Code review 2 fixes — wrapped `strptime` ValueError in DataFormatError (H1); added 2 seasons schema-violation tests (M1)
+
+### Senior Developer Review (AI) — 2026-03-11
+
+**Verdict:** APPROVED with fixes applied.
+
+**Fixed (2 issues):**
+- 🔴 **H1 FIXED** — `load_day_zeros()` malformed DayZero string raised uncaught `ValueError` instead of `DataFormatError`. Wrapped `strptime` call in try/except and raises `DataFormatError` with descriptive message. `kaggle.py:186-192`
+- 🟡 **M1 FIXED** — `_SEASONS_SCHEMA` had zero schema-violation test coverage. Added `test_fetch_seasons_missing_columns` and `test_fetch_seasons_malformed_day_zero` to `TestKaggleConnectorSeasons`. `test_kaggle_connector.py`
+
+**Action Items (pre-existing, out of story scope):**
+- [ ] [AI-Review][MEDIUM] `_parse_games_csv` silently allows `game_date=None` when a season is not in `day_zeros` — contradicts MEMORY.md invariant "all games have dates"; consider raising `DataFormatError` or logging a warning instead of silently producing `date=None` models [`kaggle.py:269-272`]
+- [ ] [AI-Review][MEDIUM] `fetch_team_spellings()` uses `dict(zip(...))` which silently drops duplicate lowercase spellings — last writer wins; consider raising or logging on collision [`kaggle.py:214`]
+
+**Verified:**
+- All ACs implemented ✓
+- All tasks marked [x] are genuinely done ✓
+- 1132 tests pass, mypy --strict clean, ruff clean ✓
 
 ### File List
 

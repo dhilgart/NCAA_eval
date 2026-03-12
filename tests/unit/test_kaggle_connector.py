@@ -192,6 +192,22 @@ class TestKaggleConnectorSeasons:
         with pytest.raises(DataFormatError, match="file not found"):
             connector.fetch_seasons()
 
+    def test_fetch_seasons_missing_columns(self, tmp_path: Path) -> None:
+        """Missing required column in MSeasons.csv raises DataFormatError."""
+        csv_path = tmp_path / "MSeasons.csv"
+        csv_path.write_text("Year,DayZero\n2024,11/06/2023\n")
+        connector = KaggleConnector(extract_dir=tmp_path)
+        with pytest.raises(DataFormatError, match="schema validation failed"):
+            connector.fetch_seasons()
+
+    def test_fetch_seasons_malformed_day_zero(self, tmp_path: Path) -> None:
+        """DayZero with wrong date format raises DataFormatError."""
+        csv_path = tmp_path / "MSeasons.csv"
+        csv_path.write_text("Season,DayZero\n2024,2023-11-06\n")
+        connector = KaggleConnector(extract_dir=tmp_path)
+        with pytest.raises(DataFormatError, match="does not match expected format"):
+            connector.fetch_seasons()
+
 
 # ---------------------------------------------------------------------------
 # TestKaggleConnectorSchemaValidation  (Story 9.14 — Pandera)
