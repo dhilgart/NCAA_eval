@@ -32,6 +32,11 @@ so that test helpers follow DRY principles and future test files can reuse the f
   - [x] 3.2 `mypy --strict src/ncaa_eval tests` — clean (103 source files)
   - [x] 3.3 `ruff check .` — clean
 
+### Review Follow-ups (AI)
+- [ ] [AI-Review][HIGH] Add `spec=StatefulFeatureServer` to `MagicMock()` in `_make_feature_server` and fix return type to `StatefulFeatureServer` via `cast` — prevents silent swallowing of protocol typos [tests/unit/conftest.py:65-76]
+- [ ] [AI-Review][MEDIUM] Add `assert year >= 1` (or docstring note) to `_make_season_df` — year=0 produces `DateParseError` from malformed date string [tests/unit/conftest.py:19]
+- [ ] [AI-Review][LOW] Expand `_make_fold` docstring to note that shared `rng` state means output size of first call affects second call's random sequence [tests/unit/test_evaluation_backtest.py:30]
+
 ## Dev Notes
 
 ### Key Implementation Details
