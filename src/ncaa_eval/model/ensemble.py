@@ -14,6 +14,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+import pandas as pd  # type: ignore[import-untyped]
 from pydantic import Field as _Field
 
 from ncaa_eval.model._feature_config_io import save_feature_config
@@ -202,6 +203,56 @@ class StackedEnsemble:
             base_model_types=base_types,
             contextual_features=list(self.contextual_features),
         )
+
+    # ------------------------------------------------------------------
+    # Inference
+    # ------------------------------------------------------------------
+
+    def predict_proba(self, X: pd.DataFrame) -> pd.Series:
+        """Route features through base models and meta-learner.
+
+        For each base model, generates predictions by dispatching
+        stateless models through ``X[base_model.feature_names_]`` and
+        stateful models through the full ``X``.  Assembles base
+        predictions and contextual features into a meta-input DataFrame
+        in ``self.meta_column_order``, then calls the meta-learner.
+
+        Args:
+            X: Feature DataFrame with at least the columns required by
+                each base model and all contextual features.
+
+        Returns:
+            Series of ensemble win probabilities, indexed like *X*.
+
+        Raises:
+            ValueError: If any column in ``meta_column_order`` is missing
+                from the assembled meta-input.
+        """
+        base_preds: dict[str, pd.Series[float]] = {}
+        for i, base_model in enumerate(self.base_models):
+            col_name = f"pred_base_{i}"
+            if isinstance(base_model, StatefulModel):
+                base_preds[col_name] = base_model.predict_proba(X)
+            else:
+                feat_names: list[str] = base_model.feature_names_  # type: ignore[attr-defined]
+                base_preds[col_name] = base_model.predict_proba(X[feat_names])
+
+        # Assemble meta-input in training column order
+        meta_parts: dict[str, pd.Series[float]] = {**base_preds}
+        for feat in self.contextual_features:
+            if feat in X.columns:
+                meta_parts[feat] = X[feat]
+
+        meta_df = pd.DataFrame(meta_parts, index=X.index)
+
+        # Validate column order
+        missing = [c for c in self.meta_column_order if c not in meta_df.columns]
+        if missing:
+            msg = f"Missing meta-learner input columns: {missing}"
+            raise ValueError(msg)
+
+        meta_X = meta_df[self.meta_column_order]
+        return self.meta_learner.predict_proba(meta_X)
 
     # ------------------------------------------------------------------
     # Persistence

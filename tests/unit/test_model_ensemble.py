@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pandas as pd  # type: ignore[import-untyped]
@@ -557,3 +557,150 @@ class TestMetaColumnOrder:
 
         loaded = StackedEnsemble.load(save_dir)
         assert loaded.meta_column_order == []
+
+
+# ── Test: predict_proba ──────────────────────────────────────────────────────
+
+
+def _make_mock_stateless(feature_names: list[str], preds: list[float]) -> MagicMock:
+    """Create a mock stateless model with feature_names_ and predict_proba."""
+    mock = MagicMock(spec=LogisticRegressionModel)
+    mock.feature_names_ = feature_names
+    mock.predict_proba.return_value = pd.Series(preds)
+    mock.feature_config = FeatureConfig()
+    mock.get_config.return_value = MagicMock(model_name="logistic_regression")
+    return mock
+
+
+def _make_mock_stateful(preds: list[float]) -> MagicMock:
+    """Create a mock stateful model with predict_proba."""
+    mock = MagicMock(spec=StatefulModel)
+    mock.predict_proba.return_value = pd.Series(preds)
+    mock.feature_config = FeatureConfig(elo_enabled=True)
+    mock.get_config.return_value = MagicMock(model_name="elo")
+    return mock
+
+
+class TestPredictProba:
+    """AC #1, #3: predict_proba routes correctly and enforces column order."""
+
+    def test_predict_proba_with_stateless_models(self) -> None:
+        """predict_proba routes stateless models through feature_names_ slicing."""
+        base0 = _make_mock_stateless(["feat_a"], [0.6, 0.7])
+        base1 = _make_mock_stateless(["feat_b"], [0.4, 0.5])
+        meta = _make_mock_stateless(
+            ["pred_base_0", "pred_base_1", "seed_diff"],
+            [0.55, 0.65],
+        )
+
+        ensemble = StackedEnsemble(
+            base_models=[base0, base1],
+            meta_learner=meta,
+            contextual_features=["seed_diff"],
+            meta_column_order=["pred_base_0", "pred_base_1", "seed_diff"],
+        )
+
+        X = pd.DataFrame(
+            {
+                "feat_a": [1.0, 2.0],
+                "feat_b": [3.0, 4.0],
+                "seed_diff": [1.0, -2.0],
+                "team_a_id": [101, 102],
+                "team_b_id": [103, 104],
+            }
+        )
+
+        result = ensemble.predict_proba(X)
+        assert len(result) == 2
+
+        # Verify stateless routing: called with sliced DataFrame
+        base0.predict_proba.assert_called_once()
+        call_df = base0.predict_proba.call_args[0][0]
+        assert list(call_df.columns) == ["feat_a"]
+
+        base1.predict_proba.assert_called_once()
+        call_df = base1.predict_proba.call_args[0][0]
+        assert list(call_df.columns) == ["feat_b"]
+
+    def test_predict_proba_with_stateful_model(self) -> None:
+        """predict_proba passes full DataFrame to stateful models."""
+        base0 = _make_mock_stateful([0.6, 0.7])
+        base1 = _make_mock_stateless(["feat_a"], [0.4, 0.5])
+        meta = _make_mock_stateless(
+            ["pred_base_0", "pred_base_1", "seed_diff"],
+            [0.55, 0.65],
+        )
+
+        ensemble = StackedEnsemble(
+            base_models=[base0, base1],
+            meta_learner=meta,
+            contextual_features=["seed_diff"],
+            meta_column_order=["pred_base_0", "pred_base_1", "seed_diff"],
+        )
+
+        X = pd.DataFrame(
+            {
+                "feat_a": [1.0, 2.0],
+                "seed_diff": [1.0, -2.0],
+                "team_a_id": [101, 102],
+                "team_b_id": [103, 104],
+            }
+        )
+
+        ensemble.predict_proba(X)
+
+        # Stateful model receives full DataFrame
+        base0.predict_proba.assert_called_once()
+        call_df = base0.predict_proba.call_args[0][0]
+        assert "team_a_id" in call_df.columns
+
+    def test_predict_proba_column_order_enforced(self) -> None:
+        """Meta-learner receives columns in exact meta_column_order."""
+        base0 = _make_mock_stateless(["feat_a"], [0.6, 0.7])
+        base1 = _make_mock_stateless(["feat_b"], [0.4, 0.5])
+        meta = _make_mock_stateless(
+            ["pred_base_0", "pred_base_1", "seed_diff"],
+            [0.55, 0.65],
+        )
+
+        # Deliberate order: seed_diff first, then predictions
+        ensemble = StackedEnsemble(
+            base_models=[base0, base1],
+            meta_learner=meta,
+            contextual_features=["seed_diff"],
+            meta_column_order=["seed_diff", "pred_base_0", "pred_base_1"],
+        )
+
+        X = pd.DataFrame(
+            {
+                "feat_a": [1.0, 2.0],
+                "feat_b": [3.0, 4.0],
+                "seed_diff": [1.0, -2.0],
+            }
+        )
+
+        ensemble.predict_proba(X)
+
+        # Check meta-learner was called with correct column order
+        meta.predict_proba.assert_called_once()
+        meta_X = meta.predict_proba.call_args[0][0]
+        assert list(meta_X.columns) == ["seed_diff", "pred_base_0", "pred_base_1"]
+
+    def test_predict_proba_missing_column_raises(self) -> None:
+        """ValueError raised when a required contextual feature is missing."""
+        base0 = _make_mock_stateless(["feat_a"], [0.6])
+        base1 = _make_mock_stateless(["feat_b"], [0.4])
+        meta = _make_mock_stateless(["pred_base_0", "pred_base_1", "seed_diff"], [0.5])
+
+        ensemble = StackedEnsemble(
+            base_models=[base0, base1],
+            meta_learner=meta,
+            contextual_features=["seed_diff"],
+            meta_column_order=["pred_base_0", "pred_base_1", "seed_diff"],
+        )
+
+        # X is missing seed_diff
+        X = pd.DataFrame({"feat_a": [1.0], "feat_b": [3.0]})
+
+        with pytest.raises(ValueError, match="Missing meta-learner input columns.*seed_diff"):
+            ensemble.predict_proba(X)
