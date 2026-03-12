@@ -255,6 +255,7 @@
 <li class="toctree-l3 has-children"><a class="reference internal" href="../../../api/ncaa_eval.model.html">ncaa_eval.model package</a><input aria-label="Toggle navigation of ncaa_eval.model package" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api/ncaa_eval.model.base.html">ncaa_eval.model.base module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api/ncaa_eval.model.elo.html">ncaa_eval.model.elo module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/ncaa_eval.model.ensemble.html">ncaa_eval.model.ensemble module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api/ncaa_eval.model.logistic_regression.html">ncaa_eval.model.logistic_regression module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api/ncaa_eval.model.registry.html">ncaa_eval.model.registry module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api/ncaa_eval.model.tracking.html">ncaa_eval.model.tracking module</a></li>
@@ -326,7 +327,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timezone</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span><span class="p">,</span> <span class="n">Any</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Annotated</span><span class="p">,</span> <span class="n">Any</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>  <span class="c1"># type: ignore[import-untyped]</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pyarrow</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pa</span>  <span class="c1"># type: ignore[import-untyped]</span>
@@ -334,6 +335,9 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.model.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">Model</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.model.ensemble</span><span class="w"> </span><span class="kn">import</span> <span class="n">StackedEnsemble</span>
 
 <span class="c1"># ── PyArrow schema for Prediction Parquet files ────────────────────────────</span>
 
@@ -547,12 +551,21 @@
         <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_parquet</span><span class="p">(</span><span class="n">path</span><span class="p">)</span></div>
 
 
+<div class="viewcode-block" id="RunStore.model_dir">
+<a class="viewcode-back" href="../../../api/ncaa_eval.model.tracking.html#ncaa_eval.model.tracking.RunStore.model_dir">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">model_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Path</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the model directory path for a run (creates it if absent).&quot;&quot;&quot;</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_runs_dir</span> <span class="o">/</span> <span class="n">run_id</span> <span class="o">/</span> <span class="s2">&quot;model&quot;</span>
+        <span class="n">path</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">path</span></div>
+
+
 <div class="viewcode-block" id="RunStore.save_model">
 <a class="viewcode-back" href="../../../api/ncaa_eval.model.tracking.html#ncaa_eval.model.tracking.RunStore.save_model">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">save_model</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">run_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-        <span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span>
+        <span class="n">model</span><span class="p">:</span> <span class="n">Model</span> <span class="o">|</span> <span class="n">StackedEnsemble</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
         <span class="n">feature_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -561,6 +574,7 @@
 <span class="sd">        Args:</span>
 <span class="sd">            run_id: The run identifier.</span>
 <span class="sd">            model: A fitted model implementing ``save(path)``.</span>
+<span class="sd">                Accepts both ``Model`` and ``StackedEnsemble`` instances.</span>
 <span class="sd">            feature_names: Feature column names used during training.</span>
 
 <span class="sd">        Raises:</span>
@@ -579,21 +593,27 @@
 
 <div class="viewcode-block" id="RunStore.load_model">
 <a class="viewcode-back" href="../../../api/ncaa_eval.model.tracking.html#ncaa_eval.model.tracking.RunStore.load_model">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">load_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Model</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Model</span> <span class="o">|</span> <span class="n">StackedEnsemble</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load a trained model from a run directory.</span>
+
+<span class="sd">        Delegates to ``StackedEnsemble.load()`` when ``model_type == &quot;ensemble&quot;``.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            run_id: The run identifier.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            Model instance or None if no model directory exists (legacy run).</span>
+<span class="sd">            Model or StackedEnsemble instance, or None if no model directory</span>
+<span class="sd">            exists (legacy run).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.model.ensemble</span><span class="w"> </span><span class="kn">import</span> <span class="n">StackedEnsemble</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.model.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_model</span>
 
         <span class="n">model_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_runs_dir</span> <span class="o">/</span> <span class="n">run_id</span> <span class="o">/</span> <span class="s2">&quot;model&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">model_dir</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
             <span class="k">return</span> <span class="kc">None</span>
         <span class="n">run</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_run</span><span class="p">(</span><span class="n">run_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">run</span><span class="o">.</span><span class="n">model_type</span> <span class="o">==</span> <span class="s2">&quot;ensemble&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">StackedEnsemble</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">model_dir</span><span class="p">)</span>
         <span class="n">model_cls</span> <span class="o">=</span> <span class="n">get_model</span><span class="p">(</span><span class="n">run</span><span class="o">.</span><span class="n">model_type</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">model_cls</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">model_dir</span><span class="p">)</span></div>
 

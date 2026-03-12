@@ -9,6 +9,7 @@ Submodules
 
    ncaa_eval.model.base
    ncaa_eval.model.elo
+   ncaa_eval.model.ensemble
    ncaa_eval.model.logistic_regression
    ncaa_eval.model.registry
    ncaa_eval.model.tracking

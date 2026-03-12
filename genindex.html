@@ -254,6 +254,7 @@
 <li class="toctree-l3 has-children"><a class="reference internal" href="api/ncaa_eval.model.html">ncaa_eval.model package</a><input aria-label="Toggle navigation of ncaa_eval.model package" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.model.base.html">ncaa_eval.model.base module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.model.elo.html">ncaa_eval.model.elo module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.model.ensemble.html">ncaa_eval.model.ensemble module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.model.logistic_regression.html">ncaa_eval.model.logistic_regression module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.model.registry.html">ncaa_eval.model.registry module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="api/ncaa_eval.model.tracking.html">ncaa_eval.model.tracking module</a></li>
@@ -385,6 +386,14 @@
 
         <ul>
           <li><a href="api/ncaa_eval.evaluation.backtest.html#ncaa_eval.evaluation.backtest.BacktestResult">(class in ncaa_eval.evaluation.backtest)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.model.ensemble.html#ncaa_eval.model.ensemble.StackedEnsembleConfig.base_model_types">base_model_types (ncaa_eval.model.ensemble.StackedEnsembleConfig attribute)</a>
+</li>
+        <li><a href="api/ncaa_eval.model.ensemble.html#id0">base_models (ncaa_eval.model.ensemble.StackedEnsemble attribute)</a>, <a href="api/ncaa_eval.model.ensemble.html#ncaa_eval.model.ensemble.StackedEnsemble.base_models">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.model.html#id1">(ncaa_eval.model.StackedEnsemble attribute)</a>, <a href="api/ncaa_eval.model.html#ncaa_eval.model.StackedEnsemble.base_models">[1]</a>
 </li>
         </ul></li>
         <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.EloProvider.batch_matchup_probabilities">batch_matchup_probabilities() (ncaa_eval.evaluation.EloProvider method)</a>
@@ -747,6 +756,14 @@
         </ul></li>
         <li><a href="api/ncaa_eval.ingest.connectors.base.html#ncaa_eval.ingest.connectors.base.ConnectorError">ConnectorError</a>, <a href="api/ncaa_eval.ingest.connectors.html#ncaa_eval.ingest.connectors.ConnectorError">[1]</a>, <a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.ConnectorError">[2]</a>
 </li>
+        <li><a href="api/ncaa_eval.model.ensemble.html#id1">contextual_features (ncaa_eval.model.ensemble.StackedEnsemble attribute)</a>, <a href="api/ncaa_eval.model.ensemble.html#ncaa_eval.model.ensemble.StackedEnsemble.contextual_features">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.model.ensemble.html#ncaa_eval.model.ensemble.StackedEnsembleConfig.contextual_features">(ncaa_eval.model.ensemble.StackedEnsembleConfig attribute)</a>
+</li>
+          <li><a href="api/ncaa_eval.model.html#id2">(ncaa_eval.model.StackedEnsemble attribute)</a>, <a href="api/ncaa_eval.model.html#ncaa_eval.model.StackedEnsemble.contextual_features">[1]</a>
+</li>
+        </ul></li>
         <li><a href="api/ncaa_eval.transform.html#ncaa_eval.transform.CoverageGateResult">CoverageGateResult (class in ncaa_eval.transform)</a>
 
         <ul>
@@ -972,7 +989,11 @@
         <li><a href="api/ncaa_eval.model.base.html#id0">feature_config (ncaa_eval.model.base.Model attribute)</a>, <a href="api/ncaa_eval.model.base.html#ncaa_eval.model.base.Model.feature_config">[1]</a>
 
         <ul>
+          <li><a href="api/ncaa_eval.model.ensemble.html#ncaa_eval.model.ensemble.StackedEnsemble.feature_config">(ncaa_eval.model.ensemble.StackedEnsemble property)</a>
+</li>
           <li><a href="api/ncaa_eval.model.html#id0">(ncaa_eval.model.Model attribute)</a>, <a href="api/ncaa_eval.model.html#ncaa_eval.model.Model.feature_config">[1]</a>
+</li>
+          <li><a href="api/ncaa_eval.model.html#ncaa_eval.model.StackedEnsemble.feature_config">(ncaa_eval.model.StackedEnsemble property)</a>
 </li>
         </ul></li>
         <li><a href="api/ncaa_eval.model.logistic_regression.html#ncaa_eval.model.logistic_regression.LogisticRegressionModel.feature_names_">feature_names_ (ncaa_eval.model.logistic_regression.LogisticRegressionModel attribute)</a>
@@ -1200,9 +1221,13 @@
         <ul>
           <li><a href="api/ncaa_eval.model.elo.html#ncaa_eval.model.elo.EloModel.get_config">(ncaa_eval.model.elo.EloModel method)</a>
 </li>
+          <li><a href="api/ncaa_eval.model.ensemble.html#ncaa_eval.model.ensemble.StackedEnsemble.get_config">(ncaa_eval.model.ensemble.StackedEnsemble method)</a>
+</li>
           <li><a href="api/ncaa_eval.model.logistic_regression.html#ncaa_eval.model.logistic_regression.LogisticRegressionModel.get_config">(ncaa_eval.model.logistic_regression.LogisticRegressionModel method)</a>
 </li>
           <li><a href="api/ncaa_eval.model.html#ncaa_eval.model.Model.get_config">(ncaa_eval.model.Model method)</a>
+</li>
+          <li><a href="api/ncaa_eval.model.html#ncaa_eval.model.StackedEnsemble.get_config">(ncaa_eval.model.StackedEnsemble method)</a>
 </li>
           <li><a href="api/ncaa_eval.model.xgboost_model.html#ncaa_eval.model.xgboost_model.XGBoostModel.get_config">(ncaa_eval.model.xgboost_model.XGBoostModel method)</a>
 </li>
@@ -1542,9 +1567,13 @@
         <ul>
           <li><a href="api/ncaa_eval.model.elo.html#ncaa_eval.model.elo.EloModel.load">(ncaa_eval.model.elo.EloModel class method)</a>
 </li>
+          <li><a href="api/ncaa_eval.model.ensemble.html#ncaa_eval.model.ensemble.StackedEnsemble.load">(ncaa_eval.model.ensemble.StackedEnsemble class method)</a>
+</li>
           <li><a href="api/ncaa_eval.model.logistic_regression.html#ncaa_eval.model.logistic_regression.LogisticRegressionModel.load">(ncaa_eval.model.logistic_regression.LogisticRegressionModel class method)</a>
 </li>
           <li><a href="api/ncaa_eval.model.html#ncaa_eval.model.Model.load">(ncaa_eval.model.Model class method)</a>
+</li>
+          <li><a href="api/ncaa_eval.model.html#ncaa_eval.model.StackedEnsemble.load">(ncaa_eval.model.StackedEnsemble class method)</a>
 </li>
           <li><a href="api/ncaa_eval.model.xgboost_model.html#ncaa_eval.model.xgboost_model.XGBoostModel.load">(ncaa_eval.model.xgboost_model.XGBoostModel class method)</a>
 </li>
@@ -1693,6 +1722,12 @@
         </ul></li>
         <li><a href="api/ncaa_eval.ingest.validation.html#ncaa_eval.ingest.validation.ValidationResult.message">message (ncaa_eval.ingest.validation.ValidationResult attribute)</a>
 </li>
+        <li><a href="api/ncaa_eval.model.ensemble.html#id2">meta_learner (ncaa_eval.model.ensemble.StackedEnsemble attribute)</a>, <a href="api/ncaa_eval.model.ensemble.html#ncaa_eval.model.ensemble.StackedEnsemble.meta_learner">[1]</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.model.html#id3">(ncaa_eval.model.StackedEnsemble attribute)</a>, <a href="api/ncaa_eval.model.html#ncaa_eval.model.StackedEnsemble.meta_learner">[1]</a>
+</li>
+        </ul></li>
         <li><a href="api/ncaa_eval.evaluation.simulation.html#id24">method (ncaa_eval.evaluation.simulation.SimulationResult attribute)</a>, <a href="api/ncaa_eval.evaluation.simulation.html#ncaa_eval.evaluation.simulation.SimulationResult.method">[1]</a>
 
         <ul>
@@ -1740,6 +1775,8 @@
 </li>
           <li><a href="api/ncaa_eval.model.elo.html#ncaa_eval.model.elo.EloModelConfig.model_config">(ncaa_eval.model.elo.EloModelConfig attribute)</a>
 </li>
+          <li><a href="api/ncaa_eval.model.ensemble.html#ncaa_eval.model.ensemble.StackedEnsembleConfig.model_config">(ncaa_eval.model.ensemble.StackedEnsembleConfig attribute)</a>
+</li>
           <li><a href="api/ncaa_eval.model.logistic_regression.html#ncaa_eval.model.logistic_regression.LogisticRegressionConfig.model_config">(ncaa_eval.model.logistic_regression.LogisticRegressionConfig attribute)</a>
 </li>
           <li><a href="api/ncaa_eval.model.html#ncaa_eval.model.ModelConfig.model_config">(ncaa_eval.model.ModelConfig attribute)</a>
@@ -1753,10 +1790,14 @@
         </ul></li>
     </ul></td>
     <td style="width: 33%; vertical-align: top;"><ul>
+        <li><a href="api/ncaa_eval.model.tracking.html#ncaa_eval.model.tracking.RunStore.model_dir">model_dir() (ncaa_eval.model.tracking.RunStore method)</a>
+</li>
         <li><a href="api/ncaa_eval.model.base.html#ncaa_eval.model.base.ModelConfig.model_name">model_name (ncaa_eval.model.base.ModelConfig attribute)</a>
 
         <ul>
           <li><a href="api/ncaa_eval.model.elo.html#ncaa_eval.model.elo.EloModelConfig.model_name">(ncaa_eval.model.elo.EloModelConfig attribute)</a>
+</li>
+          <li><a href="api/ncaa_eval.model.ensemble.html#ncaa_eval.model.ensemble.StackedEnsembleConfig.model_name">(ncaa_eval.model.ensemble.StackedEnsembleConfig attribute)</a>
 </li>
           <li><a href="api/ncaa_eval.model.logistic_regression.html#ncaa_eval.model.logistic_regression.LogisticRegressionConfig.model_name">(ncaa_eval.model.logistic_regression.LogisticRegressionConfig attribute)</a>
 </li>
@@ -1840,6 +1881,8 @@
           <li><a href="api/ncaa_eval.model.base.html#module-ncaa_eval.model.base">ncaa_eval.model.base</a>
 </li>
           <li><a href="api/ncaa_eval.model.elo.html#module-ncaa_eval.model.elo">ncaa_eval.model.elo</a>
+</li>
+          <li><a href="api/ncaa_eval.model.ensemble.html#module-ncaa_eval.model.ensemble">ncaa_eval.model.ensemble</a>
 </li>
           <li><a href="api/ncaa_eval.model.logistic_regression.html#module-ncaa_eval.model.logistic_regression">ncaa_eval.model.logistic_regression</a>
 </li>
@@ -2154,6 +2197,13 @@
 
         <ul>
           <li><a href="api/ncaa_eval.model.elo.html#module-ncaa_eval.model.elo">module</a>
+</li>
+        </ul></li>
+        <li>
+    ncaa_eval.model.ensemble
+
+        <ul>
+          <li><a href="api/ncaa_eval.model.ensemble.html#module-ncaa_eval.model.ensemble">module</a>
 </li>
         </ul></li>
         <li>
@@ -2665,9 +2715,13 @@
         <ul>
           <li><a href="api/ncaa_eval.model.elo.html#ncaa_eval.model.elo.EloModel.save">(ncaa_eval.model.elo.EloModel method)</a>
 </li>
+          <li><a href="api/ncaa_eval.model.ensemble.html#ncaa_eval.model.ensemble.StackedEnsemble.save">(ncaa_eval.model.ensemble.StackedEnsemble method)</a>
+</li>
           <li><a href="api/ncaa_eval.model.logistic_regression.html#ncaa_eval.model.logistic_regression.LogisticRegressionModel.save">(ncaa_eval.model.logistic_regression.LogisticRegressionModel method)</a>
 </li>
           <li><a href="api/ncaa_eval.model.html#ncaa_eval.model.Model.save">(ncaa_eval.model.Model method)</a>
+</li>
+          <li><a href="api/ncaa_eval.model.html#ncaa_eval.model.StackedEnsemble.save">(ncaa_eval.model.StackedEnsemble method)</a>
 </li>
           <li><a href="api/ncaa_eval.model.xgboost_model.html#ncaa_eval.model.xgboost_model.XGBoostModel.save">(ncaa_eval.model.xgboost_model.XGBoostModel method)</a>
 </li>
@@ -2930,6 +2984,14 @@
           <li><a href="api/ncaa_eval.ingest.html#ncaa_eval.ingest.SyncResult.source">(ncaa_eval.ingest.SyncResult attribute)</a>
 </li>
         </ul></li>
+        <li><a href="api/ncaa_eval.model.html#ncaa_eval.model.StackedEnsemble">StackedEnsemble (class in ncaa_eval.model)</a>
+
+        <ul>
+          <li><a href="api/ncaa_eval.model.ensemble.html#ncaa_eval.model.ensemble.StackedEnsemble">(class in ncaa_eval.model.ensemble)</a>
+</li>
+        </ul></li>
+        <li><a href="api/ncaa_eval.model.ensemble.html#ncaa_eval.model.ensemble.StackedEnsembleConfig">StackedEnsembleConfig (class in ncaa_eval.model.ensemble)</a>
+</li>
         <li><a href="api/ncaa_eval.evaluation.html#ncaa_eval.evaluation.StandardScoring">StandardScoring (class in ncaa_eval.evaluation)</a>
 
         <ul>

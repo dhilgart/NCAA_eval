@@ -256,6 +256,7 @@
 <li class="toctree-l3 current has-children"><a class="reference internal" href="ncaa_eval.model.html">ncaa_eval.model package</a><input aria-label="Toggle navigation of ncaa_eval.model package" checked="" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul class="current">
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.base.html">ncaa_eval.model.base module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.elo.html">ncaa_eval.model.elo module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.ensemble.html">ncaa_eval.model.ensemble module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.logistic_regression.html">ncaa_eval.model.logistic_regression module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="ncaa_eval.model.registry.html">ncaa_eval.model.registry module</a></li>
 <li class="toctree-l4 current current-page"><a class="current reference internal" href="#">ncaa_eval.model.tracking module</a></li>
@@ -507,14 +508,16 @@ roc_auc, ece, elapsed_seconds]. Empty DataFrame if no summaries.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="ncaa_eval.model.tracking.RunStore.load_model">
-<span class="sig-name descname"><span class="pre">load_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="ncaa_eval.model.base.html#ncaa_eval.model.base.Model" title="ncaa_eval.model.base.Model"><span class="pre">Model</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/model/tracking.html#RunStore.load_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.model.tracking.RunStore.load_model" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">load_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="ncaa_eval.model.html#ncaa_eval.model.Model" title="ncaa_eval.model.Model"><span class="pre">Model</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="ncaa_eval.model.html#ncaa_eval.model.StackedEnsemble" title="ncaa_eval.model.StackedEnsemble"><span class="pre">StackedEnsemble</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/model/tracking.html#RunStore.load_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.model.tracking.RunStore.load_model" title="Link to this definition">¶</a></dt>
 <dd><p>Load a trained model from a run directory.</p>
+<p>Delegates to <code class="docutils literal notranslate"><span class="pre">StackedEnsemble.load()</span></code> when <code class="docutils literal notranslate"><span class="pre">model_type</span> <span class="pre">==</span> <span class="pre">&quot;ensemble&quot;</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>run_id</strong> – The run identifier.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Model instance or None if no model directory exists (legacy run).</p>
+<dd class="field-even"><p>Model or StackedEnsemble instance, or None if no model directory
+exists (legacy run).</p>
 </dd>
 </dl>
 </dd></dl>
@@ -540,6 +543,12 @@ roc_auc, ece, elapsed_seconds]. Empty DataFrame if no summaries.</p>
     exist.</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.model.tracking.RunStore.model_dir">
+<span class="sig-name descname"><span class="pre">model_dir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Path</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/model/tracking.html#RunStore.model_dir"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.model.tracking.RunStore.model_dir" title="Link to this definition">¶</a></dt>
+<dd><p>Return the model directory path for a run (creates it if absent).</p>
 </dd></dl>
 
 <dl class="py method">
@@ -580,13 +589,14 @@ columns=[log_loss, brier_score, roc_auc, ece, elapsed_seconds]).</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="ncaa_eval.model.tracking.RunStore.save_model">
-<span class="sig-name descname"><span class="pre">save_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="ncaa_eval.model.base.html#ncaa_eval.model.base.Model" title="ncaa_eval.model.base.Model"><span class="pre">Model</span></a></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/model/tracking.html#RunStore.save_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.model.tracking.RunStore.save_model" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">save_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="ncaa_eval.model.html#ncaa_eval.model.Model" title="ncaa_eval.model.Model"><span class="pre">Model</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="ncaa_eval.model.html#ncaa_eval.model.StackedEnsemble" title="ncaa_eval.model.StackedEnsemble"><span class="pre">StackedEnsemble</span></a></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/model/tracking.html#RunStore.save_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.model.tracking.RunStore.save_model" title="Link to this definition">¶</a></dt>
 <dd><p>Persist a trained model alongside a run.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>run_id</strong> – The run identifier.</p></li>
-<li><p><strong>model</strong> – A fitted model implementing <code class="docutils literal notranslate"><span class="pre">save(path)</span></code>.</p></li>
+<li><p><strong>model</strong> – A fitted model implementing <code class="docutils literal notranslate"><span class="pre">save(path)</span></code>.
+Accepts both <code class="docutils literal notranslate"><span class="pre">Model</span></code> and <code class="docutils literal notranslate"><span class="pre">StackedEnsemble</span></code> instances.</p></li>
 <li><p><strong>feature_names</strong> – Feature column names used during training.</p></li>
 </ul>
 </dd>
@@ -696,6 +706,7 @@ handling empty prediction lists by constructing typed empty arrays.</p>
 <li><a class="reference internal" href="#ncaa_eval.model.tracking.RunStore.load_model"><code class="docutils literal notranslate"><span class="pre">RunStore.load_model()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.model.tracking.RunStore.load_predictions"><code class="docutils literal notranslate"><span class="pre">RunStore.load_predictions()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.model.tracking.RunStore.load_run"><code class="docutils literal notranslate"><span class="pre">RunStore.load_run()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.model.tracking.RunStore.model_dir"><code class="docutils literal notranslate"><span class="pre">RunStore.model_dir()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.model.tracking.RunStore.save_fold_predictions"><code class="docutils literal notranslate"><span class="pre">RunStore.save_fold_predictions()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.model.tracking.RunStore.save_metrics"><code class="docutils literal notranslate"><span class="pre">RunStore.save_metrics()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.model.tracking.RunStore.save_model"><code class="docutils literal notranslate"><span class="pre">RunStore.save_model()</span></code></a></li>

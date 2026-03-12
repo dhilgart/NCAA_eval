@@ -255,6 +255,7 @@
 <li class="toctree-l3 has-children"><a class="reference internal" href="../../../api/ncaa_eval.model.html">ncaa_eval.model package</a><input aria-label="Toggle navigation of ncaa_eval.model package" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api/ncaa_eval.model.base.html">ncaa_eval.model.base module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api/ncaa_eval.model.elo.html">ncaa_eval.model.elo module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/ncaa_eval.model.ensemble.html">ncaa_eval.model.ensemble module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api/ncaa_eval.model.logistic_regression.html">ncaa_eval.model.logistic_regression module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api/ncaa_eval.model.registry.html">ncaa_eval.model.registry module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api/ncaa_eval.model.tracking.html">ncaa_eval.model.tracking module</a></li>
@@ -337,6 +338,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.evaluation.providers</span><span class="w"> </span><span class="kn">import</span> <span class="n">EloProvider</span><span class="p">,</span> <span class="n">build_probability_matrix</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.ingest</span><span class="w"> </span><span class="kn">import</span> <span class="n">ParquetRepository</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.model.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">Model</span><span class="p">,</span> <span class="n">StatefulModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.model.ensemble</span><span class="w"> </span><span class="kn">import</span> <span class="n">StackedEnsemble</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.model.tracking</span><span class="w"> </span><span class="kn">import</span> <span class="n">RunStore</span>
 
 
@@ -463,6 +465,10 @@
     <span class="k">if</span> <span class="n">model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;No model found for run </span><span class="si">{</span><span class="n">run_id</span><span class="si">!r}</span><span class="s2">&quot;</span>
         <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">StackedEnsemble</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Ensemble prediction is not yet supported (Story 10.2)&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="n">repo</span> <span class="o">=</span> <span class="n">ParquetRepository</span><span class="p">(</span><span class="n">base_path</span><span class="o">=</span><span class="n">data_dir</span><span class="p">)</span>
 

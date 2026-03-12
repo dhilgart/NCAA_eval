@@ -255,6 +255,7 @@
 <li class="toctree-l3 has-children"><a class="reference internal" href="../../../api/ncaa_eval.model.html">ncaa_eval.model package</a><input aria-label="Toggle navigation of ncaa_eval.model package" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="../../../api/ncaa_eval.model.base.html">ncaa_eval.model.base module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api/ncaa_eval.model.elo.html">ncaa_eval.model.elo module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/ncaa_eval.model.ensemble.html">ncaa_eval.model.ensemble module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api/ncaa_eval.model.logistic_regression.html">ncaa_eval.model.logistic_regression module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api/ncaa_eval.model.registry.html">ncaa_eval.model.registry module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../../../api/ncaa_eval.model.tracking.html">ncaa_eval.model.tracking module</a></li>
@@ -324,6 +325,8 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">subprocess</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">uuid</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
@@ -339,9 +342,12 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.evaluation.backtest</span><span class="w"> </span><span class="kn">import</span> <span class="n">_randomize_team_assignment</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.ingest</span><span class="w"> </span><span class="kn">import</span> <span class="n">ParquetRepository</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.model.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">Model</span><span class="p">,</span> <span class="n">StatefulModel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.model.ensemble</span><span class="w"> </span><span class="kn">import</span> <span class="n">StackedEnsemble</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.model.tracking</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelRun</span><span class="p">,</span> <span class="n">Prediction</span><span class="p">,</span> <span class="n">RunStore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.transform.feature_serving</span><span class="w"> </span><span class="kn">import</span> <span class="n">FeatureConfig</span><span class="p">,</span> <span class="n">StatefulFeatureServer</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.transform.serving</span><span class="w"> </span><span class="kn">import</span> <span class="n">ChronologicalDataServer</span>
+
+<span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
 <span class="nd">@dataclass</span>
@@ -564,7 +570,7 @@
 <div class="viewcode-block" id="run_training">
 <a class="viewcode-back" href="../../../api/ncaa_eval.cli.train.html#ncaa_eval.cli.train.run_training">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">run_training</span><span class="p">(</span>  <span class="c1"># noqa: PLR0913</span>
-    <span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">Model</span> <span class="o">|</span> <span class="n">StackedEnsemble</span><span class="p">,</span>
     <span class="o">*</span><span class="p">,</span>
     <span class="n">start_year</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="n">end_year</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -575,19 +581,11 @@
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ModelRun</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Execute the full train → predict → persist pipeline.</span>
 
-<span class="sd">    Initialises a ``_TrainingContext`` by calling ``_setup_feature_server``</span>
-<span class="sd">    and wrapping all run-scoped state.  Calls ``_build_season_features`` to</span>
-<span class="sd">    produce per-season DataFrames; short-circuits with an empty ``ModelRun``</span>
-<span class="sd">    if no game data is found.  Concatenates frames, then calls</span>
-<span class="sd">    ``_prepare_and_train`` (label extraction, balance check, fit) to get</span>
-<span class="sd">    ``feat_cols``.  Generates tournament predictions via</span>
-<span class="sd">    ``_generate_tournament_predictions``, persists the ``ModelRun`` record,</span>
-<span class="sd">    runs the walk-forward backtest via ``_run_backtest_and_persist``</span>
-<span class="sd">    (skipped if fewer than 2 seasons), and finally saves model artifacts and</span>
-<span class="sd">    prints the summary table via ``_persist_artifacts_and_summarize``.</span>
+<span class="sd">    Dispatches to ``_run_ensemble_training`` when *model* is a</span>
+<span class="sd">    ``StackedEnsemble``; otherwise runs the single-model pipeline.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        model: An instantiated model (stateful or stateless).</span>
+<span class="sd">        model: An instantiated model (stateful, stateless, or ensemble).</span>
 <span class="sd">        start_year: First season year (inclusive) for training.</span>
 <span class="sd">        end_year: Last season year (inclusive) for training.</span>
 <span class="sd">        data_dir: Path to the local Parquet data store.</span>
@@ -601,6 +599,18 @@
 <span class="sd">        The persisted run metadata record.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">_console</span> <span class="o">=</span> <span class="n">console</span> <span class="ow">or</span> <span class="n">Console</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">StackedEnsemble</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_run_ensemble_training</span><span class="p">(</span>
+            <span class="n">model</span><span class="p">,</span>
+            <span class="n">start_year</span><span class="o">=</span><span class="n">start_year</span><span class="p">,</span>
+            <span class="n">end_year</span><span class="o">=</span><span class="n">end_year</span><span class="p">,</span>
+            <span class="n">data_dir</span><span class="o">=</span><span class="n">data_dir</span><span class="p">,</span>
+            <span class="n">output_dir</span><span class="o">=</span><span class="n">output_dir</span><span class="p">,</span>
+            <span class="n">model_name</span><span class="o">=</span><span class="n">model_name</span><span class="p">,</span>
+            <span class="n">console</span><span class="o">=</span><span class="n">_console</span><span class="p">,</span>
+        <span class="p">)</span>
+
     <span class="n">server</span> <span class="o">=</span> <span class="n">_setup_feature_server</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">feature_config</span><span class="p">)</span>
     <span class="n">store</span> <span class="o">=</span> <span class="n">RunStore</span><span class="p">(</span><span class="n">base_path</span><span class="o">=</span><span class="n">output_dir</span><span class="p">)</span>
     <span class="n">ctx</span> <span class="o">=</span> <span class="n">_TrainingContext</span><span class="p">(</span>
@@ -661,6 +671,275 @@
 
     <span class="k">return</span> <span class="n">run</span></div>
 
+
+
+<span class="c1"># ── Ensemble training pipeline ─────────────────────────────────────────────</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_collect_oof_predictions</span><span class="p">(</span>  <span class="c1"># noqa: PLR0913</span>
+    <span class="n">base_model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span>
+    <span class="n">base_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">data_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">start_year</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">end_year</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">console</span><span class="p">:</span> <span class="n">Console</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run a walk-forward backtest for one base model and return OOF predictions.</span>
+
+<span class="sd">    Returns a DataFrame with columns</span>
+<span class="sd">    ``[year, game_id, team_a_id, team_b_id, pred_base_&lt;idx&gt;, team_a_won]``.</span>
+<span class="sd">    Contextual features (``seed_diff``, ``is_tournament``, ``loc_encoding``)</span>
+<span class="sd">    are NOT included here; they are joined in Step 3 of</span>
+<span class="sd">    ``_run_ensemble_training`` from the union feature server.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">server</span> <span class="o">=</span> <span class="n">_setup_feature_server</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">base_model</span><span class="o">.</span><span class="n">feature_config</span><span class="p">)</span>
+    <span class="n">seasons</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">start_year</span><span class="p">,</span> <span class="n">end_year</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">mode</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;batch&quot;</span><span class="p">,</span> <span class="s2">&quot;stateful&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;stateful&quot;</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">base_model</span><span class="p">,</span> <span class="n">StatefulModel</span><span class="p">)</span> <span class="k">else</span> <span class="s2">&quot;batch&quot;</span>
+
+    <span class="n">console</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  OOF backtest for base model </span><span class="si">{</span><span class="n">base_idx</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">base_model</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">)...&quot;</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">run_backtest</span><span class="p">(</span>
+        <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">base_model</span><span class="p">),</span>
+        <span class="n">server</span><span class="p">,</span>
+        <span class="n">seasons</span><span class="o">=</span><span class="n">seasons</span><span class="p">,</span>
+        <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span>
+        <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">console</span><span class="o">=</span><span class="n">console</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">fold_preds</span> <span class="o">=</span> <span class="n">_build_fold_predictions</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">fold_preds</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+
+    <span class="n">fold_preds</span> <span class="o">=</span> <span class="n">fold_preds</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;pred_win_prob&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;pred_base_</span><span class="si">{</span><span class="n">base_idx</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">})</span>
+    <span class="k">return</span> <span class="n">fold_preds</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_align_oof_predictions</span><span class="p">(</span>
+    <span class="n">oof_frames</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Inner-join OOF predictions from all base models on ``game_id``.</span>
+
+<span class="sd">    Logs a warning if &gt;5% of games are dropped by the join.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">oof_frames</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+
+    <span class="n">aligned</span> <span class="o">=</span> <span class="n">oof_frames</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">frame</span> <span class="ow">in</span> <span class="n">oof_frames</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+        <span class="n">pred_cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">frame</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;pred_base_&quot;</span><span class="p">)]</span>
+        <span class="n">aligned</span> <span class="o">=</span> <span class="n">aligned</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span>
+            <span class="n">frame</span><span class="p">[[</span><span class="s2">&quot;game_id&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">pred_cols</span><span class="p">]],</span>
+            <span class="n">on</span><span class="o">=</span><span class="s2">&quot;game_id&quot;</span><span class="p">,</span>
+            <span class="n">how</span><span class="o">=</span><span class="s2">&quot;inner&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="n">max_len</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">oof_frames</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">max_len</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">drop_pct</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">aligned</span><span class="p">)</span> <span class="o">/</span> <span class="n">max_len</span>
+        <span class="k">if</span> <span class="n">drop_pct</span> <span class="o">&gt;</span> <span class="mf">0.05</span><span class="p">:</span>
+            <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;OOF alignment dropped </span><span class="si">%.1f%%</span><span class="s2"> of games (</span><span class="si">%d</span><span class="s2"> → </span><span class="si">%d</span><span class="s2">)&quot;</span><span class="p">,</span>
+                <span class="n">drop_pct</span> <span class="o">*</span> <span class="mi">100</span><span class="p">,</span>
+                <span class="n">max_len</span><span class="p">,</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">aligned</span><span class="p">),</span>
+            <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">aligned</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_build_meta_training_set</span><span class="p">(</span>
+    <span class="n">aligned</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+    <span class="n">contextual_features</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build meta-learner X and y from aligned OOF predictions.</span>
+
+<span class="sd">    Returns (meta_X, meta_y) where meta_X has columns</span>
+<span class="sd">    ``[pred_base_0, ..., &lt;contextual_features&gt;]`` and meta_y is ``team_a_won``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">pred_cols</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">aligned</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;pred_base_&quot;</span><span class="p">))</span>
+    <span class="n">context_cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">contextual_features</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">aligned</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span>
+    <span class="n">meta_X</span> <span class="o">=</span> <span class="n">aligned</span><span class="p">[</span><span class="n">pred_cols</span> <span class="o">+</span> <span class="n">context_cols</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">meta_y</span> <span class="o">=</span> <span class="n">aligned</span><span class="p">[</span><span class="s2">&quot;team_a_won&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">meta_X</span><span class="p">,</span> <span class="n">meta_y</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_retrain_base_models</span><span class="p">(</span>
+    <span class="n">ensemble</span><span class="p">:</span> <span class="n">StackedEnsemble</span><span class="p">,</span>
+    <span class="n">data_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">start_year</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">end_year</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">console</span><span class="p">:</span> <span class="n">Console</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Retrain each base model on the full dataset.&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">base_model</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ensemble</span><span class="o">.</span><span class="n">base_models</span><span class="p">):</span>
+        <span class="n">console</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Retraining base model </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> on full dataset...&quot;</span><span class="p">)</span>
+        <span class="n">server</span> <span class="o">=</span> <span class="n">_setup_feature_server</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">base_model</span><span class="o">.</span><span class="n">feature_config</span><span class="p">)</span>
+        <span class="n">is_stateful</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">base_model</span><span class="p">,</span> <span class="n">StatefulModel</span><span class="p">)</span>
+
+        <span class="n">season_frames</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">year</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">start_year</span><span class="p">,</span> <span class="n">end_year</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">mode</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;batch&quot;</span><span class="p">,</span> <span class="s2">&quot;stateful&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;stateful&quot;</span> <span class="k">if</span> <span class="n">is_stateful</span> <span class="k">else</span> <span class="s2">&quot;batch&quot;</span>
+            <span class="n">df</span> <span class="o">=</span> <span class="n">server</span><span class="o">.</span><span class="n">serve_season_features</span><span class="p">(</span><span class="n">year</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">df</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+                <span class="n">season_frames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">season_frames</span><span class="p">:</span>
+            <span class="k">continue</span>
+
+        <span class="n">combined</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">season_frames</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_stateful</span><span class="p">:</span>
+            <span class="n">combined</span> <span class="o">=</span> <span class="n">_randomize_team_assignment</span><span class="p">(</span><span class="n">combined</span><span class="p">)</span>
+
+        <span class="n">y</span> <span class="o">=</span> <span class="n">combined</span><span class="p">[</span><span class="s2">&quot;team_a_won&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">is_stateful</span><span class="p">:</span>
+            <span class="n">base_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">combined</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">feat_cols</span> <span class="o">=</span> <span class="n">_feature_cols</span><span class="p">(</span><span class="n">combined</span><span class="p">)</span>
+            <span class="n">feat_cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">feat_cols</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">combined</span><span class="p">[</span><span class="n">c</span><span class="p">]</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">all</span><span class="p">()]</span>
+            <span class="n">base_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">combined</span><span class="p">[</span><span class="n">feat_cols</span><span class="p">],</span> <span class="n">y</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_run_ensemble_training</span><span class="p">(</span>  <span class="c1"># noqa: PLR0913</span>
+    <span class="n">ensemble</span><span class="p">:</span> <span class="n">StackedEnsemble</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">start_year</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">end_year</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">data_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">output_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">console</span><span class="p">:</span> <span class="n">Console</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ModelRun</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Execute the stacked ensemble training pipeline.</span>
+
+<span class="sd">    Steps:</span>
+<span class="sd">      1. OOF generation — walk-forward backtest per base model</span>
+<span class="sd">      2. OOF alignment — inner join on game_id</span>
+<span class="sd">      3. Meta-training set construction</span>
+<span class="sd">      4. Meta-learner training</span>
+<span class="sd">      5. Full-dataset base model retraining</span>
+<span class="sd">      6. Artifact persistence</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">store</span> <span class="o">=</span> <span class="n">RunStore</span><span class="p">(</span><span class="n">base_path</span><span class="o">=</span><span class="n">output_dir</span><span class="p">)</span>
+
+    <span class="c1"># Step 1: OOF generation</span>
+    <span class="n">console</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;[bold]Step 1/6: Generating OOF predictions...[/bold]&quot;</span><span class="p">)</span>
+    <span class="n">oof_frames</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">oof_run_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">base_model</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ensemble</span><span class="o">.</span><span class="n">base_models</span><span class="p">):</span>
+        <span class="n">oof_df</span> <span class="o">=</span> <span class="n">_collect_oof_predictions</span><span class="p">(</span>
+            <span class="n">base_model</span><span class="p">,</span>
+            <span class="n">base_idx</span><span class="o">=</span><span class="n">i</span><span class="p">,</span>
+            <span class="n">data_dir</span><span class="o">=</span><span class="n">data_dir</span><span class="p">,</span>
+            <span class="n">start_year</span><span class="o">=</span><span class="n">start_year</span><span class="p">,</span>
+            <span class="n">end_year</span><span class="o">=</span><span class="n">end_year</span><span class="p">,</span>
+            <span class="n">console</span><span class="o">=</span><span class="n">console</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">oof_frames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">oof_df</span><span class="p">)</span>
+        <span class="n">oof_run_ids</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">()))</span>
+
+    <span class="c1"># Step 2: OOF alignment</span>
+    <span class="n">console</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;[bold]Step 2/6: Aligning OOF predictions...[/bold]&quot;</span><span class="p">)</span>
+    <span class="n">aligned</span> <span class="o">=</span> <span class="n">_align_oof_predictions</span><span class="p">(</span><span class="n">oof_frames</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">aligned</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+        <span class="n">console</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;[yellow]No aligned OOF predictions — aborting ensemble training.[/yellow]&quot;</span><span class="p">)</span>
+        <span class="n">run_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())</span>
+        <span class="n">run</span> <span class="o">=</span> <span class="n">ModelRun</span><span class="p">(</span>
+            <span class="n">run_id</span><span class="o">=</span><span class="n">run_id</span><span class="p">,</span>
+            <span class="n">model_type</span><span class="o">=</span><span class="s2">&quot;ensemble&quot;</span><span class="p">,</span>
+            <span class="n">hyperparameters</span><span class="o">=</span><span class="n">ensemble</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(),</span>
+            <span class="n">git_hash</span><span class="o">=</span><span class="n">_get_git_hash</span><span class="p">(),</span>
+            <span class="n">start_year</span><span class="o">=</span><span class="n">start_year</span><span class="p">,</span>
+            <span class="n">end_year</span><span class="o">=</span><span class="n">end_year</span><span class="p">,</span>
+            <span class="n">prediction_count</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">store</span><span class="o">.</span><span class="n">save_run</span><span class="p">(</span><span class="n">run</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="k">return</span> <span class="n">run</span>
+
+    <span class="n">console</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Aligned OOF games: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">aligned</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Step 3: Meta-training set</span>
+    <span class="n">console</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;[bold]Step 3/6: Building meta-training set...[/bold]&quot;</span><span class="p">)</span>
+    <span class="c1"># Contextual features (seed_diff, is_tournament, loc_encoding) are</span>
+    <span class="c1"># present in the OOF fold predictions from _build_fold_predictions</span>
+    <span class="c1"># via _evaluate_fold&#39;s test data, but _build_fold_predictions only</span>
+    <span class="c1"># returns game_id/pred/actuals. We need to get them from a feature</span>
+    <span class="c1"># server. Build one with the ensemble&#39;s union feature_config.</span>
+    <span class="n">union_server</span> <span class="o">=</span> <span class="n">_setup_feature_server</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">feature_config</span><span class="p">)</span>
+    <span class="n">context_frames</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">year</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">start_year</span><span class="p">,</span> <span class="n">end_year</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">union_server</span><span class="o">.</span><span class="n">serve_season_features</span><span class="p">(</span><span class="n">year</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;batch&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">df</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+            <span class="n">context_frames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">df</span><span class="p">[[</span><span class="s2">&quot;game_id&quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">ensemble</span><span class="o">.</span><span class="n">contextual_features</span><span class="p">]])</span>
+
+    <span class="k">if</span> <span class="n">context_frames</span><span class="p">:</span>
+        <span class="n">context_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">context_frames</span><span class="p">,</span> <span class="n">ignore_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="c1"># The feature server assigns team_a = winner always, so game_ids</span>
+        <span class="c1"># are unique per game. Inner join: if a game_id is missing from the</span>
+        <span class="c1"># context server it likely indicates a data inconsistency; NaN</span>
+        <span class="c1"># contextual features would silently poison the meta-learner.</span>
+        <span class="n">before_merge</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">aligned</span><span class="p">)</span>
+        <span class="n">aligned</span> <span class="o">=</span> <span class="n">aligned</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">context_df</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="s2">&quot;game_id&quot;</span><span class="p">,</span> <span class="n">how</span><span class="o">=</span><span class="s2">&quot;inner&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">aligned</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">before_merge</span><span class="p">:</span>
+            <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;Context feature join dropped </span><span class="si">%d</span><span class="s2"> OOF games (</span><span class="si">%d</span><span class="s2"> → </span><span class="si">%d</span><span class="s2">); &quot;</span>
+                <span class="s2">&quot;possible game_id mismatch between base model OOF and union feature server.&quot;</span><span class="p">,</span>
+                <span class="n">before_merge</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">aligned</span><span class="p">),</span>
+                <span class="n">before_merge</span><span class="p">,</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">aligned</span><span class="p">),</span>
+            <span class="p">)</span>
+
+    <span class="n">meta_X</span><span class="p">,</span> <span class="n">meta_y</span> <span class="o">=</span> <span class="n">_build_meta_training_set</span><span class="p">(</span><span class="n">aligned</span><span class="p">,</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">contextual_features</span><span class="p">)</span>
+    <span class="n">meta_column_order</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">meta_X</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+    <span class="n">console</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Meta-training shape: </span><span class="si">{</span><span class="n">meta_X</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Step 4: Meta-learner training</span>
+    <span class="n">console</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;[bold]Step 4/6: Training meta-learner...[/bold]&quot;</span><span class="p">)</span>
+    <span class="n">ensemble</span><span class="o">.</span><span class="n">meta_learner</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">meta_X</span><span class="p">,</span> <span class="n">meta_y</span><span class="p">)</span>
+
+    <span class="c1"># Step 5: Retrain base models on full dataset</span>
+    <span class="n">console</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;[bold]Step 5/6: Retraining base models on full dataset...[/bold]&quot;</span><span class="p">)</span>
+    <span class="n">_retrain_base_models</span><span class="p">(</span><span class="n">ensemble</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">,</span> <span class="n">start_year</span><span class="p">,</span> <span class="n">end_year</span><span class="p">,</span> <span class="n">console</span><span class="p">)</span>
+
+    <span class="c1"># Step 6: Persist</span>
+    <span class="n">console</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;[bold]Step 6/6: Persisting ensemble artifacts...[/bold]&quot;</span><span class="p">)</span>
+    <span class="n">run_id</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">uuid</span><span class="o">.</span><span class="n">uuid4</span><span class="p">())</span>
+    <span class="n">run</span> <span class="o">=</span> <span class="n">ModelRun</span><span class="p">(</span>
+        <span class="n">run_id</span><span class="o">=</span><span class="n">run_id</span><span class="p">,</span>
+        <span class="n">model_type</span><span class="o">=</span><span class="s2">&quot;ensemble&quot;</span><span class="p">,</span>
+        <span class="n">hyperparameters</span><span class="o">=</span><span class="n">ensemble</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(),</span>
+        <span class="n">git_hash</span><span class="o">=</span><span class="n">_get_git_hash</span><span class="p">(),</span>
+        <span class="n">start_year</span><span class="o">=</span><span class="n">start_year</span><span class="p">,</span>
+        <span class="n">end_year</span><span class="o">=</span><span class="n">end_year</span><span class="p">,</span>
+        <span class="n">prediction_count</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">store</span><span class="o">.</span><span class="n">save_run</span><span class="p">(</span><span class="n">run</span><span class="p">,</span> <span class="p">[])</span>
+    <span class="n">store</span><span class="o">.</span><span class="n">save_model</span><span class="p">(</span><span class="n">run_id</span><span class="p">,</span> <span class="n">ensemble</span><span class="p">)</span>
+
+    <span class="c1"># Augment manifest with OOF metadata</span>
+    <span class="n">model_dir</span> <span class="o">=</span> <span class="n">store</span><span class="o">.</span><span class="n">model_dir</span><span class="p">(</span><span class="n">run_id</span><span class="p">)</span>
+    <span class="n">manifest_path</span> <span class="o">=</span> <span class="n">model_dir</span> <span class="o">/</span> <span class="s2">&quot;manifest.json&quot;</span>
+    <span class="n">manifest</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">manifest_path</span><span class="o">.</span><span class="n">read_text</span><span class="p">())</span>
+    <span class="n">manifest</span><span class="p">[</span><span class="s2">&quot;meta_column_order&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">meta_column_order</span>
+    <span class="n">manifest</span><span class="p">[</span><span class="s2">&quot;oof_backtest_run_ids&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">oof_run_ids</span>
+    <span class="n">manifest</span><span class="p">[</span><span class="s2">&quot;oof_game_count&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">aligned</span><span class="p">)</span>
+    <span class="n">max_len</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">oof_frames</span><span class="p">)</span> <span class="k">if</span> <span class="n">oof_frames</span> <span class="k">else</span> <span class="mi">0</span>
+    <span class="n">manifest</span><span class="p">[</span><span class="s2">&quot;oof_drop_pct&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">aligned</span><span class="p">)</span> <span class="o">/</span> <span class="n">max_len</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span> <span class="k">if</span> <span class="n">max_len</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mf">0.0</span>
+    <span class="n">manifest_path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">manifest</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+
+    <span class="c1"># Summary table</span>
+    <span class="n">table</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Ensemble Training Results&quot;</span><span class="p">)</span>
+    <span class="n">table</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="s2">&quot;Field&quot;</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;cyan&quot;</span><span class="p">)</span>
+    <span class="n">table</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="s2">&quot;Value&quot;</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;green&quot;</span><span class="p">)</span>
+    <span class="n">table</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span><span class="s2">&quot;Run ID&quot;</span><span class="p">,</span> <span class="n">run</span><span class="o">.</span><span class="n">run_id</span><span class="p">)</span>
+    <span class="n">table</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span><span class="s2">&quot;Model&quot;</span><span class="p">,</span> <span class="n">model_name</span><span class="p">)</span>
+    <span class="n">table</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span><span class="s2">&quot;Base models&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ensemble</span><span class="o">.</span><span class="n">base_models</span><span class="p">)))</span>
+    <span class="n">table</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span><span class="s2">&quot;Seasons&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">start_year</span><span class="si">}</span><span class="s2">–</span><span class="si">{</span><span class="n">end_year</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">table</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span><span class="s2">&quot;OOF games&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">aligned</span><span class="p">)))</span>
+    <span class="n">table</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span><span class="s2">&quot;Meta features&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">meta_column_order</span><span class="p">)))</span>
+    <span class="n">table</span><span class="o">.</span><span class="n">add_row</span><span class="p">(</span><span class="s2">&quot;Git hash&quot;</span><span class="p">,</span> <span class="n">run</span><span class="o">.</span><span class="n">git_hash</span><span class="p">)</span>
+    <span class="n">console</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">run</span>
 </pre></div>
         </article>
       </div>
