@@ -144,7 +144,7 @@ development_status:
   9-11-replace-undocumented-streamlit-api: done
   9-12-implement-st-progress-simulation: done
   9-13-consolidate-duplicated-test-helper: done
-  9-14-add-pandera-schema-validation-kaggle: review
+  9-14-add-pandera-schema-validation-kaggle: done
   9-15-document-iterrows-convention-exception: backlog
   epic-9-retrospective: optional
 

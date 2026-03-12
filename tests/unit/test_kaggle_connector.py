@@ -237,6 +237,28 @@ class TestKaggleConnectorSchemaValidation:
         with pytest.raises(DataFormatError, match="schema validation failed"):
             connector.fetch_games(2024)
 
+    def test_fetch_team_spellings_valid(self, connector: KaggleConnector) -> None:
+        """fetch_team_spellings() parses MTeamSpellings.csv into spelling→ID dict."""
+        spellings = connector.fetch_team_spellings()
+        assert spellings["abilene chr"] == 1101
+        assert spellings["air force"] == 1102
+
+    def test_fetch_team_spellings_schema_violation(self, tmp_path: Path) -> None:
+        """Invalid spellings CSV (missing required column) raises DataFormatError."""
+        csv_path = tmp_path / "MTeamSpellings.csv"
+        csv_path.write_text("Spelling,ID\nabilene chr,1101\n")
+        connector = KaggleConnector(extract_dir=tmp_path)
+        with pytest.raises(DataFormatError, match="schema validation failed"):
+            connector.fetch_team_spellings()
+
+    def test_fetch_team_spellings_negative_id(self, tmp_path: Path) -> None:
+        """Negative TeamID in spellings CSV raises DataFormatError."""
+        csv_path = tmp_path / "MTeamSpellings.csv"
+        csv_path.write_text("TeamNameSpelling,TeamID\nabilene chr,-1\n")
+        connector = KaggleConnector(extract_dir=tmp_path)
+        with pytest.raises(DataFormatError, match="schema validation failed"):
+            connector.fetch_team_spellings()
+
 
 # ---------------------------------------------------------------------------
 # TestKaggleConnectorDownload  (subtask 6.9 — error handling)

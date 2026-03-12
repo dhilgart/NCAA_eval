@@ -1,6 +1,6 @@
 # Story 9.14: Add Pandera Schema Validation to KaggleConnector
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -156,6 +156,11 @@ Claude Opus 4.6
 - Pandera 0.29.0 deprecation: `import pandera as pa` triggers FutureWarning; used `import pandera.pandas as pa` instead
 - Pandera has `py.typed` marker — no `# type: ignore` needed for mypy
 - Existing `test_fetch_teams_missing_columns` matched on "missing columns" but Pandera error says "column 'X' not in dataframe" — updated match pattern to "schema validation failed"
+- `import pandera as pa` triggers FutureWarning in v0.29+; must use `import pandera.pandas as pa`. `pandera.errors` does not re-export through `pandera.pandas` so it is imported separately — explanatory comment added to source
+- `fetch_team_spellings()` originally called `.astype(int)` on TeamID Series; removed as redundant after Pandera enforces int dtype
+- `test_wrong_type_in_team_id`: feeding "abc" in TeamID causes pandas to infer `object` dtype; Pandera then rejects the type mismatch — this tests dtype inference, not a runtime type error per se
+- Code review fix (2026-03-11): `fetch_seasons()` was re-reading MSeasons.csv independently of `load_day_zeros()`; refactored to delegate, eliminating duplicate disk read and Pandera validation
+- Code review fix (2026-03-11): Added `tests/fixtures/kaggle/MTeamSpellings.csv` fixture and 3 tests covering `_SPELLINGS_SCHEMA` — this was the only schema path with zero test coverage
 
 ### Completion Notes List
 
@@ -166,16 +171,19 @@ Claude Opus 4.6
 - Removed manual WLoc validation (lines 244-247) — now handled by `_GAMES_SCHEMA` `isin` check
 - Added 4 new tests in `TestKaggleConnectorSchemaValidation`: wrong type, negative value, invalid WLoc, negative score
 - Updated `test_fetch_teams_missing_columns` match pattern for Pandera error format
-- All 1127 tests pass, mypy --strict clean, ruff check clean
+- All 1127 tests pass, mypy --strict clean, ruff check clean (post-dev; post-review: 1130 tests)
 - iterrows usage untouched per carve-out
+- Code review (2026-03-11): Refactored `fetch_seasons()` to delegate to `load_day_zeros()`; added spellings fixture + 3 tests; removed redundant `.astype(int)`; added import comment
 
 ### Change Log
 
 - 2026-03-11: Replaced manual CSV column validation with Pandera schema validation in KaggleConnector (Story 9.14)
+- 2026-03-11: Code review fixes — eliminated duplicate MSeasons.csv validation, added spellings coverage, minor code cleanup
 
 ### File List
 
 - `src/ncaa_eval/ingest/connectors/kaggle.py` (modified)
 - `tests/unit/test_kaggle_connector.py` (modified)
+- `tests/fixtures/kaggle/MTeamSpellings.csv` (added)
 - `_bmad-output/implementation-artifacts/9-14-add-pandera-schema-validation-kaggle.md` (modified)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified)

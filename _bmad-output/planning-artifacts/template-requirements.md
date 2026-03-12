@@ -1244,10 +1244,11 @@ Before writing a custom implementation for any common data engineering concern, 
 
 **Pandera-specific notes (Discovered Story 1.8):**
 - Import as `import pandera.pandas as pa` for pandas validation (the top-level `import pandera as pa` is deprecated in pandera ≥ 0.20)
-- Import the exception separately: `from pandera.errors import SchemaError`
+- Import the exception separately: `import pandera.errors` (not `from pandera.errors import SchemaError` — both work, but module import avoids name shadowing). `pandera.pandas` does NOT re-export `pandera.errors`, so always import it as a separate statement with an explanatory comment
 - Pandera IS fully typed — no `# type: ignore[import-untyped]` needed
 - `pa.DataFrameSchema({col: pa.Column(...)}, strict=False)` — `strict=False` allows extra columns beyond the schema; required for subset-column validation functions
 - When a validation function should always verify column existence (even with no constraints), always build the schema: use `pa.Column(checks=checks or None)` instead of early-returning
+- **Avoid double-validation** (Discovered Story 9.14): when one method already reads+validates a CSV and caches results, other methods that need the same data should reuse the cache — not re-read and re-validate the same file. Example: `fetch_seasons()` should delegate to `load_day_zeros()` rather than calling `_read_csv()` + `schema.validate()` independently
 
 ### Keep Story File in Sync with Mid-Story Pivots (Discovered Story 1.8 Code Review Round 2)
 

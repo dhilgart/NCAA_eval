@@ -18,6 +18,9 @@ import pandas as pd  # type: ignore[import-untyped]
 import pandera.errors
 import pandera.pandas as pa
 
+# pandera.pandas (not bare pandera) avoids the FutureWarning in v0.29+.
+# pandera.errors is imported separately because pandera.pandas does not
+# re-export the errors sub-module.
 from ncaa_eval.ingest.connectors.base import (
     AuthenticationError,
     Connector,
@@ -207,7 +210,8 @@ class KaggleConnector(Connector):
         """
         df = self._read_csv("MTeamSpellings.csv")
         _validate_schema(df, _SPELLINGS_SCHEMA, "MTeamSpellings.csv")
-        return dict(zip(df["TeamNameSpelling"].str.lower(), df["TeamID"].astype(int)))
+        # Pandera already enforced int dtype; no .astype() needed here.
+        return dict(zip(df["TeamNameSpelling"].str.lower(), df["TeamID"]))
 
     def fetch_games(self, season: int) -> list[Game]:
         """Parse regular-season and tournament CSVs into Game models.
@@ -229,12 +233,11 @@ class KaggleConnector(Connector):
     def fetch_seasons(self) -> list[Season]:
         """Parse ``MSeasons.csv`` into Season models.
 
-        Reads MSeasons.csv, validates required columns, then constructs
-        Season models from each row's season year.
+        Delegates to :meth:`load_day_zeros` (which already reads and validates
+        MSeasons.csv) to avoid a second disk read and Pandera validation pass.
         """
-        df = self._read_csv("MSeasons.csv")
-        _validate_schema(df, _SEASONS_SCHEMA, "MSeasons.csv")
-        return [Season(year=int(row["Season"])) for _, row in df.iterrows()]
+        day_zeros = self.load_day_zeros()
+        return [Season(year=year) for year in day_zeros]
 
     # -- internal parsing ---------------------------------------------------
 
