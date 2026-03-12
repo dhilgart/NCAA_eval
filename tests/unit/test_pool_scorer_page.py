@@ -278,7 +278,7 @@ class TestCustomScoringPath:
 
 
 class TestAnalyzeOutcomesButton:
-    def test_button_triggers_simulation(self) -> None:
+    def test_button_triggers_simulation_with_progress(self) -> None:
         mock_st = MagicMock()
         mock_st.session_state = {
             "selected_run_id": "abc123",
@@ -298,14 +298,48 @@ class TestAnalyzeOutcomesButton:
             patch.object(_page_mod, "st", mock_st),
             patch.object(_page_mod, "get_data_dir", return_value="/fake/data"),
             patch.object(_page_mod, "load_tourney_seeds", return_value=[{"seed": "W01"}]),
-            patch.object(_page_mod, "run_bracket_simulation", return_value=sim_data) as mock_sim,
+            patch.object(
+                _page_mod, "run_bracket_simulation_with_progress", return_value=sim_data
+            ) as mock_sim,
         ):
             _page_mod._render_pool_scorer_page()
 
-        # run_bracket_simulation should have been called with monte_carlo
+        # run_bracket_simulation_with_progress should have been called
         mock_sim.assert_called_once()
         call_kwargs = mock_sim.call_args[1]
-        assert call_kwargs["method"] == "monte_carlo"
+        assert call_kwargs["n_simulations"] == 10_000
+
+    def test_progress_bar_used_instead_of_spinner(self) -> None:
+        """st.progress should be called for MC, not st.spinner."""
+        mock_st = MagicMock()
+        mock_progress_bar = MagicMock()
+        mock_st.progress.return_value = mock_progress_bar
+        mock_st.session_state = {
+            "selected_run_id": "abc123",
+            "selected_year": 2023,
+            "selected_scoring": "standard",
+        }
+        mock_st.columns.side_effect = lambda n: [
+            MagicMock() for _ in range(n if isinstance(n, int) else len(n))
+        ]
+        mock_st.checkbox.return_value = False
+        mock_st.slider.return_value = 10_000
+        mock_st.button.return_value = True
+
+        sim_data = _make_sim_data()
+
+        with (
+            patch.object(_page_mod, "st", mock_st),
+            patch.object(_page_mod, "get_data_dir", return_value="/fake/data"),
+            patch.object(_page_mod, "load_tourney_seeds", return_value=[{"seed": "W01"}]),
+            patch.object(_page_mod, "run_bracket_simulation_with_progress", return_value=sim_data),
+        ):
+            _page_mod._render_pool_scorer_page()
+
+        # st.progress should be called (not st.spinner for MC path)
+        mock_st.progress.assert_called()
+        # progress bar should be cleared after simulation
+        mock_progress_bar.empty.assert_called_once()
 
 
 class TestSimulationFailure:
@@ -327,7 +361,7 @@ class TestSimulationFailure:
             patch.object(_page_mod, "st", mock_st),
             patch.object(_page_mod, "get_data_dir", return_value="/fake/data"),
             patch.object(_page_mod, "load_tourney_seeds", return_value=[{"seed": "W01"}]),
-            patch.object(_page_mod, "run_bracket_simulation", return_value=None),
+            patch.object(_page_mod, "run_bracket_simulation_with_progress", return_value=None),
         ):
             _page_mod._render_pool_scorer_page()
 
@@ -369,7 +403,7 @@ class TestNoSimWinners:
             patch.object(_page_mod, "st", mock_st),
             patch.object(_page_mod, "get_data_dir", return_value="/fake/data"),
             patch.object(_page_mod, "load_tourney_seeds", return_value=[{"seed": "W01"}]),
-            patch.object(_page_mod, "run_bracket_simulation", return_value=no_mc_sim),
+            patch.object(_page_mod, "run_bracket_simulation_with_progress", return_value=no_mc_sim),
         ):
             _page_mod._render_pool_scorer_page()
 

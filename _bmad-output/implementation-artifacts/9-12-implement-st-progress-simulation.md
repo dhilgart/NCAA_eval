@@ -1,6 +1,6 @@
 # Story 9.12: Implement st.progress for Simulation
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -28,30 +28,30 @@ so that **I know how long the simulation will take and can see it progressing**.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add `progress_callback` parameter to simulation engine (AC: #3)
-  - [ ] 1.1: Add `progress_callback: Callable[[int, int], None] | None = None` parameter to `simulate_tournament_mc()` in `src/ncaa_eval/evaluation/simulation.py`
-  - [ ] 1.2: Call `progress_callback(round_completed, total_rounds)` after each round in the MC loop (alongside existing `tqdm` support)
-  - [ ] 1.3: Add `progress_callback` parameter to `simulate_tournament()` orchestrator and pass through to MC path
-  - [ ] 1.4: Update docstrings for both functions
+- [x] Task 1: Add `progress_callback` parameter to simulation engine (AC: #3)
+  - [x] 1.1: Add `progress_callback: Callable[[int, int], None] | None = None` parameter to `simulate_tournament_mc()` in `src/ncaa_eval/evaluation/simulation.py`
+  - [x] 1.2: Call `progress_callback(round_completed, total_rounds)` after each round in the MC loop (alongside existing `tqdm` support)
+  - [x] 1.3: Add `progress_callback` parameter to `simulate_tournament()` orchestrator and pass through to MC path
+  - [x] 1.4: Update docstrings for both functions
 
-- [ ] Task 2: Create uncached simulation wrapper with progress support (AC: #1, #2)
-  - [ ] 2.1: In `dashboard/lib/simulation_helpers.py`, create a new function `run_bracket_simulation_with_progress()` that duplicates the MC path of `run_bracket_simulation()` but is NOT decorated with `@st.cache_data`
-  - [ ] 2.2: The new function accepts an `st.progress` bar object and passes a lambda callback to `simulate_tournament()` that updates the progress bar
-  - [ ] 2.3: Reuse all existing bracket-building, provider-creation, and scoring logic from the cached function (call shared helpers, do NOT duplicate)
+- [x] Task 2: Create uncached simulation wrapper with progress support (AC: #1, #2)
+  - [x] 2.1: In `dashboard/lib/simulation_helpers.py`, create a new function `run_bracket_simulation_with_progress()` that duplicates the MC path of `run_bracket_simulation()` but is NOT decorated with `@st.cache_data`
+  - [x] 2.2: The new function accepts an `st.progress` bar object and passes a lambda callback to `simulate_tournament()` that updates the progress bar
+  - [x] 2.3: Reuse all existing bracket-building, provider-creation, and scoring logic from the cached function (call shared helpers, do NOT duplicate)
 
-- [ ] Task 3: Replace `st.spinner` with `st.progress` on Pool Scorer page (AC: #1, #4)
-  - [ ] 3.1: In `dashboard/pages/4_Pool_Scorer.py` `_run_simulation()`, replace `st.spinner("Running Monte Carlo simulation...")` with an `st.progress(0, text="Running Monte Carlo simulation...")` bar
-  - [ ] 3.2: Call the new uncached simulation function, passing the progress bar
-  - [ ] 3.3: Set progress to 1.0 and clear after simulation completes
+- [x] Task 3: Replace `st.spinner` with `st.progress` on Pool Scorer page (AC: #1, #4)
+  - [x] 3.1: In `dashboard/pages/4_Pool_Scorer.py` `_run_simulation()`, replace `st.spinner("Running Monte Carlo simulation...")` with an `st.progress(0, text="Running Monte Carlo simulation...")` bar
+  - [x] 3.2: Call the new uncached simulation function, passing the progress bar
+  - [x] 3.3: Set progress to 1.0 and clear after simulation completes
 
-- [ ] Task 4: Replace `st.spinner` with `st.progress` on Presentation page (AC: #4, #5)
-  - [ ] 4.1: In `dashboard/pages/2_Presentation.py`, replace the MC spinner with `st.progress` only when `method == "monte_carlo"`
-  - [ ] 4.2: Keep `st.spinner` for analytical method (near-instant, no progress needed)
+- [x] Task 4: Replace `st.spinner` with `st.progress` on Presentation page (AC: #4, #5)
+  - [x] 4.1: In `dashboard/pages/2_Presentation.py`, replace the MC spinner with `st.progress` only when `method == "monte_carlo"`
+  - [x] 4.2: Keep `st.spinner` for analytical method (near-instant, no progress needed)
 
-- [ ] Task 5: Update tests (AC: all)
-  - [ ] 5.1: Add unit tests for `progress_callback` in `test_evaluation_simulation.py` — verify callback is called once per round with correct `(round, total)` args
-  - [ ] 5.2: Update `test_pool_scorer_page.py` — verify `st.progress` is called instead of `st.spinner` for MC simulation path
-  - [ ] 5.3: Verify `st.spinner` is still used for analytical path on Presentation page
+- [x] Task 5: Update tests (AC: all)
+  - [x] 5.1: Add unit tests for `progress_callback` in `test_evaluation_simulation.py` — verify callback is called once per round with correct `(round, total)` args
+  - [x] 5.2: Update `test_pool_scorer_page.py` — verify `st.progress` is called instead of `st.spinner` for MC simulation path
+  - [x] 5.3: Verify `st.spinner` is still used for analytical path on Presentation page
 
 ## Dev Notes
 
@@ -117,8 +117,32 @@ so that **I know how long the simulation will take and can see it progressing**.
 
 ### Agent Model Used
 
+Claude Opus 4.6
+
 ### Debug Log References
+
+No debugging issues encountered.
 
 ### Completion Notes List
 
+- **Task 1**: Added `progress_callback: Callable[[int, int], None] | None = None` parameter to both `simulate_tournament_mc()` and `simulate_tournament()`. Callback is invoked after each MC round with `(round_completed, total_rounds)`. Existing `tqdm` progress path is preserved.
+- **Task 2**: Created `run_bracket_simulation_with_progress()` in `simulation_helpers.py` — uncached wrapper that delegates bracket setup to the cached `run_bracket_simulation(method="analytical")`, then runs MC with progress callback. Supports game-theory slider values (`upset_aggression`, `seed_weight_pct`).
+- **Task 3**: Pool Scorer page `_run_simulation()` now uses `st.progress(0, text="Running Monte Carlo simulation...")` instead of `st.spinner`. Progress bar is cleared via `.empty()` after simulation.
+- **Task 4**: Presentation page now branches: MC path uses `st.progress` + `run_bracket_simulation_with_progress()`, analytical path keeps `st.spinner("Computing bracket...")`.
+- **Task 5**: Added 3 new tests for `progress_callback` (direct MC, via orchestrator, default None). Updated 3 existing pool scorer tests to mock `run_bracket_simulation_with_progress`. Updated 2 bracket page MC tests. Added new `TestAnalyticalUsesSpinner` test class. All 1122 tests pass (up from 1114 baseline — 8 new tests added).
+
 ### File List
+
+- `src/ncaa_eval/evaluation/simulation.py` — added `progress_callback` param to `simulate_tournament_mc()` and `simulate_tournament()`
+- `dashboard/lib/simulation_helpers.py` — added `run_bracket_simulation_with_progress()` uncached wrapper, imported `simulate_tournament_mc`
+- `dashboard/pages/4_Pool_Scorer.py` — replaced `st.spinner` with `st.progress` in `_run_simulation()`
+- `dashboard/pages/2_Presentation.py` — split MC/analytical paths: `st.progress` for MC, `st.spinner` for analytical
+- `tests/unit/test_evaluation_simulation.py` — 3 new `progress_callback` tests in `TestMonteCarlo`
+- `tests/unit/test_pool_scorer_page.py` — updated 3 tests to mock `run_bracket_simulation_with_progress`, added `test_progress_bar_used_instead_of_spinner`
+- `tests/unit/test_bracket_page.py` — updated 2 MC tests to mock `run_bracket_simulation_with_progress`, added `TestAnalyticalUsesSpinner`
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — status: in-progress → review
+- `_bmad-output/implementation-artifacts/9-12-implement-st-progress-simulation.md` — story file updates
+
+## Change Log
+
+- **2026-03-11**: Implemented st.progress for Monte Carlo simulation (Story 9.12). Added `progress_callback` parameter to simulation engine, created uncached dashboard wrapper, replaced spinners with progress bars on Pool Scorer and Presentation pages, added/updated 8 tests. All 1122 tests pass.
