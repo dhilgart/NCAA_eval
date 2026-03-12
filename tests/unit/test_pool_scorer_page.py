@@ -280,6 +280,8 @@ class TestCustomScoringPath:
 class TestAnalyzeOutcomesButton:
     def test_button_triggers_simulation_with_progress(self) -> None:
         mock_st = MagicMock()
+        mock_progress_bar = MagicMock()
+        mock_st.progress.return_value = mock_progress_bar
         mock_st.session_state = {
             "selected_run_id": "abc123",
             "selected_year": 2023,
@@ -308,6 +310,8 @@ class TestAnalyzeOutcomesButton:
         mock_sim.assert_called_once()
         call_kwargs = mock_sim.call_args[1]
         assert call_kwargs["n_simulations"] == 10_000
+        # progress bar must always be cleared after simulation (even on exception)
+        mock_progress_bar.empty.assert_called_once()
 
     def test_progress_bar_used_instead_of_spinner(self) -> None:
         """st.progress should be called for MC, not st.spinner."""

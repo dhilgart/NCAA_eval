@@ -338,17 +338,19 @@ def _render_bracket_page() -> None:  # noqa: C901
     sim_data: BracketSimulationResult | None
     if method == "monte_carlo":
         progress_bar = st.progress(0, text="Running Monte Carlo simulation...")
-        sim_data = run_bracket_simulation_with_progress(
-            data_dir=data_dir,
-            run_id=selected_run_id,
-            season=selected_year,
-            scoring_name=scoring,
-            n_simulations=n_sims,
-            progress_bar=progress_bar,
-            upset_aggression=upset_aggression,
-            seed_weight_pct=seed_weight_pct,
-        )
-        progress_bar.empty()
+        try:
+            sim_data = run_bracket_simulation_with_progress(
+                data_dir=data_dir,
+                run_id=selected_run_id,
+                season=selected_year,
+                scoring_name=scoring,
+                n_simulations=n_sims,
+                progress_bar=progress_bar,
+                upset_aggression=upset_aggression,
+                seed_weight_pct=seed_weight_pct,
+            )
+        finally:
+            progress_bar.empty()
     else:
         with st.spinner("Computing bracket..."):
             sim_data = run_bracket_simulation(

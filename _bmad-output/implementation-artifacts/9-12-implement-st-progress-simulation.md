@@ -1,6 +1,6 @@
 # Story 9.12: Implement st.progress for Simulation
 
-Status: review
+Status: done
 
 ## Story
 
@@ -143,6 +143,24 @@ No debugging issues encountered.
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` — status: in-progress → review
 - `_bmad-output/implementation-artifacts/9-12-implement-st-progress-simulation.md` — story file updates
 
+## Senior Developer Review (AI)
+
+**Reviewer:** Claude Sonnet 4.6 — 2026-03-11
+
+**Verdict:** APPROVED with fixes applied
+
+**Findings and fixes (4 Medium, 2 Low — all resolved):**
+
+- 🟡 MEDIUM (FIXED): Progress bar leaked on exception — `progress_bar.empty()` was never called if `run_bracket_simulation_with_progress` raised. Fixed with `try/finally` in both `4_Pool_Scorer.py:_run_simulation()` and `2_Presentation.py` MC path.
+- 🟡 MEDIUM (FIXED): `run_bracket_simulation_with_progress` had no exception handler — unlike the cached function's `except (OSError, ValueError, KeyError, TypeError)`, exceptions propagated raw. Added matching `except` block returning `None` on failure.
+- 🟡 MEDIUM (FIXED): `test_button_triggers_simulation_with_progress` in `test_pool_scorer_page.py` was missing `mock_progress_bar.empty.assert_called_once()` — the bar could be removed without test failure. Fixed by adding the assertion and `mock_progress_bar` setup.
+- 🟡 MEDIUM (FIXED): `run_bracket_simulation_with_progress` docstring did not explain why provider re-loading is required despite having a cached result (unperturbed vs perturbed matrix). Fixed with expanded docstring.
+- 🟢 LOW (ACCEPTED): Pool Scorer intentionally passes `upset_aggression=0, seed_weight_pct=0` — no sliders on that page. Already documented via comment in page code.
+- 🟢 LOW (ACCEPTED): Orchestrator `test_progress_callback_via_orchestrator` checks only `calls[-1]` — the direct `test_progress_callback_called_each_round` test already covers all intermediate calls. Not a meaningful gap.
+
+**AC verification:** All 5 ACs confirmed implemented. All 1075 tests pass post-fix.
+
 ## Change Log
 
 - **2026-03-11**: Implemented st.progress for Monte Carlo simulation (Story 9.12). Added `progress_callback` parameter to simulation engine, created uncached dashboard wrapper, replaced spinners with progress bars on Pool Scorer and Presentation pages, added/updated 8 tests. All 1122 tests pass.
+- **2026-03-11**: Code review fixes — added `try/finally` around progress bar usage in both pages, added exception handler to `run_bracket_simulation_with_progress`, strengthened pool scorer test assertion, improved docstring. 4 Medium issues resolved.

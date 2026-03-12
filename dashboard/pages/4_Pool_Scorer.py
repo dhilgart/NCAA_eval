@@ -171,15 +171,17 @@ def _run_simulation(
 ) -> None:
     """Run MC simulation and store result in session state."""
     progress_bar = st.progress(0, text="Running Monte Carlo simulation...")
-    sim_data = run_bracket_simulation_with_progress(
-        data_dir=data_dir,
-        run_id=run_id,
-        season=season,
-        scoring_name=scoring,
-        n_simulations=n_sims,
-        progress_bar=progress_bar,
-    )
-    progress_bar.empty()
+    try:
+        sim_data = run_bracket_simulation_with_progress(
+            data_dir=data_dir,
+            run_id=run_id,
+            season=season,
+            scoring_name=scoring,
+            n_simulations=n_sims,
+            progress_bar=progress_bar,
+        )
+    finally:
+        progress_bar.empty()
 
     if sim_data is None:
         st.warning(
