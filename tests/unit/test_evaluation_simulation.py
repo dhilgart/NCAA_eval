@@ -1192,6 +1192,53 @@ class TestMonteCarlo:
         result = simulate_tournament(bracket, provider, ctx, method="analytical")
         assert result.sim_winners is None
 
+    def test_progress_callback_called_each_round(self) -> None:
+        """progress_callback receives (round_completed, total_rounds) once per round."""
+        bracket = _make_small_bracket(4)
+        P = _make_uniform_matrix(4)
+        rules = [StandardScoring()]
+        calls: list[tuple[int, int]] = []
+        simulate_tournament_mc(
+            bracket,
+            P,
+            rules,
+            season=2024,
+            n_simulations=200,
+            rng=np.random.default_rng(50),
+            progress_callback=lambda done, total: calls.append((done, total)),
+        )
+        n_rounds = 2  # log2(4) = 2
+        assert len(calls) == n_rounds
+        assert calls == [(1, n_rounds), (2, n_rounds)]
+
+    def test_progress_callback_via_orchestrator(self) -> None:
+        """progress_callback passes through simulate_tournament to MC path."""
+        bracket = _make_small_bracket(4)
+        P = _make_uniform_matrix(4)
+        provider = MatrixProvider(P, list(range(4)))
+        ctx = _make_context()
+        calls: list[tuple[int, int]] = []
+        simulate_tournament(
+            bracket,
+            provider,
+            ctx,
+            method="monte_carlo",
+            n_simulations=200,
+            rng=np.random.default_rng(51),
+            progress_callback=lambda done, total: calls.append((done, total)),
+        )
+        assert calls == [(1, 2), (2, 2)]
+
+    def test_progress_callback_none_by_default(self) -> None:
+        """No error when progress_callback is not provided."""
+        bracket = _make_small_bracket(4)
+        P = _make_uniform_matrix(4)
+        rules = [StandardScoring()]
+        result = simulate_tournament_mc(
+            bracket, P, rules, season=2024, n_simulations=200, rng=np.random.default_rng(52)
+        )
+        assert result.method == "monte_carlo"
+
 
 class TestScoreBracketAgainstSims:
     """Tests for score_bracket_against_sims (Task 6)."""

@@ -32,6 +32,7 @@ from ncaa_eval.evaluation.simulation import (
     compute_most_likely_bracket,
     get_scoring,
     simulate_tournament,
+    simulate_tournament_mc,
 )
 from ncaa_eval.model.tracking import RunStore
 from ncaa_eval.transform.normalization import TourneySeedTable
@@ -253,4 +254,127 @@ def run_bracket_simulation(  # noqa: PLR0913
         )
     except (OSError, ValueError, KeyError, TypeError) as exc:
         logger.exception("Bracket simulation failed: %s", exc)
+        return None
+
+
+def run_bracket_simulation_with_progress(  # noqa: PLR0913
+    data_dir: str,
+    run_id: str,
+    season: int,
+    scoring_name: str,
+    n_simulations: int,
+    progress_bar: st.delta_generator.DeltaGenerator,
+    upset_aggression: int = 0,
+    seed_weight_pct: int = 0,
+) -> BracketSimulationResult | None:
+    """Run MC bracket simulation with ``st.progress`` updates.
+
+    NOT cached — progress bars require the function body to execute on every
+    call.  Calls :func:`run_bracket_simulation` (cached, analytical) for
+    bracket/label/most-likely setup, then re-loads the probability provider
+    to build an **unperturbed** matrix for MC simulation.
+
+    The re-load is necessary because :class:`BracketSimulationResult` only
+    exposes the perturbed matrix (used for analytical EP and most-likely
+    bracket picks).  MC simulation must use the raw model probabilities so
+    that each simulated outcome reflects true model uncertainty rather than
+    the user's game-theory slider adjustments.
+
+    Args:
+        data_dir: String path to the project data directory.
+        run_id: Model run identifier.
+        season: Tournament season year.
+        scoring_name: Scoring rule name (e.g. ``"standard"``).
+        n_simulations: Number of MC simulations.
+        progress_bar: A Streamlit ``st.progress`` bar object to update.
+        upset_aggression: Upset Aggression slider value in ``[-5, +5]``.
+        seed_weight_pct: Seed-Weight slider value in ``[0, 100]``.
+
+    Returns:
+        :class:`BracketSimulationResult` or ``None`` on failure.
+    """
+    # Get the analytical result (cached) for bracket setup
+    analytical = run_bracket_simulation(
+        data_dir=data_dir,
+        run_id=run_id,
+        season=season,
+        scoring_name=scoring_name,
+        method="analytical",
+        n_simulations=n_simulations,
+        upset_aggression=upset_aggression,
+        seed_weight_pct=seed_weight_pct,
+    )
+    if analytical is None:
+        return None
+
+    try:
+        bracket = analytical.bracket
+        scoring_cls = get_scoring(scoring_name)
+        sig = inspect.signature(scoring_cls)
+        if "seed_map" in sig.parameters:
+            scoring_rule = scoring_cls(bracket.seed_map)
+        else:
+            scoring_rule = scoring_cls()
+
+        context = MatchupContext(season=season, day_num=_ROUND_OF_64_DAY_NUM, is_neutral=True)
+
+        # Build the UNPERTURBED probability matrix for MC (original model probs).
+        # The cached analytical result contains only the perturbed matrix (used for
+        # analytical EP and most-likely bracket).  MC simulation must use the raw model
+        # probabilities, so we re-load the provider here to build an unperturbed P.
+        path = Path(data_dir)
+        store = RunStore(path)
+        run = store.load_run(run_id)
+        model = store.load_model(run_id)
+        if model is None:
+            return None
+
+        provider: EloProvider | MatrixProvider
+        if run.model_type == "elo":
+            provider = EloProvider(model)
+        else:
+            mp = _build_provider_from_folds(store, run_id, season, bracket)
+            if mp is None:
+                return None
+            provider = mp
+
+        P = build_probability_matrix(provider, bracket.team_ids, context)
+
+        def _update_progress(round_completed: int, total_rounds: int) -> None:
+            progress_bar.progress(
+                round_completed / total_rounds,
+                text=f"Simulating round {round_completed}/{total_rounds}...",
+            )
+
+        mc_result = simulate_tournament_mc(
+            bracket=bracket,
+            P=P,
+            scoring_rules=[scoring_rule],
+            season=season,
+            n_simulations=n_simulations,
+            progress_callback=_update_progress,
+        )
+
+        # Merge MC fields into the analytical result (same pattern as cached function)
+        merged = SimulationResult(
+            season=analytical.sim_result.season,
+            advancement_probs=analytical.sim_result.advancement_probs,
+            expected_points=analytical.sim_result.expected_points,
+            method="monte_carlo",
+            n_simulations=mc_result.n_simulations,
+            confidence_intervals=mc_result.confidence_intervals,
+            score_distribution=mc_result.score_distribution,
+            bracket_distributions=mc_result.bracket_distributions,
+            sim_winners=mc_result.sim_winners,
+        )
+
+        return BracketSimulationResult(
+            sim_result=merged,
+            bracket=analytical.bracket,
+            most_likely=analytical.most_likely,
+            prob_matrix=analytical.prob_matrix,
+            team_labels=analytical.team_labels,
+        )
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        logger.exception("MC simulation with progress failed: %s", exc)
         return None

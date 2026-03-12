@@ -25,7 +25,11 @@ from dashboard.lib.bracket_overrides import (
 )
 from dashboard.lib.bracket_renderer import render_bracket_html
 from dashboard.lib.data_loaders import get_data_dir, load_scoring_display_names, load_tourney_seeds
-from dashboard.lib.simulation_helpers import BracketSimulationResult, run_bracket_simulation
+from dashboard.lib.simulation_helpers import (
+    BracketSimulationResult,
+    run_bracket_simulation,
+    run_bracket_simulation_with_progress,
+)
 from ncaa_eval.evaluation.plotting import (
     plot_advancement_heatmap,
     plot_score_distribution,
@@ -331,18 +335,34 @@ def _render_bracket_page() -> None:  # noqa: C901
             st.rerun()
 
     # Run simulation
-    spinner_msg = "Running tournament simulation..." if method == "monte_carlo" else "Computing bracket..."
-    with st.spinner(spinner_msg):
-        sim_data = run_bracket_simulation(
-            data_dir=data_dir,
-            run_id=selected_run_id,
-            season=selected_year,
-            scoring_name=scoring,
-            method=method,
-            n_simulations=n_sims,
-            upset_aggression=upset_aggression,
-            seed_weight_pct=seed_weight_pct,
-        )
+    sim_data: BracketSimulationResult | None
+    if method == "monte_carlo":
+        progress_bar = st.progress(0, text="Running Monte Carlo simulation...")
+        try:
+            sim_data = run_bracket_simulation_with_progress(
+                data_dir=data_dir,
+                run_id=selected_run_id,
+                season=selected_year,
+                scoring_name=scoring,
+                n_simulations=n_sims,
+                progress_bar=progress_bar,
+                upset_aggression=upset_aggression,
+                seed_weight_pct=seed_weight_pct,
+            )
+        finally:
+            progress_bar.empty()
+    else:
+        with st.spinner("Computing bracket..."):
+            sim_data = run_bracket_simulation(
+                data_dir=data_dir,
+                run_id=selected_run_id,
+                season=selected_year,
+                scoring_name=scoring,
+                method="analytical",
+                n_simulations=n_sims,
+                upset_aggression=upset_aggression,
+                seed_weight_pct=seed_weight_pct,
+            )
 
     if sim_data is None:
         st.warning(

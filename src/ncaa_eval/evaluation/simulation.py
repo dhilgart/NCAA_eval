@@ -24,7 +24,7 @@ References:
 from __future__ import annotations
 
 import logging
-from collections.abc import Iterable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
 
 import numpy as np
@@ -535,6 +535,7 @@ def simulate_tournament_mc(  # noqa: PLR0913 — REFACTOR Story 8.1
     n_simulations: int = 10_000,
     rng: np.random.Generator | None = None,
     progress: bool = False,
+    progress_callback: Callable[[int, int], None] | None = None,
 ) -> SimulationResult:
     """Vectorized Monte Carlo tournament simulation.
 
@@ -550,6 +551,9 @@ def simulate_tournament_mc(  # noqa: PLR0913 — REFACTOR Story 8.1
         n_simulations: Number of simulations (default 10,000).
         rng: NumPy random generator for reproducibility.
         progress: Display a tqdm progress bar for simulation rounds.
+        progress_callback: Optional callback invoked after each round
+            with ``(round_completed, total_rounds)``.  UI-agnostic hook
+            for external progress reporting (e.g. Streamlit ``st.progress``).
 
     Returns:
         :class:`SimulationResult` with MC-derived advancement probs,
@@ -641,6 +645,9 @@ def simulate_tournament_mc(  # noqa: PLR0913 — REFACTOR Story 8.1
         survivors = winners
         game_offset += n_games_in_round
 
+        if progress_callback is not None:
+            progress_callback(r + 1, n_rounds)
+
     if n_simulations >= 10_000:
         logger.info("MC simulation complete: %d sims", n_simulations)
 
@@ -712,6 +719,7 @@ def simulate_tournament(  # noqa: PLR0913 — REFACTOR Story 8.1
     n_simulations: int = 10_000,
     rng: np.random.Generator | None = None,
     progress: bool = False,
+    progress_callback: Callable[[int, int], None] | None = None,
 ) -> SimulationResult:
     """High-level tournament simulation orchestrator.
 
@@ -729,6 +737,9 @@ def simulate_tournament(  # noqa: PLR0913 — REFACTOR Story 8.1
         rng: NumPy random generator (MC only).
         progress: Display a tqdm progress bar for MC simulation rounds.
             Ignored when ``method="analytical"``.
+        progress_callback: Optional callback invoked after each MC round
+            with ``(round_completed, total_rounds)``.  Ignored when
+            ``method="analytical"``.
 
     Returns:
         :class:`SimulationResult`.
@@ -775,4 +786,5 @@ def simulate_tournament(  # noqa: PLR0913 — REFACTOR Story 8.1
         n_simulations=n_simulations,
         rng=rng,
         progress=progress,
+        progress_callback=progress_callback,
     )

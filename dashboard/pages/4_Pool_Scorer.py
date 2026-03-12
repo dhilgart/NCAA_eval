@@ -15,7 +15,10 @@ from dashboard.lib.bracket_overrides import apply_overrides, check_invalidation,
 from dashboard.lib.data_loaders import get_data_dir, load_scoring_display_names, load_tourney_seeds
 from dashboard.lib.export import export_bracket_csv
 from dashboard.lib.filters import build_custom_scoring, score_chosen_bracket
-from dashboard.lib.simulation_helpers import BracketSimulationResult, run_bracket_simulation
+from dashboard.lib.simulation_helpers import (
+    BracketSimulationResult,
+    run_bracket_simulation_with_progress,
+)
 from ncaa_eval.evaluation.plotting import plot_score_distribution
 from ncaa_eval.evaluation.simulation import BracketDistribution, get_scoring
 
@@ -167,15 +170,18 @@ def _run_simulation(
     n_sims: int,
 ) -> None:
     """Run MC simulation and store result in session state."""
-    with st.spinner("Running Monte Carlo simulation..."):
-        sim_data = run_bracket_simulation(
+    progress_bar = st.progress(0, text="Running Monte Carlo simulation...")
+    try:
+        sim_data = run_bracket_simulation_with_progress(
             data_dir=data_dir,
             run_id=run_id,
             season=season,
             scoring_name=scoring,
-            method="monte_carlo",
             n_simulations=n_sims,
+            progress_bar=progress_bar,
         )
+    finally:
+        progress_bar.empty()
 
     if sim_data is None:
         st.warning(

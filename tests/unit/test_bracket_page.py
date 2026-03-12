@@ -266,6 +266,8 @@ class TestMCModeRender:
 
     def test_mc_renders_score_distribution(self) -> None:
         mock_st = MagicMock()
+        mock_progress_bar = MagicMock()
+        mock_st.progress.return_value = mock_progress_bar
         mock_st.session_state = {
             "selected_run_id": "abc123",
             "selected_year": 2023,
@@ -294,7 +296,7 @@ class TestMCModeRender:
             patch.object(_page_mod, "components", mock_components),
             patch.object(_page_mod, "get_data_dir", return_value="/fake/data"),
             patch.object(_page_mod, "load_tourney_seeds", return_value=[{"seed": "W01"}]),
-            patch.object(_page_mod, "run_bracket_simulation", return_value=sim_data),
+            patch.object(_page_mod, "run_bracket_simulation_with_progress", return_value=sim_data),
             patch.object(_page_mod, "render_bracket_html", return_value="<html></html>"),
             patch.object(_page_mod, "plot_advancement_heatmap", return_value=MagicMock()),
             patch.object(_page_mod, "plot_score_distribution", mock_plot_score),
@@ -310,6 +312,9 @@ class TestMCModeRender:
         mock_st.plotly_chart.assert_called()
         # plot_score_distribution must have been called (AC #4)
         mock_plot_score.assert_called_once()
+        # st.progress should be called for MC path
+        mock_st.progress.assert_called()
+        mock_progress_bar.empty.assert_called_once()
 
     def test_mc_missing_scoring_key_shows_info(self) -> None:
         """When bracket_distributions lacks the scoring key, st.info is shown (L2 fix)."""
@@ -364,7 +369,7 @@ class TestMCModeRender:
             patch.object(_page_mod, "components", MagicMock()),
             patch.object(_page_mod, "get_data_dir", return_value="/fake/data"),
             patch.object(_page_mod, "load_tourney_seeds", return_value=[{"seed": "W01"}]),
-            patch.object(_page_mod, "run_bracket_simulation", return_value=sim_data),
+            patch.object(_page_mod, "run_bracket_simulation_with_progress", return_value=sim_data),
             patch.object(_page_mod, "render_bracket_html", return_value="<html></html>"),
             patch.object(_page_mod, "plot_advancement_heatmap", return_value=MagicMock()),
             patch.object(*patches[0]),
@@ -379,6 +384,54 @@ class TestMCModeRender:
         mock_st.info.assert_called()
         info_msgs = [call[0][0] for call in mock_st.info.call_args_list]
         assert any("fibonacci" in msg for msg in info_msgs)
+
+
+class TestAnalyticalUsesSpinner:
+    """Verify AC #5: Analytical path still uses st.spinner (not st.progress)."""
+
+    def test_analytical_uses_spinner_not_progress(self) -> None:
+        mock_st = MagicMock()
+        mock_st.session_state = {
+            "selected_run_id": "abc123",
+            "selected_year": 2023,
+            "selected_scoring": "standard",
+        }
+        mock_st.columns.side_effect = lambda *a, **kw: [
+            MagicMock() for _ in range(a[0] if isinstance(a[0], int) else len(a[0]))
+        ]
+        mock_st.selectbox.side_effect = [
+            "analytical",
+            "[1] Duke",
+            "[16] Norfolk St",
+            "[1] Duke",
+            "[1] UConn",
+            "[1] Duke",
+        ]
+
+        sim_data = _make_sim_data()
+        patches = _override_patches()
+        with (
+            patch.object(_page_mod, "st", mock_st),
+            patch.object(_page_mod, "components", MagicMock()),
+            patch.object(_page_mod, "get_data_dir", return_value="/fake/data"),
+            patch.object(_page_mod, "load_tourney_seeds", return_value=[{"seed": "W01"}]),
+            patch.object(_page_mod, "run_bracket_simulation", return_value=sim_data),
+            patch.object(_page_mod, "render_bracket_html", return_value="<html></html>"),
+            patch.object(_page_mod, "plot_advancement_heatmap", return_value=MagicMock()),
+            patch.object(*patches[0]),
+            patch.object(*patches[1]),
+            patch.object(*patches[2]),
+            patch.object(*patches[3]),
+            patch.object(*patches[4]),
+        ):
+            _page_mod._render_bracket_page()
+
+        # Analytical path should use st.spinner, NOT st.progress
+        mock_st.spinner.assert_called()
+        spinner_msgs = [call[0][0] for call in mock_st.spinner.call_args_list]
+        assert any("Computing bracket" in msg for msg in spinner_msgs)
+        # st.progress should NOT be called for analytical
+        mock_st.progress.assert_not_called()
 
 
 class TestSliderValuesPassThrough:
