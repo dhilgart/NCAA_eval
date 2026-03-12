@@ -3994,6 +3994,20 @@ finally:
 
 **Test verification:** Tests for the progress bar clearing must assert `mock_progress_bar.empty.assert_called_once()`. A test that only asserts the long operation was called (but not the cleanup) allows the `progress_bar.empty()` call to be silently removed.
 
+**Exception-path testing:** The `finally` block is only proven by a test where the helper *raises*. A mock returning a normal result does NOT exercise the `finally`. Add a dedicated test using `side_effect=RuntimeError(...)` and wrap the page call in `try/except` to absorb the re-raise:
+```python
+def test_progress_bar_cleared_on_exception(self) -> None:
+    mock_progress_bar = MagicMock()
+    mock_st.progress.return_value = mock_progress_bar
+    with patch.object(_page_mod, "run_long_operation", side_effect=RuntimeError("boom")):
+        try:
+            _page_mod._render_page()
+        except RuntimeError:
+            pass  # expected — page re-raises after finally
+    mock_progress_bar.empty.assert_called_once()
+```
+(Discovered Story 9.12 Code Review Pass 2, 2026-03-11)
+
 ### Uncached Wrappers Around Cached Functions Must Match Error Handling (Discovered Story 9.12 Code Review, 2026-03-11)
 
 When creating an uncached wrapper that delegates to a `@st.cache_data`-decorated function, the wrapper must replicate the cached function's exception handling. The cached function's `except` clause handles errors gracefully (e.g., returns `None`). Without a matching handler, the uncached wrapper propagates raw exceptions to Streamlit, producing an unhandled traceback page instead of a graceful `st.warning()`.
