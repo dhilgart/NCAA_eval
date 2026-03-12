@@ -1,6 +1,6 @@
 # Story 9.15: Document Iterrows Convention Exception for Ingest Layer
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -19,16 +19,16 @@ so that **future audits do not re-flag this as a convention violation and the ra
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add ingest-layer exception to Style Guide Section 5 (AC: #1)
-  - [ ] 1.1: In `docs/STYLE_GUIDE.md` Section 5 ("Vectorization First"), add a 4th exception to the "Exceptions" list for ingest-layer one-time-per-sync operations
-  - [ ] 1.2: Include rationale: one-time sync cost (not in hot paths), Pydantic per-row validation justifies row iteration, and Pandera schema validation guards the DataFrame boundary
-  - [ ] 1.3: Reference the PO decision (Audit item 2.4, PO Decision C — 2026-03-11)
-- [ ] Task 2: Update forbidden-pattern documentation to acknowledge the exception (AC: #1)
-  - [ ] 2.1: In `docs/testing/test-purpose-guide.md` (around line 147), add a comment or note that `src/ncaa_eval/ingest/` is excluded from the forbidden-pattern check
-  - [ ] 2.2: In `docs/testing/domain-testing.md` (around line 142), add the same note about the ingest-layer exception
-- [ ] Task 3: Run quality gates (AC: #1)
-  - [ ] 3.1: `ruff check .` — clean
-  - [ ] 3.2: Verify no markdown formatting issues in changed files
+- [x] Task 1: Add ingest-layer exception to Style Guide Section 5 (AC: #1)
+  - [x] 1.1: In `docs/STYLE_GUIDE.md` Section 5 ("Vectorization First"), add a 4th exception to the "Exceptions" list for ingest-layer one-time-per-sync operations
+  - [x] 1.2: Include rationale: one-time sync cost (not in hot paths), Pydantic per-row validation justifies row iteration, and Pandera schema validation guards the DataFrame boundary
+  - [x] 1.3: Reference the PO decision (Audit item 2.4, PO Decision C — 2026-03-11)
+- [x] Task 2: Update forbidden-pattern documentation to acknowledge the exception (AC: #1)
+  - [x] 2.1: In `docs/testing/test-purpose-guide.md` (around line 147), add a comment or note that `src/ncaa_eval/ingest/` is excluded from the forbidden-pattern check
+  - [x] 2.2: In `docs/testing/domain-testing.md` (around line 142), add the same note about the ingest-layer exception
+- [x] Task 3: Run quality gates (AC: #1)
+  - [x] 3.1: `ruff check .` — clean
+  - [x] 3.2: Verify no markdown formatting issues in changed files
 
 ## Dev Notes
 
@@ -100,10 +100,27 @@ Recent commit pattern: `docs(convention): ...` or `docs(style): ...` would be ap
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+(none — documentation-only story, no debug issues encountered)
+
 ### Completion Notes List
 
+- Added Exception #4 to Style Guide Section 5 "Exceptions" list covering ingest-layer one-time-per-sync `iterrows()` usage with full rationale (Pydantic per-row validation, Pandera boundary guard, PO Decision C reference)
+- Added blockquote notes to both `test-purpose-guide.md` and `domain-testing.md` clarifying the ingest-layer exclusion from forbidden-pattern checks, with cross-reference to Style Guide Section 5 Exception #4
+- All quality gates pass: `ruff check .` clean, markdown formatting verified
+- No Python source code or test changes — documentation only as specified
+
+### Change Log
+
+- 2026-03-12: Documented ingest-layer iterrows exception in Style Guide and testing docs (Story 9.15)
+
 ### File List
+
+- `docs/STYLE_GUIDE.md` (modified — added Exception #4 to Section 5)
+- `docs/testing/test-purpose-guide.md` (modified — added ingest-layer exclusion note)
+- `docs/testing/domain-testing.md` (modified — added ingest-layer exclusion note)
+- `_bmad-output/implementation-artifacts/9-15-document-iterrows-convention-exception.md` (modified — task completion, status)
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified — status update)
