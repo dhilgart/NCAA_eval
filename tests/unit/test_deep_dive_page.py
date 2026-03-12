@@ -292,7 +292,7 @@ class TestEnsembleDeepDive:
             },
         ]
         importances = [
-            {"feature": "Xgboost Prediction", "importance": 0.6},
+            {"feature": "XGBoost Prediction", "importance": 0.6},
             {"feature": "seed_diff", "importance": 0.1},
         ]
         manifest = {
@@ -337,7 +337,7 @@ class TestEnsembleDeepDive:
             },
         ]
         importances = [
-            {"feature": "Xgboost Prediction", "importance": 0.6},
+            {"feature": "XGBoost Prediction", "importance": 0.6},
             {"feature": "seed_diff", "importance": 0.1},
         ]
 

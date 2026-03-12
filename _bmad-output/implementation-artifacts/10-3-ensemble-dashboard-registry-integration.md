@@ -245,6 +245,12 @@ No blocking issues encountered.
 - **Task 6**: Added 11 new test methods across 3 files covering bracket simulation ensemble path, feature importance label mapping, ensemble manifest loading, deep dive ensemble components section, and leaderboard ensemble row display.
 - **Task 7**: All quality gates pass — `ruff check .` clean, `mypy --strict` clean, 1180 tests pass, 0 regressions.
 
+### Code Review Fixes — Round 2 (Claude Sonnet 4.6, 2026-03-12)
+
+**M1 Fixed**: `_load_oof_log_losses` in `3_Model_Deep_Dive.py` used `__import__("pathlib").Path(data_dir)` (import anti-pattern). Added `from pathlib import Path` at module level; function now uses `Path(data_dir)` directly. Local `from ncaa_eval.model.tracking import RunStore` renamed to `_RunStore` to avoid shadowing and clarify it is a local import.
+
+**L3 Fixed**: `_map_ensemble_feature_labels` used `.title()` for model type names, producing `"Xgboost Prediction"` instead of `"XGBoost Prediction"`. Added `_MODEL_TYPE_DISPLAY_NAMES` lookup table (`{"xgboost": "XGBoost", "elo": "Elo", "logistic_regression": "Logistic Regression"}`) with `.title()` fallback for unknown types. Updated 4 test assertions to use the correct `"XGBoost Prediction"` label.
+
 ### Code Review Fixes (Claude Sonnet 4.6, 2026-03-12)
 
 **H1 Fixed**: AC #2 partially unimplemented — OOF log loss was missing from Ensemble Components table. Added `_load_oof_log_losses()` helper that reads `store.load_metrics()` for each `oof_backtest_run_ids` entry. Table now shows "Base Model | OOF Log Loss" per AC spec.
@@ -262,10 +268,10 @@ No blocking issues encountered.
 ### File List
 
 - `dashboard/lib/simulation_helpers.py` — Modified: ensemble branch in provider selection, `_build_probability_provider()` helper extracted
-- `dashboard/lib/data_loaders.py` — Modified: ensemble feature importances, `_map_ensemble_feature_labels()`, `load_ensemble_manifest()`, `_runs_dir` path pattern
-- `dashboard/pages/3_Model_Deep_Dive.py` — Modified: `_render_ensemble_components()` with OOF log loss, `_load_oof_log_losses()` helper, ensemble chart title
-- `tests/unit/test_dashboard_filters.py` — Modified: ensemble bracket simulation tests, manifest tests, `_make_manifest_store()` helper, `TestRunBracketSimulationWithProgress`
-- `tests/unit/test_deep_dive_page.py` — Modified: `TestEnsembleDeepDive` class (3 tests), manifest now includes `oof_backtest_run_ids`
+- `dashboard/lib/data_loaders.py` — Modified: ensemble feature importances, `_map_ensemble_feature_labels()`, `_MODEL_TYPE_DISPLAY_NAMES` lookup table, `load_ensemble_manifest()`, `_runs_dir` path pattern
+- `dashboard/pages/3_Model_Deep_Dive.py` — Modified: `_render_ensemble_components()` with OOF log loss, `_load_oof_log_losses()` helper, ensemble chart title, `from pathlib import Path` added
+- `tests/unit/test_dashboard_filters.py` — Modified: ensemble bracket simulation tests, manifest tests, `_make_manifest_store()` helper, `TestRunBracketSimulationWithProgress`, XGBoost label assertions updated
+- `tests/unit/test_deep_dive_page.py` — Modified: `TestEnsembleDeepDive` class (3 tests), manifest now includes `oof_backtest_run_ids`, XGBoost label fixture updated
 - `tests/unit/test_leaderboard_page.py` — Modified: `TestEnsembleLeaderboardDisplay` class (1 test)
 - `_bmad-output/planning-artifacts/template-requirements.md` — Modified: Story 10.3 learnings added
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` — Modified: status update
@@ -275,3 +281,4 @@ No blocking issues encountered.
 
 - 2026-03-12: Implemented dashboard ensemble integration — bracket simulation, feature importance labels, deep dive components section, verification of leaderboard and CLI paths (Story 10.3)
 - 2026-03-12: Code review fixes — OOF log loss in components table (H1), model_dir side-effect fix (M1), Index column removed (M2), assert isinstance → graceful check (M3), JSONDecodeError test (M4), with_progress ensemble test (M5)
+- 2026-03-12: Code review fixes (round 2) — `__import__("pathlib")` anti-pattern fixed (M1), `_MODEL_TYPE_DISPLAY_NAMES` lookup for correct "XGBoost" capitalization (L3), 4 test assertions updated

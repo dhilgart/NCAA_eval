@@ -166,6 +166,13 @@ def load_fold_predictions(data_dir: str, run_id: str) -> list[dict[str, object]]
         return []
 
 
+_MODEL_TYPE_DISPLAY_NAMES: dict[str, str] = {
+    "xgboost": "XGBoost",
+    "elo": "Elo",
+    "logistic_regression": "Logistic Regression",
+}
+
+
 def _map_ensemble_feature_labels(
     raw: list[tuple[str, float]],
     store: RunStore,
@@ -190,7 +197,9 @@ def _map_ensemble_feature_labels(
             try:
                 idx = int(idx_str)
                 if idx < len(base_model_types):
-                    label = f"{base_model_types[idx].replace('_', ' ').title()} Prediction"
+                    raw_type = base_model_types[idx]
+                    display = _MODEL_TYPE_DISPLAY_NAMES.get(raw_type, raw_type.replace("_", " ").title())
+                    label = f"{display} Prediction"
                 else:
                     label = name
             except ValueError:

@@ -4220,3 +4220,24 @@ def test_with_progress(mock_run_bracket_sim, ...):
     result = run_bracket_simulation_with_progress(...)
 ```
 This bypasses the cache layer entirely and tests only the `with_progress` MC path.
+
+### Use a Display Name Lookup Table for Model Type Labels (Discovered Story 10.3 Code Review Round 2, 2026-03-12)
+
+When rendering model type names for display (labels, chart titles, table cells), Python's `.title()` produces incorrect capitalization for acronym-heavy names: `"xgboost".title()` → `"Xgboost"` (wrong) instead of `"XGBoost"` (correct).
+
+**Template pattern:** Define a module-level `_MODEL_TYPE_DISPLAY_NAMES: dict[str, str]` lookup with correct display names for all known model types, and fall back to `.replace("_", " ").title()` for unknown types:
+```python
+_MODEL_TYPE_DISPLAY_NAMES: dict[str, str] = {
+    "xgboost": "XGBoost",
+    "elo": "Elo",
+    "logistic_regression": "Logistic Regression",
+}
+display = _MODEL_TYPE_DISPLAY_NAMES.get(raw_type, raw_type.replace("_", " ").title())
+```
+Update the lookup table whenever a new model type is registered.
+
+### Avoid `__import__()` as a Module Import Mechanism (Discovered Story 10.3 Code Review Round 2, 2026-03-12)
+
+`__import__("pathlib").Path(...)` is an anti-pattern that bypasses Python's normal import machinery and makes code harder to read, test, and statically analyze. It was found in `_load_oof_log_losses` in dashboard code.
+
+**Correct pattern:** Always use top-level `from pathlib import Path` (or equivalent module-level imports). If a function needs an import that creates a circular dependency at module level, use a local `import X` (conventional Python pattern), but never `__import__("X")`.

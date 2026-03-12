@@ -873,7 +873,7 @@ class TestMapEnsembleFeatureLabels:
 
         result = _map_ensemble_feature_labels(raw, mock_store, "run-1")
 
-        assert result[0] == ("Xgboost Prediction", 0.6)
+        assert result[0] == ("XGBoost Prediction", 0.6)
         assert result[1] == ("Elo Prediction", 0.3)
         assert result[2] == ("seed_diff", 0.1)
 
@@ -915,7 +915,7 @@ class TestLoadFeatureImportancesEnsemble:
         mock_store_cls.return_value = mock_store
 
         mock_map_labels.return_value = [
-            ("Xgboost Prediction", 0.6),
+            ("XGBoost Prediction", 0.6),
             ("seed_diff", 0.1),
         ]
 
@@ -924,7 +924,7 @@ class TestLoadFeatureImportancesEnsemble:
         result: list[dict[str, object]] = _unwrap(load_feature_importances)("/fake/data", "run-ens")
 
         assert len(result) == 2
-        assert result[0]["feature"] == "Xgboost Prediction"
+        assert result[0]["feature"] == "XGBoost Prediction"
         assert result[0]["importance"] == 0.6
         mock_meta.get_feature_importances.assert_called_once()
         mock_map_labels.assert_called_once()

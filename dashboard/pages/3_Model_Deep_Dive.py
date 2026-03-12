@@ -6,6 +6,8 @@ diagram, per-year metric summary, feature importance, and hyperparameters.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import numpy as np
 import pandas as pd  # type: ignore[import-untyped]
 import plotly.graph_objects as go  # type: ignore[import-untyped]
@@ -132,10 +134,9 @@ def _load_oof_log_losses(data_dir: str, oof_run_ids: list[object]) -> dict[str, 
     Loads the per-year metric summary for each OOF backtest run and averages
     the ``log_loss`` column.  Returns ``None`` for runs where no summary exists.
     """
-    from ncaa_eval.model.tracking import RunStore
+    from ncaa_eval.model.tracking import RunStore as _RunStore
 
-    path_obj = __import__("pathlib").Path(data_dir)
-    store = RunStore(path_obj)
+    store = _RunStore(Path(data_dir))
     result: dict[str, float | None] = {}
     for rid in oof_run_ids:
         run_id_str = str(rid)
