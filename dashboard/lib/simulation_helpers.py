@@ -20,6 +20,7 @@ from ncaa_eval.evaluation.perturbation import (
     perturb_probability_matrix,
     slider_to_temperature,
 )
+from ncaa_eval.evaluation.providers import EnsembleProvider as _EnsembleProvider
 from ncaa_eval.evaluation.simulation import (
     BracketStructure,
     EloProvider,
@@ -34,6 +35,7 @@ from ncaa_eval.evaluation.simulation import (
     simulate_tournament,
     simulate_tournament_mc,
 )
+from ncaa_eval.model.ensemble import StackedEnsemble
 from ncaa_eval.model.tracking import RunStore
 from ncaa_eval.transform.normalization import TourneySeedTable
 
@@ -174,9 +176,12 @@ def run_bracket_simulation(  # noqa: PLR0913
             logger.warning("No model found for run %s", run_id)
             return None
 
-        provider: EloProvider | MatrixProvider
+        provider: EloProvider | MatrixProvider | _EnsembleProvider
         if run.model_type == "elo":
             provider = EloProvider(model)
+        elif run.model_type == "ensemble":
+            assert isinstance(model, StackedEnsemble)
+            provider = _EnsembleProvider(model, path, season)
         else:
             mp = _build_provider_from_folds(store, run_id, season, bracket)
             if mp is None:
@@ -329,9 +334,12 @@ def run_bracket_simulation_with_progress(  # noqa: PLR0913
         if model is None:
             return None
 
-        provider: EloProvider | MatrixProvider
+        provider: EloProvider | MatrixProvider | _EnsembleProvider
         if run.model_type == "elo":
             provider = EloProvider(model)
+        elif run.model_type == "ensemble":
+            assert isinstance(model, StackedEnsemble)
+            provider = _EnsembleProvider(model, path, season)
         else:
             mp = _build_provider_from_folds(store, run_id, season, bracket)
             if mp is None:

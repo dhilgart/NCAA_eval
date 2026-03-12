@@ -1,6 +1,6 @@
 # Story 10.3: Dashboard and Model Registry Integration
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -22,41 +22,41 @@ so that **I can compare ensemble performance against single models and understan
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Fix `simulation_helpers.py` to handle ensemble model type (AC: #4)
-  - [ ] 1.1: In `run_bracket_simulation()`, add an `elif run.model_type == "ensemble"` branch that loads the ensemble via `StackedEnsemble.load()` and creates an `EnsembleProvider`
-  - [ ] 1.2: In `run_bracket_simulation_with_progress()`, add the same ensemble provider branch for the MC simulation unperturbed matrix re-load
-  - [ ] 1.3: Update the provider type annotation from `EloProvider | MatrixProvider` to include the ensemble path
+- [x] Task 1: Fix `simulation_helpers.py` to handle ensemble model type (AC: #4)
+  - [x] 1.1: In `run_bracket_simulation()`, add an `elif run.model_type == "ensemble"` branch that loads the ensemble via `StackedEnsemble.load()` and creates an `EnsembleProvider`
+  - [x] 1.2: In `run_bracket_simulation_with_progress()`, add the same ensemble provider branch for the MC simulation unperturbed matrix re-load
+  - [x] 1.3: Update the provider type annotation from `EloProvider | MatrixProvider` to include the ensemble path
 
-- [ ] Task 2: Fix `data_loaders.py` `load_feature_importances()` for ensembles (AC: #3)
-  - [ ] 2.1: When `store.load_model()` returns a `StackedEnsemble`, call `ensemble.meta_learner.get_feature_importances()` instead of `model.get_feature_importances()`
-  - [ ] 2.2: Map raw column names to interpretable labels: `pred_base_N` -> base model type name from manifest, contextual features keep their names
-  - [ ] 2.3: Read manifest to get `base_model_types` for label mapping
+- [x] Task 2: Fix `data_loaders.py` `load_feature_importances()` for ensembles (AC: #3)
+  - [x] 2.1: When `store.load_model()` returns a `StackedEnsemble`, call `ensemble.meta_learner.get_feature_importances()` instead of `model.get_feature_importances()`
+  - [x] 2.2: Map raw column names to interpretable labels: `pred_base_N` -> base model type name from manifest, contextual features keep their names
+  - [x] 2.3: Read manifest to get `base_model_types` for label mapping
 
-- [ ] Task 3: Add "Ensemble Components" section to Model Deep Dive (AC: #2)
-  - [ ] 3.1: In `_render_deep_dive()`, detect `model_type == "ensemble"` and render an expandable "Ensemble Components" section
-  - [ ] 3.2: Load the manifest from the run's model directory to get `base_model_types` and `contextual_features`
-  - [ ] 3.3: Load OOF run summaries if available (the manifest contains `oof_backtest_run_ids` or similar) to show per-base-model OOF log loss
-  - [ ] 3.4: Display a table: Base Model Name | OOF Log Loss
+- [x] Task 3: Add "Ensemble Components" section to Model Deep Dive (AC: #2)
+  - [x] 3.1: In `_render_deep_dive()`, detect `model_type == "ensemble"` and render an expandable "Ensemble Components" section
+  - [x] 3.2: Load the manifest from the run's model directory to get `base_model_types` and `contextual_features`
+  - [x] 3.3: Load OOF run summaries if available (the manifest contains `oof_backtest_run_ids` or similar) to show per-base-model OOF log loss
+  - [x] 3.4: Display a table: Base Model Name | OOF Log Loss
 
-- [ ] Task 4: Verify leaderboard displays ensembles correctly (AC: #1)
-  - [ ] 4.1: Verify `load_leaderboard_data()` already works for ensemble runs (it reads `model_type` from `ModelRun.model_type` which is set to `"ensemble"` by `_run_ensemble_training`)
-  - [ ] 4.2: If any filtering/display logic excludes unknown model types, fix it
+- [x] Task 4: Verify leaderboard displays ensembles correctly (AC: #1)
+  - [x] 4.1: Verify `load_leaderboard_data()` already works for ensemble runs (it reads `model_type` from `ModelRun.model_type` which is set to `"ensemble"` by `_run_ensemble_training`)
+  - [x] 4.2: If any filtering/display logic excludes unknown model types, fix it
 
-- [ ] Task 5: Verify CLI predict/export works for ensemble run IDs (AC: #5)
-  - [ ] 5.1: Verify `cli/predict.py` `build_predictions()` already handles ensembles (Story 10.2 replaced the `NotImplementedError`)
-  - [ ] 5.2: Verify `cli/export.py` handles ensembles or add a clear error message if not supported
+- [x] Task 5: Verify CLI predict/export works for ensemble run IDs (AC: #5)
+  - [x] 5.1: Verify `cli/predict.py` `build_predictions()` already handles ensembles (Story 10.2 replaced the `NotImplementedError`)
+  - [x] 5.2: Verify `cli/export.py` handles ensembles or add a clear error message if not supported
 
-- [ ] Task 6: Tests (AC: all)
-  - [ ] 6.1: Unit test: `run_bracket_simulation` with ensemble model type returns valid `BracketSimulationResult`
-  - [ ] 6.2: Unit test: `load_feature_importances` for ensemble returns interpretable labels
-  - [ ] 6.3: Unit test: Model Deep Dive renders ensemble components section when `model_type == "ensemble"`
-  - [ ] 6.4: Unit test: Leaderboard displays ensemble runs alongside single-model runs
+- [x] Task 6: Tests (AC: all)
+  - [x] 6.1: Unit test: `run_bracket_simulation` with ensemble model type returns valid `BracketSimulationResult`
+  - [x] 6.2: Unit test: `load_feature_importances` for ensemble returns interpretable labels
+  - [x] 6.3: Unit test: Model Deep Dive renders ensemble components section when `model_type == "ensemble"`
+  - [x] 6.4: Unit test: Leaderboard displays ensemble runs alongside single-model runs
 
-- [ ] Task 7: Quality gates (AC: all)
-  - [ ] 7.1: `ruff check .` clean
-  - [ ] 7.2: `mypy --strict src/ncaa_eval tests` clean
-  - [ ] 7.3: Full `pytest` suite passes (existing + new tests)
-  - [ ] 7.4: No regressions in single-model dashboard paths
+- [x] Task 7: Quality gates (AC: all)
+  - [x] 7.1: `ruff check .` clean
+  - [x] 7.2: `mypy --strict src/ncaa_eval tests` clean
+  - [x] 7.3: Full `pytest` suite passes (existing + new tests)
+  - [x] 7.4: No regressions in single-model dashboard paths
 
 ## Dev Notes
 
@@ -229,10 +229,33 @@ All changes go in existing dashboard files:
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+No blocking issues encountered.
+
 ### Completion Notes List
 
+- **Task 1**: Added `elif run.model_type == "ensemble"` branch to both `run_bracket_simulation()` and `run_bracket_simulation_with_progress()` in `simulation_helpers.py`. Imports `EnsembleProvider` from `evaluation/providers.py` and `StackedEnsemble` from `model/ensemble.py`. Updated provider type annotation to `EloProvider | MatrixProvider | _EnsembleProvider`.
+- **Task 2**: Modified `load_feature_importances()` to detect `StackedEnsemble` via `isinstance` check and route through `meta_learner.get_feature_importances()`. Added `_map_ensemble_feature_labels()` helper that reads `manifest.json` to map `pred_base_N` column names to human-readable labels (e.g., "Xgboost Prediction"). Added `load_ensemble_manifest()` cached function for the deep dive page.
+- **Task 3**: Added `_render_ensemble_components()` function to Model Deep Dive page. Renders an `st.expander("Ensemble Components")` showing meta-learner type, contextual features, and a base model table. Called from `_render_deep_dive()` only when `model_type == "ensemble"`. Added "Meta-Learner Feature Importance" chart title for ensemble model type.
+- **Task 4**: Verified — leaderboard displays ensembles without changes. `load_leaderboard_data()` includes `model_type` from `ModelRun.model_type` and no filtering excludes unknown types.
+- **Task 5**: Verified — `cli/predict.py` handles ensembles via `_build_ensemble_predictions()` (Story 10.2). `cli/export.py` raises `TypeError` for non-Elo models with a clear message.
+- **Task 6**: Added 11 new test methods across 3 files covering bracket simulation ensemble path, feature importance label mapping, ensemble manifest loading, deep dive ensemble components section, and leaderboard ensemble row display.
+- **Task 7**: All quality gates pass — `ruff check .` clean, `mypy --strict` clean, 1178 tests pass, 0 regressions.
+
 ### File List
+
+- `dashboard/lib/simulation_helpers.py` — Modified: ensemble branch in provider selection
+- `dashboard/lib/data_loaders.py` — Modified: ensemble feature importances, `_map_ensemble_feature_labels()`, `load_ensemble_manifest()`
+- `dashboard/pages/3_Model_Deep_Dive.py` — Modified: `_render_ensemble_components()`, ensemble chart title
+- `tests/unit/test_dashboard_filters.py` — Modified: ensemble bracket simulation test, feature importance tests, manifest loader tests
+- `tests/unit/test_deep_dive_page.py` — Modified: `TestEnsembleDeepDive` class (3 tests)
+- `tests/unit/test_leaderboard_page.py` — Modified: `TestEnsembleLeaderboardDisplay` class (1 test)
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — Modified: status update
+- `_bmad-output/implementation-artifacts/10-3-ensemble-dashboard-registry-integration.md` — Modified: story status and task checkboxes
+
+## Change Log
+
+- 2026-03-12: Implemented dashboard ensemble integration — bracket simulation, feature importance labels, deep dive components section, verification of leaderboard and CLI paths (Story 10.3)

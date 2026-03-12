@@ -8,6 +8,7 @@ page navigations hit the in-memory cache.
 from __future__ import annotations
 
 import datetime
+import json
 import logging
 from pathlib import Path
 from typing import cast
@@ -17,6 +18,7 @@ import streamlit as st
 
 from ncaa_eval.evaluation import list_metrics, list_scoring_display_names, list_scorings
 from ncaa_eval.ingest.repository import ParquetRepository
+from ncaa_eval.model.ensemble import StackedEnsemble
 from ncaa_eval.model.tracking import RunStore
 from ncaa_eval.transform.normalization import TourneySeedTable
 
@@ -164,6 +166,41 @@ def load_fold_predictions(data_dir: str, run_id: str) -> list[dict[str, object]]
         return []
 
 
+def _map_ensemble_feature_labels(
+    raw: list[tuple[str, float]],
+    store: RunStore,
+    run_id: str,
+) -> list[tuple[str, float]]:
+    """Map ``pred_base_N`` column names to interpretable labels.
+
+    Reads the ensemble manifest to get ``base_model_types`` and replaces
+    ``pred_base_0`` → ``"XGBoost Prediction"``, etc.  Contextual feature
+    names are kept as-is.
+    """
+    manifest_path = store.model_dir(run_id) / "manifest.json"
+    base_model_types: list[str] = []
+    if manifest_path.exists():
+        manifest = json.loads(manifest_path.read_text())
+        base_model_types = manifest.get("base_model_types", [])
+
+    result: list[tuple[str, float]] = []
+    for name, value in raw:
+        if name.startswith("pred_base_"):
+            idx_str = name[len("pred_base_") :]
+            try:
+                idx = int(idx_str)
+                if idx < len(base_model_types):
+                    label = f"{base_model_types[idx].replace('_', ' ').title()} Prediction"
+                else:
+                    label = name
+            except ValueError:
+                label = name
+            result.append((label, value))
+        else:
+            result.append((name, value))
+    return result
+
+
 @st.cache_data(ttl=300)
 def load_feature_importances(data_dir: str, run_id: str) -> list[dict[str, object]]:
     """Load feature importances for a run.
@@ -189,15 +226,21 @@ def load_feature_importances(data_dir: str, run_id: str) -> list[dict[str, objec
         model = store.load_model(run_id)
         if model is None:
             return []
-        raw = model.get_feature_importances()
-        if raw is None:
-            # Legacy fallback: model doesn't have feature names stored
-            feature_names = store.load_feature_names(run_id) or []
-            clf = getattr(model, "_clf", None)
-            importances = getattr(clf, "feature_importances_", None)
-            if importances is None or not feature_names or len(feature_names) != len(importances):
+        if isinstance(model, StackedEnsemble):
+            raw = model.meta_learner.get_feature_importances()
+            if raw is None:
                 return []
-            raw = list(zip(feature_names, importances.tolist()))
+            raw = _map_ensemble_feature_labels(raw, store, run_id)
+        else:
+            raw = model.get_feature_importances()
+            if raw is None:
+                # Legacy fallback: model doesn't have feature names stored
+                feature_names = store.load_feature_names(run_id) or []
+                clf = getattr(model, "_clf", None)
+                importances = getattr(clf, "feature_importances_", None)
+                if importances is None or not feature_names or len(feature_names) != len(importances):
+                    return []
+                raw = list(zip(feature_names, importances.tolist()))
         pairs = sorted(raw, key=lambda p: p[1], reverse=True)
         return [{"feature": f, "importance": v} for f, v in pairs]
     except (OSError, KeyError):
@@ -332,3 +375,29 @@ def load_team_names(data_dir: str) -> dict[int, str]:
         Mapping of team_id to team_name.  Empty dict if unavailable.
     """
     return _load_team_names_uncached(data_dir)
+
+
+@st.cache_data(ttl=300)
+def load_ensemble_manifest(data_dir: str, run_id: str) -> dict[str, object]:
+    """Load the ensemble manifest for a run.
+
+    Args:
+        data_dir: String path to the project data directory.
+        run_id: The model run identifier.
+
+    Returns:
+        Manifest dict with keys like ``base_model_types``,
+        ``contextual_features``, ``meta_learner_type``, etc.
+        Empty dict if the run is not an ensemble or manifest is missing.
+    """
+    path = Path(data_dir)
+    if not path.exists():
+        return {}
+    try:
+        store = RunStore(path)
+        manifest_path = store.model_dir(run_id) / "manifest.json"
+        if not manifest_path.exists():
+            return {}
+        return cast(dict[str, object], json.loads(manifest_path.read_text()))
+    except (OSError, json.JSONDecodeError):
+        return {}

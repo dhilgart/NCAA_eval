@@ -15,6 +15,7 @@ from dashboard.lib.data_loaders import (
     get_data_dir,
     get_metric_cols as _get_metric_cols,
     load_available_runs,
+    load_ensemble_manifest,
     load_feature_importances,
     load_fold_predictions,
     load_leaderboard_data,
@@ -104,6 +105,9 @@ def _render_feature_importance(data_dir: str, run_id: str, model_type: str) -> N
     elif model_type == "logistic_regression":
         chart_title = "Feature Importance (|Coefficient|)"
         x_label = "Absolute Coefficient"
+    elif model_type == "ensemble":
+        chart_title = "Meta-Learner Feature Importance"
+        x_label = "Importance"
     else:
         chart_title = "Feature Importance (Gain)"
         x_label = "Importance"
@@ -120,6 +124,27 @@ def _render_feature_importance(data_dir: str, run_id: str, model_type: str) -> N
         height=min(max(400, len(feature_names) * 25), 2000),
     )
     st.plotly_chart(fig, use_container_width=True)
+
+
+def _render_ensemble_components(data_dir: str, run_id: str) -> None:
+    """Render the Ensemble Components expander for ensemble model runs."""
+    manifest = load_ensemble_manifest(data_dir, run_id)
+    if not manifest:
+        return
+
+    with st.expander("Ensemble Components", expanded=True):
+        base_types = manifest.get("base_model_types", [])
+        meta_type = manifest.get("meta_learner_type", "unknown")
+        contextual = manifest.get("contextual_features", [])
+
+        st.markdown(f"**Meta-Learner:** {meta_type}")
+        st.markdown(f"**Contextual Features:** {', '.join(str(f) for f in contextual)}")
+
+        if base_types:
+            rows = [
+                {"Base Model": str(t).replace("_", " ").title(), "Index": i} for i, t in enumerate(base_types)
+            ]
+            st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
 
 
 def _render_deep_dive() -> None:
@@ -153,6 +178,9 @@ def _render_deep_dive() -> None:
     _render_reliability_section(data_dir, run_id, label)
     _render_metric_summary(data_dir, run_id)
     _render_feature_importance(data_dir, run_id, model_type)
+
+    if model_type == "ensemble":
+        _render_ensemble_components(data_dir, run_id)
 
     st.subheader("Hyperparameters")
     st.json(run.get("hyperparameters", {}))

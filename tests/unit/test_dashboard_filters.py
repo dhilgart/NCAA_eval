@@ -800,6 +800,228 @@ class TestRunBracketSimulation:
 
         assert result is None
 
+    @patch("dashboard.lib.simulation_helpers.Path.exists", return_value=True)
+    @patch("dashboard.lib.simulation_helpers.TourneySeedTable")
+    @patch("dashboard.lib.simulation_helpers.RunStore")
+    @patch("dashboard.lib.simulation_helpers.build_bracket")
+    @patch("dashboard.lib.simulation_helpers.build_probability_matrix")
+    @patch("dashboard.lib.simulation_helpers.compute_most_likely_bracket")
+    @patch("dashboard.lib.simulation_helpers.simulate_tournament")
+    @patch("dashboard.lib.simulation_helpers.get_scoring")
+    @patch("dashboard.lib.simulation_helpers._build_team_labels")
+    @patch("dashboard.lib.simulation_helpers._EnsembleProvider")
+    def test_returns_result_for_ensemble_model(  # noqa: PLR0913 — @patch mock injection
+        self,
+        mock_ensemble_provider: MagicMock,
+        mock_labels: MagicMock,
+        mock_get_scoring: MagicMock,
+        mock_simulate: MagicMock,
+        mock_most_likely: MagicMock,
+        mock_prob_matrix: MagicMock,
+        mock_build_bracket: MagicMock,
+        mock_run_store: MagicMock,
+        mock_seed_table: MagicMock,
+        mock_exists: MagicMock,
+    ) -> None:
+        """Story 10.3 AC#4: Ensemble model type uses EnsembleProvider for bracket simulation."""
+        from dashboard.lib.simulation_helpers import run_bracket_simulation
+
+        bracket = _make_mock_bracket((100, 200))
+        mock_build_bracket.return_value = bracket
+        mock_prob_matrix.return_value = np.full((2, 2), 0.5)
+        mock_most_likely.return_value = MagicMock()
+        mock_simulate.return_value = MagicMock()
+        mock_labels.return_value = {0: "[1] Duke", 1: "[16] Norfolk St"}
+        mock_get_scoring.return_value = MagicMock(return_value=MagicMock())
+        mock_ensemble_provider.return_value = MagicMock()
+
+        mock_store = MagicMock()
+        mock_run = MagicMock()
+        mock_run.model_type = "ensemble"
+        mock_store.load_run.return_value = mock_run
+
+        # Return a mock that passes isinstance(model, StackedEnsemble)
+        from ncaa_eval.model.ensemble import StackedEnsemble
+
+        mock_model = MagicMock(spec=StackedEnsemble)
+        mock_store.load_model.return_value = mock_model
+        mock_run_store.return_value = mock_store
+
+        mock_table = MagicMock()
+        mock_table.all_seeds.return_value = [MagicMock()]
+        mock_seed_table.from_csv.return_value = mock_table
+
+        result = _unwrap(run_bracket_simulation)("/fake/data", "run-ens", 2023, "standard")
+
+        assert result is not None
+        assert result.team_labels == {0: "[1] Duke", 1: "[16] Norfolk St"}
+        mock_ensemble_provider.assert_called_once()
+
+
+# ---------------------------------------------------------------------------
+# Story 10.3: Ensemble feature importance tests
+# ---------------------------------------------------------------------------
+
+
+class TestMapEnsembleFeatureLabels:
+    def test_maps_pred_base_to_model_type_names(self) -> None:
+        """pred_base_N columns are mapped to interpretable model type labels."""
+        from dashboard.lib.data_loaders import _map_ensemble_feature_labels
+
+        raw = [("pred_base_0", 0.6), ("pred_base_1", 0.3), ("seed_diff", 0.1)]
+        mock_store = MagicMock()
+        manifest_path = MagicMock()
+        manifest_path.exists.return_value = True
+        manifest_path.read_text.return_value = (
+            '{"base_model_types": ["xgboost", "elo"], "base_model_count": 2}'
+        )
+        mock_store.model_dir.return_value.__truediv__ = MagicMock(return_value=manifest_path)
+
+        result = _map_ensemble_feature_labels(raw, mock_store, "run-1")
+
+        assert result[0] == ("Xgboost Prediction", 0.6)
+        assert result[1] == ("Elo Prediction", 0.3)
+        assert result[2] == ("seed_diff", 0.1)
+
+    def test_keeps_original_names_when_no_manifest(self) -> None:
+        """When manifest is missing, pred_base_N names are kept as-is."""
+        from dashboard.lib.data_loaders import _map_ensemble_feature_labels
+
+        raw = [("pred_base_0", 0.6), ("seed_diff", 0.1)]
+        mock_store = MagicMock()
+        manifest_path = MagicMock()
+        manifest_path.exists.return_value = False
+        mock_store.model_dir.return_value.__truediv__ = MagicMock(return_value=manifest_path)
+
+        result = _map_ensemble_feature_labels(raw, mock_store, "run-1")
+
+        assert result[0] == ("pred_base_0", 0.6)
+        assert result[1] == ("seed_diff", 0.1)
+
+
+class TestLoadFeatureImportancesEnsemble:
+    @patch("dashboard.lib.data_loaders.Path.exists", return_value=True)
+    @patch("dashboard.lib.data_loaders.RunStore")
+    @patch("dashboard.lib.data_loaders._map_ensemble_feature_labels")
+    def test_routes_through_meta_learner_for_ensemble(
+        self,
+        mock_map_labels: MagicMock,
+        mock_store_cls: MagicMock,
+        mock_exists: MagicMock,
+    ) -> None:
+        """Story 10.3 AC#3: Ensemble feature importances come from the meta-learner."""
+        from ncaa_eval.model.ensemble import StackedEnsemble
+
+        mock_store = MagicMock()
+        mock_ensemble = MagicMock(spec=StackedEnsemble)
+        mock_meta = MagicMock()
+        mock_meta.get_feature_importances.return_value = [
+            ("pred_base_0", 0.6),
+            ("seed_diff", 0.1),
+        ]
+        mock_ensemble.meta_learner = mock_meta
+        mock_store.load_model.return_value = mock_ensemble
+        mock_store_cls.return_value = mock_store
+
+        mock_map_labels.return_value = [
+            ("Xgboost Prediction", 0.6),
+            ("seed_diff", 0.1),
+        ]
+
+        from dashboard.lib.data_loaders import load_feature_importances
+
+        result: list[dict[str, object]] = _unwrap(load_feature_importances)("/fake/data", "run-ens")
+
+        assert len(result) == 2
+        assert result[0]["feature"] == "Xgboost Prediction"
+        assert result[0]["importance"] == 0.6
+        mock_meta.get_feature_importances.assert_called_once()
+        mock_map_labels.assert_called_once()
+
+    @patch("dashboard.lib.data_loaders.Path.exists", return_value=True)
+    @patch("dashboard.lib.data_loaders.RunStore")
+    def test_returns_empty_when_meta_learner_has_no_importances(
+        self,
+        mock_store_cls: MagicMock,
+        mock_exists: MagicMock,
+    ) -> None:
+        """Ensemble with meta-learner returning None gives empty result."""
+        from ncaa_eval.model.ensemble import StackedEnsemble
+
+        mock_store = MagicMock()
+        mock_ensemble = MagicMock(spec=StackedEnsemble)
+        mock_meta = MagicMock()
+        mock_meta.get_feature_importances.return_value = None
+        mock_ensemble.meta_learner = mock_meta
+        mock_store.load_model.return_value = mock_ensemble
+        mock_store_cls.return_value = mock_store
+
+        from dashboard.lib.data_loaders import load_feature_importances
+
+        result: list[dict[str, object]] = _unwrap(load_feature_importances)("/fake/data", "run-ens")
+
+        assert result == []
+
+
+class TestLoadEnsembleManifest:
+    @patch("dashboard.lib.data_loaders.Path.exists", return_value=True)
+    @patch("dashboard.lib.data_loaders.RunStore")
+    def test_loads_manifest_json(
+        self,
+        mock_store_cls: MagicMock,
+        mock_exists: MagicMock,
+    ) -> None:
+        import json
+        from pathlib import Path
+
+        mock_store = MagicMock()
+        manifest_data = {
+            "base_model_types": ["xgboost", "elo"],
+            "base_model_count": 2,
+            "contextual_features": ["seed_diff"],
+            "meta_learner_type": "logistic_regression",
+        }
+        mock_manifest = MagicMock(spec=Path)
+        mock_manifest.exists.return_value = True
+        mock_manifest.read_text.return_value = json.dumps(manifest_data)
+        mock_store.model_dir.return_value.__truediv__ = MagicMock(return_value=mock_manifest)
+        mock_store_cls.return_value = mock_store
+
+        from dashboard.lib.data_loaders import load_ensemble_manifest
+
+        result = _unwrap(load_ensemble_manifest)("/fake/data", "run-ens")
+
+        assert result["base_model_types"] == ["xgboost", "elo"]
+        assert result["meta_learner_type"] == "logistic_regression"
+
+    @patch("dashboard.lib.data_loaders.Path.exists", return_value=True)
+    @patch("dashboard.lib.data_loaders.RunStore")
+    def test_returns_empty_when_no_manifest(
+        self,
+        mock_store_cls: MagicMock,
+        mock_exists: MagicMock,
+    ) -> None:
+        from pathlib import Path
+
+        mock_store = MagicMock()
+        mock_manifest = MagicMock(spec=Path)
+        mock_manifest.exists.return_value = False
+        mock_store.model_dir.return_value.__truediv__ = MagicMock(return_value=mock_manifest)
+        mock_store_cls.return_value = mock_store
+
+        from dashboard.lib.data_loaders import load_ensemble_manifest
+
+        result = _unwrap(load_ensemble_manifest)("/fake/data", "run-ens")
+
+        assert result == {}
+
+    def test_returns_empty_when_data_dir_missing(self) -> None:
+        from dashboard.lib.data_loaders import load_ensemble_manifest
+
+        result = _unwrap(load_ensemble_manifest)("/nonexistent", "run-ens")
+
+        assert result == {}
+
 
 # ---------------------------------------------------------------------------
 # Story 7.6: Pool Scorer helper tests

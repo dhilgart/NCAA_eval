@@ -231,3 +231,43 @@ class TestEmptyStateHandling:
         mock_st.warning.assert_called_once()
         call_args = mock_st.warning.call_args[0][0]
         assert "Re-run training" in call_args
+
+
+class TestEnsembleLeaderboardDisplay:
+    """Story 10.3 AC#1: Ensemble runs appear in the leaderboard alongside single models."""
+
+    def test_ensemble_rows_appear_in_leaderboard(self) -> None:
+        data = _sample_data() + [
+            {
+                "run_id": "run-ens",
+                "model_type": "ensemble",
+                "timestamp": "2025-01-03T00:00:00",
+                "start_year": 2015,
+                "end_year": 2025,
+                "year": 2023,
+                "log_loss": 0.49,
+                "brier_score": 0.17,
+                "roc_auc": 0.79,
+                "ece": 0.023,
+            },
+        ]
+
+        mock_st = MagicMock()
+        mock_st.session_state = {"selected_year": 2023}
+        mock_st.columns.side_effect = [
+            [MagicMock(), MagicMock()],  # breadcrumb columns
+            [MagicMock(), MagicMock(), MagicMock(), MagicMock()],  # KPI columns
+        ]
+        mock_st.dataframe.return_value = {"selection": {"rows": []}}
+
+        with (
+            patch.object(_lab_mod, "load_leaderboard_data", return_value=data),
+            patch.object(_lab_mod, "get_data_dir", return_value="/fake/data"),
+            patch.object(_lab_mod, "st", mock_st),
+        ):
+            _lab_mod._render_leaderboard()
+
+        mock_st.dataframe.assert_called_once()
+        rendered_df = mock_st.dataframe.call_args[0][0].data
+        model_types = rendered_df["model_type"].tolist()
+        assert "ensemble" in model_types
