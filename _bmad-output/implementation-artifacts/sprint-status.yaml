@@ -149,8 +149,8 @@ development_status:
   epic-9-retrospective: optional
 
   # Epic 10: Ensemble Modeling Framework
-  epic-10: backlog
-  10-1-stacked-ensemble-oof-training-pipeline: backlog
+  epic-10: in-progress
+  10-1-stacked-ensemble-oof-training-pipeline: done
   10-2-ensemble-inference-interface: backlog
   10-3-ensemble-dashboard-registry-integration: backlog
   10-4-ensemble-tutorial-notebook: backlog
