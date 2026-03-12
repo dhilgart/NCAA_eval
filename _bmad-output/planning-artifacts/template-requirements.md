@@ -3976,3 +3976,37 @@ if selected_rows:
 3. Test with `{}` (no selection key) — verifies `.get("selection", {})` default handles absent key gracefully
 
 **Assertion strength for session_state writes:** Don't just check `"key" in st.session_state` — also assert the value. The aggregate path sorts rows by metric before display, so which `run_id` lands at index 0 depends on sort order. Assert the exact expected string (e.g., `assert mock_st.session_state["selected_run_id"] == "run-2"` with a comment explaining the sort). A key-presence-only check would pass silently even if the wrong run_id were stored. (Discovered Story 9.11 Code Review Pass 2, 2026-03-11)
+
+## Story 9.12 Learnings (st.progress for Monte Carlo Simulation, 2026-03-11)
+
+### Streamlit Progress Bar Must Be Cleaned Up With `try/finally` (Discovered Story 9.12 Code Review, 2026-03-11)
+
+`st.progress()` returns a `DeltaGenerator` object whose `empty()` method removes the bar from the UI. If the code between `st.progress()` and `progress_bar.empty()` raises an exception, the bar stays frozen at its last value forever — there is no automatic cleanup by Streamlit.
+
+**Pattern:** Always wrap progress bar usage in `try/finally`:
+```python
+progress_bar = st.progress(0, text="Running...")
+try:
+    result = run_long_operation(progress_bar=progress_bar)
+finally:
+    progress_bar.empty()
+```
+
+**Test verification:** Tests for the progress bar clearing must assert `mock_progress_bar.empty.assert_called_once()`. A test that only asserts the long operation was called (but not the cleanup) allows the `progress_bar.empty()` call to be silently removed.
+
+### Uncached Wrappers Around Cached Functions Must Match Error Handling (Discovered Story 9.12 Code Review, 2026-03-11)
+
+When creating an uncached wrapper that delegates to a `@st.cache_data`-decorated function, the wrapper must replicate the cached function's exception handling. The cached function's `except` clause handles errors gracefully (e.g., returns `None`). Without a matching handler, the uncached wrapper propagates raw exceptions to Streamlit, producing an unhandled traceback page instead of a graceful `st.warning()`.
+
+**Pattern:** Mirror the cached function's `except (OSError, ValueError, KeyError, TypeError)` block in any uncached sibling. The uncached wrapper should have the same return type and failure semantics.
+
+### Uncached Wrappers Needing Unperturbed Probability Matrix Must Re-Load Provider (Discovered Story 9.12, 2026-03-11)
+
+When a cached function exposes only the *perturbed* probability matrix (for game-theory slider features), an uncached MC wrapper that needs the *unperturbed* matrix must re-load the model provider. The `BracketSimulationResult` dataclass does not store the original provider or unperturbed matrix — only the perturbed matrix (which is correct for the analytical EP calculation).
+
+**Docstring requirement:** Document explicitly WHY the provider re-load is needed despite having a cached result:
+```
+The re-load is necessary because BracketSimulationResult only exposes the
+perturbed matrix. MC simulation must use raw model probabilities so each
+simulated outcome reflects true model uncertainty, not the user's slider adjustments.
+```
