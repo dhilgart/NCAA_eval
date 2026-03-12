@@ -1,6 +1,6 @@
 # Story 10.2: Ensemble Inference Interface
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -30,38 +30,38 @@ so that ensembles compose transparently with the existing evaluation and bracket
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Add `meta_column_order` to `StackedEnsemble` and wire it through `load()` (AC: #3)
-  - [ ] 1.1 Add `meta_column_order: list[str]` field to `StackedEnsemble` (default empty list; populated during training or load)
-  - [ ] 1.2 Update `StackedEnsemble.load()` to read `meta_column_order` from manifest.json and set it on the instance
-  - [ ] 1.3 Update `_run_ensemble_training` in `cli/train.py` to set `ensemble.meta_column_order` after building the meta-training set (before save, so it's available for inference immediately after training without reload)
-  - [ ] 1.4 Add unit test: loaded ensemble has correct `meta_column_order`
+- [x] Task 1: Add `meta_column_order` to `StackedEnsemble` and wire it through `load()` (AC: #3)
+  - [x] 1.1 Add `meta_column_order: list[str]` field to `StackedEnsemble` (default empty list; populated during training or load)
+  - [x] 1.2 Update `StackedEnsemble.load()` to read `meta_column_order` from manifest.json and set it on the instance
+  - [x] 1.3 Update `_run_ensemble_training` in `cli/train.py` to set `ensemble.meta_column_order` after building the meta-training set (before save, so it's available for inference immediately after training without reload)
+  - [x] 1.4 Add unit test: loaded ensemble has correct `meta_column_order`
 
-- [ ] Task 2: Implement `StackedEnsemble.predict_proba(X)` (AC: #1, #3)
-  - [ ] 2.1 Add `predict_proba(self, X: pd.DataFrame) -> pd.Series` method to `StackedEnsemble`
-  - [ ] 2.2 Route stateless base models through `X[base_model.feature_names_]`; stateful through `X` directly
-  - [ ] 2.3 Assemble `meta_X` DataFrame with columns in `self.meta_column_order`; raise `ValueError` if any column is missing
-  - [ ] 2.4 Call `self.meta_learner.predict_proba(meta_X)` and return result
-  - [ ] 2.5 Unit tests: correct predictions with mixed stateful/stateless base models; column order enforcement; ValueError on missing columns
+- [x] Task 2: Implement `StackedEnsemble.predict_proba(X)` (AC: #1, #3)
+  - [x] 2.1 Add `predict_proba(self, X: pd.DataFrame) -> pd.Series` method to `StackedEnsemble`
+  - [x] 2.2 Route stateless base models through `X[base_model.feature_names_]`; stateful through `X` directly
+  - [x] 2.3 Assemble `meta_X` DataFrame with columns in `self.meta_column_order`; raise `ValueError` if any column is missing
+  - [x] 2.4 Call `self.meta_learner.predict_proba(meta_X)` and return result
+  - [x] 2.5 Unit tests: correct predictions with mixed stateful/stateless base models; column order enforcement; ValueError on missing columns
 
-- [ ] Task 3: Implement `StackedEnsemble.predict_bracket(data_dir, season)` (AC: #2, #3)
-  - [ ] 3.1 Add `predict_bracket(self, data_dir: Path, season: int) -> pd.DataFrame` method
-  - [ ] 3.2 For each base model: build feature server from `base_model.feature_config`, serve season features, generate predictions
-  - [ ] 3.3 Handle stateful models: they need to be fit on prior seasons' games before predicting current-season matchups (use `_setup_feature_server` + `fit` on all prior data)
-  - [ ] 3.4 For all C(n,2) team pairings: assemble meta-input (base predictions + contextual features) in `meta_column_order`
-  - [ ] 3.5 Return n×n probability matrix as DataFrame indexed by team_id
-  - [ ] 3.6 Unit test: verify matrix shape, symmetry (`P[a,b] + P[b,a] ≈ 1`), zero diagonal
+- [x] Task 3: Implement `StackedEnsemble.predict_bracket(data_dir, season)` (AC: #2, #3)
+  - [x] 3.1 Add `predict_bracket(self, data_dir: Path, season: int) -> pd.DataFrame` method
+  - [x] 3.2 For each base model: build feature server from `base_model.feature_config`, serve season features, generate predictions
+  - [x] 3.3 Handle stateful models: they need to be fit on prior seasons' games before predicting current-season matchups (use `_setup_feature_server` + `fit` on all prior data)
+  - [x] 3.4 For all C(n,2) team pairings: assemble meta-input (base predictions + contextual features) in `meta_column_order`
+  - [x] 3.5 Return n×n probability matrix as DataFrame indexed by team_id
+  - [x] 3.6 Unit test: verify matrix shape, symmetry (`P[a,b] + P[b,a] ≈ 1`), zero diagonal
 
-- [ ] Task 4: Replace `NotImplementedError` in `cli/predict.py` (AC: #4, #5)
-  - [ ] 4.1 Remove the `StackedEnsemble` guard from `build_predictions()`
-  - [ ] 4.2 Add ensemble prediction path: load ensemble, call `predict_bracket(data_dir, season)` to get probability matrix, convert to prediction rows
-  - [ ] 4.3 Ensure CSV output format matches single-model output (`season,team_a_id,team_b_id,pred_win_prob`)
-  - [ ] 4.4 Integration test: CLI predict with a mock ensemble produces valid CSV
+- [x] Task 4: Replace `NotImplementedError` in `cli/predict.py` (AC: #4, #5)
+  - [x] 4.1 Remove the `StackedEnsemble` guard from `build_predictions()`
+  - [x] 4.2 Add ensemble prediction path: load ensemble, call `predict_bracket(data_dir, season)` to get probability matrix, convert to prediction rows
+  - [x] 4.3 Ensure CSV output format matches single-model output (`season,team_a_id,team_b_id,pred_win_prob`)
+  - [x] 4.4 Integration test: CLI predict with a mock ensemble produces valid CSV
 
-- [ ] Task 5: Quality gates (AC: all)
-  - [ ] 5.1 `ruff check .` clean
-  - [ ] 5.2 `mypy --strict src/ncaa_eval tests` clean
-  - [ ] 5.3 Full `pytest` suite passes (existing + new tests)
-  - [ ] 5.4 No regressions in single-model prediction paths
+- [x] Task 5: Quality gates (AC: all)
+  - [x] 5.1 `ruff check .` clean
+  - [x] 5.2 `mypy --strict src/ncaa_eval tests` clean
+  - [x] 5.3 Full `pytest` suite passes (existing + new tests)
+  - [x] 5.4 No regressions in single-model prediction paths
 
 ## Dev Notes
 
@@ -218,8 +218,31 @@ def predict_proba(self, X: pd.DataFrame) -> pd.Series:
 
 ### Agent Model Used
 
+Claude Opus 4.6
+
 ### Debug Log References
+
+- Pre-commit hook caught unused `type: ignore[type-arg]` on `predict_proba` return type — mypy infers `pd.Series` fine without the annotation
+- Pre-commit hook caught `Model` has no attribute `feature_names_` — used `type: ignore[attr-defined]` since stateless models set this dynamically during `fit()`
+- Ruff format auto-fixed parenthesization in `_build_ensemble_predictions` tuple append
 
 ### Completion Notes List
 
+- **Task 1**: Added `meta_column_order: list[str]` field to `StackedEnsemble` dataclass with default empty list. Updated `save()` to persist in manifest.json, `load()` to read from manifest (with `.get()` fallback for backward compatibility), and `_run_ensemble_training` to set it on the instance before save. 3 unit tests cover default, round-trip, and legacy manifest scenarios.
+- **Task 2**: Implemented `predict_proba(X)` that routes stateful base models through full DataFrame and stateless models through `X[feature_names_]`. Assembles meta-input in `meta_column_order`, validates completeness, and delegates to meta-learner. 4 unit tests cover stateless routing, stateful routing, column order enforcement, and missing column ValueError.
+- **Task 3**: Implemented `predict_bracket(data_dir, season)` with extracted helper functions for complexity management. Stateful base models use `EloProvider` + `build_probability_matrix()`. Stateless base models use synthetic feature row construction from per-team season profiles extracted from the feature server. Contextual features (seed_diff, is_tournament, loc_encoding) are computed for all C(n,2) pairs. Returns n×n DataFrame indexed by team_id. 1 unit test verifies shape, symmetry, and zero diagonal.
+- **Task 4**: Replaced `NotImplementedError` in `build_predictions()` with `_build_ensemble_predictions()` that calls `ensemble.predict_bracket()` and converts the probability matrix to CSV-compatible rows. CSV output format matches single-model output. 1 integration test verifies valid CSV output through the CLI.
+- **Task 5**: All quality gates pass — `ruff check .` clean, `mypy --strict` clean (105 files), `pytest` 1163 passed / 0 failed / 1 skipped. No regressions in single-model prediction paths.
+
 ### File List
+
+- `src/ncaa_eval/model/ensemble.py` — MODIFIED: Added `meta_column_order` field, `predict_proba()`, `predict_bracket()` methods; updated `save()`/`load()`; added bracket helper functions
+- `src/ncaa_eval/cli/train.py` — MODIFIED: Set `ensemble.meta_column_order` after building meta-training set
+- `src/ncaa_eval/cli/predict.py` — MODIFIED: Replaced `NotImplementedError` with working ensemble prediction path via `_build_ensemble_predictions()`
+- `tests/unit/test_model_ensemble.py` — MODIFIED: Added `TestMetaColumnOrder` (3 tests), `TestPredictProba` (4 tests), `TestPredictBracket` (1 test)
+- `tests/unit/test_cli_predict.py` — MODIFIED: Added `TestEnsemblePredict` (1 test)
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — MODIFIED: Story status updated
+
+## Change Log
+
+- 2026-03-12: Implemented ensemble inference interface — `predict_proba()`, `predict_bracket()`, CLI predict integration, meta_column_order persistence. 9 new tests added. All quality gates pass.
