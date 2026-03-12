@@ -869,13 +869,7 @@ class TestMapEnsembleFeatureLabels:
         from dashboard.lib.data_loaders import _map_ensemble_feature_labels
 
         raw = [("pred_base_0", 0.6), ("pred_base_1", 0.3), ("seed_diff", 0.1)]
-        mock_store = MagicMock()
-        manifest_path = MagicMock()
-        manifest_path.exists.return_value = True
-        manifest_path.read_text.return_value = (
-            '{"base_model_types": ["xgboost", "elo"], "base_model_count": 2}'
-        )
-        mock_store.model_dir.return_value.__truediv__ = MagicMock(return_value=manifest_path)
+        mock_store = _make_manifest_store({"base_model_types": ["xgboost", "elo"], "base_model_count": 2})
 
         result = _map_ensemble_feature_labels(raw, mock_store, "run-1")
 
@@ -888,10 +882,7 @@ class TestMapEnsembleFeatureLabels:
         from dashboard.lib.data_loaders import _map_ensemble_feature_labels
 
         raw = [("pred_base_0", 0.6), ("seed_diff", 0.1)]
-        mock_store = MagicMock()
-        manifest_path = MagicMock()
-        manifest_path.exists.return_value = False
-        mock_store.model_dir.return_value.__truediv__ = MagicMock(return_value=manifest_path)
+        mock_store = _make_manifest_store(None)
 
         result = _map_ensemble_feature_labels(raw, mock_store, "run-1")
 
@@ -963,6 +954,35 @@ class TestLoadFeatureImportancesEnsemble:
         assert result == []
 
 
+def _make_manifest_store(manifest_data: dict[str, object] | None) -> MagicMock:
+    """Return a mock RunStore whose _runs_dir / run_id / model / manifest.json path works.
+
+    If manifest_data is None, the manifest path reports exists()=False.
+    Otherwise it returns json.dumps(manifest_data) from read_text().
+    """
+    import json
+    from pathlib import Path
+
+    mock_manifest = MagicMock(spec=Path)
+    if manifest_data is None:
+        mock_manifest.exists.return_value = False
+    else:
+        mock_manifest.exists.return_value = True
+        mock_manifest.read_text.return_value = json.dumps(manifest_data)
+
+    # Simulate store._runs_dir / run_id / "model" / "manifest.json" chain
+    mock_model_dir = MagicMock()
+    mock_model_dir.__truediv__ = MagicMock(return_value=mock_manifest)  # / "manifest.json"
+    mock_run_dir = MagicMock()
+    mock_run_dir.__truediv__ = MagicMock(return_value=mock_model_dir)  # / "model"
+    mock_runs_dir = MagicMock()
+    mock_runs_dir.__truediv__ = MagicMock(return_value=mock_run_dir)  # / run_id
+
+    mock_store = MagicMock()
+    mock_store._runs_dir = mock_runs_dir
+    return mock_store
+
+
 class TestLoadEnsembleManifest:
     @patch("dashboard.lib.data_loaders.Path.exists", return_value=True)
     @patch("dashboard.lib.data_loaders.RunStore")
@@ -971,21 +991,13 @@ class TestLoadEnsembleManifest:
         mock_store_cls: MagicMock,
         mock_exists: MagicMock,
     ) -> None:
-        import json
-        from pathlib import Path
-
-        mock_store = MagicMock()
         manifest_data = {
             "base_model_types": ["xgboost", "elo"],
             "base_model_count": 2,
             "contextual_features": ["seed_diff"],
             "meta_learner_type": "logistic_regression",
         }
-        mock_manifest = MagicMock(spec=Path)
-        mock_manifest.exists.return_value = True
-        mock_manifest.read_text.return_value = json.dumps(manifest_data)
-        mock_store.model_dir.return_value.__truediv__ = MagicMock(return_value=mock_manifest)
-        mock_store_cls.return_value = mock_store
+        mock_store_cls.return_value = _make_manifest_store(manifest_data)
 
         from dashboard.lib.data_loaders import load_ensemble_manifest
 
@@ -1001,13 +1013,7 @@ class TestLoadEnsembleManifest:
         mock_store_cls: MagicMock,
         mock_exists: MagicMock,
     ) -> None:
-        from pathlib import Path
-
-        mock_store = MagicMock()
-        mock_manifest = MagicMock(spec=Path)
-        mock_manifest.exists.return_value = False
-        mock_store.model_dir.return_value.__truediv__ = MagicMock(return_value=mock_manifest)
-        mock_store_cls.return_value = mock_store
+        mock_store_cls.return_value = _make_manifest_store(None)
 
         from dashboard.lib.data_loaders import load_ensemble_manifest
 
@@ -1021,6 +1027,97 @@ class TestLoadEnsembleManifest:
         result = _unwrap(load_ensemble_manifest)("/nonexistent", "run-ens")
 
         assert result == {}
+
+    @patch("dashboard.lib.data_loaders.Path.exists", return_value=True)
+    @patch("dashboard.lib.data_loaders.RunStore")
+    def test_returns_empty_on_corrupt_json(
+        self,
+        mock_store_cls: MagicMock,
+        mock_exists: MagicMock,
+    ) -> None:
+        """Corrupt manifest JSON (truncated file) returns empty dict, not an exception."""
+        # Override the read_text from the helper to return invalid JSON
+        mock_store = _make_manifest_store({"valid": "data"})
+        # Inject invalid JSON into the manifest path's read_text
+        mock_store._runs_dir.__truediv__.return_value.__truediv__.return_value.__truediv__.return_value.read_text.return_value = "{not valid json"
+        mock_store_cls.return_value = mock_store
+
+        from dashboard.lib.data_loaders import load_ensemble_manifest
+
+        result = _unwrap(load_ensemble_manifest)("/fake/data", "run-ens")
+
+        assert result == {}
+
+
+# ---------------------------------------------------------------------------
+# Story 10.3: run_bracket_simulation_with_progress ensemble path
+# ---------------------------------------------------------------------------
+
+
+class TestRunBracketSimulationWithProgress:
+    @patch("dashboard.lib.simulation_helpers.run_bracket_simulation")
+    @patch("dashboard.lib.simulation_helpers.RunStore")
+    @patch("dashboard.lib.simulation_helpers.build_probability_matrix")
+    @patch("dashboard.lib.simulation_helpers.simulate_tournament_mc")
+    @patch("dashboard.lib.simulation_helpers.get_scoring")
+    @patch("dashboard.lib.simulation_helpers._EnsembleProvider")
+    def test_returns_result_for_ensemble_model_with_progress(  # noqa: PLR0913 — @patch injection
+        self,
+        mock_ensemble_provider: MagicMock,
+        mock_get_scoring: MagicMock,
+        mock_simulate_mc: MagicMock,
+        mock_prob_matrix: MagicMock,
+        mock_run_store: MagicMock,
+        mock_run_bracket_sim: MagicMock,
+    ) -> None:
+        """Story 10.3 AC#4: run_bracket_simulation_with_progress uses EnsembleProvider for ensemble."""
+        from dashboard.lib.simulation_helpers import (
+            BracketSimulationResult,
+            run_bracket_simulation_with_progress,
+        )
+
+        bracket = _make_mock_bracket((100, 200))
+
+        # Stub the cached analytical call — returns a valid BracketSimulationResult
+        analytical_result = BracketSimulationResult(
+            sim_result=MagicMock(),
+            bracket=bracket,
+            most_likely=MagicMock(),
+            prob_matrix=np.full((2, 2), 0.5),
+            team_labels={0: "[1] Duke", 1: "[16] Norfolk St"},
+        )
+        mock_run_bracket_sim.return_value = analytical_result
+
+        mock_prob_matrix.return_value = np.full((2, 2), 0.5)
+        mock_simulate_mc.return_value = MagicMock(
+            n_simulations=100,
+            confidence_intervals={},
+            score_distribution={},
+            bracket_distributions={},
+            sim_winners=None,
+        )
+        mock_get_scoring.return_value = MagicMock(return_value=MagicMock())
+        mock_ensemble_provider.return_value = MagicMock()
+
+        mock_store = MagicMock()
+        mock_run = MagicMock()
+        mock_run.model_type = "ensemble"
+        mock_store.load_run.return_value = mock_run
+
+        from ncaa_eval.model.ensemble import StackedEnsemble
+
+        mock_model = MagicMock(spec=StackedEnsemble)
+        mock_store.load_model.return_value = mock_model
+        mock_run_store.return_value = mock_store
+
+        mock_progress = MagicMock()
+
+        result = run_bracket_simulation_with_progress(
+            "/fake/data", "run-ens", 2023, "standard", 100, mock_progress
+        )
+
+        assert result is not None
+        mock_ensemble_provider.assert_called()
 
 
 # ---------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 # Story 10.3: Dashboard and Model Registry Integration
 
-Status: review
+Status: done
 
 ## Story
 
@@ -243,19 +243,35 @@ No blocking issues encountered.
 - **Task 4**: Verified — leaderboard displays ensembles without changes. `load_leaderboard_data()` includes `model_type` from `ModelRun.model_type` and no filtering excludes unknown types.
 - **Task 5**: Verified — `cli/predict.py` handles ensembles via `_build_ensemble_predictions()` (Story 10.2). `cli/export.py` raises `TypeError` for non-Elo models with a clear message.
 - **Task 6**: Added 11 new test methods across 3 files covering bracket simulation ensemble path, feature importance label mapping, ensemble manifest loading, deep dive ensemble components section, and leaderboard ensemble row display.
-- **Task 7**: All quality gates pass — `ruff check .` clean, `mypy --strict` clean, 1178 tests pass, 0 regressions.
+- **Task 7**: All quality gates pass — `ruff check .` clean, `mypy --strict` clean, 1180 tests pass, 0 regressions.
+
+### Code Review Fixes (Claude Sonnet 4.6, 2026-03-12)
+
+**H1 Fixed**: AC #2 partially unimplemented — OOF log loss was missing from Ensemble Components table. Added `_load_oof_log_losses()` helper that reads `store.load_metrics()` for each `oof_backtest_run_ids` entry. Table now shows "Base Model | OOF Log Loss" per AC spec.
+
+**M1 Fixed**: `_map_ensemble_feature_labels()` and `load_ensemble_manifest()` called `store.model_dir(run_id)` which creates the directory as a side effect. Changed to use `store._runs_dir / run_id / "model" / "manifest.json"` directly.
+
+**M2 Fixed**: Ensemble Components table had a useless "Index" column (0, 1, 2...) — removed. Table now shows only "Base Model" and "OOF Log Loss".
+
+**M3 Fixed**: Both `run_bracket_simulation()` and `run_bracket_simulation_with_progress()` used `assert isinstance(model, StackedEnsemble)` which is unsafe in production (not caught by `except (OSError, ValueError, KeyError, TypeError)`). Replaced with graceful `if not isinstance(...) return None` pattern. Extracted `_build_probability_provider()` helper to keep both functions under C901/PLR0911 complexity limits.
+
+**M4 Fixed**: Added `test_returns_empty_on_corrupt_json` to `TestLoadEnsembleManifest` — covers `json.JSONDecodeError` path for truncated manifest files.
+
+**M5 Fixed**: Added `TestRunBracketSimulationWithProgress::test_returns_result_for_ensemble_model_with_progress` — covers the MC simulation ensemble provider path (previously untested).
 
 ### File List
 
-- `dashboard/lib/simulation_helpers.py` — Modified: ensemble branch in provider selection
-- `dashboard/lib/data_loaders.py` — Modified: ensemble feature importances, `_map_ensemble_feature_labels()`, `load_ensemble_manifest()`
-- `dashboard/pages/3_Model_Deep_Dive.py` — Modified: `_render_ensemble_components()`, ensemble chart title
-- `tests/unit/test_dashboard_filters.py` — Modified: ensemble bracket simulation test, feature importance tests, manifest loader tests
-- `tests/unit/test_deep_dive_page.py` — Modified: `TestEnsembleDeepDive` class (3 tests)
+- `dashboard/lib/simulation_helpers.py` — Modified: ensemble branch in provider selection, `_build_probability_provider()` helper extracted
+- `dashboard/lib/data_loaders.py` — Modified: ensemble feature importances, `_map_ensemble_feature_labels()`, `load_ensemble_manifest()`, `_runs_dir` path pattern
+- `dashboard/pages/3_Model_Deep_Dive.py` — Modified: `_render_ensemble_components()` with OOF log loss, `_load_oof_log_losses()` helper, ensemble chart title
+- `tests/unit/test_dashboard_filters.py` — Modified: ensemble bracket simulation tests, manifest tests, `_make_manifest_store()` helper, `TestRunBracketSimulationWithProgress`
+- `tests/unit/test_deep_dive_page.py` — Modified: `TestEnsembleDeepDive` class (3 tests), manifest now includes `oof_backtest_run_ids`
 - `tests/unit/test_leaderboard_page.py` — Modified: `TestEnsembleLeaderboardDisplay` class (1 test)
+- `_bmad-output/planning-artifacts/template-requirements.md` — Modified: Story 10.3 learnings added
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` — Modified: status update
-- `_bmad-output/implementation-artifacts/10-3-ensemble-dashboard-registry-integration.md` — Modified: story status and task checkboxes
+- `_bmad-output/implementation-artifacts/10-3-ensemble-dashboard-registry-integration.md` — Modified: story status
 
 ## Change Log
 
 - 2026-03-12: Implemented dashboard ensemble integration — bracket simulation, feature importance labels, deep dive components section, verification of leaderboard and CLI paths (Story 10.3)
+- 2026-03-12: Code review fixes — OOF log loss in components table (H1), model_dir side-effect fix (M1), Index column removed (M2), assert isinstance → graceful check (M3), JSONDecodeError test (M4), with_progress ensemble test (M5)

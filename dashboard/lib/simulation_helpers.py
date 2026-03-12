@@ -121,6 +121,32 @@ def _build_team_labels(
     return labels
 
 
+def _build_probability_provider(  # noqa: PLR0913
+    store: RunStore,
+    run_id: str,
+    run: object,
+    model: object,
+    path: Path,
+    season: int,
+    bracket: BracketStructure,
+) -> EloProvider | MatrixProvider | _EnsembleProvider | None:
+    """Select and construct the appropriate probability provider for a model run.
+
+    Returns ``None`` if the provider cannot be built (e.g. no fold predictions
+    for non-Elo/non-ensemble models, or unexpected model type for ensemble runs).
+    """
+    model_type: str = getattr(run, "model_type", "")
+    if model_type == "elo":
+        return EloProvider(model)  # type: ignore[arg-type]
+    if model_type == "ensemble":
+        if not isinstance(model, StackedEnsemble):
+            logger.warning("Expected StackedEnsemble for ensemble run %s, got %s", run_id, type(model))
+            return None
+        return _EnsembleProvider(model, path, season)
+    mp = _build_provider_from_folds(store, run_id, season, bracket)
+    return mp
+
+
 @st.cache_data(ttl=None)
 def run_bracket_simulation(  # noqa: PLR0913
     data_dir: str,
@@ -176,17 +202,9 @@ def run_bracket_simulation(  # noqa: PLR0913
             logger.warning("No model found for run %s", run_id)
             return None
 
-        provider: EloProvider | MatrixProvider | _EnsembleProvider
-        if run.model_type == "elo":
-            provider = EloProvider(model)
-        elif run.model_type == "ensemble":
-            assert isinstance(model, StackedEnsemble)
-            provider = _EnsembleProvider(model, path, season)
-        else:
-            mp = _build_provider_from_folds(store, run_id, season, bracket)
-            if mp is None:
-                return None
-            provider = mp
+        provider = _build_probability_provider(store, run_id, run, model, path, season, bracket)
+        if provider is None:
+            return None
 
         team_labels = _build_team_labels(data_dir, bracket)
 
@@ -334,17 +352,9 @@ def run_bracket_simulation_with_progress(  # noqa: PLR0913
         if model is None:
             return None
 
-        provider: EloProvider | MatrixProvider | _EnsembleProvider
-        if run.model_type == "elo":
-            provider = EloProvider(model)
-        elif run.model_type == "ensemble":
-            assert isinstance(model, StackedEnsemble)
-            provider = _EnsembleProvider(model, path, season)
-        else:
-            mp = _build_provider_from_folds(store, run_id, season, bracket)
-            if mp is None:
-                return None
-            provider = mp
+        provider = _build_probability_provider(store, run_id, run, model, path, season, bracket)
+        if provider is None:
+            return None
 
         P = build_probability_matrix(provider, bracket.team_ids, context)
 

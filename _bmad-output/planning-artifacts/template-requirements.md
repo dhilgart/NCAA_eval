@@ -4178,3 +4178,45 @@ if not self.meta_column_order:
 ```
 
 Without this guard, `meta_df[[]]` produces a zero-column DataFrame that passes to `meta_learner.predict_proba()` without error, producing meaningless output rather than a clear failure message.
+
+### RunStore.model_dir() Creates Directory as Side Effect — Avoid in Read Paths (Discovered Story 10.3 Code Review, 2026-03-12)
+
+`RunStore.model_dir(run_id)` calls `path.mkdir(parents=True, exist_ok=True)` every time it is called. Using it in a read-only data loader (like `load_feature_importances` or `load_ensemble_manifest`) silently creates ghost directories under `runs/<run_id>/model/` for any run ID that is queried, even if no model was ever saved there.
+
+**Template pattern:** In dashboard loaders that only need to read a path, construct the path directly from `store._runs_dir / run_id / "model" / "manifest.json"` rather than calling `store.model_dir(run_id) / "manifest.json"`. This avoids the directory-creation side effect.
+
+### Use assert isinstance Sparingly — Prefer Graceful Returns in Production Dashboard Code (Discovered Story 10.3 Code Review, 2026-03-12)
+
+`assert isinstance(model, SomeClass)` in a Streamlit page function body is dangerous:
+1. Python `-O` (optimize) strips `assert` statements entirely
+2. `AssertionError` does **not** inherit from `OSError`/`ValueError`/`TypeError` — a broad `except (OSError, ValueError, KeyError, TypeError)` will NOT catch it
+3. An uncaught `AssertionError` in a dashboard function crashes the page render
+
+**Template pattern:** Replace `assert isinstance(model, T)` with:
+```python
+if not isinstance(model, T):
+    logger.warning("Expected %s for run %s, got %s", T.__name__, run_id, type(model))
+    return None
+```
+
+### Extract Provider/Strategy Selection Helpers to Keep Streamlit Functions Under Complexity Limits (Discovered Story 10.3 Code Review, 2026-03-12)
+
+Streamlit pages trigger ruff C901 (`complexity > 10`) quickly because `@st.cache_data` functions often contain model-loading, branch selection, and error handling all in one function. Adding even one extra branch (like ensemble support) can push a function over the threshold.
+
+**Template pattern:** Extract branchy strategy-selection logic into a private helper (`_build_probability_provider`, etc.) and call it from the Streamlit function. This:
+- Keeps the `@st.cache_data` function under C901/PLR0911 limits
+- Makes the selection logic independently testable
+- Signals intent clearly ("this function picks a provider; the main function orchestrates simulation")
+
+### `@st.cache_data` Functions Cannot Be Called Directly in Tests — Use `__wrapped__` (Discovered Story 7.2, reinforced Story 10.3)
+
+`run_bracket_simulation_with_progress` calls the cached `run_bracket_simulation` internally. Attempting to test `run_bracket_simulation_with_progress` by mocking `build_bracket`, etc. fails because the cache serialization layer (pickle) rejects MagicMock return values.
+
+**Template pattern:** When testing a function that internally calls another `@st.cache_data` function, patch the cached function at the module level to return a valid dataclass:
+```python
+@patch("dashboard.lib.simulation_helpers.run_bracket_simulation")
+def test_with_progress(mock_run_bracket_sim, ...):
+    mock_run_bracket_sim.return_value = BracketSimulationResult(...)
+    result = run_bracket_simulation_with_progress(...)
+```
+This bypasses the cache layer entirely and tests only the `with_progress` MC path.

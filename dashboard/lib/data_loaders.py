@@ -177,7 +177,7 @@ def _map_ensemble_feature_labels(
     ``pred_base_0`` → ``"XGBoost Prediction"``, etc.  Contextual feature
     names are kept as-is.
     """
-    manifest_path = store.model_dir(run_id) / "manifest.json"
+    manifest_path = store._runs_dir / run_id / "model" / "manifest.json"
     base_model_types: list[str] = []
     if manifest_path.exists():
         manifest = json.loads(manifest_path.read_text())
@@ -395,7 +395,7 @@ def load_ensemble_manifest(data_dir: str, run_id: str) -> dict[str, object]:
         return {}
     try:
         store = RunStore(path)
-        manifest_path = store.model_dir(run_id) / "manifest.json"
+        manifest_path = store._runs_dir / run_id / "model" / "manifest.json"
         if not manifest_path.exists():
             return {}
         return cast(dict[str, object], json.loads(manifest_path.read_text()))

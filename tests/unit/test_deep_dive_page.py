@@ -300,6 +300,7 @@ class TestEnsembleDeepDive:
             "base_model_count": 2,
             "contextual_features": ["seed_diff", "is_tournament"],
             "meta_learner_type": "logistic_regression",
+            "oof_backtest_run_ids": ["oof-run-1", "oof-run-2"],
         }
 
         with (
