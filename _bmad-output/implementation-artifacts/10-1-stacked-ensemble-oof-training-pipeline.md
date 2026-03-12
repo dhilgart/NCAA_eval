@@ -1,6 +1,6 @@
 # Story 10.1: StackedEnsemble Class and OOF Training Pipeline
 
-Status: review
+Status: done
 
 ## Story
 
@@ -341,12 +341,15 @@ Claude Opus 4.6
 ### Change Log
 
 - 2026-03-12: Implemented Story 10.1 — StackedEnsemble class and OOF training pipeline
+- 2026-03-12: Code review — applied fixes (6 issues resolved, 2 tests added)
 
 ### File List
 
 - `src/ncaa_eval/model/ensemble.py` — NEW: StackedEnsemble dataclass, config, registry sentinel, feature_config union helpers
 - `src/ncaa_eval/model/__init__.py` — MODIFIED: import ensemble module, export StackedEnsemble
+- `src/ncaa_eval/model/tracking.py` — MODIFIED: RunStore.save_model/load_model accept StackedEnsemble; new model_dir() accessor
 - `src/ncaa_eval/cli/train.py` — MODIFIED: union type signature, ensemble dispatch, _run_ensemble_training pipeline
-- `tests/unit/test_model_ensemble.py` — NEW: 20 unit tests
+- `src/ncaa_eval/cli/predict.py` — MODIFIED: explicit StackedEnsemble guard with NotImplementedError (Story 10.2 placeholder)
+- `tests/unit/test_model_ensemble.py` — NEW: 22 unit tests (added matchup_deltas and dataset_scope agreement tests)
 - `_bmad-output/implementation-artifacts/10-1-stacked-ensemble-oof-training-pipeline.md` — MODIFIED: task checkboxes, dev record, status
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` — MODIFIED: story status

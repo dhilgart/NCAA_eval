@@ -366,9 +366,11 @@ def _collect_oof_predictions(  # noqa: PLR0913
 ) -> pd.DataFrame:
     """Run a walk-forward backtest for one base model and return OOF predictions.
 
-    Returns a DataFrame with columns ``[game_id, pred_base_<idx>, team_a_won]``
-    plus contextual metadata columns (``seed_diff``, ``is_tournament``,
-    ``loc_encoding``).
+    Returns a DataFrame with columns
+    ``[year, game_id, team_a_id, team_b_id, pred_base_<idx>, team_a_won]``.
+    Contextual features (``seed_diff``, ``is_tournament``, ``loc_encoding``)
+    are NOT included here; they are joined in Step 3 of
+    ``_run_ensemble_training`` from the union feature server.
     """
     server = _setup_feature_server(data_dir, base_model.feature_config)
     seasons = list(range(start_year, end_year + 1))
@@ -505,7 +507,7 @@ def _run_ensemble_training(  # noqa: PLR0913
     oof_run_ids: list[str] = []
     for i, base_model in enumerate(ensemble.base_models):
         oof_df = _collect_oof_predictions(
-            copy.deepcopy(base_model),
+            base_model,
             base_idx=i,
             data_dir=data_dir,
             start_year=start_year,
@@ -552,8 +554,19 @@ def _run_ensemble_training(  # noqa: PLR0913
     if context_frames:
         context_df = pd.concat(context_frames, ignore_index=True)
         # The feature server assigns team_a = winner always, so game_ids
-        # are unique per game. Merge contextual features onto aligned OOF.
-        aligned = aligned.merge(context_df, on="game_id", how="left")
+        # are unique per game. Inner join: if a game_id is missing from the
+        # context server it likely indicates a data inconsistency; NaN
+        # contextual features would silently poison the meta-learner.
+        before_merge = len(aligned)
+        aligned = aligned.merge(context_df, on="game_id", how="inner")
+        if len(aligned) < before_merge:
+            _logger.warning(
+                "Context feature join dropped %d OOF games (%d → %d); "
+                "possible game_id mismatch between base model OOF and union feature server.",
+                before_merge - len(aligned),
+                before_merge,
+                len(aligned),
+            )
 
     meta_X, meta_y = _build_meta_training_set(aligned, ensemble.contextual_features)
     meta_column_order = list(meta_X.columns)
@@ -580,13 +593,10 @@ def _run_ensemble_training(  # noqa: PLR0913
         prediction_count=0,
     )
     store.save_run(run, [])
-
-    # Save ensemble artifacts into the run's model directory
-    run_dir = store._runs_dir / run_id  # noqa: SLF001
-    model_dir = run_dir / "model"
-    ensemble.save(model_dir)
+    store.save_model(run_id, ensemble)
 
     # Augment manifest with OOF metadata
+    model_dir = store.model_dir(run_id)
     manifest_path = model_dir / "manifest.json"
     manifest = json.loads(manifest_path.read_text())
     manifest["meta_column_order"] = meta_column_order

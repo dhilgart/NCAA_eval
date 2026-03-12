@@ -14,6 +14,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from pydantic import Field as _Field
+
 from ncaa_eval.model._feature_config_io import save_feature_config
 from ncaa_eval.model.base import Model, ModelConfig, StatefulModel
 from ncaa_eval.model.registry import get_model, register_model
@@ -97,8 +99,8 @@ class StackedEnsembleConfig(ModelConfig):
     """
 
     model_name: str = "ensemble"
-    base_model_types: list[str] = []  # noqa: RUF012
-    contextual_features: list[str] = []  # noqa: RUF012
+    base_model_types: list[str] = _Field(default_factory=list)
+    contextual_features: list[str] = _Field(default_factory=list)
 
 
 # Register so that ``list_models()`` includes ``"ensemble"``
@@ -237,6 +239,7 @@ class StackedEnsemble:
             "base_model_types": base_model_types,
             "base_model_count": len(self.base_models),
             "contextual_features": list(self.contextual_features),
+            "meta_learner_type": self.meta_learner.get_config().model_name,
         }
         (path / "manifest.json").write_text(json.dumps(manifest, indent=2))
 
@@ -250,6 +253,7 @@ class StackedEnsemble:
         base_model_types: list[str] = manifest_data["base_model_types"]
         base_model_count: int = manifest_data["base_model_count"]
         contextual_features: list[str] = manifest_data["contextual_features"]
+        meta_learner_type: str = manifest_data["meta_learner_type"]
 
         # Load base models
         base_dir = path / "base_models"
@@ -260,10 +264,7 @@ class StackedEnsemble:
             base_models.append(model_cls.load(base_dir / f"base_{i}"))
 
         # Load meta-learner
-        meta_type_path = path / "meta_learner" / "config.json"
-        meta_config_data = json.loads(meta_type_path.read_text())
-        meta_model_name = meta_config_data.get("model_name", "logistic_regression")
-        meta_cls = get_model(meta_model_name)
+        meta_cls = get_model(meta_learner_type)
         meta_learner = meta_cls.load(path / "meta_learner")
 
         return cls(

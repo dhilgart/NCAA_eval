@@ -195,6 +195,37 @@ class TestFeatureConfigAgreement:
         with pytest.raises(ValueError, match="gender_scope"):
             _ = ensemble.feature_config
 
+    def test_matchup_deltas_mismatch_raises(self) -> None:
+        m1 = _make_lr()
+        m2 = _make_lr()
+        object.__setattr__(
+            m2,
+            "feature_config",
+            FeatureConfig(matchup_deltas=False),
+        )
+        ensemble = StackedEnsemble(
+            base_models=[m1, m2],
+            meta_learner=_make_lr(),
+        )
+        with pytest.raises(ValueError, match="matchup_deltas"):
+            _ = ensemble.feature_config
+
+    def test_dataset_scope_mismatch_raises(self) -> None:
+        m1 = _make_lr()
+        m2 = _make_lr()
+        # Default dataset_scope is "kaggle"; set m2 to "all" to force mismatch
+        object.__setattr__(
+            m2,
+            "feature_config",
+            FeatureConfig(dataset_scope="all"),
+        )
+        ensemble = StackedEnsemble(
+            base_models=[m1, m2],
+            meta_learner=_make_lr(),
+        )
+        with pytest.raises(ValueError, match="dataset_scope"):
+            _ = ensemble.feature_config
+
 
 # ── Test: StackedEnsembleConfig ──────────────────────────────────────────────
 
@@ -288,6 +319,7 @@ class TestSaveLoadRoundTrip:
             "logistic_regression",
         ]
         assert "contextual_features" in manifest
+        assert manifest["meta_learner_type"] == "logistic_regression"
 
 
 # ── Test: OOF alignment ─────────────────────────────────────────────────────

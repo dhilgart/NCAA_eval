@@ -21,6 +21,7 @@ from ncaa_eval.evaluation.kaggle_export import KAGGLE_NEUTRAL_DAY_NUM
 from ncaa_eval.evaluation.providers import EloProvider, build_probability_matrix
 from ncaa_eval.ingest import ParquetRepository
 from ncaa_eval.model.base import Model, StatefulModel
+from ncaa_eval.model.ensemble import StackedEnsemble
 from ncaa_eval.model.tracking import RunStore
 
 
@@ -142,6 +143,10 @@ def build_predictions(*, run_id: str, season: int, data_dir: Path) -> str:
     if model is None:
         msg = f"No model found for run {run_id!r}"
         raise FileNotFoundError(msg)
+
+    if isinstance(model, StackedEnsemble):
+        msg = "Ensemble prediction is not yet supported (Story 10.2)"
+        raise NotImplementedError(msg)
 
     repo = ParquetRepository(base_path=data_dir)
 

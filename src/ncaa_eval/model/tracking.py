@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Annotated, Any
+from typing import TYPE_CHECKING, Annotated, Any
 
 import pandas as pd  # type: ignore[import-untyped]
 import pyarrow as pa  # type: ignore[import-untyped]
@@ -18,6 +18,9 @@ import pyarrow.parquet as pq  # type: ignore[import-untyped]
 from pydantic import BaseModel, Field
 
 from ncaa_eval.model.base import Model
+
+if TYPE_CHECKING:
+    from ncaa_eval.model.ensemble import StackedEnsemble
 
 # ── PyArrow schema for Prediction Parquet files ────────────────────────────
 
@@ -202,10 +205,16 @@ class RunStore:
             return None
         return pd.read_parquet(path)
 
+    def model_dir(self, run_id: str) -> Path:
+        """Return the model directory path for a run (creates it if absent)."""
+        path = self._runs_dir / run_id / "model"
+        path.mkdir(parents=True, exist_ok=True)
+        return path
+
     def save_model(
         self,
         run_id: str,
-        model: Model,
+        model: Model | StackedEnsemble,
         *,
         feature_names: list[str] | None = None,
     ) -> None:
@@ -214,6 +223,7 @@ class RunStore:
         Args:
             run_id: The run identifier.
             model: A fitted model implementing ``save(path)``.
+                Accepts both ``Model`` and ``StackedEnsemble`` instances.
             feature_names: Feature column names used during training.
 
         Raises:
@@ -229,21 +239,27 @@ class RunStore:
         if feature_names is not None:
             (model_dir / "feature_names.json").write_text(json.dumps(feature_names))
 
-    def load_model(self, run_id: str) -> Model | None:
+    def load_model(self, run_id: str) -> Model | StackedEnsemble | None:
         """Load a trained model from a run directory.
+
+        Delegates to ``StackedEnsemble.load()`` when ``model_type == "ensemble"``.
 
         Args:
             run_id: The run identifier.
 
         Returns:
-            Model instance or None if no model directory exists (legacy run).
+            Model or StackedEnsemble instance, or None if no model directory
+            exists (legacy run).
         """
+        from ncaa_eval.model.ensemble import StackedEnsemble
         from ncaa_eval.model.registry import get_model
 
         model_dir = self._runs_dir / run_id / "model"
         if not model_dir.exists():
             return None
         run = self.load_run(run_id)
+        if run.model_type == "ensemble":
+            return StackedEnsemble.load(model_dir)
         model_cls = get_model(run.model_type)
         return model_cls.load(model_dir)
 

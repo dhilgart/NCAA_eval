@@ -4064,3 +4064,41 @@ The re-load is necessary because BracketSimulationResult only exposes the
 perturbed matrix. MC simulation must use raw model probabilities so each
 simulated outcome reflects true model uncertainty, not the user's slider adjustments.
 ```
+
+### Sentinel Classes in Model Registries (Discovered Story 10.1 Code Review, 2026-03-12)
+
+When a complex composed type (e.g., `StackedEnsemble`) can't implement a `Model` ABC but needs to appear in the model registry (for `list_models()` and run-type resolution), use a sentinel class:
+
+```python
+@register_model("ensemble")
+class _EnsembleSentinel(Model):
+    """Registry placeholder — never instantiated directly."""
+    feature_config = FeatureConfig()
+
+    def fit(self, X: Any, y: Any) -> None:  # pragma: no cover
+        raise NotImplementedError
+    # ... (all abstract methods raise NotImplementedError)
+```
+
+The real load path should be handled in `RunStore.load_model()` via an explicit `if run.model_type == "ensemble": return StackedEnsemble.load(model_dir)` branch — not in the sentinel.
+
+### `RunStore` Extension Pattern for Non-Model Types (Discovered Story 10.1 Code Review, 2026-03-12)
+
+When extending a model run store to support new artifact types that don't fit the existing `Model` interface:
+1. Add a **public `model_dir(run_id)`** accessor so callers never reach into `store._runs_dir` (private attribute)
+2. Extend `save_model()` and `load_model()` signatures to accept union types (`Model | NewType`)
+3. Add an explicit `if model_type == "new_type"` branch in `load_model()` — never rely on the registry sentinel's `load()` which raises `NotImplementedError`
+
+### Manifest-First Artifact Reconstruction (Discovered Story 10.1 Code Review, 2026-03-12)
+
+When saving composed model artifacts (e.g., ensemble with base models + meta-learner), always store the **type name of every component** in the manifest JSON — never rely on sniffing sub-files (e.g., reading `config.json` inside a subdirectory) with a fallback default:
+
+```python
+# ❌ Bad — fragile config.json sniffing with silent fallback:
+meta_model_name = meta_config_data.get("model_name", "logistic_regression")
+
+# ✅ Good — explicit in manifest, fails loudly if key missing:
+manifest["meta_learner_type"] = ensemble.meta_learner.get_config().model_name
+# ... in load():
+meta_cls = get_model(manifest_data["meta_learner_type"])
+```
