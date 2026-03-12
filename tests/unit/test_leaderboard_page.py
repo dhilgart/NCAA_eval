@@ -151,8 +151,9 @@ class TestClickToNavigate:
         ):
             _lab_mod._render_leaderboard()
 
-        # session_state["selected_run_id"] must be set
-        assert "selected_run_id" in mock_st.session_state
+        # session_state["selected_run_id"] must be set to the correct run_id.
+        # Aggregate path: 2 runs, sorted by log_loss ascending → run-2 (0.490) is index 0.
+        assert mock_st.session_state["selected_run_id"] == "run-2"
         # switch_page must be called to navigate to Model Deep Dive
         mock_st.switch_page.assert_called_once_with("pages/3_Model_Deep_Dive.py")
 

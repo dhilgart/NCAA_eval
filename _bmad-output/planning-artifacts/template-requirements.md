@@ -3971,6 +3971,8 @@ if selected_rows:
 ```
 
 **Test coverage gap to avoid:** Navigation tests (where `if selected_rows:` branch executes) are easily missed. Always include:
-1. Test with `{"selection": {"rows": [N]}}` — verifies `switch_page` is called and session state is set
+1. Test with `{"selection": {"rows": [N]}}` — verifies `switch_page` is called and session state is set **to the correct value**
 2. Test with `{"selection": {"rows": []}}` — verifies `switch_page` is NOT called
 3. Test with `{}` (no selection key) — verifies `.get("selection", {})` default handles absent key gracefully
+
+**Assertion strength for session_state writes:** Don't just check `"key" in st.session_state` — also assert the value. The aggregate path sorts rows by metric before display, so which `run_id` lands at index 0 depends on sort order. Assert the exact expected string (e.g., `assert mock_st.session_state["selected_run_id"] == "run-2"` with a comment explaining the sort). A key-presence-only check would pass silently even if the wrong run_id were stored. (Discovered Story 9.11 Code Review Pass 2, 2026-03-11)

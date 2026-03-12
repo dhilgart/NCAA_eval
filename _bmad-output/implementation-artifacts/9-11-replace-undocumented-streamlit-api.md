@@ -163,7 +163,7 @@ Recent commits follow `feat(scope): description (Story X.Y)` pattern. Stories 9.
 - [Source: `_bmad-output/planning-artifacts/epics.md#Story 9.11` — acceptance criteria and PO decision]
 - [Source: Audit item 2.14; PO decision 2026-03-11 (A — Rewrite to use official Streamlit API)]
 
-## Senior Developer Review (AI)
+## Senior Developer Review (AI) — Pass 1
 
 **Reviewer:** Claude Sonnet 4.6 (Code Review Agent) — 2026-03-11
 **Outcome:** ✅ APPROVED with fixes
@@ -191,6 +191,33 @@ Git vs story File List: 0 discrepancies. All ACs verified implemented. All quali
 - `pytest tests/unit/test_leaderboard_page.py`: ✅ 10 passed (was 7)
 - All 1114 tests passing (from dev agent)
 
+## Senior Developer Review (AI) — Pass 2
+
+**Reviewer:** Claude Sonnet 4.6 (Code Review Agent) — 2026-03-11
+**Outcome:** ✅ APPROVED with 1 fix
+
+### Review Summary
+
+Git vs story File List: 0 discrepancies. Re-review after Pass 1 fixes. All ACs verified implemented.
+
+**Issues Found and Fixed:**
+
+| ID | Severity | Description | Fix Applied |
+|----|----------|-------------|-------------|
+| M1 | MEDIUM | Weak test assertion in `test_row_selection_sets_session_state_and_switches_page` — only checked key presence, not value; a bug producing wrong run_id would pass silently | Hardened to `assert mock_st.session_state["selected_run_id"] == "run-2"` with comment explaining aggregate sort order |
+
+**Issues Not Fixed (pre-existing or out of scope):**
+
+- L1: `width="stretch"` is the `st.dataframe()` default — explicit pass is redundant but documents migration intent; acceptable
+- L2: `use_container_width=True` remains in 3 other dashboard files — out of scope for this story
+- L3: `_METRIC_COLS` hardcoded in test file — pre-existing, currently matches registry
+
+**Post-fix quality gates:**
+- `mypy --strict` on all 118 files: ✅ clean
+- `ruff check .`: ✅ clean
+- `pytest tests/unit/test_leaderboard_page.py`: ✅ 10 passed
+- All 1114 tests passing (from dev agent)
+
 ## Dev Agent Record
 
 ### Agent Model Used
@@ -214,6 +241,7 @@ Claude Opus 4.6
 
 - 2026-03-11: Replaced undocumented attribute-style Streamlit dataframe selection API with typed dict-style access; removed type: ignore comments; updated test mocks (Story 9.11)
 - 2026-03-11: Code review fixes — added TestClickToNavigate tests (H1: navigation path was untested), replaced deprecated `use_container_width=True` with `width="stretch"` (M1: deadline passed 2025-12-31), corrected Dev Notes "The Fix" section to reflect actual cast-free implementation (M3)
+- 2026-03-11: Code review Pass 2 fix — hardened session_state value assertion in TestClickToNavigate (M1: weak key-existence-only check)
 
 ### File List
 
