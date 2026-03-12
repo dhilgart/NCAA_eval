@@ -570,6 +570,7 @@ def _run_ensemble_training(  # noqa: PLR0913
 
     meta_X, meta_y = _build_meta_training_set(aligned, ensemble.contextual_features)
     meta_column_order = list(meta_X.columns)
+    ensemble.meta_column_order = meta_column_order
     console.print(f"  Meta-training shape: {meta_X.shape}")
 
     # Step 4: Meta-learner training

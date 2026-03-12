@@ -103,6 +103,40 @@ def _build_stateless_predictions(
     return rows
 
 
+def _build_ensemble_predictions(
+    *,
+    ensemble: StackedEnsemble,
+    season: int,
+    data_dir: Path,
+) -> list[tuple[int, int, int, float]]:
+    """Build pairwise predictions for a stacked ensemble.
+
+    Calls ``ensemble.predict_bracket`` to generate an n×n probability
+    matrix, then extracts upper-triangle rows (team_a_id < team_b_id)
+    matching the single-model CSV format.
+
+    Returns:
+        List of ``(season, team_a_id, team_b_id, pred_win_prob)`` tuples
+        for all C(n,2) team pairs where ``team_a_id < team_b_id``.
+    """
+    prob_df = ensemble.predict_bracket(data_dir, season)
+    team_ids = list(prob_df.index)
+
+    rows: list[tuple[int, int, int, float]] = []
+    n = len(team_ids)
+    for i in range(n):
+        for j in range(i + 1, n):
+            rows.append(
+                (
+                    season,
+                    team_ids[i],
+                    team_ids[j],
+                    float(min(max(float(prob_df.iloc[i, j]), 0.0), 1.0)),
+                )
+            )
+    return rows
+
+
 def format_predictions_csv(rows: list[tuple[int, int, int, float]]) -> str:
     """Format prediction rows as a CSV string.
 
@@ -145,8 +179,12 @@ def build_predictions(*, run_id: str, season: int, data_dir: Path) -> str:
         raise FileNotFoundError(msg)
 
     if isinstance(model, StackedEnsemble):
-        msg = "Ensemble prediction is not yet supported (Story 10.2)"
-        raise NotImplementedError(msg)
+        rows = _build_ensemble_predictions(
+            ensemble=model,
+            season=season,
+            data_dir=data_dir,
+        )
+        return format_predictions_csv(rows)
 
     repo = ParquetRepository(base_path=data_dir)
 

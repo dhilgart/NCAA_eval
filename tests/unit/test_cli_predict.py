@@ -15,6 +15,7 @@ from typer.testing import CliRunner
 from ncaa_eval.cli.main import app
 from ncaa_eval.ingest.schema import Game
 from ncaa_eval.model.base import StatefulModel
+from ncaa_eval.model.ensemble import StackedEnsemble
 from ncaa_eval.model.logistic_regression import LogisticRegressionModel
 
 runner = CliRunner()
@@ -313,3 +314,110 @@ class TestCLIPredict:
         for line in lines[1:]:
             parts = line.split(",")
             assert len(parts) == 4, f"Non-CSV line found in stdout: {line!r}"
+
+
+class TestEnsemblePredict:
+    """Tests for ensemble prediction through the CLI predict path."""
+
+    @patch("ncaa_eval.cli.predict._build_ensemble_predictions")
+    @patch("ncaa_eval.cli.predict.RunStore")
+    def test_ensemble_predict_writes_csv(
+        self,
+        mock_store_cls: MagicMock,
+        mock_build_ensemble: MagicMock,
+        tmp_path: Path,
+    ) -> None:
+        """CLI predict with ensemble model produces valid CSV output."""
+        # Mock RunStore to return an ensemble
+        mock_ensemble = MagicMock(spec=StackedEnsemble)
+        mock_store = mock_store_cls.return_value
+        mock_store.load_model.return_value = mock_ensemble
+
+        # Mock ensemble predictions: 3 teams → C(3,2)=3 rows
+        mock_build_ensemble.return_value = [
+            (2025, 1101, 1102, 0.65),
+            (2025, 1101, 1103, 0.58),
+            (2025, 1102, 1103, 0.52),
+        ]
+
+        output_file = tmp_path / "predictions.csv"
+        result = runner.invoke(
+            app,
+            [
+                "predict",
+                "--run-id",
+                "test-ensemble-001",
+                "--season",
+                "2025",
+                "--data-dir",
+                str(tmp_path),
+                "--output",
+                str(output_file),
+            ],
+        )
+        assert result.exit_code == 0, f"CLI failed: {result.output}"
+        assert output_file.exists()
+
+        content = output_file.read_text()
+        reader = csv.DictReader(io.StringIO(content))
+        rows = list(reader)
+        assert len(rows) == 3
+        for row in rows:
+            assert row["season"] == "2025"
+            assert "team_a_id" in row
+            assert "team_b_id" in row
+            assert "pred_win_prob" in row
+            prob = float(row["pred_win_prob"])
+            assert 0.0 <= prob <= 1.0
+
+    @patch("ncaa_eval.cli.predict.RunStore")
+    def test_build_ensemble_predictions_calls_predict_bracket(
+        self,
+        mock_store_cls: MagicMock,
+        tmp_path: Path,
+    ) -> None:
+        """_build_ensemble_predictions calls ensemble.predict_bracket and formats output correctly.
+
+        This test patches at the ensemble.predict_bracket level (not the helper
+        function) to exercise the actual _build_ensemble_predictions logic including
+        upper-triangle extraction and probability clamping.
+        """
+        import numpy as np
+
+        from ncaa_eval.cli.predict import _build_ensemble_predictions
+
+        mock_ensemble = MagicMock(spec=StackedEnsemble)
+        team_ids = [1101, 1102, 1103]
+        n = len(team_ids)
+
+        # Build a 3×3 probability matrix
+        prob_matrix = np.zeros((n, n), dtype=np.float64)
+        prob_matrix[0, 1] = 0.65  # 1101 vs 1102
+        prob_matrix[1, 0] = 0.35
+        prob_matrix[0, 2] = 0.58  # 1101 vs 1103
+        prob_matrix[2, 0] = 0.42
+        prob_matrix[1, 2] = 0.52  # 1102 vs 1103
+        prob_matrix[2, 1] = 0.48
+
+        mock_ensemble.predict_bracket.return_value = pd.DataFrame(
+            prob_matrix, index=team_ids, columns=team_ids
+        )
+        mock_store = mock_store_cls.return_value
+        mock_store.load_model.return_value = mock_ensemble
+
+        rows = _build_ensemble_predictions(ensemble=mock_ensemble, season=2025, data_dir=tmp_path)
+
+        # Should call predict_bracket with correct args
+        mock_ensemble.predict_bracket.assert_called_once_with(tmp_path, 2025)
+
+        # Upper-triangle: C(3,2) = 3 rows
+        assert len(rows) == 3
+        # All rows: season correct, team_a_id < team_b_id enforced by ordering
+        for season_val, a, b, prob in rows:
+            assert season_val == 2025
+            assert 0.0 <= prob <= 1.0
+        # Verify specific probabilities match the matrix
+        row_dict = {(a, b): p for _, a, b, p in rows}
+        assert row_dict[(1101, 1102)] == pytest.approx(0.65)
+        assert row_dict[(1101, 1103)] == pytest.approx(0.58)
+        assert row_dict[(1102, 1103)] == pytest.approx(0.52)

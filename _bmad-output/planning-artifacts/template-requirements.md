@@ -4102,3 +4102,79 @@ manifest["meta_learner_type"] = ensemble.meta_learner.get_config().model_name
 # ... in load():
 meta_cls = get_model(manifest_data["meta_learner_type"])
 ```
+
+### Provider Wrapper Pattern for Composed Models (Discovered Story 10.2 Code Review, 2026-03-12)
+
+When a composed model (e.g., `StackedEnsemble`) needs to participate in a framework that expects a `Protocol` interface (e.g., `ProbabilityProvider` for the Monte Carlo bracket simulator), **always add an explicit provider wrapper class** — never rely on callers manually wrapping via `MatrixProvider(ensemble.predict_bracket(...))`.
+
+```python
+class EnsembleProvider:
+    """Wraps StackedEnsemble as a ProbabilityProvider — lazy matrix construction."""
+    def __init__(self, ensemble: StackedEnsemble, data_dir: Path, season: int) -> None:
+        self._delegate: MatrixProvider | None = None
+        ...
+
+    def _get_delegate(self) -> MatrixProvider:
+        if self._delegate is None:
+            prob_df = self._ensemble.predict_bracket(...)
+            self._delegate = MatrixProvider(prob_df.to_numpy(), list(prob_df.index))
+        return self._delegate
+```
+
+Key design decisions:
+- **Lazy construction**: compute the matrix only on first use (avoids I/O during construction)
+- **Cache the delegate**: call `predict_bracket` once, then reuse `MatrixProvider` for all lookups
+- **Export from the module `__init__.py`**: `EnsembleProvider` should be importable from the same location as `EloProvider`, `MatrixProvider`
+
+### Team Discovery for Bracket Prediction: Tournament-First Strategy (Discovered Story 10.2 Code Review, 2026-03-12)
+
+When generating a bracket probability matrix, **always filter to tournament-eligible teams first** — don't use all-season-games teams:
+
+```python
+# ❌ Bad — returns 300+ teams, produces huge matrix, slow and semantically wrong:
+team_id_set = {g.w_team_id for g in all_games} | {g.l_team_id for g in all_games}
+
+# ✅ Good — tournament-only (64 teams), with fallback for pre-tournament data:
+tourney_games = [g for g in games if g.is_tournament]
+source_games = tourney_games if tourney_games else games
+```
+
+The `is_tournament` field on `Game` objects is the correct filter. The fallback to all-season games handles the case where tournament data isn't yet available in the data store.
+
+### Always Validate Array Lengths in Vectorized Matrix Assembly (Discovered Story 10.2 Code Review, 2026-03-12)
+
+When assembling multi-source arrays into a DataFrame for batch prediction (e.g., upper-triangle predictions + contextual feature vectors), always validate that all arrays have the same length before creating the DataFrame:
+
+```python
+expected_len = len(rows_idx)  # C(n, 2) for upper triangle
+for feat, vals in context_features.items():
+    if len(vals) != expected_len:
+        raise ValueError(f"Context feature {feat!r} has length {len(vals)}, expected {expected_len}")
+```
+
+Without this guard, `pd.DataFrame(mismatched_arrays)` raises a confusing `ValueError` that doesn't identify which source caused the mismatch.
+
+### Always Pass Scoping Config to Internal Feature Servers (Discovered Story 10.2 Adversarial Review, 2026-03-12)
+
+When a composed model (e.g., `StackedEnsemble`) has helper functions that build internal `FeatureServer` instances, **always pass the ensemble's actual `feature_config`** — never silently fall back to `FeatureConfig()` defaults.
+
+```python
+# ❌ Wrong — ignores ensemble's dataset_scope / gender_scope:
+server = _setup_feature_server(data_dir, FeatureConfig())
+
+# ✅ Correct — honours all scoping decisions made during training:
+server = _setup_feature_server(data_dir, feature_config)  # passed from ensemble
+```
+
+The symptom is silent data poisoning: an ensemble trained on Women's (`gender_scope="W"`) data silently serves Men's data during bracket prediction. Always propagate the config through all helper function signatures.
+
+### Guard Against Empty meta_column_order (Discovered Story 10.2 Adversarial Review, 2026-03-12)
+
+When a model stores learned column order in a field that defaults to empty (`meta_column_order: list[str] = field(default_factory=list)`), add an explicit guard before any indexing that would silently succeed on an empty list:
+
+```python
+if not self.meta_column_order:
+    raise ValueError("meta_column_order is empty — ensemble was not trained or loaded correctly")
+```
+
+Without this guard, `meta_df[[]]` produces a zero-column DataFrame that passes to `meta_learner.predict_proba()` without error, producing meaningless output rather than a clear failure message.
