@@ -155,9 +155,10 @@ def test_metric_calculations_are_vectorized():
             f"Metrics module contains non-vectorized pattern: {pattern}"
 ```
 
-> **Note:** The ingest layer (`src/ncaa_eval/ingest/`) is excluded from forbidden-pattern
-> checks. `iterrows()` is explicitly permitted there for one-time-per-sync Pydantic
-> model construction. See Style Guide Section 5, Exception #4.
+> **Note:** The ingest layer (`src/ncaa_eval/ingest/`) is excluded from the `iterrows()`
+> forbidden-pattern check only. `iterrows()` is explicitly permitted there for one-time-per-sync
+> data transformation (see Style Guide Section 5, Exception #4). All other forbidden patterns
+> (`.itertuples()`, `for row in df`) remain prohibited project-wide, including the ingest layer.
 
 ### Marker
 `@pytest.mark.performance` (combine with scope markers like `@pytest.mark.integration`)

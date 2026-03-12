@@ -1,6 +1,6 @@
 # Story 9.15: Document Iterrows Convention Exception for Ingest Layer
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -116,6 +116,37 @@ Claude Opus 4.6
 ### Change Log
 
 - 2026-03-12: Documented ingest-layer iterrows exception in Style Guide and testing docs (Story 9.15)
+- 2026-03-12: Code review fixes — corrected Style Guide Exception #4 rationale for `load_day_zeros` (MEDIUM-1); clarified itertuples scope exclusion in both testing doc notes (MEDIUM-2)
+
+## Senior Developer Review (AI)
+
+**Reviewer:** Claude Sonnet 4.6 | **Date:** 2026-03-12
+
+**Verdict:** ✅ APPROVED (with fixes applied)
+
+**Git vs Story Discrepancies:** 0
+**Issues Found:** 0 High, 2 Medium, 3 Low
+**Issues Fixed:** 2 (MEDIUM-1, MEDIUM-2)
+**Action Items Created:** 0
+
+### Findings
+
+**[FIXED] MEDIUM-1 — STYLE_GUIDE.md:312-318: Overstated Pydantic rationale for `load_day_zeros`**
+- Original text claimed all three methods use iterrows "to construct Pydantic model instances (`Game`, `Team`) from CSV rows"
+- `load_day_zeros` builds `dict[int, datetime.date]` — no Pydantic models; it uses per-row date parsing with custom `DataFormatError`
+- Fixed: Reworded to accurately describe per-row transformation for each method
+
+**[FIXED] MEDIUM-2 — test-purpose-guide.md:158 / domain-testing.md:153: Ambiguous scope of forbidden-pattern exclusion**
+- Notes appeared adjacent to a forbidden-patterns list containing `.iterrows()`, `.itertuples()`, and `for row in df`
+- Story explicitly prohibits adding `.itertuples()` to the exception; notes could mislead inattentive readers
+- Fixed: Reworded to explicitly state "the `iterrows()` forbidden-pattern check only" and that all other patterns remain prohibited
+
+**LOW-1** — PO decision log has stale kaggle.py line numbers (157, 168 vs actual 187, 208) — planning artifact, no fix needed in this story.
+**LOW-2** — Exception #4 title/body scope mismatch (broad title vs narrow named file) — acceptable as written; ingest-layer scope is clear from context.
+**LOW-3** — Testing doc notes don't cross-reference PO Decision C directly — low traceability value; Style Guide cross-reference is sufficient.
+
+### AC Coverage
+- AC #1: IMPLEMENTED ✅ — Exception documented in Style Guide, with rationale and testing doc cross-references.
 
 ### File List
 
@@ -124,3 +155,4 @@ Claude Opus 4.6
 - `docs/testing/domain-testing.md` (modified — added ingest-layer exclusion note)
 - `_bmad-output/implementation-artifacts/9-15-document-iterrows-convention-exception.md` (modified — task completion, status)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified — status update)
+- `_bmad-output/planning-artifacts/template-requirements.md` (modified — template learnings from code review, Story 9.15)

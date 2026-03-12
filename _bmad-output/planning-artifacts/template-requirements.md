@@ -748,6 +748,11 @@ class MyModelConfig(BaseModel):
 - ✅ **Documentation-first approach** - Defining testing strategy (Story 1.3) before implementation (Story 1.5) ensures alignment and prevents rework
 - ✅ **Adversarial code review workflow** - Finding 3-10 specific issues per review ensures thorough validation and catches gaps
 
+**Story 9.15 - Document Iterrows Convention Exception (2026-03-12):**
+- ✅ **Convention exceptions need per-method rationale** — When a style rule has a named exception covering multiple functions, verify the stated rationale applies to each function individually. Grouping functions under a single rationale (e.g., "constructs Pydantic models") can be inaccurate if one function does something different (e.g., date parsing into a plain dict). Template pattern: List each function separately with its specific justification in the exception text.
+- ✅ **Scope-clarifying notes adjacent to forbidden-pattern lists** — When testing docs show a code example of a forbidden-pattern check (e.g., `assert ".iterrows()" not in source`), add a blockquote note immediately after specifying any layer exceptions. Critically, the note must state *which* pattern is excepted — not just which layer — to prevent readers from assuming the entire forbidden-patterns list is waived.
+- ✅ **PO Decision citations in Style Guide exceptions** — Including the PO decision reference (date + item ID) directly in the exception text creates a traceable audit trail. Future audits can verify the exception was intentional rather than accidental.
+
 **Story 9.5 - Post-Sync Data Validation (2026-03-09):**
 - ✅ **Non-fatal validation gate pattern** — Post-operation validation using a `ValidationReport` with per-check `passed: bool` results decouples data quality visibility from pipeline correctness. The validation function logs internally (INFO summary + WARNING per failure) and returns the report; the caller simply invokes it and ignores the return value. This pattern is broadly reusable: validate after any I/O operation without blocking the happy path.
 - ✅ **Frozen Pydantic models for result objects** — Using `ConfigDict(frozen=True)` on `ValidationResult`/`ValidationReport` prevents accidental mutation and communicates immutable semantics clearly. Mutable default `dict[str, Any] = {}` is safe in Pydantic v2 (new instance per object, unlike Python dataclasses).

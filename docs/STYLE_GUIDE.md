@@ -310,11 +310,12 @@ Explicit `for` loops are acceptable only when:
 3. The loop body involves **side effects** that cannot be vectorized (e.g.,
    writing files per team).
 4. **Ingest-layer one-time-per-sync operations** — `src/ncaa_eval/ingest/connectors/kaggle.py`
-   uses `iterrows()` in `load_day_zeros`, `fetch_teams`, and `_parse_games_csv` to
-   construct Pydantic model instances (`Game`, `Team`) from CSV rows. These run exactly
-   once per `sync` operation and are not in any hot path. The per-row Pydantic validation
-   catches data integrity issues at the boundary, and Pandera schema validation (Story 9.14)
-   guards the DataFrame before iteration begins.
+   uses `iterrows()` in `load_day_zeros`, `fetch_teams`, and `_parse_games_csv` for
+   per-row data transformation: constructing Pydantic models (`Game`, `Team`) in
+   `fetch_teams` and `_parse_games_csv`, and parsing dates with per-row error handling
+   in `load_day_zeros`. These run exactly once per `sync` operation and are not in any
+   hot path. Pandera schema validation (Story 9.14) guards the DataFrame before iteration
+   begins.
    *(PO Decision C — Audit item 2.4, 2026-03-11)*
 
 In these cases, add a brief comment explaining why the loop is necessary.
