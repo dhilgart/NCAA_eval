@@ -704,3 +704,68 @@ class TestPredictProba:
 
         with pytest.raises(ValueError, match="Missing meta-learner input columns.*seed_diff"):
             ensemble.predict_proba(X)
+
+
+# ── Test: predict_bracket ────────────────────────────────────────────────────
+
+
+class TestPredictBracket:
+    """AC #2, #3: predict_bracket returns correct probability matrix."""
+
+    @patch("ncaa_eval.model.ensemble._build_bracket_contextual_features")
+    @patch("ncaa_eval.model.ensemble._predict_bracket_base_matrices")
+    def test_matrix_shape_and_symmetry(
+        self,
+        mock_base_matrices: MagicMock,
+        mock_context: MagicMock,
+    ) -> None:
+        """predict_bracket returns n×n matrix with correct symmetry."""
+        team_ids = [1101, 1102, 1103]
+        n = len(team_ids)
+
+        # Mock base matrices: each is n×n
+        mat0 = np.array(
+            [[0.0, 0.6, 0.7], [0.4, 0.0, 0.55], [0.3, 0.45, 0.0]],
+            dtype=np.float64,
+        )
+        mat1 = np.array(
+            [[0.0, 0.5, 0.65], [0.5, 0.0, 0.6], [0.35, 0.4, 0.0]],
+            dtype=np.float64,
+        )
+        mock_base_matrices.return_value = (team_ids, [mat0, mat1])
+
+        # Mock contextual features for C(3,2)=3 pairs
+        mock_context.return_value = {
+            "seed_diff": np.array([1.0, 2.0, -1.0]),
+        }
+
+        base0 = _make_mock_stateless(["feat_a"], [0.6, 0.7, 0.5])
+        base1 = _make_mock_stateless(["feat_b"], [0.4, 0.5, 0.6])
+        meta = _make_mock_stateless(
+            ["pred_base_0", "pred_base_1", "seed_diff"],
+            [0.58, 0.62, 0.55],
+        )
+
+        ensemble = StackedEnsemble(
+            base_models=[base0, base1],
+            meta_learner=meta,
+            contextual_features=["seed_diff"],
+            meta_column_order=["pred_base_0", "pred_base_1", "seed_diff"],
+        )
+
+        result = ensemble.predict_bracket(Path("/tmp/fake"), 2025)
+
+        # Shape check
+        assert result.shape == (n, n)
+        assert list(result.index) == team_ids
+        assert list(result.columns) == team_ids
+
+        # Zero diagonal
+        for tid in team_ids:
+            assert result.loc[tid, tid] == pytest.approx(0.0)
+
+        # Symmetry: P[a,b] + P[b,a] ≈ 1
+        for i in range(n):
+            for j in range(i + 1, n):
+                a, b = team_ids[i], team_ids[j]
+                assert result.loc[a, b] + result.loc[b, a] == pytest.approx(1.0)
