@@ -152,8 +152,10 @@ def test_metric_calculations_are_vectorized():
 
 > **Note:** The ingest layer (`src/ncaa_eval/ingest/`) is excluded from the `iterrows()`
 > forbidden-pattern check only. `iterrows()` is explicitly permitted there for one-time-per-sync
-> data transformation (see Style Guide Section 5, Exception #4). All other forbidden patterns
-> (`.itertuples()`, `for row in df`) remain prohibited project-wide, including the ingest layer.
+> data transformation (see Style Guide Section 5, Exception #4). The `.itertuples()` and
+> `for row in df` patterns remain prohibited in business-logic and metric-calculation code;
+> their use elsewhere (ingest connectors, model prediction loops) is evaluated case-by-case
+> against the vectorization mandate.
 
 ---
 

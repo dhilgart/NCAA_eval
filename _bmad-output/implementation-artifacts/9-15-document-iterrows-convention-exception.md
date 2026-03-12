@@ -116,9 +116,10 @@ Claude Opus 4.6
 ### Change Log
 
 - 2026-03-12: Documented ingest-layer iterrows exception in Style Guide and testing docs (Story 9.15)
-- 2026-03-12: Code review fixes — corrected Style Guide Exception #4 rationale for `load_day_zeros` (MEDIUM-1); clarified itertuples scope exclusion in both testing doc notes (MEDIUM-2)
+- 2026-03-12: Code review fixes (pass 1) — corrected Style Guide Exception #4 rationale for `load_day_zeros` (MEDIUM-1); clarified itertuples scope exclusion in both testing doc notes (MEDIUM-2)
+- 2026-03-12: Code review fixes (pass 2) — corrected false "prohibited project-wide" itertuples claim in both testing docs; replaced with accurate business-logic/metrics scoping (MEDIUM-2)
 
-## Senior Developer Review (AI)
+## Senior Developer Review (AI) — Pass 1
 
 **Reviewer:** Claude Sonnet 4.6 | **Date:** 2026-03-12
 
@@ -148,11 +149,55 @@ Claude Opus 4.6
 ### AC Coverage
 - AC #1: IMPLEMENTED ✅ — Exception documented in Style Guide, with rationale and testing doc cross-references.
 
+---
+
+## Senior Developer Review (AI) — Pass 2
+
+**Reviewer:** Claude Sonnet 4.6 | **Date:** 2026-03-12
+
+**Verdict:** ✅ APPROVED (with fixes applied)
+
+**Git vs Story Discrepancies:** 0
+**Issues Found:** 0 High, 3 Medium, 3 Low
+**Issues Fixed:** 1 (MEDIUM-2)
+**Action Items Created:** 2
+
+### Findings
+
+**[FIXED] MEDIUM-2 — test-purpose-guide.md:158 / domain-testing.md:153: False claim that `.itertuples()` is "prohibited project-wide"**
+- Pass-1 fix said "All other forbidden patterns…remain prohibited project-wide, including the ingest layer"
+- `espn.py:215` uses `itertuples()` in ingest; `normalization.py:232` and `model/base.py:120,154` use `itertuples()` in transform/model layers
+- The forbidden-pattern tests only check `evaluation/metrics.py` — the "project-wide prohibition" was never true
+- Fixed: Reworded both notes to say `.itertuples()` and `for row in df` are prohibited in business-logic / metric-calculation code; their use elsewhere is evaluated case-by-case against the vectorization mandate
+
+**[ACTION] MEDIUM-1 — STYLE_GUIDE.md:312: Exception #4 scope too narrow (file-specific rather than layer-wide)**
+- Exception title says "Ingest-layer one-time-per-sync operations" but body only names `kaggle.py`
+- `espn.py` uses `itertuples()` for row iteration in the ingest layer — no explicit exception covers this
+- Future developers adding `iterrows` to `espn.py` find no coverage; exception principle is sound but guidance is ambiguous
+- Action: Broaden Exception #4 to cover ingest-layer connectors generally (requires PO confirmation that espn.py itertuples is also explicitly approved)
+
+**[ACTION] LOW-1 — kaggle.py:187, 208, 269: Missing inline exception comments**
+- Style Guide Section 5 Exceptions rule states: "In these cases, add a brief comment explaining why the loop is necessary"
+- The three `iterrows()` sites in kaggle.py have no such comment
+- Action: Add `# Exception #4: one-time ingest sync, per-row Pydantic/date validation` comment to each site
+
+**LOW-2** — Exception #4 title/body scope mismatch — escalated to MEDIUM-1 above.
+**LOW-3** — PO decision log has stale kaggle.py line numbers (187, 208 vs planning artifact's 157, 168) — planning artifact only.
+**LOW-4** — Sphinx HTML build in `docs/_build/` is stale (pre-story); normal workflow, no action needed.
+
+### AC Coverage
+- AC #1: IMPLEMENTED ✅ — Exception documented in Style Guide with accurate rationale; testing docs updated with corrected itertuples scope language.
+
+### Review Follow-ups (AI)
+
+- [ ] [AI-Review][MEDIUM] Broaden Style Guide Exception #4 from kaggle.py-specific to ingest-layer-wide after PO confirmation that espn.py itertuples is also explicitly approved [docs/STYLE_GUIDE.md:312-319]
+- [ ] [AI-Review][LOW] Add `# Exception #4: one-time ingest sync, per-row Pydantic/date validation` inline comments to iterrows call sites [src/ncaa_eval/ingest/connectors/kaggle.py:187, 208, 269]
+
 ### File List
 
 - `docs/STYLE_GUIDE.md` (modified — added Exception #4 to Section 5)
-- `docs/testing/test-purpose-guide.md` (modified — added ingest-layer exclusion note)
-- `docs/testing/domain-testing.md` (modified — added ingest-layer exclusion note)
-- `_bmad-output/implementation-artifacts/9-15-document-iterrows-convention-exception.md` (modified — task completion, status)
+- `docs/testing/test-purpose-guide.md` (modified — added ingest-layer exclusion note, corrected itertuples scope in pass 2)
+- `docs/testing/domain-testing.md` (modified — added ingest-layer exclusion note, corrected itertuples scope in pass 2)
+- `_bmad-output/implementation-artifacts/9-15-document-iterrows-convention-exception.md` (modified — task completion, status, pass-2 review)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified — status update)
 - `_bmad-output/planning-artifacts/template-requirements.md` (modified — template learnings from code review, Story 9.15)
