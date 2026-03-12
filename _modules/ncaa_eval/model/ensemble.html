@@ -328,9 +328,13 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">combinations</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">npt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>  <span class="c1"># type: ignore[import-untyped]</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">Field</span> <span class="k">as</span> <span class="n">_Field</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.model._feature_config_io</span><span class="w"> </span><span class="kn">import</span> <span class="n">save_feature_config</span>
@@ -408,6 +412,291 @@
     <span class="k">return</span> <span class="n">matchup_deltas_set</span><span class="o">.</span><span class="n">pop</span><span class="p">(),</span> <span class="n">gender_scope_set</span><span class="o">.</span><span class="n">pop</span><span class="p">(),</span> <span class="n">dataset_scope_set</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
 
 
+<span class="c1"># ── Bracket prediction helpers (extracted for complexity budget) ─────────</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_discover_team_ids</span><span class="p">(</span><span class="n">data_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span> <span class="n">season</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Discover tournament-eligible team IDs from game data.</span>
+
+<span class="sd">    Prefers tournament games (``is_tournament=True``) so the result is</span>
+<span class="sd">    limited to the ~64 teams that actually competed in the bracket.  Falls</span>
+<span class="sd">    back to all season games if no tournament games are found (e.g. for</span>
+<span class="sd">    seasons before the tournament or when running on partial data).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.ingest</span><span class="w"> </span><span class="kn">import</span> <span class="n">ParquetRepository</span>
+
+    <span class="n">repo</span> <span class="o">=</span> <span class="n">ParquetRepository</span><span class="p">(</span><span class="n">base_path</span><span class="o">=</span><span class="n">data_dir</span><span class="p">)</span>
+    <span class="n">games</span> <span class="o">=</span> <span class="n">repo</span><span class="o">.</span><span class="n">get_games</span><span class="p">(</span><span class="n">season</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">games</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;No season data for bracket prediction: season </span><span class="si">{</span><span class="n">season</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="n">tourney_games</span> <span class="o">=</span> <span class="p">[</span><span class="n">g</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">games</span> <span class="k">if</span> <span class="n">g</span><span class="o">.</span><span class="n">is_tournament</span><span class="p">]</span>
+    <span class="n">source_games</span> <span class="o">=</span> <span class="n">tourney_games</span> <span class="k">if</span> <span class="n">tourney_games</span> <span class="k">else</span> <span class="n">games</span>
+
+    <span class="n">team_id_set</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">source_games</span><span class="p">:</span>
+        <span class="n">team_id_set</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">w_team_id</span><span class="p">)</span>
+        <span class="n">team_id_set</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">l_team_id</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">team_id_set</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_stateful_base_matrix</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">StatefulModel</span><span class="p">,</span>
+    <span class="n">team_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+    <span class="n">season</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build pairwise probability matrix for a stateful base model.&quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.evaluation.bracket</span><span class="w"> </span><span class="kn">import</span> <span class="n">MatchupContext</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.evaluation.kaggle_export</span><span class="w"> </span><span class="kn">import</span> <span class="n">KAGGLE_NEUTRAL_DAY_NUM</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.evaluation.providers</span><span class="w"> </span><span class="kn">import</span> <span class="n">EloProvider</span><span class="p">,</span> <span class="n">build_probability_matrix</span>
+
+    <span class="n">provider</span> <span class="o">=</span> <span class="n">EloProvider</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+    <span class="n">context</span> <span class="o">=</span> <span class="n">MatchupContext</span><span class="p">(</span>
+        <span class="n">season</span><span class="o">=</span><span class="n">season</span><span class="p">,</span>
+        <span class="n">day_num</span><span class="o">=</span><span class="n">KAGGLE_NEUTRAL_DAY_NUM</span><span class="p">,</span>
+        <span class="n">is_neutral</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">build_probability_matrix</span><span class="p">(</span><span class="n">provider</span><span class="p">,</span> <span class="n">team_ids</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_extract_team_features</span><span class="p">(</span>
+    <span class="n">season_df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+    <span class="n">team_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Extract per-team feature profiles from season game data.</span>
+
+<span class="sd">    For each team, averages their features across all games where they</span>
+<span class="sd">    appear as either team_a or team_b.  Returns a mapping of</span>
+<span class="sd">    ``team_id -&gt; {feature_name_without_suffix: value}``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Identify per-team columns (those ending with _a or _b)</span>
+    <span class="n">a_cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">season_df</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;_a&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">c</span> <span class="o">!=</span> <span class="s2">&quot;team_a_id&quot;</span><span class="p">]</span>
+    <span class="n">b_cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">season_df</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;_b&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">c</span> <span class="o">!=</span> <span class="s2">&quot;team_b_id&quot;</span><span class="p">]</span>
+    <span class="c1"># Map base feature name to (a_col, b_col)</span>
+    <span class="n">base_names</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">ac</span> <span class="ow">in</span> <span class="n">a_cols</span><span class="p">:</span>
+        <span class="n">base</span> <span class="o">=</span> <span class="n">ac</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>  <span class="c1"># strip _a</span>
+        <span class="n">bc</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">base</span><span class="si">}</span><span class="s2">_b&quot;</span>
+        <span class="k">if</span> <span class="n">bc</span> <span class="ow">in</span> <span class="n">b_cols</span><span class="p">:</span>
+            <span class="n">base_names</span><span class="p">[</span><span class="n">base</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">ac</span><span class="p">,</span> <span class="n">bc</span><span class="p">)</span>
+
+    <span class="n">team_profiles</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">tid</span> <span class="ow">in</span> <span class="n">team_ids</span><span class="p">:</span>
+        <span class="c1"># Games where this team is team_a</span>
+        <span class="n">as_a</span> <span class="o">=</span> <span class="n">season_df</span><span class="p">[</span><span class="n">season_df</span><span class="p">[</span><span class="s2">&quot;team_a_id&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">tid</span><span class="p">]</span>
+        <span class="c1"># Games where this team is team_b</span>
+        <span class="n">as_b</span> <span class="o">=</span> <span class="n">season_df</span><span class="p">[</span><span class="n">season_df</span><span class="p">[</span><span class="s2">&quot;team_b_id&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">tid</span><span class="p">]</span>
+
+        <span class="n">profile</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">base</span><span class="p">,</span> <span class="p">(</span><span class="n">ac</span><span class="p">,</span> <span class="n">bc</span><span class="p">)</span> <span class="ow">in</span> <span class="n">base_names</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">values</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">as_a</span><span class="o">.</span><span class="n">empty</span> <span class="ow">and</span> <span class="n">ac</span> <span class="ow">in</span> <span class="n">as_a</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+                <span class="n">vals</span> <span class="o">=</span> <span class="n">as_a</span><span class="p">[</span><span class="n">ac</span><span class="p">]</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
+                <span class="n">values</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">vals</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">as_b</span><span class="o">.</span><span class="n">empty</span> <span class="ow">and</span> <span class="n">bc</span> <span class="ow">in</span> <span class="n">as_b</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+                <span class="n">vals</span> <span class="o">=</span> <span class="n">as_b</span><span class="p">[</span><span class="n">bc</span><span class="p">]</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
+                <span class="n">values</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">vals</span><span class="o">.</span><span class="n">tolist</span><span class="p">())</span>
+            <span class="n">profile</span><span class="p">[</span><span class="n">base</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">values</span><span class="p">))</span> <span class="k">if</span> <span class="n">values</span> <span class="k">else</span> <span class="mf">0.0</span>
+
+        <span class="n">team_profiles</span><span class="p">[</span><span class="n">tid</span><span class="p">]</span> <span class="o">=</span> <span class="n">profile</span>
+    <span class="k">return</span> <span class="n">team_profiles</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_build_synthetic_feature_rows</span><span class="p">(</span>
+    <span class="n">team_profiles</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]],</span>
+    <span class="n">team_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+    <span class="n">feat_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build synthetic feature rows for all C(n,2) team pairings.</span>
+
+<span class="sd">    Constructs ``_a``/``_b`` columns from team profiles and computes</span>
+<span class="sd">    ``delta_*`` and ``seed_diff`` columns.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">rows</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">pair_indices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">combinations</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">team_ids</span><span class="p">)),</span> <span class="mi">2</span><span class="p">):</span>
+        <span class="n">tid_a</span><span class="p">,</span> <span class="n">tid_b</span> <span class="o">=</span> <span class="n">team_ids</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">team_ids</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+        <span class="n">prof_a</span> <span class="o">=</span> <span class="n">team_profiles</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">tid_a</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">prof_b</span> <span class="o">=</span> <span class="n">team_profiles</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">tid_b</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">row</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="c1"># Populate _a and _b columns (dict.fromkeys preserves insertion order,</span>
+        <span class="c1"># deduplicating without non-deterministic set iteration)</span>
+        <span class="k">for</span> <span class="n">base</span> <span class="ow">in</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">prof_a</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">prof_b</span><span class="o">.</span><span class="n">keys</span><span class="p">())):</span>
+            <span class="n">row</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">base</span><span class="si">}</span><span class="s2">_a&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">prof_a</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="n">row</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">base</span><span class="si">}</span><span class="s2">_b&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">prof_b</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">base</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="n">row</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;delta_</span><span class="si">{</span><span class="n">base</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">base</span><span class="si">}</span><span class="s2">_a&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">row</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">base</span><span class="si">}</span><span class="s2">_b&quot;</span><span class="p">]</span>
+        <span class="c1"># Special: seed_diff (derived from seed_num)</span>
+        <span class="k">if</span> <span class="s2">&quot;seed_num&quot;</span> <span class="ow">in</span> <span class="n">prof_a</span> <span class="ow">or</span> <span class="s2">&quot;seed_num&quot;</span> <span class="ow">in</span> <span class="n">prof_b</span><span class="p">:</span>
+            <span class="n">row</span><span class="p">[</span><span class="s2">&quot;seed_diff&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">prof_a</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;seed_num&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">-</span> <span class="n">prof_b</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;seed_num&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+        <span class="n">pair_indices</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">rows</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">()</span>
+
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
+    <span class="c1"># Fill missing feature columns with 0</span>
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">feat_names</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">c</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+            <span class="n">df</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">df</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;pair_indices&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pair_indices</span>
+    <span class="k">return</span> <span class="n">df</span><span class="p">[</span><span class="n">feat_names</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_stateless_base_matrix</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span>
+    <span class="n">team_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+    <span class="n">data_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">season</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build pairwise probability matrix for a stateless base model.&quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.cli.train</span><span class="w"> </span><span class="kn">import</span> <span class="n">_setup_feature_server</span>
+
+    <span class="n">feat_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">feature_names_</span>  <span class="c1"># type: ignore[attr-defined]</span>
+    <span class="n">server</span> <span class="o">=</span> <span class="n">_setup_feature_server</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">feature_config</span><span class="p">)</span>
+    <span class="n">season_df</span> <span class="o">=</span> <span class="n">server</span><span class="o">.</span><span class="n">serve_season_features</span><span class="p">(</span><span class="n">season</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;batch&quot;</span><span class="p">)</span>
+
+    <span class="n">team_profiles</span> <span class="o">=</span> <span class="n">_extract_team_features</span><span class="p">(</span><span class="n">season_df</span><span class="p">,</span> <span class="n">team_ids</span><span class="p">)</span>
+    <span class="n">synthetic_df</span> <span class="o">=</span> <span class="n">_build_synthetic_feature_rows</span><span class="p">(</span><span class="n">team_profiles</span><span class="p">,</span> <span class="n">team_ids</span><span class="p">,</span> <span class="n">feat_names</span><span class="p">)</span>
+
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">team_ids</span><span class="p">)</span>
+    <span class="n">P</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">synthetic_df</span><span class="o">.</span><span class="n">empty</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">P</span>
+
+    <span class="n">pair_indices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="n">synthetic_df</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;pair_indices&quot;</span><span class="p">]</span>
+    <span class="n">probs</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">synthetic_df</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">pair_indices</span><span class="p">):</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">probs</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+        <span class="n">P</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">p</span>
+        <span class="n">P</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">p</span>
+
+    <span class="k">return</span> <span class="n">P</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_predict_bracket_base_matrices</span><span class="p">(</span>
+    <span class="n">base_models</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Model</span><span class="p">],</span>
+    <span class="n">data_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">season</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="nb">list</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build per-base-model probability matrices.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Tuple of (team_ids, list of n×n probability matrices).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">team_ids</span> <span class="o">=</span> <span class="n">_discover_team_ids</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">season</span><span class="p">)</span>
+    <span class="n">matrices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">base_model</span> <span class="ow">in</span> <span class="n">base_models</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">base_model</span><span class="p">,</span> <span class="n">StatefulModel</span><span class="p">):</span>
+            <span class="n">mat</span> <span class="o">=</span> <span class="n">_stateful_base_matrix</span><span class="p">(</span><span class="n">base_model</span><span class="p">,</span> <span class="n">team_ids</span><span class="p">,</span> <span class="n">season</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">mat</span> <span class="o">=</span> <span class="n">_stateless_base_matrix</span><span class="p">(</span><span class="n">base_model</span><span class="p">,</span> <span class="n">team_ids</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">,</span> <span class="n">season</span><span class="p">)</span>
+        <span class="n">matrices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mat</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">team_ids</span><span class="p">,</span> <span class="n">matrices</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_build_bracket_contextual_features</span><span class="p">(</span>
+    <span class="n">data_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="n">season</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">team_ids</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+    <span class="n">contextual_features</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">feature_config</span><span class="p">:</span> <span class="n">FeatureConfig</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build contextual feature vectors for all C(n,2) matchups.</span>
+
+<span class="sd">    Returns a dict mapping feature name to a 1-D array of length C(n,2),</span>
+<span class="sd">    ordered by upper-triangle iteration.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.cli.train</span><span class="w"> </span><span class="kn">import</span> <span class="n">_setup_feature_server</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">contextual_features</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">{}</span>
+
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">team_ids</span><span class="p">)</span>
+
+    <span class="c1"># Build a feature server to get contextual features, using the ensemble&#39;s</span>
+    <span class="c1"># feature_config so dataset_scope and gender_scope are honoured.</span>
+    <span class="n">server</span> <span class="o">=</span> <span class="n">_setup_feature_server</span><span class="p">(</span><span class="n">data_dir</span><span class="p">,</span> <span class="n">feature_config</span><span class="p">)</span>
+    <span class="n">season_df</span> <span class="o">=</span> <span class="n">server</span><span class="o">.</span><span class="n">serve_season_features</span><span class="p">(</span><span class="n">season</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;batch&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Extract per-team contextual profiles</span>
+    <span class="n">team_profiles</span> <span class="o">=</span> <span class="n">_extract_team_features</span><span class="p">(</span><span class="n">season_df</span><span class="p">,</span> <span class="n">team_ids</span><span class="p">)</span>
+
+    <span class="n">result</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">feat</span> <span class="ow">in</span> <span class="n">contextual_features</span><span class="p">:</span>
+        <span class="n">values</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">combinations</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="mi">2</span><span class="p">):</span>
+            <span class="n">tid_a</span><span class="p">,</span> <span class="n">tid_b</span> <span class="o">=</span> <span class="n">team_ids</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">team_ids</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+            <span class="n">prof_a</span> <span class="o">=</span> <span class="n">team_profiles</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">tid_a</span><span class="p">,</span> <span class="p">{})</span>
+            <span class="n">prof_b</span> <span class="o">=</span> <span class="n">team_profiles</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">tid_b</span><span class="p">,</span> <span class="p">{})</span>
+
+            <span class="k">if</span> <span class="n">feat</span> <span class="o">==</span> <span class="s2">&quot;seed_diff&quot;</span><span class="p">:</span>
+                <span class="n">val</span> <span class="o">=</span> <span class="n">prof_a</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;seed_num&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">-</span> <span class="n">prof_b</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;seed_num&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">feat</span> <span class="o">==</span> <span class="s2">&quot;is_tournament&quot;</span><span class="p">:</span>
+                <span class="n">val</span> <span class="o">=</span> <span class="mf">1.0</span>  <span class="c1"># bracket prediction is always tournament</span>
+            <span class="k">elif</span> <span class="n">feat</span> <span class="o">==</span> <span class="s2">&quot;loc_encoding&quot;</span><span class="p">:</span>
+                <span class="n">val</span> <span class="o">=</span> <span class="mf">0.0</span>  <span class="c1"># neutral site for bracket</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Generic: use team A&#39;s value minus team B&#39;s value if available</span>
+                <span class="n">val</span> <span class="o">=</span> <span class="n">prof_a</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">feat</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">-</span> <span class="n">prof_b</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">feat</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+            <span class="n">values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+        <span class="n">result</span><span class="p">[</span><span class="n">feat</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_assemble_bracket_meta_predictions</span><span class="p">(</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">base_matrices</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]],</span>
+    <span class="n">context_features</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]],</span>
+    <span class="n">meta_column_order</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+    <span class="n">meta_learner</span><span class="p">:</span> <span class="n">Model</span><span class="p">,</span>
+    <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Assemble meta-input from base matrices + context and predict.</span>
+
+<span class="sd">    Returns the final n×n probability matrix.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Extract upper-triangle predictions from each base matrix</span>
+    <span class="n">rows_idx</span><span class="p">,</span> <span class="n">cols_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">triu_indices</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">expected_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">rows_idx</span><span class="p">)</span>  <span class="c1"># C(n, 2)</span>
+    <span class="n">meta_parts</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">mat</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">base_matrices</span><span class="p">):</span>
+        <span class="n">meta_parts</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;pred_base_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mat</span><span class="p">[</span><span class="n">rows_idx</span><span class="p">,</span> <span class="n">cols_idx</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+
+    <span class="c1"># Add contextual features (validate length matches upper-triangle count)</span>
+    <span class="k">for</span> <span class="n">feat</span><span class="p">,</span> <span class="n">vals</span> <span class="ow">in</span> <span class="n">context_features</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">vals</span><span class="p">)</span> <span class="o">!=</span> <span class="n">expected_len</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Context feature </span><span class="si">{</span><span class="n">feat</span><span class="si">!r}</span><span class="s2"> has length </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">vals</span><span class="p">)</span><span class="si">}</span><span class="s2">, expected </span><span class="si">{</span><span class="n">expected_len</span><span class="si">}</span><span class="s2"> (C(</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2">, 2))&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="n">meta_parts</span><span class="p">[</span><span class="n">feat</span><span class="p">]</span> <span class="o">=</span> <span class="n">vals</span>
+
+    <span class="n">meta_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">meta_parts</span><span class="p">)</span>
+
+    <span class="c1"># Validate column order</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">meta_column_order</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;meta_column_order is empty — ensemble was not trained or loaded correctly&quot;</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">meta_column_order</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">meta_df</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Missing meta-learner input columns: </span><span class="si">{</span><span class="n">missing</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="n">meta_X</span> <span class="o">=</span> <span class="n">meta_df</span><span class="p">[</span><span class="n">meta_column_order</span><span class="p">]</span>
+    <span class="n">probs</span> <span class="o">=</span> <span class="n">meta_learner</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">meta_X</span><span class="p">)</span>
+
+    <span class="c1"># Fill n×n matrix</span>
+    <span class="n">P</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="n">P</span><span class="p">[</span><span class="n">rows_idx</span><span class="p">,</span> <span class="n">cols_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">probs</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="n">P</span><span class="p">[</span><span class="n">cols_idx</span><span class="p">,</span> <span class="n">rows_idx</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">probs</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">P</span>
+
+
 <div class="viewcode-block" id="StackedEnsembleConfig">
 <a class="viewcode-back" href="../../../api/ncaa_eval.model.ensemble.html#ncaa_eval.model.StackedEnsembleConfig">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">StackedEnsembleConfig</span><span class="p">(</span><span class="n">ModelConfig</span><span class="p">):</span>
@@ -472,6 +761,7 @@
     <span class="n">contextual_features</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
         <span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;seed_diff&quot;</span><span class="p">,</span> <span class="s2">&quot;is_tournament&quot;</span><span class="p">,</span> <span class="s2">&quot;loc_encoding&quot;</span><span class="p">],</span>
     <span class="p">)</span>
+    <span class="n">meta_column_order</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate base model count and meta-learner type.&quot;&quot;&quot;</span>
@@ -528,6 +818,111 @@
 
 
     <span class="c1"># ------------------------------------------------------------------</span>
+    <span class="c1"># Inference</span>
+    <span class="c1"># ------------------------------------------------------------------</span>
+
+<div class="viewcode-block" id="StackedEnsemble.predict_proba">
+<a class="viewcode-back" href="../../../api/ncaa_eval.model.ensemble.html#ncaa_eval.model.StackedEnsemble.predict_proba">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">predict_proba</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Route features through base models and meta-learner.</span>
+
+<span class="sd">        For each base model, generates predictions by dispatching</span>
+<span class="sd">        stateless models through ``X[base_model.feature_names_]`` and</span>
+<span class="sd">        stateful models through the full ``X``.  Assembles base</span>
+<span class="sd">        predictions and contextual features into a meta-input DataFrame</span>
+<span class="sd">        in ``self.meta_column_order``, then calls the meta-learner.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            X: Feature DataFrame with at least the columns required by</span>
+<span class="sd">                each base model and all contextual features.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Series of ensemble win probabilities, indexed like *X*.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: If any column in ``meta_column_order`` is missing</span>
+<span class="sd">                from the assembled meta-input.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">base_preds</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">base_model</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_models</span><span class="p">):</span>
+            <span class="n">col_name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;pred_base_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">base_model</span><span class="p">,</span> <span class="n">StatefulModel</span><span class="p">):</span>
+                <span class="n">base_preds</span><span class="p">[</span><span class="n">col_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">base_model</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">feat_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">base_model</span><span class="o">.</span><span class="n">feature_names_</span>  <span class="c1"># type: ignore[attr-defined]</span>
+                <span class="n">base_preds</span><span class="p">[</span><span class="n">col_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">base_model</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="n">feat_names</span><span class="p">])</span>
+
+        <span class="c1"># Assemble meta-input in training column order</span>
+        <span class="n">meta_parts</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">[</span><span class="nb">float</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">base_preds</span><span class="p">}</span>
+        <span class="k">for</span> <span class="n">feat</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">contextual_features</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">feat</span> <span class="ow">in</span> <span class="n">X</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+                <span class="n">meta_parts</span><span class="p">[</span><span class="n">feat</span><span class="p">]</span> <span class="o">=</span> <span class="n">X</span><span class="p">[</span><span class="n">feat</span><span class="p">]</span>
+
+        <span class="n">meta_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">meta_parts</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">X</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+
+        <span class="c1"># Validate column order</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta_column_order</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;meta_column_order is empty — ensemble was not trained or loaded correctly&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="n">missing</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta_column_order</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">meta_df</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Missing meta-learner input columns: </span><span class="si">{</span><span class="n">missing</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="n">meta_X</span> <span class="o">=</span> <span class="n">meta_df</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">meta_column_order</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta_learner</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">meta_X</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="StackedEnsemble.predict_bracket">
+<a class="viewcode-back" href="../../../api/ncaa_eval.model.ensemble.html#ncaa_eval.model.StackedEnsemble.predict_bracket">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">predict_bracket</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">data_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+        <span class="n">season</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate an n×n pairwise probability matrix for bracket prediction.</span>
+
+<span class="sd">        Discovers tournament-eligible teams, generates per-base-model</span>
+<span class="sd">        pairwise predictions, assembles meta-input for all C(n,2) matchups,</span>
+<span class="sd">        and returns a probability matrix suitable for the Monte Carlo</span>
+<span class="sd">        bracket simulator.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            data_dir: Path to the local Parquet data store.</span>
+<span class="sd">            season: Target season year.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            DataFrame of shape ``(n, n)`` with team_id index and columns.</span>
+<span class="sd">            ``P[a, b]`` is the ensemble probability that team *a* beats</span>
+<span class="sd">            team *b*.  Diagonal is zero; ``P[a,b] + P[b,a] ≈ 1``.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            FileNotFoundError: If no season data exists for *season*.</span>
+<span class="sd">            ValueError: If any column in ``meta_column_order`` is missing</span>
+<span class="sd">                from the assembled meta-input, or if a context feature</span>
+<span class="sd">                array has unexpected length.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">team_ids</span><span class="p">,</span> <span class="n">base_matrices</span> <span class="o">=</span> <span class="n">_predict_bracket_base_matrices</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_models</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">,</span> <span class="n">season</span><span class="p">)</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">team_ids</span><span class="p">)</span>
+
+        <span class="c1"># Build contextual feature vectors for all C(n,2) pairs</span>
+        <span class="n">context_features</span> <span class="o">=</span> <span class="n">_build_bracket_contextual_features</span><span class="p">(</span>
+            <span class="n">data_dir</span><span class="p">,</span> <span class="n">season</span><span class="p">,</span> <span class="n">team_ids</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">contextual_features</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">feature_config</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Assemble meta-input for upper triangle and predict</span>
+        <span class="n">prob_matrix</span> <span class="o">=</span> <span class="n">_assemble_bracket_meta_predictions</span><span class="p">(</span>
+            <span class="n">base_matrices</span><span class="o">=</span><span class="n">base_matrices</span><span class="p">,</span>
+            <span class="n">context_features</span><span class="o">=</span><span class="n">context_features</span><span class="p">,</span>
+            <span class="n">meta_column_order</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">meta_column_order</span><span class="p">,</span>
+            <span class="n">meta_learner</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">meta_learner</span><span class="p">,</span>
+            <span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">prob_matrix</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">team_ids</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">team_ids</span><span class="p">)</span></div>
+
+
+    <span class="c1"># ------------------------------------------------------------------</span>
     <span class="c1"># Persistence</span>
     <span class="c1"># ------------------------------------------------------------------</span>
 
@@ -567,6 +962,7 @@
             <span class="s2">&quot;base_model_count&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_models</span><span class="p">),</span>
             <span class="s2">&quot;contextual_features&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">contextual_features</span><span class="p">),</span>
             <span class="s2">&quot;meta_learner_type&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">meta_learner</span><span class="o">.</span><span class="n">get_config</span><span class="p">()</span><span class="o">.</span><span class="n">model_name</span><span class="p">,</span>
+            <span class="s2">&quot;meta_column_order&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">meta_column_order</span><span class="p">),</span>
         <span class="p">}</span>
         <span class="p">(</span><span class="n">path</span> <span class="o">/</span> <span class="s2">&quot;manifest.json&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">manifest</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
 
@@ -584,6 +980,7 @@
         <span class="n">base_model_count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">manifest_data</span><span class="p">[</span><span class="s2">&quot;base_model_count&quot;</span><span class="p">]</span>
         <span class="n">contextual_features</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">manifest_data</span><span class="p">[</span><span class="s2">&quot;contextual_features&quot;</span><span class="p">]</span>
         <span class="n">meta_learner_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">manifest_data</span><span class="p">[</span><span class="s2">&quot;meta_learner_type&quot;</span><span class="p">]</span>
+        <span class="n">meta_column_order</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">manifest_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;meta_column_order&quot;</span><span class="p">,</span> <span class="p">[])</span>
 
         <span class="c1"># Load base models</span>
         <span class="n">base_dir</span> <span class="o">=</span> <span class="n">path</span> <span class="o">/</span> <span class="s2">&quot;base_models&quot;</span>
@@ -601,6 +998,7 @@
             <span class="n">base_models</span><span class="o">=</span><span class="n">base_models</span><span class="p">,</span>
             <span class="n">meta_learner</span><span class="o">=</span><span class="n">meta_learner</span><span class="p">,</span>
             <span class="n">contextual_features</span><span class="o">=</span><span class="n">contextual_features</span><span class="p">,</span>
+            <span class="n">meta_column_order</span><span class="o">=</span><span class="n">meta_column_order</span><span class="p">,</span>
         <span class="p">)</span></div>
 </div>
 

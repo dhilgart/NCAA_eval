@@ -322,13 +322,18 @@
 
 <span class="sd">* :class:`MatrixProvider` — wraps a pre-computed probability matrix.</span>
 <span class="sd">* :class:`EloProvider` — wraps a stateful model&#39;s ``predict_matchup`` method.</span>
+<span class="sd">* :class:`EnsembleProvider` — wraps a ``StackedEnsemble`` as a provider.</span>
 <span class="sd">* :func:`build_probability_matrix` — builds an n×n pairwise matrix.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Sequence</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Protocol</span><span class="p">,</span> <span class="n">runtime_checkable</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Protocol</span><span class="p">,</span> <span class="n">runtime_checkable</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.model.ensemble</span><span class="w"> </span><span class="kn">import</span> <span class="n">StackedEnsemble</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">npt</span>
@@ -502,6 +507,77 @@
             <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">predict_matchup</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span> <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">team_a_ids</span><span class="p">,</span> <span class="n">team_b_ids</span><span class="p">)],</span>
             <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span>
         <span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="EnsembleProvider">
+<a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.providers.html#ncaa_eval.evaluation.EnsembleProvider">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">EnsembleProvider</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Wraps a :class:`StackedEnsemble` as a :class:`ProbabilityProvider`.</span>
+
+<span class="sd">    Calls ``ensemble.predict_bracket(data_dir, season)`` once on first use</span>
+<span class="sd">    and caches the result as a :class:`MatrixProvider` for subsequent</span>
+<span class="sd">    lookups.  This allows a ``StackedEnsemble`` to be passed to</span>
+<span class="sd">    :func:`build_probability_matrix` and the Monte Carlo bracket simulator</span>
+<span class="sd">    identically to single-model mode.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        ensemble: A trained ``StackedEnsemble`` instance.</span>
+<span class="sd">        data_dir: Path to the local Parquet data store.</span>
+<span class="sd">        season: Target season year.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">ensemble</span><span class="p">:</span> <span class="n">StackedEnsemble</span><span class="p">,</span>
+        <span class="n">data_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+        <span class="n">season</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ensemble</span> <span class="o">=</span> <span class="n">ensemble</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_data_dir</span> <span class="o">=</span> <span class="n">data_dir</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_season</span> <span class="o">=</span> <span class="n">season</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_delegate</span><span class="p">:</span> <span class="n">MatrixProvider</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_delegate</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MatrixProvider</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_delegate</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">prob_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ensemble</span><span class="o">.</span><span class="n">predict_bracket</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data_dir</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_season</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_delegate</span> <span class="o">=</span> <span class="n">MatrixProvider</span><span class="p">(</span>
+                <span class="n">prob_df</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">),</span>
+                <span class="nb">list</span><span class="p">(</span><span class="n">prob_df</span><span class="o">.</span><span class="n">index</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_delegate</span>
+
+<div class="viewcode-block" id="EnsembleProvider.matchup_probability">
+<a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.providers.html#ncaa_eval.evaluation.EnsembleProvider.matchup_probability">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">matchup_probability</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">team_a_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">team_b_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">context</span><span class="p">:</span> <span class="n">MatchupContext</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return P(team_a beats team_b) from the ensemble probability matrix.</span>
+
+<span class="sd">        Triggers ensemble bracket prediction on first call; subsequent calls</span>
+<span class="sd">        use the cached matrix.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_delegate</span><span class="p">()</span><span class="o">.</span><span class="n">matchup_probability</span><span class="p">(</span><span class="n">team_a_id</span><span class="p">,</span> <span class="n">team_b_id</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="EnsembleProvider.batch_matchup_probabilities">
+<a class="viewcode-back" href="../../../api/ncaa_eval.evaluation.providers.html#ncaa_eval.evaluation.EnsembleProvider.batch_matchup_probabilities">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">batch_matchup_probabilities</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">team_a_ids</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+        <span class="n">team_b_ids</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+        <span class="n">context</span><span class="p">:</span> <span class="n">MatchupContext</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return batch probabilities from the cached ensemble matrix.</span>
+
+<span class="sd">        Triggers ensemble bracket prediction on first call; subsequent calls</span>
+<span class="sd">        use the cached matrix.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_delegate</span><span class="p">()</span><span class="o">.</span><span class="n">batch_matchup_probabilities</span><span class="p">(</span><span class="n">team_a_ids</span><span class="p">,</span> <span class="n">team_b_ids</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span></div>
 </div>
 
 

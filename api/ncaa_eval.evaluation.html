@@ -451,6 +451,11 @@
 <li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.providers.html#ncaa_eval.evaluation.providers.EloProvider.matchup_probability"><code class="docutils literal notranslate"><span class="pre">EloProvider.matchup_probability()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="ncaa_eval.evaluation.providers.html#ncaa_eval.evaluation.providers.EnsembleProvider"><code class="docutils literal notranslate"><span class="pre">EnsembleProvider</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.providers.html#ncaa_eval.evaluation.providers.EnsembleProvider.batch_matchup_probabilities"><code class="docutils literal notranslate"><span class="pre">EnsembleProvider.batch_matchup_probabilities()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.providers.html#ncaa_eval.evaluation.providers.EnsembleProvider.matchup_probability"><code class="docutils literal notranslate"><span class="pre">EnsembleProvider.matchup_probability()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="ncaa_eval.evaluation.providers.html#ncaa_eval.evaluation.providers.MatrixProvider"><code class="docutils literal notranslate"><span class="pre">MatrixProvider</span></code></a><ul>
 <li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.providers.html#ncaa_eval.evaluation.providers.MatrixProvider.batch_matchup_probabilities"><code class="docutils literal notranslate"><span class="pre">MatrixProvider.batch_matchup_probabilities()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="ncaa_eval.evaluation.providers.html#ncaa_eval.evaluation.providers.MatrixProvider.matchup_probability"><code class="docutils literal notranslate"><span class="pre">MatrixProvider.matchup_probability()</span></code></a></li>
@@ -1114,6 +1119,43 @@ results into a list.</p>
 <p>Delegates to the model’s predict_matchup method, which retrieves both
 teams’ current ratings and applies the Elo logistic expected-score
 formula.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ncaa_eval.evaluation.EnsembleProvider">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ncaa_eval.evaluation.</span></span><span class="sig-name descname"><span class="pre">EnsembleProvider</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ensemble</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="ncaa_eval.model.html#ncaa_eval.model.StackedEnsemble" title="ncaa_eval.model.StackedEnsemble"><span class="pre">StackedEnsemble</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">season</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ncaa_eval/evaluation/providers.html#EnsembleProvider"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.evaluation.EnsembleProvider" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Wraps a <code class="xref py py-class docutils literal notranslate"><span class="pre">StackedEnsemble</span></code> as a <a class="reference internal" href="#ncaa_eval.evaluation.ProbabilityProvider" title="ncaa_eval.evaluation.ProbabilityProvider"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProbabilityProvider</span></code></a>.</p>
+<p>Calls <code class="docutils literal notranslate"><span class="pre">ensemble.predict_bracket(data_dir,</span> <span class="pre">season)</span></code> once on first use
+and caches the result as a <a class="reference internal" href="#ncaa_eval.evaluation.MatrixProvider" title="ncaa_eval.evaluation.MatrixProvider"><code class="xref py py-class docutils literal notranslate"><span class="pre">MatrixProvider</span></code></a> for subsequent
+lookups.  This allows a <code class="docutils literal notranslate"><span class="pre">StackedEnsemble</span></code> to be passed to
+<a class="reference internal" href="#ncaa_eval.evaluation.build_probability_matrix" title="ncaa_eval.evaluation.build_probability_matrix"><code class="xref py py-func docutils literal notranslate"><span class="pre">build_probability_matrix()</span></code></a> and the Monte Carlo bracket simulator
+identically to single-model mode.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ensemble</strong> – A trained <code class="docutils literal notranslate"><span class="pre">StackedEnsemble</span></code> instance.</p></li>
+<li><p><strong>data_dir</strong> – Path to the local Parquet data store.</p></li>
+<li><p><strong>season</strong> – Target season year.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.evaluation.EnsembleProvider.batch_matchup_probabilities">
+<span class="sig-name descname"><span class="pre">batch_matchup_probabilities</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">team_a_ids</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">team_b_ids</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="ncaa_eval.evaluation.bracket.html#ncaa_eval.evaluation.bracket.MatchupContext" title="ncaa_eval.evaluation.bracket.MatchupContext"><span class="pre">MatchupContext</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">[</span></span><span class="pre">float64</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/evaluation/providers.html#EnsembleProvider.batch_matchup_probabilities"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.evaluation.EnsembleProvider.batch_matchup_probabilities" title="Link to this definition">¶</a></dt>
+<dd><p>Return batch probabilities from the cached ensemble matrix.</p>
+<p>Triggers ensemble bracket prediction on first call; subsequent calls
+use the cached matrix.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.evaluation.EnsembleProvider.matchup_probability">
+<span class="sig-name descname"><span class="pre">matchup_probability</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">team_a_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">team_b_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="ncaa_eval.evaluation.bracket.html#ncaa_eval.evaluation.bracket.MatchupContext" title="ncaa_eval.evaluation.bracket.MatchupContext"><span class="pre">MatchupContext</span></a></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/evaluation/providers.html#EnsembleProvider.matchup_probability"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.evaluation.EnsembleProvider.matchup_probability" title="Link to this definition">¶</a></dt>
+<dd><p>Return P(team_a beats team_b) from the ensemble probability matrix.</p>
+<p>Triggers ensemble bracket prediction on first call; subsequent calls
+use the cached matrix.</p>
 </dd></dl>
 
 </dd></dl>
@@ -2736,6 +2778,11 @@ test year; <code class="docutils literal notranslate"><span class="pre">test</sp
 <li><a class="reference internal" href="#ncaa_eval.evaluation.EloProvider"><code class="docutils literal notranslate"><span class="pre">EloProvider</span></code></a><ul>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.EloProvider.batch_matchup_probabilities"><code class="docutils literal notranslate"><span class="pre">EloProvider.batch_matchup_probabilities()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.EloProvider.matchup_probability"><code class="docutils literal notranslate"><span class="pre">EloProvider.matchup_probability()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ncaa_eval.evaluation.EnsembleProvider"><code class="docutils literal notranslate"><span class="pre">EnsembleProvider</span></code></a><ul>
+<li><a class="reference internal" href="#ncaa_eval.evaluation.EnsembleProvider.batch_matchup_probabilities"><code class="docutils literal notranslate"><span class="pre">EnsembleProvider.batch_matchup_probabilities()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.evaluation.EnsembleProvider.matchup_probability"><code class="docutils literal notranslate"><span class="pre">EnsembleProvider.matchup_probability()</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#ncaa_eval.evaluation.FibonacciScoring"><code class="docutils literal notranslate"><span class="pre">FibonacciScoring</span></code></a><ul>

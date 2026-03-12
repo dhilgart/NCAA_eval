@@ -330,7 +330,7 @@ The training pipeline in <code class="docutils literal notranslate"><span class=
 <code class="docutils literal notranslate"><span class="pre">isinstance(model,</span> <span class="pre">StackedEnsemble)</span></code> to invoke ensemble-specific training.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="ncaa_eval.model.ensemble.StackedEnsemble">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ncaa_eval.model.ensemble.</span></span><span class="sig-name descname"><span class="pre">StackedEnsemble</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">base_models:</span> <span class="pre">list[~ncaa_eval.model.base.Model],</span> <span class="pre">meta_learner:</span> <span class="pre">~ncaa_eval.model.base.Model,</span> <span class="pre">contextual_features:</span> <span class="pre">list[str]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ncaa_eval/model/ensemble.html#StackedEnsemble"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.model.ensemble.StackedEnsemble" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">ncaa_eval.model.ensemble.</span></span><span class="sig-name descname"><span class="pre">StackedEnsemble</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">base_models:</span> <span class="pre">list[~ncaa_eval.model.base.Model],</span> <span class="pre">meta_learner:</span> <span class="pre">~ncaa_eval.model.base.Model,</span> <span class="pre">contextual_features:</span> <span class="pre">list[str]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;,</span> <span class="pre">meta_column_order:</span> <span class="pre">list[str]</span> <span class="pre">=</span> <span class="pre">&lt;factory&gt;</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ncaa_eval/model/ensemble.html#StackedEnsemble"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.model.ensemble.StackedEnsemble" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Stacked generalisation ensemble.</p>
 <p>Holds a list of base <code class="docutils literal notranslate"><span class="pre">Model</span></code> instances and a stateless meta-learner.
@@ -399,9 +399,69 @@ before meta-learner training (e.g. <code class="docutils literal notranslate"><s
 </dd></dl>
 
 <dl class="py attribute">
+<dt class="sig sig-object py" id="ncaa_eval.model.ensemble.StackedEnsemble.meta_column_order">
+<span class="sig-name descname"><span class="pre">meta_column_order</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><a class="headerlink" href="#ncaa_eval.model.ensemble.StackedEnsemble.meta_column_order" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="id2">
 <span class="sig-name descname"><span class="pre">meta_learner</span></span><span class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="ncaa_eval.model.base.html#ncaa_eval.model.base.Model" title="ncaa_eval.model.base.Model"><span class="pre">Model</span></a></span><a class="headerlink" href="#id2" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.model.ensemble.StackedEnsemble.predict_bracket">
+<span class="sig-name descname"><span class="pre">predict_bracket</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">season</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DataFrame</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/model/ensemble.html#StackedEnsemble.predict_bracket"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.model.ensemble.StackedEnsemble.predict_bracket" title="Link to this definition">¶</a></dt>
+<dd><p>Generate an n×n pairwise probability matrix for bracket prediction.</p>
+<p>Discovers tournament-eligible teams, generates per-base-model
+pairwise predictions, assembles meta-input for all C(n,2) matchups,
+and returns a probability matrix suitable for the Monte Carlo
+bracket simulator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data_dir</strong> – Path to the local Parquet data store.</p></li>
+<li><p><strong>season</strong> – Target season year.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>DataFrame of shape <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">n)</span></code> with team_id index and columns.
+<code class="docutils literal notranslate"><span class="pre">P[a,</span> <span class="pre">b]</span></code> is the ensemble probability that team <em>a</em> beats
+team <em>b</em>.  Diagonal is zero; <code class="docutils literal notranslate"><span class="pre">P[a,b]</span> <span class="pre">+</span> <span class="pre">P[b,a]</span> <span class="pre">≈</span> <span class="pre">1</span></code>.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>FileNotFoundError</strong> – If no season data exists for <em>season</em>.</p></li>
+<li><p><strong>ValueError</strong> – If any column in <code class="docutils literal notranslate"><span class="pre">meta_column_order</span></code> is missing
+    from the assembled meta-input, or if a context feature
+    array has unexpected length.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ncaa_eval.model.ensemble.StackedEnsemble.predict_proba">
+<span class="sig-name descname"><span class="pre">predict_proba</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">X</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Series</span></span></span><a class="reference internal" href="../_modules/ncaa_eval/model/ensemble.html#StackedEnsemble.predict_proba"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.model.ensemble.StackedEnsemble.predict_proba" title="Link to this definition">¶</a></dt>
+<dd><p>Route features through base models and meta-learner.</p>
+<p>For each base model, generates predictions by dispatching
+stateless models through <code class="docutils literal notranslate"><span class="pre">X[base_model.feature_names_]</span></code> and
+stateful models through the full <code class="docutils literal notranslate"><span class="pre">X</span></code>.  Assembles base
+predictions and contextual features into a meta-input DataFrame
+in <code class="docutils literal notranslate"><span class="pre">self.meta_column_order</span></code>, then calls the meta-learner.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>X</strong> – Feature DataFrame with at least the columns required by
+each base model and all contextual features.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Series of ensemble win probabilities, indexed like <em>X</em>.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If any column in <code class="docutils literal notranslate"><span class="pre">meta_column_order</span></code> is missing
+    from the assembled meta-input.</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="ncaa_eval.model.ensemble.StackedEnsemble.save">
@@ -518,7 +578,10 @@ serialisation and run-tracking purposes.</p>
 <li><a class="reference internal" href="#ncaa_eval.model.ensemble.StackedEnsemble.feature_config"><code class="docutils literal notranslate"><span class="pre">StackedEnsemble.feature_config</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.model.ensemble.StackedEnsemble.get_config"><code class="docutils literal notranslate"><span class="pre">StackedEnsemble.get_config()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.model.ensemble.StackedEnsemble.load"><code class="docutils literal notranslate"><span class="pre">StackedEnsemble.load()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.model.ensemble.StackedEnsemble.meta_column_order"><code class="docutils literal notranslate"><span class="pre">StackedEnsemble.meta_column_order</span></code></a></li>
 <li><a class="reference internal" href="#id2"><code class="docutils literal notranslate"><span class="pre">StackedEnsemble.meta_learner</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.model.ensemble.StackedEnsemble.predict_bracket"><code class="docutils literal notranslate"><span class="pre">StackedEnsemble.predict_bracket()</span></code></a></li>
+<li><a class="reference internal" href="#ncaa_eval.model.ensemble.StackedEnsemble.predict_proba"><code class="docutils literal notranslate"><span class="pre">StackedEnsemble.predict_proba()</span></code></a></li>
 <li><a class="reference internal" href="#ncaa_eval.model.ensemble.StackedEnsemble.save"><code class="docutils literal notranslate"><span class="pre">StackedEnsemble.save()</span></code></a></li>
 </ul>
 </li>
