@@ -1,6 +1,6 @@
 # Story 9.13: Consolidate Duplicated Test Helper
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -19,18 +19,18 @@ so that test helpers follow DRY principles and future test files can reuse the f
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Consolidate `_make_season_df` into shared location (AC: #1)
-  - [ ] 1.1 Create the unified `_make_season_df` in `tests/unit/conftest.py` — use the **backtest version** (it's a superset with `elo_diff` and `win_pct_diff` columns the splitter version lacks)
-  - [ ] 1.2 Remove `_make_season_df` from `tests/unit/test_evaluation_splitter.py`
-  - [ ] 1.3 Remove `_make_season_df` from `tests/unit/test_evaluation_backtest.py`
-  - [ ] 1.4 Verify both test files can access the helper (pytest auto-discovers conftest.py fixtures/helpers)
-- [ ] Task 2: Consolidate `_make_feature_server` into shared location (AC: #1)
-  - [ ] 2.1 Move the identical `_make_feature_server` helper to `tests/unit/conftest.py`
-  - [ ] 2.2 Remove from both `test_evaluation_splitter.py` and `test_evaluation_backtest.py`
-- [ ] Task 3: Run full test suite and verify no regressions (AC: #1)
-  - [ ] 3.1 `pytest` — all tests pass
-  - [ ] 3.2 `mypy --strict src/ncaa_eval tests` — clean
-  - [ ] 3.3 `ruff check .` — clean
+- [x] Task 1: Consolidate `_make_season_df` into shared location (AC: #1)
+  - [x] 1.1 Create the unified `_make_season_df` in `tests/unit/conftest.py` — use the **backtest version** (it's a superset with `elo_diff` and `win_pct_diff` columns the splitter version lacks)
+  - [x] 1.2 Remove `_make_season_df` from `tests/unit/test_evaluation_splitter.py`
+  - [x] 1.3 Remove `_make_season_df` from `tests/unit/test_evaluation_backtest.py`
+  - [x] 1.4 Verify both test files can access the helper (pytest auto-discovers conftest.py fixtures/helpers)
+- [x] Task 2: Consolidate `_make_feature_server` into shared location (AC: #1)
+  - [x] 2.1 Move the identical `_make_feature_server` helper to `tests/unit/conftest.py`
+  - [x] 2.2 Remove from both `test_evaluation_splitter.py` and `test_evaluation_backtest.py`
+- [x] Task 3: Run full test suite and verify no regressions (AC: #1)
+  - [x] 3.1 `pytest` — all tests pass (1123 passed, 1 skipped)
+  - [x] 3.2 `mypy --strict src/ncaa_eval tests` — clean (103 source files)
+  - [x] 3.3 `ruff check .` — clean
 
 ## Dev Notes
 
@@ -99,8 +99,29 @@ Check if `tests/unit/conftest.py` exists. If not, create it. If it exists, appen
 
 ### Agent Model Used
 
+Claude Opus 4.6
+
 ### Debug Log References
+
+- Initial `from conftest import ...` failed with `ModuleNotFoundError` because `tests/unit/` is a Python package (has `__init__.py`). Fixed by using fully-qualified import: `from tests.unit.conftest import ...`.
+- Ruff flagged import ordering (I001) after adding the new import — resolved by running `ruff check . --fix`.
 
 ### Completion Notes List
 
+- Created `tests/unit/conftest.py` with the backtest version of `_make_season_df` (11-column superset including `elo_diff` and `win_pct_diff`) and `_make_feature_server`.
+- Removed both helpers from `test_evaluation_splitter.py` and `test_evaluation_backtest.py`.
+- Both test files now import via `from tests.unit.conftest import _make_feature_server, _make_season_df`.
+- Cleaned up unused imports (`MagicMock`, `numpy`) from `test_evaluation_splitter.py`.
+- All 1123 tests pass, mypy --strict clean, ruff clean.
+
 ### File List
+
+- `tests/unit/conftest.py` (new) — shared test helpers
+- `tests/unit/test_evaluation_splitter.py` (modified) — removed duplicated helpers, added import from conftest
+- `tests/unit/test_evaluation_backtest.py` (modified) — removed duplicated helpers, added import from conftest
+- `_bmad-output/implementation-artifacts/9-13-consolidate-duplicated-test-helper.md` (modified) — story updates
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified) — status update
+
+### Change Log
+
+- 2026-03-11: Consolidated `_make_season_df` and `_make_feature_server` from two test files into shared `tests/unit/conftest.py` to follow DRY principles
