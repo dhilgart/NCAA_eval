@@ -150,6 +150,7 @@ class StackedEnsemble:
     contextual_features: list[str] = field(
         default_factory=lambda: ["seed_diff", "is_tournament", "loc_encoding"],
     )
+    meta_column_order: list[str] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         """Validate base model count and meta-learner type."""
@@ -240,6 +241,7 @@ class StackedEnsemble:
             "base_model_count": len(self.base_models),
             "contextual_features": list(self.contextual_features),
             "meta_learner_type": self.meta_learner.get_config().model_name,
+            "meta_column_order": list(self.meta_column_order),
         }
         (path / "manifest.json").write_text(json.dumps(manifest, indent=2))
 
@@ -254,6 +256,7 @@ class StackedEnsemble:
         base_model_count: int = manifest_data["base_model_count"]
         contextual_features: list[str] = manifest_data["contextual_features"]
         meta_learner_type: str = manifest_data["meta_learner_type"]
+        meta_column_order: list[str] = manifest_data.get("meta_column_order", [])
 
         # Load base models
         base_dir = path / "base_models"
@@ -271,4 +274,5 @@ class StackedEnsemble:
             base_models=base_models,
             meta_learner=meta_learner,
             contextual_features=contextual_features,
+            meta_column_order=meta_column_order,
         )

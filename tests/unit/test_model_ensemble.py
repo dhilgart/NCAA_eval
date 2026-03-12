@@ -488,3 +488,72 @@ class TestRunTrainingDispatch:
                 pass  # We just need to verify dispatch was called
 
             mock_fn.assert_called_once()
+
+
+# ── Test: meta_column_order persistence ──────────────────────────────────────
+
+
+class TestMetaColumnOrder:
+    """AC #3: meta_column_order persisted in manifest and loaded correctly."""
+
+    def test_default_meta_column_order_empty(self) -> None:
+        """Default meta_column_order is an empty list."""
+        ensemble = StackedEnsemble(
+            base_models=[_make_lr(), _make_lr()],
+            meta_learner=_make_lr(),
+        )
+        assert ensemble.meta_column_order == []
+
+    def test_meta_column_order_save_and_load(self, tmp_path: Path) -> None:
+        """meta_column_order round-trips through save/load via manifest."""
+        m1 = _make_lr()
+        m2 = _make_lr()
+        meta = _make_lr()
+        X, y = _make_train_data()
+        m1.fit(X, y)
+        m2.fit(X, y)
+        meta.fit(X, y)
+
+        ensemble = StackedEnsemble(
+            base_models=[m1, m2],
+            meta_learner=meta,
+        )
+        expected_order = ["pred_base_0", "pred_base_1", "seed_diff", "is_tournament", "loc_encoding"]
+        ensemble.meta_column_order = expected_order
+
+        save_dir = tmp_path / "ensemble"
+        ensemble.save(save_dir)
+
+        # Verify manifest contains meta_column_order
+        manifest = json.loads((save_dir / "manifest.json").read_text())
+        assert manifest["meta_column_order"] == expected_order
+
+        # Verify load restores it
+        loaded = StackedEnsemble.load(save_dir)
+        assert loaded.meta_column_order == expected_order
+
+    def test_load_without_meta_column_order_defaults_empty(self, tmp_path: Path) -> None:
+        """Loading an ensemble saved before meta_column_order gives empty list."""
+        m1 = _make_lr()
+        m2 = _make_lr()
+        meta = _make_lr()
+        X, y = _make_train_data()
+        m1.fit(X, y)
+        m2.fit(X, y)
+        meta.fit(X, y)
+
+        ensemble = StackedEnsemble(
+            base_models=[m1, m2],
+            meta_learner=meta,
+        )
+        save_dir = tmp_path / "ensemble"
+        ensemble.save(save_dir)
+
+        # Remove meta_column_order from manifest to simulate old format
+        manifest_path = save_dir / "manifest.json"
+        manifest = json.loads(manifest_path.read_text())
+        manifest.pop("meta_column_order", None)
+        manifest_path.write_text(json.dumps(manifest))
+
+        loaded = StackedEnsemble.load(save_dir)
+        assert loaded.meta_column_order == []
