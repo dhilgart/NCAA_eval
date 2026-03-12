@@ -3,58 +3,13 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from unittest.mock import MagicMock
 
-import numpy as np
 import pandas as pd  # type: ignore[import-untyped]
 import pytest
 from hypothesis import given, settings, strategies as st
 
 from ncaa_eval.evaluation.splitter import CVFold, walk_forward_splits
-
-# ── Test helpers ─────────────────────────────────────────────────────────────
-
-
-def _make_season_df(
-    year: int,
-    n_regular: int = 10,
-    n_tournament: int = 3,
-    *,
-    rng: np.random.Generator | None = None,
-) -> pd.DataFrame:
-    """Create a minimal synthetic season DataFrame for testing.
-
-    Produces ``n_regular`` regular-season rows and ``n_tournament`` tournament
-    rows.  Uses deterministic game_id generation so callers can assert equality.
-    """
-    if rng is None:
-        rng = np.random.default_rng(seed=year)
-
-    total = n_regular + n_tournament
-    is_tournament = [False] * n_regular + [True] * n_tournament
-    return pd.DataFrame(
-        {
-            "game_id": [f"{year}_{i}" for i in range(total)],
-            "season": year,
-            "day_num": list(range(total)),
-            "date": pd.date_range(f"{year}-01-01", periods=total, freq="D"),
-            "team_a_id": rng.integers(1000, 2000, size=total),
-            "team_b_id": rng.integers(1000, 2000, size=total),
-            "is_tournament": is_tournament,
-            "loc_encoding": rng.choice([1, -1, 0], size=total),
-            "team_a_won": rng.choice([True, False], size=total),
-        }
-    )
-
-
-def _make_feature_server(
-    season_dfs: dict[int, pd.DataFrame],
-) -> MagicMock:
-    """Build a mock StatefulFeatureServer returning pre-built DataFrames."""
-    mock = MagicMock()
-    mock.serve_season_features.side_effect = lambda year, mode="batch": season_dfs.get(year, pd.DataFrame())
-    return mock
-
+from tests.unit.conftest import _make_feature_server, _make_season_df
 
 # ── TestCVFold ───────────────────────────────────────────────────────────────
 
