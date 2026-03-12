@@ -127,15 +127,16 @@ def _render_leaderboard() -> None:
 
     event = st.dataframe(
         styled,
-        use_container_width=True,
+        width="stretch",
         on_select="rerun",
         selection_mode="single-row",
         key="leaderboard_selection",
     )
 
     # -- Click-to-navigate to Model Deep Dive ----------------------------------
-    if event and event.selection and event.selection.rows:  # type: ignore[attr-defined]
-        selected_idx = event.selection.rows[0]  # type: ignore[attr-defined]
+    selected_rows = event.get("selection", {}).get("rows", [])
+    if selected_rows:
+        selected_idx = selected_rows[0]
         selected_run_id = str(display_df.iloc[selected_idx]["run_id"])
         st.session_state["selected_run_id"] = selected_run_id
         st.switch_page("pages/3_Model_Deep_Dive.py")

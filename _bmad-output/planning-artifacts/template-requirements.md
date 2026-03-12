@@ -3934,3 +3934,45 @@ run_predict(..., output=None)
 lines = captured.getvalue().splitlines()
 assert all(len(line.split(",")) == 4 for line in lines if line.strip())
 ```
+
+## Story 9.11 Learnings (Replace Undocumented Streamlit API, 2026-03-11)
+
+### Streamlit `use_container_width` Is Deprecated — Use `width="stretch"` (Discovered Story 9.11 Code Review, 2026-03-11)
+
+`st.dataframe(use_container_width=True)` was deprecated in Streamlit 1.54.0 with a 2025-12-31 removal deadline. The replacement API is `width="stretch"` for full-width or `width="content"` for compact. Passing the deprecated param still works in 1.54.0 but triggers a `DeprecationWarning` that is visible in test output and Streamlit logs.
+
+```python
+# ❌ Deprecated (removal deadline: 2025-12-31)
+st.dataframe(df, use_container_width=True)
+
+# ✅ Correct (Streamlit ≥ 1.43 / after the deprecation)
+st.dataframe(df, width="stretch")   # full width
+st.dataframe(df, width="content")   # fit to content
+```
+
+**Rule:** When writing new dashboard code or reviewing existing `st.dataframe()` / `st.table()` calls, always use `width=` instead of `use_container_width=`. If the project targets Streamlit `>=1.36,<2`, `width=` is safe for the entire supported range.
+
+### Streamlit `st.dataframe()` with `on_select="rerun"` — TypedDict Pattern (Discovered Story 9.11, 2026-03-11)
+
+Streamlit 1.43+ uses `@overload` signatures on `st.dataframe()` to narrow the return type to `DataframeState` (a `TypedDict`) when `on_select="rerun"`. No `cast()` or `TYPE_CHECKING` import is needed — mypy resolves the overload automatically.
+
+`DataframeState` and `DataframeSelectionState` are `TypedDict` with `total=False` — all keys are optional. Always use dict-style `.get()` access, not attribute access, to handle the case where no selection has been made yet:
+
+```python
+event = st.dataframe(df, on_select="rerun", selection_mode="single-row", key="sel")
+# ❌ Wrong: raises AttributeError when no selection yet (key absent in TypedDict)
+if event.selection and event.selection.rows:  # type: ignore[attr-defined]
+    ...
+
+# ✅ Correct: dict-style safe access
+selected_rows = event.get("selection", {}).get("rows", [])
+if selected_rows:
+    idx = selected_rows[0]
+```
+
+**Test coverage gap to avoid:** Navigation tests (where `if selected_rows:` branch executes) are easily missed. Always include:
+1. Test with `{"selection": {"rows": [N]}}` — verifies `switch_page` is called and session state is set **to the correct value**
+2. Test with `{"selection": {"rows": []}}` — verifies `switch_page` is NOT called
+3. Test with `{}` (no selection key) — verifies `.get("selection", {})` default handles absent key gracefully
+
+**Assertion strength for session_state writes:** Don't just check `"key" in st.session_state` — also assert the value. The aggregate path sorts rows by metric before display, so which `run_id` lands at index 0 depends on sort order. Assert the exact expected string (e.g., `assert mock_st.session_state["selected_run_id"] == "run-2"` with a comment explaining the sort). A key-presence-only check would pass silently even if the wrong run_id were stored. (Discovered Story 9.11 Code Review Pass 2, 2026-03-11)

@@ -97,7 +97,7 @@ class TestYearFiltering:
             [MagicMock(), MagicMock()],  # breadcrumb columns
             [MagicMock(), MagicMock(), MagicMock(), MagicMock()],  # KPI columns
         ]
-        mock_st.dataframe.return_value = MagicMock(selection=MagicMock(rows=[]))
+        mock_st.dataframe.return_value = {"selection": {"rows": []}}
 
         with (
             patch.object(_lab_mod, "load_leaderboard_data", return_value=_sample_data()),
@@ -119,7 +119,7 @@ class TestYearFiltering:
             [MagicMock(), MagicMock()],  # breadcrumb columns
             [MagicMock(), MagicMock(), MagicMock(), MagicMock()],  # KPI columns
         ]
-        mock_st.dataframe.return_value = MagicMock(selection=MagicMock(rows=[]))
+        mock_st.dataframe.return_value = {"selection": {"rows": []}}
 
         with (
             patch.object(_lab_mod, "load_leaderboard_data", return_value=_sample_data()),
@@ -130,6 +130,71 @@ class TestYearFiltering:
 
         rendered_df = mock_st.dataframe.call_args[0][0].data
         assert list(rendered_df.columns) == _DISPLAY_COLS
+
+
+class TestClickToNavigate:
+    def test_row_selection_sets_session_state_and_switches_page(self) -> None:
+        """Selecting a row must set selected_run_id and call st.switch_page."""
+        mock_st = MagicMock()
+        mock_st.session_state = {"selected_year": None}
+        mock_st.columns.side_effect = [
+            [MagicMock(), MagicMock()],  # breadcrumb columns
+            [MagicMock(), MagicMock(), MagicMock(), MagicMock()],  # KPI columns
+        ]
+        # Simulate user clicking the first row (index 0)
+        mock_st.dataframe.return_value = {"selection": {"rows": [0]}}
+
+        with (
+            patch.object(_lab_mod, "load_leaderboard_data", return_value=_sample_data()),
+            patch.object(_lab_mod, "get_data_dir", return_value="/fake/data"),
+            patch.object(_lab_mod, "st", mock_st),
+        ):
+            _lab_mod._render_leaderboard()
+
+        # session_state["selected_run_id"] must be set to the correct run_id.
+        # Aggregate path: 2 runs, sorted by log_loss ascending → run-2 (0.490) is index 0.
+        assert mock_st.session_state["selected_run_id"] == "run-2"
+        # switch_page must be called to navigate to Model Deep Dive
+        mock_st.switch_page.assert_called_once_with("pages/3_Model_Deep_Dive.py")
+
+    def test_empty_selection_does_not_navigate(self) -> None:
+        """With no row selected, switch_page must NOT be called."""
+        mock_st = MagicMock()
+        mock_st.session_state = {"selected_year": None}
+        mock_st.columns.side_effect = [
+            [MagicMock(), MagicMock()],  # breadcrumb columns
+            [MagicMock(), MagicMock(), MagicMock(), MagicMock()],  # KPI columns
+        ]
+        mock_st.dataframe.return_value = {"selection": {"rows": []}}
+
+        with (
+            patch.object(_lab_mod, "load_leaderboard_data", return_value=_sample_data()),
+            patch.object(_lab_mod, "get_data_dir", return_value="/fake/data"),
+            patch.object(_lab_mod, "st", mock_st),
+        ):
+            _lab_mod._render_leaderboard()
+
+        mock_st.switch_page.assert_not_called()
+
+    def test_absent_selection_key_does_not_navigate(self) -> None:
+        """With no selection key in the event dict, switch_page must NOT be called."""
+        mock_st = MagicMock()
+        mock_st.session_state = {"selected_year": None}
+        mock_st.columns.side_effect = [
+            [MagicMock(), MagicMock()],  # breadcrumb columns
+            [MagicMock(), MagicMock(), MagicMock(), MagicMock()],  # KPI columns
+        ]
+        # Event with no "selection" key at all — exercises the .get("selection", {}) default
+        mock_st.dataframe.return_value = {}
+
+        with (
+            patch.object(_lab_mod, "load_leaderboard_data", return_value=_sample_data()),
+            patch.object(_lab_mod, "get_data_dir", return_value="/fake/data"),
+            patch.object(_lab_mod, "st", mock_st),
+        ):
+            _lab_mod._render_leaderboard()
+
+        mock_st.switch_page.assert_not_called()
 
 
 class TestEmptyStateHandling:
