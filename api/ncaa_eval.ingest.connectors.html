@@ -494,8 +494,8 @@ have <code class="docutils literal notranslate"><span class="pre">is_tournament=
 <dt class="sig sig-object py" id="ncaa_eval.ingest.connectors.KaggleConnector.fetch_seasons">
 <span class="sig-name descname"><span class="pre">fetch_seasons</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="ncaa_eval.ingest.schema.html#ncaa_eval.ingest.schema.Season" title="ncaa_eval.ingest.schema.Season"><span class="pre">Season</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ncaa_eval/ingest/connectors/kaggle.html#KaggleConnector.fetch_seasons"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ncaa_eval.ingest.connectors.KaggleConnector.fetch_seasons" title="Link to this definition">¶</a></dt>
 <dd><p>Parse <code class="docutils literal notranslate"><span class="pre">MSeasons.csv</span></code> into Season models.</p>
-<p>Reads MSeasons.csv, validates required columns, then constructs
-Season models from each row’s season year.</p>
+<p>Delegates to <a class="reference internal" href="#ncaa_eval.ingest.connectors.KaggleConnector.load_day_zeros" title="ncaa_eval.ingest.connectors.KaggleConnector.load_day_zeros"><code class="xref py py-meth docutils literal notranslate"><span class="pre">load_day_zeros()</span></code></a> (which already reads and validates
+MSeasons.csv) to avoid a second disk read and Pandera validation pass.</p>
 </dd></dl>
 
 <dl class="py method">

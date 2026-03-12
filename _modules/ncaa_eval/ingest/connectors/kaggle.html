@@ -331,7 +331,12 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">cast</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>  <span class="c1"># type: ignore[import-untyped]</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandera.errors</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandera.pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pa</span>
 
+<span class="c1"># pandera.pandas (not bare pandera) avoids the FutureWarning in v0.29+.</span>
+<span class="c1"># pandera.errors is imported separately because pandera.pandas does not</span>
+<span class="c1"># re-export the errors sub-module.</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">ncaa_eval.ingest.connectors.base</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">AuthenticationError</span><span class="p">,</span>
     <span class="n">Connector</span><span class="p">,</span>
@@ -344,31 +349,56 @@
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 <span class="c1"># ---------------------------------------------------------------------------</span>
-<span class="c1"># Expected CSV columns (used for schema validation)</span>
+<span class="c1"># Pandera schemas for CSV validation</span>
 <span class="c1"># ---------------------------------------------------------------------------</span>
 
-<span class="n">_TEAMS_COLUMNS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;TeamID&quot;</span><span class="p">,</span> <span class="s2">&quot;TeamName&quot;</span><span class="p">}</span>
-<span class="n">_SPELLINGS_COLUMNS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;TeamNameSpelling&quot;</span><span class="p">,</span> <span class="s2">&quot;TeamID&quot;</span><span class="p">}</span>
-<span class="n">_REGULAR_SEASON_COLUMNS</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;Season&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;DayNum&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;WTeamID&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;LTeamID&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;WScore&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;LScore&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;WLoc&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;NumOT&quot;</span><span class="p">,</span>
-<span class="p">}</span>
-<span class="n">_TOURNEY_COLUMNS</span> <span class="o">=</span> <span class="n">_REGULAR_SEASON_COLUMNS</span>
-<span class="n">_SEASONS_COLUMNS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;Season&quot;</span><span class="p">,</span> <span class="s2">&quot;DayZero&quot;</span><span class="p">}</span>
+<span class="n">_TEAMS_SCHEMA</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">DataFrameSchema</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;TeamID&quot;</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">ge</span><span class="p">(</span><span class="mi">1</span><span class="p">)),</span>
+        <span class="s2">&quot;TeamName&quot;</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+    <span class="p">},</span>
+<span class="p">)</span>
+
+<span class="n">_SPELLINGS_SCHEMA</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">DataFrameSchema</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;TeamNameSpelling&quot;</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+        <span class="s2">&quot;TeamID&quot;</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">ge</span><span class="p">(</span><span class="mi">1</span><span class="p">)),</span>
+    <span class="p">},</span>
+<span class="p">)</span>
+
+<span class="n">_GAMES_SCHEMA</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">DataFrameSchema</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;Season&quot;</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">ge</span><span class="p">(</span><span class="mi">1985</span><span class="p">)),</span>
+        <span class="s2">&quot;DayNum&quot;</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">ge</span><span class="p">(</span><span class="mi">0</span><span class="p">)),</span>
+        <span class="s2">&quot;WTeamID&quot;</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">ge</span><span class="p">(</span><span class="mi">1</span><span class="p">)),</span>
+        <span class="s2">&quot;LTeamID&quot;</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">ge</span><span class="p">(</span><span class="mi">1</span><span class="p">)),</span>
+        <span class="s2">&quot;WScore&quot;</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">ge</span><span class="p">(</span><span class="mi">0</span><span class="p">)),</span>
+        <span class="s2">&quot;LScore&quot;</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">ge</span><span class="p">(</span><span class="mi">0</span><span class="p">)),</span>
+        <span class="s2">&quot;WLoc&quot;</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">isin</span><span class="p">([</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="s2">&quot;N&quot;</span><span class="p">])),</span>
+        <span class="s2">&quot;NumOT&quot;</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">ge</span><span class="p">(</span><span class="mi">0</span><span class="p">)),</span>
+    <span class="p">},</span>
+<span class="p">)</span>
+
+<span class="n">_SEASONS_SCHEMA</span> <span class="o">=</span> <span class="n">pa</span><span class="o">.</span><span class="n">DataFrameSchema</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;Season&quot;</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">pa</span><span class="o">.</span><span class="n">Check</span><span class="o">.</span><span class="n">ge</span><span class="p">(</span><span class="mi">1985</span><span class="p">)),</span>
+        <span class="s2">&quot;DayZero&quot;</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">Column</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+    <span class="p">},</span>
+<span class="p">)</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">_validate_columns</span><span class="p">(</span><span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">expected</span><span class="p">:</span> <span class="nb">set</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Raise :class:`DataFormatError` if *df* is missing required columns.&quot;&quot;&quot;</span>
-    <span class="n">missing</span> <span class="o">=</span> <span class="n">expected</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">missing</span><span class="p">:</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;kaggle: </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2"> missing columns: </span><span class="si">{</span><span class="nb">sorted</span><span class="p">(</span><span class="n">missing</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="k">raise</span> <span class="n">DataFormatError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_validate_schema</span><span class="p">(</span>
+    <span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
+    <span class="n">schema</span><span class="p">:</span> <span class="n">pa</span><span class="o">.</span><span class="n">DataFrameSchema</span><span class="p">,</span>
+    <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Validate *df* against a Pandera schema, wrapping errors in DataFormatError.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">schema</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">pandera</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">SchemaError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">DataFormatError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;kaggle: </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2"> schema validation failed: </span><span class="si">{</span><span class="n">exc</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
 
 
 <span class="c1"># ---------------------------------------------------------------------------</span>
@@ -475,10 +505,16 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_day_zeros</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_day_zeros</span>
         <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_csv</span><span class="p">(</span><span class="s2">&quot;MSeasons.csv&quot;</span><span class="p">)</span>
-        <span class="n">_validate_columns</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">_SEASONS_COLUMNS</span><span class="p">,</span> <span class="s2">&quot;MSeasons.csv&quot;</span><span class="p">)</span>
+        <span class="n">_validate_schema</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">_SEASONS_SCHEMA</span><span class="p">,</span> <span class="s2">&quot;MSeasons.csv&quot;</span><span class="p">)</span>
         <span class="n">mapping</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
-            <span class="n">mapping</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;Season&quot;</span><span class="p">])]</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;DayZero&quot;</span><span class="p">]),</span> <span class="s2">&quot;%m/</span><span class="si">%d</span><span class="s2">/%Y&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+            <span class="n">day_zero_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;DayZero&quot;</span><span class="p">])</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">mapping</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;Season&quot;</span><span class="p">])]</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">day_zero_str</span><span class="p">,</span> <span class="s2">&quot;%m/</span><span class="si">%d</span><span class="s2">/%Y&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">date</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">DataFormatError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;kaggle: MSeasons.csv DayZero value </span><span class="si">{</span><span class="n">day_zero_str</span><span class="si">!r}</span><span class="s2"> does not match expected format MM/DD/YYYY&quot;</span><span class="p">,</span>
+                <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">exc</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_day_zeros</span> <span class="o">=</span> <span class="n">mapping</span>
         <span class="k">return</span> <span class="n">mapping</span></div>
 
@@ -494,7 +530,7 @@
 <span class="sd">        models from each row&#39;s TeamID and TeamName.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_csv</span><span class="p">(</span><span class="s2">&quot;MTeams.csv&quot;</span><span class="p">)</span>
-        <span class="n">_validate_columns</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">_TEAMS_COLUMNS</span><span class="p">,</span> <span class="s2">&quot;MTeams.csv&quot;</span><span class="p">)</span>
+        <span class="n">_validate_schema</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">_TEAMS_SCHEMA</span><span class="p">,</span> <span class="s2">&quot;MTeams.csv&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">Team</span><span class="p">(</span><span class="n">team_id</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;TeamID&quot;</span><span class="p">]),</span> <span class="n">team_name</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;TeamName&quot;</span><span class="p">]))</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">iterrows</span><span class="p">()]</span></div>
 
 
@@ -508,8 +544,9 @@
 <span class="sd">        when resolving ESPN team name strings to Kaggle IDs.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_csv</span><span class="p">(</span><span class="s2">&quot;MTeamSpellings.csv&quot;</span><span class="p">)</span>
-        <span class="n">_validate_columns</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">_SPELLINGS_COLUMNS</span><span class="p">,</span> <span class="s2">&quot;MTeamSpellings.csv&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;TeamNameSpelling&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;TeamID&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)))</span></div>
+        <span class="n">_validate_schema</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">_SPELLINGS_SCHEMA</span><span class="p">,</span> <span class="s2">&quot;MTeamSpellings.csv&quot;</span><span class="p">)</span>
+        <span class="c1"># Pandera already enforced int dtype; no .astype() needed here.</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;TeamNameSpelling&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;TeamID&quot;</span><span class="p">]))</span></div>
 
 
 <div class="viewcode-block" id="KaggleConnector.fetch_games">
@@ -537,12 +574,11 @@
     <span class="k">def</span><span class="w"> </span><span class="nf">fetch_seasons</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">Season</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse ``MSeasons.csv`` into Season models.</span>
 
-<span class="sd">        Reads MSeasons.csv, validates required columns, then constructs</span>
-<span class="sd">        Season models from each row&#39;s season year.</span>
+<span class="sd">        Delegates to :meth:`load_day_zeros` (which already reads and validates</span>
+<span class="sd">        MSeasons.csv) to avoid a second disk read and Pandera validation pass.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_csv</span><span class="p">(</span><span class="s2">&quot;MSeasons.csv&quot;</span><span class="p">)</span>
-        <span class="n">_validate_columns</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">_SEASONS_COLUMNS</span><span class="p">,</span> <span class="s2">&quot;MSeasons.csv&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="p">[</span><span class="n">Season</span><span class="p">(</span><span class="n">year</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;Season&quot;</span><span class="p">]))</span> <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">iterrows</span><span class="p">()]</span></div>
+        <span class="n">day_zeros</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_day_zeros</span><span class="p">()</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Season</span><span class="p">(</span><span class="n">year</span><span class="o">=</span><span class="n">year</span><span class="p">)</span> <span class="k">for</span> <span class="n">year</span> <span class="ow">in</span> <span class="n">day_zeros</span><span class="p">]</span></div>
 
 
     <span class="c1"># -- internal parsing ---------------------------------------------------</span>
@@ -563,7 +599,7 @@
 <span class="sd">        models.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_read_csv</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
-        <span class="n">_validate_columns</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">_REGULAR_SEASON_COLUMNS</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+        <span class="n">_validate_schema</span><span class="p">(</span><span class="n">df</span><span class="p">,</span> <span class="n">_GAMES_SCHEMA</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
         <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s2">&quot;Season&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="n">season</span><span class="p">]</span>
         <span class="n">games</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Game</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
@@ -578,9 +614,6 @@
                 <span class="n">game_date</span> <span class="o">=</span> <span class="n">dz</span> <span class="o">+</span> <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="n">day_num</span><span class="p">)</span>
 
             <span class="n">wloc</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;WLoc&quot;</span><span class="p">])</span>
-            <span class="k">if</span> <span class="n">wloc</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="s2">&quot;A&quot;</span><span class="p">,</span> <span class="s2">&quot;N&quot;</span><span class="p">):</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;kaggle: </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2"> has unexpected WLoc value: </span><span class="si">{</span><span class="n">wloc</span><span class="si">!r}</span><span class="s2">&quot;</span>
-                <span class="k">raise</span> <span class="n">DataFormatError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
             <span class="n">games</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="n">Game</span><span class="p">(</span>
