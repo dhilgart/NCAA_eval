@@ -99,16 +99,26 @@ def _assert_agreement(
 
 
 def _discover_team_ids(data_dir: Path, season: int) -> list[int]:
-    """Discover tournament-eligible team IDs from game data."""
+    """Discover tournament-eligible team IDs from game data.
+
+    Prefers tournament games (``is_tournament=True``) so the result is
+    limited to the ~64 teams that actually competed in the bracket.  Falls
+    back to all season games if no tournament games are found (e.g. for
+    seasons before the tournament or when running on partial data).
+    """
     from ncaa_eval.ingest import ParquetRepository
 
     repo = ParquetRepository(base_path=data_dir)
     games = repo.get_games(season)
     if not games:
-        msg = f"No games found for season {season}"
+        msg = f"No season data for bracket prediction: season {season}"
         raise FileNotFoundError(msg)
+
+    tourney_games = [g for g in games if g.is_tournament]
+    source_games = tourney_games if tourney_games else games
+
     team_id_set: set[int] = set()
-    for g in games:
+    for g in source_games:
         team_id_set.add(g.w_team_id)
         team_id_set.add(g.l_team_id)
     return sorted(team_id_set)
@@ -193,8 +203,9 @@ def _build_synthetic_feature_rows(
         prof_a = team_profiles.get(tid_a, {})
         prof_b = team_profiles.get(tid_b, {})
         row: dict[str, float] = {}
-        # Populate _a and _b columns
-        for base in set(list(prof_a.keys()) + list(prof_b.keys())):
+        # Populate _a and _b columns (dict.fromkeys preserves insertion order,
+        # deduplicating without non-deterministic set iteration)
+        for base in dict.fromkeys(list(prof_a.keys()) + list(prof_b.keys())):
             row[f"{base}_a"] = prof_a.get(base, 0.0)
             row[f"{base}_b"] = prof_b.get(base, 0.0)
             row[f"delta_{base}"] = row[f"{base}_a"] - row[f"{base}_b"]
@@ -285,6 +296,9 @@ def _build_bracket_contextual_features(
     """
     from ncaa_eval.cli.train import _setup_feature_server
 
+    if not contextual_features:
+        return {}
+
     n = len(team_ids)
 
     # Build a feature server to get contextual features
@@ -331,12 +345,16 @@ def _assemble_bracket_meta_predictions(
     """
     # Extract upper-triangle predictions from each base matrix
     rows_idx, cols_idx = np.triu_indices(n, k=1)
+    expected_len = len(rows_idx)  # C(n, 2)
     meta_parts: dict[str, npt.NDArray[np.float64]] = {}
     for i, mat in enumerate(base_matrices):
         meta_parts[f"pred_base_{i}"] = mat[rows_idx, cols_idx].astype(np.float64)
 
-    # Add contextual features
+    # Add contextual features (validate length matches upper-triangle count)
     for feat, vals in context_features.items():
+        if len(vals) != expected_len:
+            msg = f"Context feature {feat!r} has length {len(vals)}, expected {expected_len} (C({n}, 2))"
+            raise ValueError(msg)
         meta_parts[feat] = vals
 
     meta_df = pd.DataFrame(meta_parts)
@@ -539,6 +557,12 @@ class StackedEnsemble:
             DataFrame of shape ``(n, n)`` with team_id index and columns.
             ``P[a, b]`` is the ensemble probability that team *a* beats
             team *b*.  Diagonal is zero; ``P[a,b] + P[b,a] ≈ 1``.
+
+        Raises:
+            FileNotFoundError: If no season data exists for *season*.
+            ValueError: If any column in ``meta_column_order`` is missing
+                from the assembled meta-input, or if a context feature
+                array has unexpected length.
         """
         team_ids, base_matrices = _predict_bracket_base_matrices(self.base_models, data_dir, season)
         n = len(team_ids)

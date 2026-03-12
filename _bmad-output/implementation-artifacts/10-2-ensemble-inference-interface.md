@@ -1,6 +1,6 @@
 # Story 10.2: Ensemble Inference Interface
 
-Status: review
+Status: done
 
 ## Story
 
@@ -236,13 +236,17 @@ Claude Opus 4.6
 
 ### File List
 
-- `src/ncaa_eval/model/ensemble.py` — MODIFIED: Added `meta_column_order` field, `predict_proba()`, `predict_bracket()` methods; updated `save()`/`load()`; added bracket helper functions
+- `src/ncaa_eval/model/ensemble.py` — MODIFIED: Added `meta_column_order` field, `predict_proba()`, `predict_bracket()` methods; updated `save()`/`load()`; added bracket helper functions; fixed tournament-only team discovery, deterministic iteration, length validation, `predict_bracket` `Raises:` docstring
 - `src/ncaa_eval/cli/train.py` — MODIFIED: Set `ensemble.meta_column_order` after building meta-training set
-- `src/ncaa_eval/cli/predict.py` — MODIFIED: Replaced `NotImplementedError` with working ensemble prediction path via `_build_ensemble_predictions()`
-- `tests/unit/test_model_ensemble.py` — MODIFIED: Added `TestMetaColumnOrder` (3 tests), `TestPredictProba` (4 tests), `TestPredictBracket` (1 test)
+- `src/ncaa_eval/cli/predict.py` — MODIFIED: Replaced `NotImplementedError` with working ensemble prediction path via `_build_ensemble_predictions()`; added probability clamp
+- `src/ncaa_eval/evaluation/providers.py` — MODIFIED: Added `EnsembleProvider` class implementing `ProbabilityProvider` (AC #5)
+- `src/ncaa_eval/evaluation/__init__.py` — MODIFIED: Export `EnsembleProvider`
+- `tests/unit/test_model_ensemble.py` — MODIFIED: Added `TestMetaColumnOrder` (3 tests), `TestPredictProba` (4 tests), `TestPredictBracket` (2 tests — added missing column ValueError test)
 - `tests/unit/test_cli_predict.py` — MODIFIED: Added `TestEnsemblePredict` (1 test)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` — MODIFIED: Story status updated
+- `_bmad-output/planning-artifacts/template-requirements.md` — MODIFIED: Added 3 new patterns from code review
 
 ## Change Log
 
 - 2026-03-12: Implemented ensemble inference interface — `predict_proba()`, `predict_bracket()`, CLI predict integration, meta_column_order persistence. 9 new tests added. All quality gates pass.
+- 2026-03-12: Code review fixes — Added `EnsembleProvider` (AC #5 completion); fixed tournament-only team discovery in `_discover_team_ids`; fixed non-deterministic set iteration; added context feature length validation; added probability clamp in CLI ensemble path; added `predict_bracket` missing-column ValueError test; added `Raises:` docstring section. 1 additional test. 1164 passed / 0 failed.

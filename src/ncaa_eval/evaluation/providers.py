@@ -5,13 +5,18 @@ implementations for pairwise win probability computation:
 
 * :class:`MatrixProvider` — wraps a pre-computed probability matrix.
 * :class:`EloProvider` — wraps a stateful model's ``predict_matchup`` method.
+* :class:`EnsembleProvider` — wraps a ``StackedEnsemble`` as a provider.
 * :func:`build_probability_matrix` — builds an n×n pairwise matrix.
 """
 
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Any, Protocol, runtime_checkable
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
+
+if TYPE_CHECKING:
+    from ncaa_eval.model.ensemble import StackedEnsemble
 
 import numpy as np
 import numpy.typing as npt
@@ -160,6 +165,70 @@ class EloProvider:
             [self._model.predict_matchup(a, b) for a, b in zip(team_a_ids, team_b_ids)],
             dtype=np.float64,
         )
+
+
+class EnsembleProvider:
+    """Wraps a :class:`StackedEnsemble` as a :class:`ProbabilityProvider`.
+
+    Calls ``ensemble.predict_bracket(data_dir, season)`` once on first use
+    and caches the result as a :class:`MatrixProvider` for subsequent
+    lookups.  This allows a ``StackedEnsemble`` to be passed to
+    :func:`build_probability_matrix` and the Monte Carlo bracket simulator
+    identically to single-model mode.
+
+    Args:
+        ensemble: A trained ``StackedEnsemble`` instance.
+        data_dir: Path to the local Parquet data store.
+        season: Target season year.
+    """
+
+    def __init__(
+        self,
+        ensemble: StackedEnsemble,
+        data_dir: Path,
+        season: int,
+    ) -> None:
+        self._ensemble = ensemble
+        self._data_dir = data_dir
+        self._season = season
+        self._delegate: MatrixProvider | None = None
+
+    def _get_delegate(self) -> MatrixProvider:
+        if self._delegate is None:
+            prob_df = self._ensemble.predict_bracket(self._data_dir, self._season)
+            import numpy as np
+
+            self._delegate = MatrixProvider(
+                prob_df.to_numpy().astype(np.float64),
+                list(prob_df.index),
+            )
+        return self._delegate
+
+    def matchup_probability(
+        self,
+        team_a_id: int,
+        team_b_id: int,
+        context: MatchupContext,
+    ) -> float:
+        """Return P(team_a beats team_b) from the ensemble probability matrix.
+
+        Triggers ensemble bracket prediction on first call; subsequent calls
+        use the cached matrix.
+        """
+        return self._get_delegate().matchup_probability(team_a_id, team_b_id, context)
+
+    def batch_matchup_probabilities(
+        self,
+        team_a_ids: Sequence[int],
+        team_b_ids: Sequence[int],
+        context: MatchupContext,
+    ) -> npt.NDArray[np.float64]:
+        """Return batch probabilities from the cached ensemble matrix.
+
+        Triggers ensemble bracket prediction on first call; subsequent calls
+        use the cached matrix.
+        """
+        return self._get_delegate().batch_matchup_probabilities(team_a_ids, team_b_ids, context)
 
 
 def build_probability_matrix(

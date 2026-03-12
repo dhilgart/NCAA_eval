@@ -131,7 +131,7 @@ def _build_ensemble_predictions(
                     season,
                     team_ids[i],
                     team_ids[j],
-                    float(prob_df.iloc[i, j]),
+                    float(min(max(float(prob_df.iloc[i, j]), 0.0), 1.0)),
                 )
             )
     return rows

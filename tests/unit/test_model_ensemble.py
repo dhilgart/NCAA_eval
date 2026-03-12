@@ -769,3 +769,39 @@ class TestPredictBracket:
             for j in range(i + 1, n):
                 a, b = team_ids[i], team_ids[j]
                 assert result.loc[a, b] + result.loc[b, a] == pytest.approx(1.0)
+
+    @patch("ncaa_eval.model.ensemble._build_bracket_contextual_features")
+    @patch("ncaa_eval.model.ensemble._predict_bracket_base_matrices")
+    def test_predict_bracket_missing_column_raises(
+        self,
+        mock_base_matrices: MagicMock,
+        mock_context: MagicMock,
+    ) -> None:
+        """predict_bracket raises ValueError when a meta_column_order column is missing."""
+        team_ids = [1101, 1102, 1103]
+        n = len(team_ids)
+
+        mat = np.zeros((n, n), dtype=np.float64)
+        mock_base_matrices.return_value = (team_ids, [mat, mat])
+
+        # Provide seed_diff but meta_column_order expects also "missing_feat"
+        mock_context.return_value = {
+            "seed_diff": np.array([1.0, 2.0, -1.0]),
+        }
+
+        base0 = _make_mock_stateless(["feat_a"], [0.5, 0.5, 0.5])
+        base1 = _make_mock_stateless(["feat_b"], [0.5, 0.5, 0.5])
+        meta = _make_mock_stateless(
+            ["pred_base_0", "pred_base_1", "seed_diff", "missing_feat"],
+            [0.5, 0.5, 0.5],
+        )
+
+        ensemble = StackedEnsemble(
+            base_models=[base0, base1],
+            meta_learner=meta,
+            contextual_features=["seed_diff"],
+            meta_column_order=["pred_base_0", "pred_base_1", "seed_diff", "missing_feat"],
+        )
+
+        with pytest.raises(ValueError, match="Missing meta-learner input columns.*missing_feat"):
+            ensemble.predict_bracket(Path("/tmp/fake"), 2025)

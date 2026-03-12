@@ -49,6 +49,7 @@ from ncaa_eval.evaluation.plotting import (
 )
 from ncaa_eval.evaluation.providers import (
     EloProvider,
+    EnsembleProvider,
     MatrixProvider,
     ProbabilityProvider,
     build_probability_matrix,
@@ -96,6 +97,7 @@ __all__ = [
     "default_metrics",
     "DictScoring",
     "EloProvider",
+    "EnsembleProvider",
     "FibonacciScoring",
     "FoldResult",
     "KAGGLE_NEUTRAL_DAY_NUM",
