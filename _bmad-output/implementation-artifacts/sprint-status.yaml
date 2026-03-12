@@ -142,7 +142,7 @@ development_status:
   9-9-cli-predict-command: done
   9-10-custom-metric-plugin-registry: done
   9-11-replace-undocumented-streamlit-api: done
-  9-12-implement-st-progress-simulation: backlog
+  9-12-implement-st-progress-simulation: ready-for-dev
   9-13-consolidate-duplicated-test-helper: backlog
   9-14-add-pandera-schema-validation-kaggle: backlog
   9-15-document-iterrows-convention-exception: backlog
