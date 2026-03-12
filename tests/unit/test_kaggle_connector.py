@@ -67,7 +67,7 @@ class TestKaggleConnectorTeams:
         csv_path = tmp_path / "MTeams.csv"
         csv_path.write_text("ID,Name\n1,Foo\n")
         connector = KaggleConnector(extract_dir=tmp_path)
-        with pytest.raises(DataFormatError, match="missing columns"):
+        with pytest.raises(DataFormatError, match="schema validation failed"):
             connector.fetch_teams()
 
 
@@ -191,6 +191,51 @@ class TestKaggleConnectorSeasons:
         connector = KaggleConnector(extract_dir=tmp_path)
         with pytest.raises(DataFormatError, match="file not found"):
             connector.fetch_seasons()
+
+
+# ---------------------------------------------------------------------------
+# TestKaggleConnectorSchemaValidation  (Story 9.14 — Pandera)
+# ---------------------------------------------------------------------------
+
+
+class TestKaggleConnectorSchemaValidation:
+    """Tests for Pandera schema validation in KaggleConnector."""
+
+    def test_wrong_type_in_team_id(self, tmp_path: Path) -> None:
+        """Wrong type in a column (e.g., 'abc' in TeamID) raises DataFormatError."""
+        csv_path = tmp_path / "MTeams.csv"
+        csv_path.write_text("TeamID,TeamName\nabc,Abilene Chr\n")
+        connector = KaggleConnector(extract_dir=tmp_path)
+        with pytest.raises(DataFormatError, match="schema validation failed"):
+            connector.fetch_teams()
+
+    def test_negative_team_id(self, tmp_path: Path) -> None:
+        """Value range violation (negative TeamID) raises DataFormatError."""
+        csv_path = tmp_path / "MTeams.csv"
+        csv_path.write_text("TeamID,TeamName\n-1,Abilene Chr\n")
+        connector = KaggleConnector(extract_dir=tmp_path)
+        with pytest.raises(DataFormatError, match="schema validation failed"):
+            connector.fetch_teams()
+
+    def test_invalid_wloc_value(self, kaggle_dir: Path) -> None:
+        """Invalid WLoc value raises DataFormatError (replaces manual check)."""
+        csv_path = kaggle_dir / "MRegularSeasonCompactResults.csv"
+        csv_path.write_text(
+            "Season,DayNum,WTeamID,WScore,LTeamID,LScore,WLoc,NumOT\n2024,11,1101,75,1102,60,X,0\n"
+        )
+        connector = KaggleConnector(extract_dir=kaggle_dir)
+        with pytest.raises(DataFormatError, match="schema validation failed"):
+            connector.fetch_games(2024)
+
+    def test_negative_score(self, kaggle_dir: Path) -> None:
+        """Negative score raises DataFormatError."""
+        csv_path = kaggle_dir / "MRegularSeasonCompactResults.csv"
+        csv_path.write_text(
+            "Season,DayNum,WTeamID,WScore,LTeamID,LScore,WLoc,NumOT\n2024,11,1101,-5,1102,60,H,0\n"
+        )
+        connector = KaggleConnector(extract_dir=kaggle_dir)
+        with pytest.raises(DataFormatError, match="schema validation failed"):
+            connector.fetch_games(2024)
 
 
 # ---------------------------------------------------------------------------

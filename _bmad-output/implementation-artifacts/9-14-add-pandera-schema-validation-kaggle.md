@@ -1,6 +1,6 @@
 # Story 9.14: Add Pandera Schema Validation to KaggleConnector
 
-Status: ready-for-dev
+Status: review
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -20,27 +20,27 @@ so that data integrity issues are caught at the ingest boundary with clear, stru
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Define Pandera schemas for each CSV type (AC: #1)
-  - [ ] 1.1 Create a `schemas` module or add schemas to `kaggle.py` — define `TeamsSchema`, `SpellingsSchema`, `GamesSchema`, `SeasonsSchema` using `pa.DataFrameSchema` with `pa.Column` objects
-  - [ ] 1.2 `TeamsSchema`: `TeamID` (int, >= 1), `TeamName` (str, non-null)
-  - [ ] 1.3 `SpellingsSchema`: `TeamNameSpelling` (str, non-null), `TeamID` (int, >= 1)
-  - [ ] 1.4 `GamesSchema`: `Season` (int, >= 1985), `DayNum` (int, >= 0), `WTeamID` (int, >= 1), `LTeamID` (int, >= 1), `WScore` (int, >= 0), `LScore` (int, >= 0), `WLoc` (str, isin ["H", "A", "N"]), `NumOT` (int, >= 0)
-  - [ ] 1.5 `SeasonsSchema`: `Season` (int, >= 1985), `DayZero` (str, non-null)
-- [ ] Task 2: Integrate Pandera validation into KaggleConnector (AC: #1)
-  - [ ] 2.1 Replace `_validate_columns()` calls with `schema.validate(df)` calls
-  - [ ] 2.2 Wrap `pandera.errors.SchemaError` in `DataFormatError` to preserve the existing exception contract
-  - [ ] 2.3 Remove the manual `_validate_columns` function and the `_*_COLUMNS` sets (replaced by Pandera schemas)
-  - [ ] 2.4 Remove the manual `WLoc` validation in `_parse_games_csv` (line 244-247) — now handled by Pandera `isin` check
-- [ ] Task 3: Update tests for Pandera validation (AC: #1)
-  - [ ] 3.1 Existing tests for missing columns (`test_fetch_teams_missing_columns`) should still pass — Pandera also rejects missing columns
-  - [ ] 3.2 Add test: wrong type in a column (e.g., "abc" in TeamID) raises `DataFormatError`
-  - [ ] 3.3 Add test: value range violation (e.g., negative TeamID) raises `DataFormatError`
-  - [ ] 3.4 Add test: invalid WLoc value raises `DataFormatError` (replaces manual check)
-  - [ ] 3.5 Verify all existing tests still pass unchanged
-- [ ] Task 4: Run quality gates (AC: #1)
-  - [ ] 4.1 `pytest` — all tests pass
-  - [ ] 4.2 `mypy --strict src/ncaa_eval tests` — clean
-  - [ ] 4.3 `ruff check .` — clean
+- [x] Task 1: Define Pandera schemas for each CSV type (AC: #1)
+  - [x] 1.1 Create a `schemas` module or add schemas to `kaggle.py` — define `TeamsSchema`, `SpellingsSchema`, `GamesSchema`, `SeasonsSchema` using `pa.DataFrameSchema` with `pa.Column` objects
+  - [x] 1.2 `TeamsSchema`: `TeamID` (int, >= 1), `TeamName` (str, non-null)
+  - [x] 1.3 `SpellingsSchema`: `TeamNameSpelling` (str, non-null), `TeamID` (int, >= 1)
+  - [x] 1.4 `GamesSchema`: `Season` (int, >= 1985), `DayNum` (int, >= 0), `WTeamID` (int, >= 1), `LTeamID` (int, >= 1), `WScore` (int, >= 0), `LScore` (int, >= 0), `WLoc` (str, isin ["H", "A", "N"]), `NumOT` (int, >= 0)
+  - [x] 1.5 `SeasonsSchema`: `Season` (int, >= 1985), `DayZero` (str, non-null)
+- [x] Task 2: Integrate Pandera validation into KaggleConnector (AC: #1)
+  - [x] 2.1 Replace `_validate_columns()` calls with `schema.validate(df)` calls
+  - [x] 2.2 Wrap `pandera.errors.SchemaError` in `DataFormatError` to preserve the existing exception contract
+  - [x] 2.3 Remove the manual `_validate_columns` function and the `_*_COLUMNS` sets (replaced by Pandera schemas)
+  - [x] 2.4 Remove the manual `WLoc` validation in `_parse_games_csv` (line 244-247) — now handled by Pandera `isin` check
+- [x] Task 3: Update tests for Pandera validation (AC: #1)
+  - [x] 3.1 Existing tests for missing columns (`test_fetch_teams_missing_columns`) should still pass — Pandera also rejects missing columns
+  - [x] 3.2 Add test: wrong type in a column (e.g., "abc" in TeamID) raises `DataFormatError`
+  - [x] 3.3 Add test: value range violation (e.g., negative TeamID) raises `DataFormatError`
+  - [x] 3.4 Add test: invalid WLoc value raises `DataFormatError` (replaces manual check)
+  - [x] 3.5 Verify all existing tests still pass unchanged
+- [x] Task 4: Run quality gates (AC: #1)
+  - [x] 4.1 `pytest` — all tests pass
+  - [x] 4.2 `mypy --strict src/ncaa_eval tests` — clean
+  - [x] 4.3 `ruff check .` — clean
 
 ## Dev Notes
 
@@ -149,10 +149,33 @@ Pandera's type stubs may need `# type: ignore[import-untyped]` like the existing
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+- Pandera 0.29.0 deprecation: `import pandera as pa` triggers FutureWarning; used `import pandera.pandas as pa` instead
+- Pandera has `py.typed` marker — no `# type: ignore` needed for mypy
+- Existing `test_fetch_teams_missing_columns` matched on "missing columns" but Pandera error says "column 'X' not in dataframe" — updated match pattern to "schema validation failed"
+
 ### Completion Notes List
 
+- Defined 4 Pandera `DataFrameSchema` objects (`_TEAMS_SCHEMA`, `_SPELLINGS_SCHEMA`, `_GAMES_SCHEMA`, `_SEASONS_SCHEMA`) directly in `kaggle.py`
+- Created `_validate_schema()` helper that wraps `pandera.errors.SchemaError` in `DataFormatError`
+- Replaced all 5 `_validate_columns()` calls with `_validate_schema()` calls
+- Removed `_validate_columns()` function and all `_*_COLUMNS` sets
+- Removed manual WLoc validation (lines 244-247) — now handled by `_GAMES_SCHEMA` `isin` check
+- Added 4 new tests in `TestKaggleConnectorSchemaValidation`: wrong type, negative value, invalid WLoc, negative score
+- Updated `test_fetch_teams_missing_columns` match pattern for Pandera error format
+- All 1127 tests pass, mypy --strict clean, ruff check clean
+- iterrows usage untouched per carve-out
+
+### Change Log
+
+- 2026-03-11: Replaced manual CSV column validation with Pandera schema validation in KaggleConnector (Story 9.14)
+
 ### File List
+
+- `src/ncaa_eval/ingest/connectors/kaggle.py` (modified)
+- `tests/unit/test_kaggle_connector.py` (modified)
+- `_bmad-output/implementation-artifacts/9-14-add-pandera-schema-validation-kaggle.md` (modified)
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified)
