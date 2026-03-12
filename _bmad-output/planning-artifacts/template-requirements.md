@@ -274,6 +274,22 @@ tests/
 
 **Discovered in Story 1.3 (2026-02-16):**
 
+**Discovered in Story 9.13 (2026-03-11) — Shared Test Helpers in Packaged Tests:**
+
+When subdirectories under `tests/` are Python packages (have `__init__.py`), plain helper functions in `conftest.py` are **not** auto-injected by pytest — they require an explicit import:
+
+```python
+# In tests/unit/ (a Python package with __init__.py):
+# conftest.py plain functions require explicit import in test files:
+from tests.unit.conftest import _make_season_df, _make_feature_server
+```
+
+This is intentional and the correct approach for plain helpers (not fixtures). Two alternatives exist but are more complex:
+1. **Explicit import** (used here) — simplest; test files call helpers directly with familiar function-call syntax
+2. **`@pytest.fixture` returning a factory** — works with auto-injection but changes call patterns
+
+Also: when generating synthetic test DataFrames with IDs for two parties (e.g., `team_a_id`, `team_b_id`), use **non-overlapping ranges** to prevent accidental self-play (party A == party B) in synthetic data. Example: `rng.integers(1000, 2000)` for A, `rng.integers(2000, 3000)` for B.
+
 **Discovered in Story 1.5 (2026-02-17):**
 
 ### Coverage Configuration ⭐ (Discovered Story 1.5)

@@ -1,6 +1,6 @@
 # Story 9.13: Consolidate Duplicated Test Helper
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -125,3 +125,4 @@ Claude Opus 4.6
 ### Change Log
 
 - 2026-03-11: Consolidated `_make_season_df` and `_make_feature_server` from two test files into shared `tests/unit/conftest.py` to follow DRY principles
+- 2026-03-11: [Code Review] Fixed self-play collision defect in `_make_season_df` — `team_b_id` now draws from `[2000,3000)` instead of `[1000,2000)` to guarantee distinct team IDs per game. Expanded module and function docstrings for clarity.
