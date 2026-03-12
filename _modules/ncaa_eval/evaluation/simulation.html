@@ -340,7 +340,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Sequence</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Sequence</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -880,6 +880,7 @@
     <span class="n">n_simulations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10_000</span><span class="p">,</span>
     <span class="n">rng</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">progress_callback</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SimulationResult</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Vectorized Monte Carlo tournament simulation.</span>
 
@@ -895,6 +896,9 @@
 <span class="sd">        n_simulations: Number of simulations (default 10,000).</span>
 <span class="sd">        rng: NumPy random generator for reproducibility.</span>
 <span class="sd">        progress: Display a tqdm progress bar for simulation rounds.</span>
+<span class="sd">        progress_callback: Optional callback invoked after each round</span>
+<span class="sd">            with ``(round_completed, total_rounds)``.  UI-agnostic hook</span>
+<span class="sd">            for external progress reporting (e.g. Streamlit ``st.progress``).</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        :class:`SimulationResult` with MC-derived advancement probs,</span>
@@ -986,6 +990,9 @@
         <span class="n">survivors</span> <span class="o">=</span> <span class="n">winners</span>
         <span class="n">game_offset</span> <span class="o">+=</span> <span class="n">n_games_in_round</span>
 
+        <span class="k">if</span> <span class="n">progress_callback</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">progress_callback</span><span class="p">(</span><span class="n">r</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n_rounds</span><span class="p">)</span>
+
     <span class="k">if</span> <span class="n">n_simulations</span> <span class="o">&gt;=</span> <span class="mi">10_000</span><span class="p">:</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;MC simulation complete: </span><span class="si">%d</span><span class="s2"> sims&quot;</span><span class="p">,</span> <span class="n">n_simulations</span><span class="p">)</span>
 
@@ -1060,6 +1067,7 @@
     <span class="n">n_simulations</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10_000</span><span class="p">,</span>
     <span class="n">rng</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">Generator</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">progress</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">progress_callback</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="kc">None</span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SimulationResult</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;High-level tournament simulation orchestrator.</span>
 
@@ -1077,6 +1085,9 @@
 <span class="sd">        rng: NumPy random generator (MC only).</span>
 <span class="sd">        progress: Display a tqdm progress bar for MC simulation rounds.</span>
 <span class="sd">            Ignored when ``method=&quot;analytical&quot;``.</span>
+<span class="sd">        progress_callback: Optional callback invoked after each MC round</span>
+<span class="sd">            with ``(round_completed, total_rounds)``.  Ignored when</span>
+<span class="sd">            ``method=&quot;analytical&quot;``.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        :class:`SimulationResult`.</span>
@@ -1123,6 +1134,7 @@
         <span class="n">n_simulations</span><span class="o">=</span><span class="n">n_simulations</span><span class="p">,</span>
         <span class="n">rng</span><span class="o">=</span><span class="n">rng</span><span class="p">,</span>
         <span class="n">progress</span><span class="o">=</span><span class="n">progress</span><span class="p">,</span>
+        <span class="n">progress_callback</span><span class="o">=</span><span class="n">progress_callback</span><span class="p">,</span>
     <span class="p">)</span></div>
 
 </pre></div>
