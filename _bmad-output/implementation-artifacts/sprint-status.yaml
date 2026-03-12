@@ -145,7 +145,7 @@ development_status:
   9-12-implement-st-progress-simulation: done
   9-13-consolidate-duplicated-test-helper: done
   9-14-add-pandera-schema-validation-kaggle: done
-  9-15-document-iterrows-convention-exception: backlog
+  9-15-document-iterrows-convention-exception: ready-for-dev
   epic-9-retrospective: optional
 
   # Epic 10: Ensemble Modeling Framework
