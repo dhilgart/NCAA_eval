@@ -53,6 +53,11 @@ so that **I know how long the simulation will take and can see it progressing**.
   - [x] 5.2: Update `test_pool_scorer_page.py` — verify `st.progress` is called instead of `st.spinner` for MC simulation path
   - [x] 5.3: Verify `st.spinner` is still used for analytical path on Presentation page
 
+### Review Follow-ups (AI)
+
+- [ ] [AI-Review][MEDIUM] `run_bracket_simulation_with_progress` catches `(OSError, ValueError, KeyError, TypeError)` but MC path can also raise `RuntimeError` (numpy shape mismatch, malformed bracket tree) or `AttributeError` (bad provider) — add to catch list or broaden to `Exception` [dashboard/lib/simulation_helpers.py:378]
+- [ ] [AI-Review][MEDIUM] `run_bracket_simulation_with_progress` passes `n_simulations` to the cached `run_bracket_simulation(method="analytical")` call — for analytical, this param is ignored but still pollutes the cache key. Pass a fixed value (e.g., `n_simulations=10_000`) or omit it to prevent duplicate analytical cache entries [dashboard/lib/simulation_helpers.py:297-306]
+
 ## Dev Notes
 
 ### Architecture & Design Decisions
@@ -143,7 +148,7 @@ No debugging issues encountered.
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` — status: in-progress → review
 - `_bmad-output/implementation-artifacts/9-12-implement-st-progress-simulation.md` — story file updates
 
-## Senior Developer Review (AI)
+## Senior Developer Review (AI) — Pass 1
 
 **Reviewer:** Claude Sonnet 4.6 — 2026-03-11
 
@@ -158,9 +163,27 @@ No debugging issues encountered.
 - 🟢 LOW (ACCEPTED): Pool Scorer intentionally passes `upset_aggression=0, seed_weight_pct=0` — no sliders on that page. Already documented via comment in page code.
 - 🟢 LOW (ACCEPTED): Orchestrator `test_progress_callback_via_orchestrator` checks only `calls[-1]` — the direct `test_progress_callback_called_each_round` test already covers all intermediate calls. Not a meaningful gap.
 
-**AC verification:** All 5 ACs confirmed implemented. All 1075 tests pass post-fix.
+**AC verification:** All 5 ACs confirmed implemented. All 1122 tests pass post-fix.
+
+## Senior Developer Review (AI) — Pass 2
+
+**Reviewer:** Claude Sonnet 4.6 — 2026-03-11
+
+**Verdict:** APPROVED with fixes applied
+
+**Findings and fixes (1 High fixed, 1 Medium fixed, 2 Medium → action items, 2 Low accepted):**
+
+- 🔴 HIGH (FIXED): `try/finally` for `progress_bar.empty()` was untested on the exception path — all existing tests mocked the helper to return a result, never to raise. Added `test_progress_bar_cleared_on_exception` that patches `run_bracket_simulation_with_progress` to `side_effect=RuntimeError` and asserts `progress_bar.empty.assert_called_once()`. [test_pool_scorer_page.py]
+- 🟡 MEDIUM (FIXED): `test_progress_callback_via_orchestrator` only asserted `calls[-1] == (2, 2)`, leaving intermediate values unchecked. Tightened to `assert calls == [(1, 2), (2, 2)]` to match the direct test's strictness. [test_evaluation_simulation.py:1230]
+- 🟡 MEDIUM (ACTION ITEM): `run_bracket_simulation_with_progress` exception clause misses `RuntimeError`/`AttributeError` — numpy/bracket errors propagate as unhandled crashes. Added to Review Follow-ups.
+- 🟡 MEDIUM (ACTION ITEM): Analytical cached call receives `n_simulations` (ignored but pollutes cache key) — different n_sim values create duplicate analytical cache entries. Added to Review Follow-ups.
+- 🟢 LOW (ACCEPTED): `_update_progress` closure has no guard for `total_rounds == 0` — impossible in production (64-team bracket → 6 rounds) but defensively weak.
+- 🟢 LOW (FIXED): Stale test count in Pass 1 review block said "1075 tests" — corrected to 1122.
+
+**AC verification:** All 5 ACs confirmed implemented. All 1123 tests pass post-fix (1 new test added).
 
 ## Change Log
 
 - **2026-03-11**: Implemented st.progress for Monte Carlo simulation (Story 9.12). Added `progress_callback` parameter to simulation engine, created uncached dashboard wrapper, replaced spinners with progress bars on Pool Scorer and Presentation pages, added/updated 8 tests. All 1122 tests pass.
 - **2026-03-11**: Code review fixes — added `try/finally` around progress bar usage in both pages, added exception handler to `run_bracket_simulation_with_progress`, strengthened pool scorer test assertion, improved docstring. 4 Medium issues resolved.
+- **2026-03-11**: Code review pass 2 — added `test_progress_bar_cleared_on_exception` test (H1 fix), tightened orchestrator callback assertion to full list equality (M3 fix), corrected stale test count, added 2 Medium action items. 1123 tests pass.

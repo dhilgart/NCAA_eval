@@ -1227,8 +1227,7 @@ class TestMonteCarlo:
             rng=np.random.default_rng(51),
             progress_callback=lambda done, total: calls.append((done, total)),
         )
-        assert len(calls) == 2
-        assert calls[-1] == (2, 2)
+        assert calls == [(1, 2), (2, 2)]
 
     def test_progress_callback_none_by_default(self) -> None:
         """No error when progress_callback is not provided."""

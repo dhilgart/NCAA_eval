@@ -345,6 +345,41 @@ class TestAnalyzeOutcomesButton:
         # progress bar should be cleared after simulation
         mock_progress_bar.empty.assert_called_once()
 
+    def test_progress_bar_cleared_on_exception(self) -> None:
+        """progress_bar.empty() must be called even when simulation raises (try/finally)."""
+        mock_st = MagicMock()
+        mock_progress_bar = MagicMock()
+        mock_st.progress.return_value = mock_progress_bar
+        mock_st.session_state = {
+            "selected_run_id": "abc123",
+            "selected_year": 2023,
+            "selected_scoring": "standard",
+        }
+        mock_st.columns.side_effect = lambda n: [
+            MagicMock() for _ in range(n if isinstance(n, int) else len(n))
+        ]
+        mock_st.checkbox.return_value = False
+        mock_st.slider.return_value = 10_000
+        mock_st.button.return_value = True
+
+        with (
+            patch.object(_page_mod, "st", mock_st),
+            patch.object(_page_mod, "get_data_dir", return_value="/fake/data"),
+            patch.object(_page_mod, "load_tourney_seeds", return_value=[{"seed": "W01"}]),
+            patch.object(
+                _page_mod,
+                "run_bracket_simulation_with_progress",
+                side_effect=RuntimeError("numpy shape mismatch"),
+            ),
+        ):
+            try:
+                _page_mod._render_pool_scorer_page()
+            except RuntimeError:
+                pass  # expected — the page re-raises after finally
+
+        # progress bar must be cleared even when the simulation raises
+        mock_progress_bar.empty.assert_called_once()
+
 
 class TestSimulationFailure:
     def test_shows_warning_when_simulation_returns_none(self) -> None:
