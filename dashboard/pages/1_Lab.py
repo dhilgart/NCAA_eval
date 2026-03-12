@@ -127,7 +127,7 @@ def _render_leaderboard() -> None:
 
     event = st.dataframe(
         styled,
-        use_container_width=True,
+        width="stretch",
         on_select="rerun",
         selection_mode="single-row",
         key="leaderboard_selection",

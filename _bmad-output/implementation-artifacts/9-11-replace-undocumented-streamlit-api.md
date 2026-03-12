@@ -1,6 +1,6 @@
 # Story 9.11: Replace Undocumented Streamlit API Usage
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -79,26 +79,22 @@ class DataframeState(TypedDict, total=False):
 
 Both are `TypedDict` subclasses — they support dict-style access (`event["selection"]["rows"]`) and attribute access (`event.selection.rows`) at runtime.
 
-### The Fix: `typing.cast()` to Narrow the Union
+### The Fix: Dict-Style `.get()` Access (No Cast Needed)
 
-Since `on_select="rerun"` guarantees the return is `DataframeState` (not `DeltaGenerator`), use `cast()` to tell mypy:
+Streamlit 1.54.0 uses `@overload` decorators on `ArrowMixin.dataframe()` that automatically narrow the return type to `DataframeState` when `on_select=Literal["rerun"]` is passed — **no `cast()` or `TYPE_CHECKING` import is needed**.
+
+The only change required is replacing attribute-style access with dict-style safe `.get()` access:
 
 ```python
-from __future__ import annotations
-from typing import TYPE_CHECKING, cast
-
-if TYPE_CHECKING:
-    from streamlit.elements.arrow import DataframeState
-
-event = cast("DataframeState", st.dataframe(
+event = st.dataframe(
     styled,
-    use_container_width=True,
+    width="stretch",
     on_select="rerun",
     selection_mode="single-row",
     key="leaderboard_selection",
-))
+)
 
-# Now mypy knows event is DataframeState — no type: ignore needed
+# Dict-style safe access handles total=False TypedDict — keys may be absent before any selection
 selected_rows = event.get("selection", {}).get("rows", [])
 if selected_rows:
     selected_idx = selected_rows[0]
@@ -107,27 +103,9 @@ if selected_rows:
     st.switch_page("pages/3_Model_Deep_Dive.py")
 ```
 
-**IMPORTANT:** Use `event.get("selection", {}).get("rows", [])` (dict-style safe access) rather than `event["selection"]["rows"]` to handle the `total=False` TypedDict gracefully — keys may be absent before any selection occurs.
+**Why dict-style `.get()`:** `DataframeState` and `DataframeSelectionState` are `TypedDict` with `total=False` — all keys are optional. Attribute access (`event.selection`) raises `AttributeError` at runtime when the key is absent. Dict-style `.get("selection", {})` is the correct, safe pattern.
 
-**Alternative:** If dict-style `.get()` causes mypy issues with TypedDict, use:
-```python
-selection = event.get("selection")
-if selection:
-    rows = selection.get("rows", [])
-    if rows:
-        ...
-```
-
-### Import Pattern for `DataframeState`
-
-Import from `streamlit.elements.arrow` — this is the module where the classes are defined:
-
-```python
-if TYPE_CHECKING:
-    from streamlit.elements.arrow import DataframeState
-```
-
-The `TYPE_CHECKING` guard means the import only runs during mypy analysis, not at runtime. This avoids coupling to Streamlit's internal module structure at runtime.
+**Note on `cast()`:** The story's initial Dev Notes suggested using `typing.cast("DataframeState", ...)`, but mypy reported `redundant-cast` — the `@overload` signatures already provide full type narrowing. No import from `streamlit.elements.arrow` is needed at all.
 
 ### Test Mock Update
 
@@ -185,6 +163,34 @@ Recent commits follow `feat(scope): description (Story X.Y)` pattern. Stories 9.
 - [Source: `_bmad-output/planning-artifacts/epics.md#Story 9.11` — acceptance criteria and PO decision]
 - [Source: Audit item 2.14; PO decision 2026-03-11 (A — Rewrite to use official Streamlit API)]
 
+## Senior Developer Review (AI)
+
+**Reviewer:** Claude Sonnet 4.6 (Code Review Agent) — 2026-03-11
+**Outcome:** ✅ APPROVED with fixes
+
+### Review Summary
+
+Git vs story File List: 0 discrepancies. All ACs verified implemented. All quality gates pass.
+
+**Issues Found and Fixed:**
+
+| ID | Severity | Description | Fix Applied |
+|----|----------|-------------|-------------|
+| H1 | HIGH | No test coverage for click-to-navigate (AC #3) — `switch_page` and `session_state` assignment untestable by existing mocks (all used `rows=[]`) | Added `TestClickToNavigate` class: 3 tests cover non-empty selection → navigation, empty selection → no navigation, absent key → no navigation |
+| M1 | MEDIUM | `use_container_width=True` deprecated since Streamlit 1.54.0, removal deadline 2025-12-31 (already past) | Replaced with `width="stretch"` |
+| M3 | MEDIUM | Dev Notes "The Fix" section described a `cast()` approach that was not used in the actual implementation, creating misleading narrative | Rewrote section to describe the actual dict-style `.get()` fix and explain why `cast()` was not needed |
+
+**Issues Not Fixed (pre-existing, out of scope):**
+
+- M2: No integration render test for `selected_year=None` aggregate path — pre-existing, lower risk
+- L1: `v == v` NaN check in `_fmt()` — pre-existing, well-commented, acceptable
+
+**Post-fix quality gates:**
+- `mypy --strict` on all 118 files: ✅ clean
+- `ruff check .`: ✅ clean
+- `pytest tests/unit/test_leaderboard_page.py`: ✅ 10 passed (was 7)
+- All 1114 tests passing (from dev agent)
+
 ## Dev Agent Record
 
 ### Agent Model Used
@@ -207,10 +213,11 @@ Claude Opus 4.6
 ### Change Log
 
 - 2026-03-11: Replaced undocumented attribute-style Streamlit dataframe selection API with typed dict-style access; removed type: ignore comments; updated test mocks (Story 9.11)
+- 2026-03-11: Code review fixes — added TestClickToNavigate tests (H1: navigation path was untested), replaced deprecated `use_container_width=True` with `width="stretch"` (M1: deadline passed 2025-12-31), corrected Dev Notes "The Fix" section to reflect actual cast-free implementation (M3)
 
 ### File List
 
-- `dashboard/pages/1_Lab.py` — MODIFIED: replaced `event.selection.rows` with `event.get("selection", {}).get("rows", [])`, removed `# type: ignore[attr-defined]`
-- `tests/unit/test_leaderboard_page.py` — MODIFIED: updated `mock_st.dataframe.return_value` from MagicMock to dict
-- `_bmad-output/implementation-artifacts/9-11-replace-undocumented-streamlit-api.md` — MODIFIED: task checkboxes, dev agent record, status
-- `_bmad-output/implementation-artifacts/sprint-status.yaml` — MODIFIED: story status ready-for-dev → review
+- `dashboard/pages/1_Lab.py` — MODIFIED: replaced `event.selection.rows` with `event.get("selection", {}).get("rows", [])`, removed `# type: ignore[attr-defined]`, replaced deprecated `use_container_width=True` with `width="stretch"`
+- `tests/unit/test_leaderboard_page.py` — MODIFIED: updated `mock_st.dataframe.return_value` from MagicMock to dict; added `TestClickToNavigate` class with 3 tests covering click-to-navigate behavior
+- `_bmad-output/implementation-artifacts/9-11-replace-undocumented-streamlit-api.md` — MODIFIED: task checkboxes, dev agent record, status, Dev Notes
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — MODIFIED: story status ready-for-dev → review → done
