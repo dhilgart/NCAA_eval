@@ -6,6 +6,8 @@ diagram, per-year metric summary, feature importance, and hyperparameters.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import numpy as np
 import pandas as pd  # type: ignore[import-untyped]
 import plotly.graph_objects as go  # type: ignore[import-untyped]
@@ -15,6 +17,7 @@ from dashboard.lib.data_loaders import (
     get_data_dir,
     get_metric_cols as _get_metric_cols,
     load_available_runs,
+    load_ensemble_manifest,
     load_feature_importances,
     load_fold_predictions,
     load_leaderboard_data,
@@ -104,6 +107,9 @@ def _render_feature_importance(data_dir: str, run_id: str, model_type: str) -> N
     elif model_type == "logistic_regression":
         chart_title = "Feature Importance (|Coefficient|)"
         x_label = "Absolute Coefficient"
+    elif model_type == "ensemble":
+        chart_title = "Meta-Learner Feature Importance"
+        x_label = "Importance"
     else:
         chart_title = "Feature Importance (Gain)"
         x_label = "Importance"
@@ -120,6 +126,59 @@ def _render_feature_importance(data_dir: str, run_id: str, model_type: str) -> N
         height=min(max(400, len(feature_names) * 25), 2000),
     )
     st.plotly_chart(fig, use_container_width=True)
+
+
+def _load_oof_log_losses(data_dir: str, oof_run_ids: list[object]) -> dict[str, float | None]:
+    """Return mean OOF log loss per run ID.
+
+    Loads the per-year metric summary for each OOF backtest run and averages
+    the ``log_loss`` column.  Returns ``None`` for runs where no summary exists.
+    """
+    from ncaa_eval.model.tracking import RunStore as _RunStore
+
+    store = _RunStore(Path(data_dir))
+    result: dict[str, float | None] = {}
+    for rid in oof_run_ids:
+        run_id_str = str(rid)
+        try:
+            df = store.load_metrics(run_id_str)
+            if df is not None and "log_loss" in df.columns and not df.empty:
+                result[run_id_str] = float(df["log_loss"].mean())
+            else:
+                result[run_id_str] = None
+        except (OSError, KeyError):
+            result[run_id_str] = None
+    return result
+
+
+def _render_ensemble_components(data_dir: str, run_id: str) -> None:
+    """Render the Ensemble Components expander for ensemble model runs."""
+    manifest = load_ensemble_manifest(data_dir, run_id)
+    if not manifest:
+        return
+
+    with st.expander("Ensemble Components", expanded=True):
+        base_types = manifest.get("base_model_types", [])
+        meta_type = manifest.get("meta_learner_type", "unknown")
+        contextual = manifest.get("contextual_features", [])
+        oof_run_ids: list[object] = list(manifest.get("oof_backtest_run_ids", []) or [])
+
+        st.markdown(f"**Meta-Learner:** {meta_type}")
+        st.markdown(f"**Contextual Features:** {', '.join(str(f) for f in contextual)}")
+
+        if base_types:
+            oof_losses = _load_oof_log_losses(data_dir, oof_run_ids) if oof_run_ids else {}
+            rows = []
+            for i, t in enumerate(base_types):
+                oof_rid = str(oof_run_ids[i]) if i < len(oof_run_ids) else None
+                oof_ll = oof_losses.get(oof_rid, None) if oof_rid else None
+                rows.append(
+                    {
+                        "Base Model": str(t).replace("_", " ").title(),
+                        "OOF Log Loss": f"{oof_ll:.4f}" if oof_ll is not None else "—",
+                    }
+                )
+            st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
 
 
 def _render_deep_dive() -> None:
@@ -153,6 +212,9 @@ def _render_deep_dive() -> None:
     _render_reliability_section(data_dir, run_id, label)
     _render_metric_summary(data_dir, run_id)
     _render_feature_importance(data_dir, run_id, model_type)
+
+    if model_type == "ensemble":
+        _render_ensemble_components(data_dir, run_id)
 
     st.subheader("Hyperparameters")
     st.json(run.get("hyperparameters", {}))

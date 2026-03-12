@@ -268,3 +268,111 @@ class TestFeatureImportance:
         # st.info should show generic unavailability message
         info_calls = [call[0][0] for call in mock_st.info.call_args_list]
         assert any("not available" in msg.lower() for msg in info_calls)
+
+
+class TestEnsembleDeepDive:
+    """Story 10.3 AC#2: Ensemble components section rendered for ensemble model_type."""
+
+    def test_renders_ensemble_components_expander(self) -> None:
+        mock_st = MagicMock()
+        mock_st.session_state = {"selected_run_id": "ens12345-6789"}
+        mock_st.columns.return_value = [MagicMock(), MagicMock()]
+        mock_st.selectbox.return_value = "All Years (Aggregate)"
+
+        ensemble_runs = [
+            {
+                "run_id": "ens12345-6789",
+                "model_type": "ensemble",
+                "hyperparameters": {},
+                "timestamp": "2025-01-01T00:00:00",
+                "git_hash": "abc1234",
+                "start_year": 2015,
+                "end_year": 2025,
+                "prediction_count": 100,
+            },
+        ]
+        importances = [
+            {"feature": "XGBoost Prediction", "importance": 0.6},
+            {"feature": "seed_diff", "importance": 0.1},
+        ]
+        manifest = {
+            "base_model_types": ["xgboost", "elo"],
+            "base_model_count": 2,
+            "contextual_features": ["seed_diff", "is_tournament"],
+            "meta_learner_type": "logistic_regression",
+            "oof_backtest_run_ids": ["oof-run-1", "oof-run-2"],
+        }
+
+        with (
+            patch.object(_dd_mod, "st", mock_st),
+            patch.object(_dd_mod, "get_data_dir", return_value="/fake/data"),
+            patch.object(_dd_mod, "load_available_runs", return_value=ensemble_runs),
+            patch.object(_dd_mod, "load_fold_predictions", return_value=[]),
+            patch.object(_dd_mod, "load_leaderboard_data", return_value=[]),
+            patch.object(_dd_mod, "load_feature_importances", return_value=importances),
+            patch.object(_dd_mod, "load_ensemble_manifest", return_value=manifest),
+        ):
+            _dd_mod._render_deep_dive()
+
+        # Verify expander was called with "Ensemble Components"
+        mock_st.expander.assert_called_once_with("Ensemble Components", expanded=True)
+
+    def test_ensemble_feature_importance_chart_title(self) -> None:
+        """Story 10.3 AC#3: Ensemble shows 'Meta-Learner Feature Importance' chart title."""
+        mock_st = MagicMock()
+        mock_st.session_state = {"selected_run_id": "ens12345-6789"}
+        mock_st.columns.return_value = [MagicMock(), MagicMock()]
+        mock_st.selectbox.return_value = "All Years (Aggregate)"
+
+        ensemble_runs = [
+            {
+                "run_id": "ens12345-6789",
+                "model_type": "ensemble",
+                "hyperparameters": {},
+                "timestamp": "2025-01-01T00:00:00",
+                "git_hash": "abc1234",
+                "start_year": 2015,
+                "end_year": 2025,
+                "prediction_count": 100,
+            },
+        ]
+        importances = [
+            {"feature": "XGBoost Prediction", "importance": 0.6},
+            {"feature": "seed_diff", "importance": 0.1},
+        ]
+
+        with (
+            patch.object(_dd_mod, "st", mock_st),
+            patch.object(_dd_mod, "get_data_dir", return_value="/fake/data"),
+            patch.object(_dd_mod, "load_available_runs", return_value=ensemble_runs),
+            patch.object(_dd_mod, "load_fold_predictions", return_value=_sample_fold_predictions()),
+            patch.object(_dd_mod, "load_leaderboard_data", return_value=[]),
+            patch.object(_dd_mod, "load_feature_importances", return_value=importances),
+            patch.object(_dd_mod, "load_ensemble_manifest", return_value={}),
+        ):
+            _dd_mod._render_deep_dive()
+
+        # Verify feature importance chart has ensemble-specific title
+        fig_calls = [call[0][0] for call in mock_st.plotly_chart.call_args_list]
+        titles = [fig.layout.title.text for fig in fig_calls if hasattr(fig, "layout")]
+        assert any("Meta-Learner" in (t or "") for t in titles)
+
+    def test_no_ensemble_components_for_non_ensemble(self) -> None:
+        """Ensemble Components section is NOT rendered for non-ensemble model types."""
+        mock_st = MagicMock()
+        mock_st.session_state = {"selected_run_id": "abc12345-6789"}
+        mock_st.columns.return_value = [MagicMock(), MagicMock()]
+        mock_st.selectbox.return_value = "All Years (Aggregate)"
+
+        with (
+            patch.object(_dd_mod, "st", mock_st),
+            patch.object(_dd_mod, "get_data_dir", return_value="/fake/data"),
+            patch.object(_dd_mod, "load_available_runs", return_value=_sample_runs()),
+            patch.object(_dd_mod, "load_fold_predictions", return_value=_sample_fold_predictions()),
+            patch.object(_dd_mod, "load_leaderboard_data", return_value=[]),
+            patch.object(_dd_mod, "load_feature_importances", return_value=[]),
+        ):
+            _dd_mod._render_deep_dive()
+
+        # expander should NOT be called for non-ensemble models
+        mock_st.expander.assert_not_called()
