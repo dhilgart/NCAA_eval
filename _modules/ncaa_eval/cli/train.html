@@ -755,10 +755,16 @@
 
 <span class="sd">    Returns (meta_X, meta_y) where meta_X has columns</span>
 <span class="sd">    ``[pred_base_0, ..., &lt;contextual_features&gt;]`` and meta_y is ``team_a_won``.</span>
+
+<span class="sd">    Contextual features with missing values (e.g. ``seed_diff`` for</span>
+<span class="sd">    regular-season games that lack tournament seeds) are filled with 0</span>
+<span class="sd">    so that sklearn estimators that reject NaN can still fit.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">pred_cols</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">aligned</span><span class="o">.</span><span class="n">columns</span> <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;pred_base_&quot;</span><span class="p">))</span>
     <span class="n">context_cols</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">contextual_features</span> <span class="k">if</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">aligned</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span>
     <span class="n">meta_X</span> <span class="o">=</span> <span class="n">aligned</span><span class="p">[</span><span class="n">pred_cols</span> <span class="o">+</span> <span class="n">context_cols</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">context_cols</span><span class="p">:</span>
+        <span class="n">meta_X</span><span class="p">[</span><span class="n">context_cols</span><span class="p">]</span> <span class="o">=</span> <span class="n">meta_X</span><span class="p">[</span><span class="n">context_cols</span><span class="p">]</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
     <span class="n">meta_y</span> <span class="o">=</span> <span class="n">aligned</span><span class="p">[</span><span class="s2">&quot;team_a_won&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">meta_X</span><span class="p">,</span> <span class="n">meta_y</span>
 
@@ -926,6 +932,13 @@
     <span class="n">max_len</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">oof_frames</span><span class="p">)</span> <span class="k">if</span> <span class="n">oof_frames</span> <span class="k">else</span> <span class="mi">0</span>
     <span class="n">manifest</span><span class="p">[</span><span class="s2">&quot;oof_drop_pct&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">aligned</span><span class="p">)</span> <span class="o">/</span> <span class="n">max_len</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span> <span class="k">if</span> <span class="n">max_len</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mf">0.0</span>
     <span class="n">manifest_path</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">manifest</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+
+    <span class="c1"># Save OOF aligned data for post-hoc analysis (e.g. tutorial notebook)</span>
+    <span class="n">oof_path</span> <span class="o">=</span> <span class="n">model_dir</span> <span class="o">/</span> <span class="s2">&quot;oof_aligned.parquet&quot;</span>
+    <span class="n">oof_export</span> <span class="o">=</span> <span class="n">aligned</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="c1"># Add ensemble-level OOF predictions from the meta-learner</span>
+    <span class="n">oof_export</span><span class="p">[</span><span class="s2">&quot;pred_ensemble&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ensemble</span><span class="o">.</span><span class="n">meta_learner</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">meta_X</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">oof_export</span><span class="o">.</span><span class="n">to_parquet</span><span class="p">(</span><span class="n">oof_path</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
     <span class="c1"># Summary table</span>
     <span class="n">table</span> <span class="o">=</span> <span class="n">Table</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;Ensemble Training Results&quot;</span><span class="p">)</span>
