@@ -1569,6 +1569,43 @@ def load_day_zeros(self) -> dict[int, datetime.date]:
 
 **Rule:** If a `# noqa: SLF001` exists in a caller, question whether the method belongs on the public API. If yes, rename it. If not, consider moving the logic to the callee or a shared utility.
 
+### Whole-File Parquet Cache Staleness When Upstream Adds New Records (Discovered Story 10.6, 2026-03-13)
+
+A whole-file parquet cache (e.g., `seasons.parquet`) passes the `exists()` check even when the upstream source (e.g., a re-downloaded CSV) contains new records. The bug: user caches data for year N, competition slug is updated to N+1, user runs sync — `seasons.parquet` exists → loaded from cache → year N+1 never fetched → **no error, no warning, no new data.**
+
+**Pattern: Compare cache contents against freshly-read source before deciding to skip.**
+
+```python
+# ❌ Buggy: existence check alone is insufficient when source can grow
+if force_refresh or not seasons_path.exists():
+    seasons = connector.fetch_seasons()  # reads CSV
+    repo.save_seasons(seasons)
+else:
+    seasons = repo.get_seasons()  # silently returns stale data if CSV has new records
+
+# ✅ Fixed: compare cache vs CSV after download; invalidate if new records found
+if force_refresh or not seasons_path.exists():
+    seasons = connector.fetch_seasons()
+    repo.save_seasons(seasons)
+else:
+    cached_seasons = repo.get_seasons()
+    csv_seasons = connector.fetch_seasons()  # CSV was just re-downloaded; this is a disk read
+    new_years = {s.year for s in csv_seasons} - {s.year for s in cached_seasons}
+    if new_years:
+        logger.info("[kaggle] seasons: new seasons detected: %s — updating cache", sorted(new_years))
+        repo.save_seasons(csv_seasons)
+        seasons = csv_seasons
+    else:
+        seasons = cached_seasons
+```
+
+**Test requirement:** Always include a "stale cache + new record in source" integration test:
+1. Sync with source data for year N → cache created
+2. Update source mock to add year N+1
+3. Assert sync without `force_refresh` detects and fetches N+1
+
+**Note:** The "fetch once to compare" approach requires the CSV to be already downloaded (`connector.download()` called first). This is a pure disk read, not a network call.
+
 ### ESPN-style Multi-Source Caching Requires Full Cycle Tests (Discovered Story 2.4 Code Review)
 
 When a caching strategy involves marker files (or any lightweight sentinel), the following paths must each be tested:

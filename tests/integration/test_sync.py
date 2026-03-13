@@ -171,6 +171,7 @@ def test_sync_kaggle_cache_hit(mock_cls: MagicMock, tmp_path: Path) -> None:
     engine.sync_kaggle()
     fetch_games_count_after_first = instance.fetch_games.call_count
     fetch_teams_count_after_first = instance.fetch_teams.call_count
+    fetch_seasons_count_after_first = instance.fetch_seasons.call_count
 
     # Second run: should hit cache for all seasons.
     # fetch_seasons is called again to detect new seasons in the CSV, but
@@ -179,6 +180,8 @@ def test_sync_kaggle_cache_hit(mock_cls: MagicMock, tmp_path: Path) -> None:
 
     assert instance.fetch_games.call_count == fetch_games_count_after_first
     assert instance.fetch_teams.call_count == fetch_teams_count_after_first
+    # fetch_seasons must be called once more on the cache-hit path to detect new seasons
+    assert instance.fetch_seasons.call_count == fetch_seasons_count_after_first + 1
     assert result2.seasons_cached == len(_SEASONS)
     assert result2.games_written == 0
     assert result2.teams_written == 0
@@ -239,6 +242,9 @@ def test_sync_kaggle_new_season_invalidates_cache(mock_cls: MagicMock, tmp_path:
     games_2025 = repo.get_games(2025)
     assert len(games_2025) == 1
     assert games_2025[0].game_id == "2025_10_1101_1104"
+    # Verify old seasons are still intact after cache update
+    assert len(repo.get_games(2023)) == len(_GAMES_2023)
+    assert len(repo.get_games(2024)) == len(_GAMES_2024)
 
 
 # ---------------------------------------------------------------------------

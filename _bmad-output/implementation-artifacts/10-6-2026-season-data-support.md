@@ -1,6 +1,6 @@
 # Story 10.6: 2026 Season Data Support
 
-Status: review
+Status: done
 
 ## Story
 
@@ -58,6 +58,10 @@ so that **I can train models and generate bracket predictions for the 2026 tourn
   - [x] 6.1: Update `src/ncaa_eval/transform/graph.py` lines 14–15: replace the 2025-specific comment ("2025 season stores 4,545 games twice") with a season-agnostic statement such as: "Caller is responsible for deduplicating games for any season with ESPN+Kaggle overlap before calling graph functions (e.g., 2025 stores ~4,545 games twice; check for similar patterns in subsequent seasons)"
 
 - [x] Task 7: Update dashboard and CLI example text (AC: #7)
+
+### Review Follow-ups (AI)
+
+- [ ] [AI-Review][MEDIUM] Verify Tasks 1.2, 1.3, 4.1–4.4, 5.1–5.2 against live 2026 Kaggle data once `march-machine-learning-mania-2026` competition is published — run `ncaa-eval sync`, `DataServer` feature serving, and model training end-to-end to satisfy ACs #3 and #5 [src/ncaa_eval/ingest/sync.py]
   - [x] 7.1: `dashboard/pages/home.py` line 29: change `--end-year 2025` to `--end-year 2026`
   - [x] 7.2: Audit `src/ncaa_eval/cli/` files (`main.py`, `export.py`, `predict.py`, `train.py`) for hardcoded `2025` in help text or docstring examples — update to `2026`
   - [x] 7.3: Note: the `end_year: int = typer.Option(2025, ...)` default in `cli/main.py` line 47 is intentional (users explicitly opt-in to including the current season) — do NOT change the default value, only update example text
@@ -183,9 +187,32 @@ Claude Opus 4.6
 - **Task 6**: Replaced 2025-specific graph.py comment with season-agnostic statement about ESPN+Kaggle overlap deduplication.
 - **Task 7**: Updated `dashboard/pages/home.py` example text `--end-year 2025` → `--end-year 2026`. Updated `(e.g. 2025)` docstring examples in `export.py` and `predict.py` to 2026. Confirmed `cli/main.py` `end_year=2025` default is intentional and NOT changed.
 
+### Senior Developer Review (AI)
+
+**Reviewer:** Claude Sonnet 4.6 | **Date:** 2026-03-13
+
+**Verdict:** APPROVED with minor fixes applied
+
+**AC Validation:**
+- AC1 ✅ Kaggle slug updated to `march-machine-learning-mania-2026` [kaggle.py:104]
+- AC2 ✅ `_MASSEY_LAST_SEASON = 2026`, all 3 docstrings updated [normalization.py:36,79,357,381]
+- AC3 ⏳ Live e2e deferred — 2026 Kaggle competition not yet published (external dependency)
+- AC4 ✅ Cache invalidation fix verified via new integration test `test_sync_kaggle_new_season_invalidates_cache`
+- AC5 ⏳ Deferred — `_deduplicate_espn_overlap()` is season-agnostic and tested; live 2026 spot-check pending data availability
+- AC6 ✅ graph.py comment generalized to season-agnostic language [graph.py:14-15]
+- AC7 ✅ home.py, export.py, predict.py example text updated to 2026; main.py default correctly left at 2025
+
+**Fixes Applied (1 MEDIUM, 1 LOW):**
+- **M1 FIXED** — Added `fetch_seasons.call_count` assertion to `test_sync_kaggle_cache_hit` to guard against future regression removing new-season detection [test_sync.py:173,183]
+- **L2 FIXED** — Added assertions in `test_sync_kaggle_new_season_invalidates_cache` verifying old seasons (2023/2024) remain intact after cache update [test_sync.py:243-244]
+
+**Action Items Created (1 MEDIUM):**
+- See "Review Follow-ups (AI)" in Tasks — live validation required once Kaggle 2026 competition is published
+
 ### Change Log
 
 - 2026-03-13: Story 10.6 implemented — 2026 season data support (slug, Massey constant, cache fix, comments, example text)
+- 2026-03-13: Code review — 2 test gaps fixed; live validation follow-up action item created
 
 ### File List
 
@@ -196,7 +223,7 @@ Claude Opus 4.6
 - `dashboard/pages/home.py` — example text `--end-year 2026`
 - `src/ncaa_eval/cli/export.py` — docstring examples 2025→2026
 - `src/ncaa_eval/cli/predict.py` — docstring examples 2025→2026
-- `tests/integration/test_sync.py` — new test `test_sync_kaggle_new_season_invalidates_cache`, updated cache-hit test
+- `tests/integration/test_sync.py` — new test `test_sync_kaggle_new_season_invalidates_cache`, updated cache-hit test; code review added fetch_seasons call count assertion and old-season integrity assertions
 - `tests/unit/test_normalization.py` — `_all_seasons_rows` uses module constants, docstring updated
 - `_bmad-output/implementation-artifacts/10-6-2026-season-data-support.md` — story file
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` — status update
