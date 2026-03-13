@@ -16,11 +16,13 @@ so that **I can train models and generate bracket predictions for the 2026 tourn
 
 3. **End-to-end pipeline validated** — `ncaa-eval sync`, feature serving (`DataServer`), and model training all execute without error for a year range that includes 2026 (e.g., `--start-year 2015 --end-year 2026`).
 
-4. **ESPN deduplication verified for 2026** — If 2026 exhibits the same Kaggle+ESPN game-duplication pattern as 2025 (same game stored under both a Kaggle ID and an ESPN ID), confirm `_deduplicate_espn_overlap()` correctly collapses duplicates and ESPN records are preferred. Spot-check: game count for 2026 after dedup should match expected regular-season game counts.
+4. **`seasons.parquet` cache invalidation works correctly** — When a user with 2025 data cached runs `ncaa-eval sync` (no `--force-refresh`) after the competition slug is updated to 2026, the sync correctly detects that 2026 is a new season and fetches it. The stale `seasons.parquet` cache must not silently prevent 2026 from being synced.
 
-5. **graph.py deduplication comment generalized** — The comment at `src/ncaa_eval/transform/graph.py` lines 14–15 that explicitly calls out "2025 season stores 4,545 games twice" is updated to be season-agnostic (e.g., mention that callers are responsible for deduplicating any season with ESPN+Kaggle overlap).
+5. **ESPN deduplication verified for 2026** — If 2026 exhibits the same Kaggle+ESPN game-duplication pattern as 2025 (same game stored under both a Kaggle ID and an ESPN ID), confirm `_deduplicate_espn_overlap()` correctly collapses duplicates and ESPN records are preferred. Spot-check: game count for 2026 after dedup should match expected regular-season game counts.
 
-6. **Dashboard and CLI example text updated** — The `--end-year 2025` example in `dashboard/pages/home.py` line 29 is updated to `--end-year 2026`; similarly update any CLI help-text examples in `src/ncaa_eval/cli/` that hardcode 2025 as the end year.
+6. **graph.py deduplication comment generalized** — The comment at `src/ncaa_eval/transform/graph.py` lines 14–15 that explicitly calls out "2025 season stores 4,545 games twice" is updated to be season-agnostic (e.g., mention that callers are responsible for deduplicating any season with ESPN+Kaggle overlap).
+
+7. **Dashboard and CLI example text updated** — The `--end-year 2025` example in `dashboard/pages/home.py` line 29 is updated to `--end-year 2026`; similarly update any CLI help-text examples in `src/ncaa_eval/cli/` that hardcode 2025 as the end year.
 
 ## Tasks / Subtasks
 
@@ -33,24 +35,32 @@ so that **I can train models and generate bracket predictions for the 2026 tourn
   - [ ] 2.1: In `src/ncaa_eval/transform/normalization.py` line 36, change `_MASSEY_LAST_SEASON: int = 2025` to `_MASSEY_LAST_SEASON: int = 2026`
   - [ ] 2.2: Update all docstrings in `normalization.py` that reference "2003–2025" to "2003–2026" (lines ~79, 357, 381)
 
-- [ ] Task 3: Validate end-to-end pipeline for 2026 (AC: #3)
-  - [ ] 3.1: Run `ncaa-eval sync` (both Kaggle and ESPN) and confirm no errors for 2026
-  - [ ] 3.2: Confirm cbbpy's `mens_team_map.csv` includes season 2026 — if not, the ESPN connector will log a warning and fall back to latest available year; document this if it occurs
-  - [ ] 3.3: Run feature serving through `DataServer` for a range including 2026 (e.g., `--start-year 2015 --end-year 2026`) — confirm no index errors, missing data exceptions, or assertion failures
-  - [ ] 3.4: Run `ncaa-eval train --model elo --start-year 2015 --end-year 2026` to confirm model training succeeds with 2026 data
+- [ ] Task 3: Investigate and fix `seasons.parquet` cache invalidation for new seasons (AC: #4)
+  - [ ] 3.1: Trace the `sync_kaggle()` flow in `src/ncaa_eval/ingest/sync.py` lines 154–176: if `seasons.parquet` already exists, `seasons` is loaded from cache (line 162) — **this is the bug**. The Kaggle CSVs may include 2026 in `MSeasons.csv` after re-download, but the parquet cache won't be invalidated and 2026 games will never be fetched.
+  - [ ] 3.2: Determine the correct fix — options:
+    - **(Preferred)** Always re-fetch seasons from the CSV after a new Kaggle download and compare against cached seasons; if new seasons detected, invalidate `seasons.parquet` and fetch 2026 games
+    - **(Simpler)** Document that users must run `ncaa-eval sync --force-refresh` when a new season becomes available (acceptable if UX is clearly communicated via a log warning)
+  - [ ] 3.3: Also check the CSV-level cache: `connector.download()` caches the downloaded competition zip under `extract_dir = data_dir / "kaggle"`. When the competition slug changes from 2025 → 2026, verify that the 2026 competition's `MSeasons.csv` is downloaded fresh rather than reusing 2025 CSVs. If the CSV-level cache uses filename-based detection, the 2026 competition files may land alongside 2025 files without conflict — confirm this works correctly.
+  - [ ] 3.4: Add a test (or update existing sync tests) that exercises the "cached seasons, new season available" scenario — mock `seasons.parquet` containing only 2025 seasons, then verify 2026 is detected and fetched.
 
-- [ ] Task 4: Verify ESPN deduplication for 2026 (AC: #4)
-  - [ ] 4.1: After sync, query the local data store for 2026 games and count records before and after deduplication
-  - [ ] 4.2: If duplication exists (same `(w_team_id, l_team_id, day_num)` found with both Kaggle and ESPN game IDs), confirm `_deduplicate_espn_overlap()` in `src/ncaa_eval/transform/serving.py` handles it correctly and ESPN records are preferred
-  - [ ] 4.3: Add a brief comment in `_deduplicate_espn_overlap()` noting it has been validated for 2026 (or update existing comments if they reference only 2025)
+- [ ] Task 4: Validate end-to-end pipeline for 2026 (AC: #3)
+  - [ ] 4.1: Run `ncaa-eval sync` (both Kaggle and ESPN) and confirm no errors for 2026
+  - [ ] 4.2: Confirm cbbpy's `mens_team_map.csv` includes season 2026 — if not, the ESPN connector will log a warning and fall back to latest available year; document this if it occurs
+  - [ ] 4.3: Run feature serving through `DataServer` for a range including 2026 (e.g., `--start-year 2015 --end-year 2026`) — confirm no index errors, missing data exceptions, or assertion failures
+  - [ ] 4.4: Run `ncaa-eval train --model elo --start-year 2015 --end-year 2026` to confirm model training succeeds with 2026 data
 
-- [ ] Task 5: Generalize graph.py deduplication comment (AC: #5)
-  - [ ] 5.1: Update `src/ncaa_eval/transform/graph.py` lines 14–15: replace the 2025-specific comment ("2025 season stores 4,545 games twice") with a season-agnostic statement such as: "Caller is responsible for deduplicating games for any season with ESPN+Kaggle overlap before calling graph functions (e.g., 2025 stores ~4,545 games twice; check for similar patterns in subsequent seasons)"
+- [ ] Task 5: Verify ESPN deduplication for 2026 (AC: #5)
+  - [ ] 5.1: After sync, query the local data store for 2026 games and count records before and after deduplication
+  - [ ] 5.2: If duplication exists (same `(w_team_id, l_team_id, day_num)` found with both Kaggle and ESPN game IDs), confirm `_deduplicate_espn_overlap()` in `src/ncaa_eval/transform/serving.py` handles it correctly and ESPN records are preferred
+  - [ ] 5.3: Add a brief comment in `_deduplicate_espn_overlap()` noting it has been validated for 2026 (or update existing comments if they reference only 2025)
 
-- [ ] Task 6: Update dashboard and CLI example text (AC: #6)
-  - [ ] 6.1: `dashboard/pages/home.py` line 29: change `--end-year 2025` to `--end-year 2026`
-  - [ ] 6.2: Audit `src/ncaa_eval/cli/` files (`main.py`, `export.py`, `predict.py`, `train.py`) for hardcoded `2025` in help text or docstring examples — update to `2026`
-  - [ ] 6.3: Note: the `end_year: int = typer.Option(2025, ...)` default in `cli/main.py` line 47 is intentional (users explicitly opt-in to including the current season) — do NOT change the default value, only update example text
+- [ ] Task 6: Generalize graph.py deduplication comment (AC: #6)
+  - [ ] 6.1: Update `src/ncaa_eval/transform/graph.py` lines 14–15: replace the 2025-specific comment ("2025 season stores 4,545 games twice") with a season-agnostic statement such as: "Caller is responsible for deduplicating games for any season with ESPN+Kaggle overlap before calling graph functions (e.g., 2025 stores ~4,545 games twice; check for similar patterns in subsequent seasons)"
+
+- [ ] Task 7: Update dashboard and CLI example text (AC: #7)
+  - [ ] 7.1: `dashboard/pages/home.py` line 29: change `--end-year 2025` to `--end-year 2026`
+  - [ ] 7.2: Audit `src/ncaa_eval/cli/` files (`main.py`, `export.py`, `predict.py`, `train.py`) for hardcoded `2025` in help text or docstring examples — update to `2026`
+  - [ ] 7.3: Note: the `end_year: int = typer.Option(2025, ...)` default in `cli/main.py` line 47 is intentional (users explicitly opt-in to including the current season) — do NOT change the default value, only update example text
 
 ## Dev Notes
 
@@ -66,6 +76,30 @@ so that **I can train models and generate bracket predictions for the 2026 tourn
 | `src/ncaa_eval/cli/main.py` | ~47 | Docstring/help example only (NOT the default value) |
 | `src/ncaa_eval/cli/export.py` | ~31, 87 | Docstring examples only |
 | `src/ncaa_eval/cli/predict.py` | ~166, 220 | Docstring examples only |
+
+### seasons.parquet Cache Bug (Task 3)
+
+This is the most important finding in this story. The `sync_kaggle()` method in `src/ncaa_eval/ingest/sync.py` uses a whole-file parquet cache for seasons:
+
+```python
+# Lines 154–163
+seasons_path = self._data_dir / "seasons.parquet"
+if force_refresh or not seasons_path.exists():
+    seasons = connector.fetch_seasons()   # reads from MSeasons.csv
+    self._repo.save_seasons(seasons)
+else:
+    seasons = self._repo.get_seasons()    # reads stale parquet
+```
+
+A user with 2025 data cached has `seasons.parquet` containing seasons 1985–2025. When they run `ncaa-eval sync` with the updated 2026 competition slug, `seasons.parquet` exists → loaded from cache → 2026 is never in the list → the `for season in seasons` loop at line 166 never processes 2026 games. **The user gets no error, no warning, and no 2026 data.**
+
+The ESPN scope (`year = max(s.year for s in seasons)`) has the same issue — it would remain 2025.
+
+The fix should either:
+1. Compare the CSV's season list against the cached parquet after download, invalidate if new seasons found, or
+2. Emit a clear warning/error telling the user to run `--force-refresh` when a new season year is available
+
+The dev agent must resolve this before closing this story. Adding a test that validates the "stale cache + new season available" scenario is required.
 
 ### What Does NOT Need to Change
 
@@ -124,7 +158,7 @@ If the 2026 competition is not yet available, the slug update and sync tasks sho
 - [Source: src/ncaa_eval/transform/normalization.py#L79,357,381]
 - [Source: src/ncaa_eval/transform/graph.py#L14-15]
 - [Source: src/ncaa_eval/transform/serving.py#L28,102-128]
-- [Source: src/ncaa_eval/ingest/sync.py#L36-65,213]
+- [Source: src/ncaa_eval/ingest/sync.py#L36-65,154-176,213]
 - [Source: dashboard/pages/home.py#L29]
 - [Source: src/ncaa_eval/cli/main.py#L47]
 
