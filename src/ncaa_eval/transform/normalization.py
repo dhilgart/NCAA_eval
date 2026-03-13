@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 _MASSEY_FIRST_SEASON: int = 2003
-_MASSEY_LAST_SEASON: int = 2025
+_MASSEY_LAST_SEASON: int = 2026
 _MASSEY_ALL_SEASONS: frozenset[int] = frozenset(range(_MASSEY_FIRST_SEASON, _MASSEY_LAST_SEASON + 1))
 _GATE_SYSTEMS: tuple[str, ...] = ("SAG", "WLK")
 _FALLBACK_SYSTEMS: tuple[str, ...] = ("MOR", "POM", "DOL")
@@ -76,7 +76,7 @@ class CoverageGateResult:
         primary_systems: The four primary composite systems
             (SAG, POM, MOR, WLK).
         fallback_used: True when SAG or WLK are missing for one or more
-            seasons 2003–2025 and the fallback composite is recommended.
+            seasons 2003–2026 and the fallback composite is recommended.
         fallback_reason: Human-readable description of why the fallback was
             triggered (empty string when ``fallback_used=False``).
         recommended_systems: The system names the caller should use for
@@ -354,7 +354,7 @@ class MasseyOrdinalsStore:
         return cls(df)
 
     def run_coverage_gate(self) -> CoverageGateResult:
-        """Check whether SAG and WLK cover all seasons 2003–2025.
+        """Check whether SAG and WLK cover all seasons 2003–2026.
 
         If either system has gaps the fallback composite (MOR, POM, DOL) is
         recommended instead of the primary composite (SAG, POM, MOR, WLK).
@@ -378,7 +378,7 @@ class MasseyOrdinalsStore:
             return CoverageGateResult(
                 primary_systems=_PRIMARY_COMPOSITE,
                 fallback_used=True,
-                fallback_reason=f"{missing} missing for some seasons 2003–2025",
+                fallback_reason=f"{missing} missing for some seasons 2003–2026",
                 recommended_systems=_FALLBACK_SYSTEMS,
             )
         return CoverageGateResult(

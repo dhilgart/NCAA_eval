@@ -151,7 +151,11 @@ class SyncEngine:
         else:
             logger.info("[kaggle] teams: cache hit, skipped")
 
-        # Seasons: Parquet-level cache
+        # Seasons: Parquet-level cache with new-season detection.
+        # After a Kaggle download, the CSV may contain seasons not yet in
+        # the cached parquet (e.g. 2026 added after a previous 2025 sync).
+        # Always compare CSV seasons against the cache to avoid silently
+        # missing new data.
         seasons_path = self._data_dir / "seasons.parquet"
         if force_refresh or not seasons_path.exists():
             seasons = connector.fetch_seasons()
@@ -159,8 +163,22 @@ class SyncEngine:
             result.seasons_written = len(seasons)
             logger.info("[kaggle] seasons: %d written", len(seasons))
         else:
-            seasons = self._repo.get_seasons()
-            logger.info("[kaggle] seasons: cache hit, skipped")
+            cached_seasons = self._repo.get_seasons()
+            csv_seasons = connector.fetch_seasons()
+            cached_years = {s.year for s in cached_seasons}
+            csv_years = {s.year for s in csv_seasons}
+            new_years = csv_years - cached_years
+            if new_years:
+                logger.info(
+                    "[kaggle] seasons: new seasons detected in CSV: %s — updating cache",
+                    sorted(new_years),
+                )
+                self._repo.save_seasons(csv_seasons)
+                seasons = csv_seasons
+                result.seasons_written = len(csv_seasons)
+            else:
+                seasons = cached_seasons
+                logger.info("[kaggle] seasons: cache hit, skipped")
 
         # Games: per-season Parquet-level cache
         for season in seasons:

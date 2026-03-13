@@ -26,7 +26,7 @@ def _render_home() -> None:
         st.info(
             "**Data available, but no models trained yet.**\n\n"
             "Train a model to unlock the dashboard:\n\n"
-            "```\nncaa-eval train --model elo --start-year 2015 --end-year 2025\n```"
+            "```\nncaa-eval train --model elo --start-year 2015 --end-year 2026\n```"
         )
     else:
         col1, col2 = st.columns(2)

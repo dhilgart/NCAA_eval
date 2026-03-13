@@ -83,9 +83,11 @@ def _build_massey_csv(tmp_path: Path, rows: list[tuple[int, int, str, int, int]]
 def _all_seasons_rows(
     systems: list[str], team_id: int = 1001, rank: int = 5
 ) -> list[tuple[int, int, str, int, int]]:
-    """Generate one row per season 2003–2025 for each system."""
+    """Generate one row per season for the full Massey range for each system."""
+    from ncaa_eval.transform.normalization import _MASSEY_FIRST_SEASON, _MASSEY_LAST_SEASON
+
     rows: list[tuple[int, int, str, int, int]] = []
-    for season in range(2003, 2026):
+    for season in range(_MASSEY_FIRST_SEASON, _MASSEY_LAST_SEASON + 1):
         for sys in systems:
             rows.append((season, 100, sys, team_id, rank))
     return rows
@@ -261,7 +263,7 @@ def test_conference_lookup_get_missing(conferences_csv: Path) -> None:
 
 @pytest.mark.unit
 def test_massey_coverage_gate_no_fallback(tmp_path: Path) -> None:
-    """7.12: Gate with SAG+WLK for all 2003–2025 → fallback_used=False, SAG/WLK in recommended."""
+    """7.12: Gate with SAG+WLK for all Massey seasons → fallback_used=False, SAG/WLK in recommended."""
     rows = _all_seasons_rows(["SAG", "WLK", "POM", "MOR"])
     csv = _build_massey_csv(tmp_path, rows)
     store = MasseyOrdinalsStore.from_csv(csv)

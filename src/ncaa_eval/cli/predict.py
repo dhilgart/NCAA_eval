@@ -163,7 +163,7 @@ def build_predictions(*, run_id: str, season: int, data_dir: Path) -> str:
 
     Args:
         run_id: Model run identifier.
-        season: Target season year (e.g. 2025).
+        season: Target season year (e.g. 2026).
         data_dir: Path to the local data directory.
 
     Returns:
@@ -217,7 +217,7 @@ def run_predict(
 
     Args:
         run_id: Model run identifier.
-        season: Target season year (e.g. 2025).
+        season: Target season year (e.g. 2026).
         data_dir: Path to the local data directory.
         output: File path to write the CSV. ``None`` means stdout.
         console: Rich Console instance for status output.

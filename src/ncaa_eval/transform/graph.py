@@ -11,8 +11,8 @@ Graph semantics:
 Architecture constraints:
 - Pure transform-layer component: accepts pre-loaded DataFrames, does NOT load CSV files.
 - No imports from ncaa_eval.ingest (Repository coupling is forbidden here).
-- Caller is responsible for 2025 deduplication by (w_team_id, l_team_id, day_num)
-  before calling graph functions (2025 season stores 4,545 games twice).
+- Caller is responsible for deduplicating games by (w_team_id, l_team_id, day_num)
+  before calling graph functions for any season with ESPN+Kaggle overlap.
 
 Walk-forward usage (Story 4.7):
 - Start with an empty DiGraph at the beginning of each season.
