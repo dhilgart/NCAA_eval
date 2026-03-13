@@ -154,6 +154,7 @@ development_status:
   10-2-ensemble-inference-interface: done
   10-3-ensemble-dashboard-registry-integration: done
   10-4-ensemble-tutorial-notebook: done
+  10-5-ci-gitignore-hotfixes: ready-for-dev
   epic-10-retrospective: optional
 
   # Epic X: Cookiecutter Project Template (post-project; no numeric ID — uses prior story slug)

@@ -1451,6 +1451,21 @@ So that **I can understand the ensemble UX end-to-end and use it as a template f
 **Source:** `specs/ensemble-architecture.md`; Story 7.9 (tutorial series); Story 9.1 (Kaggle export)
 **Prerequisite:** Story 10.3
 
+### Story 10.5: CI Bumpversion Fix & Output Directory Gitignore
+
+As a **developer**,
+I want **the bumpversion CI job to succeed on every main push and the `output/` directory to be excluded from git**,
+so that **version tags are automatically created and generated outputs don't pollute git status**.
+
+**Acceptance Criteria:**
+
+1. `output/` is added to `.gitignore` — `git status` no longer shows it as untracked
+2. The `bump-version` job in `.github/workflows/main-updated.yaml` succeeds (root cause identified and fixed)
+3. No regression to the `publish-github-page` job in the same workflow
+
+**Source:** CI run https://github.com/dhilgart/NCAA_eval/actions/runs/23031452020/job/66890478889; `git status` showing `?? output/`
+**Prerequisite:** None (hotfix — independent of Epic 10 ensemble work)
+
 ---
 
 ## Epic X: Cookiecutter Project Template
