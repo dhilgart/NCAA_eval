@@ -191,6 +191,55 @@ Using a mutable branch ref like `@master` for a GitHub Action is a **supply chai
 
 **Also: Add `if:` guards symmetrically.** If one job in a workflow file has an `if:` condition (e.g., skip on `bump:` commits), audit all other jobs in the same file for the same guard — they often need it too to avoid wasteful double-runs.
 
+#### commitizen-action + Branch Protection: `push: false` Is a Trap ⭐ (Discovered Story 10.5 Code Review, 2026-03-13)
+
+When `main` has branch protection requiring PRs, `commitizen-action` fails with **GH013** (push rejected). The naive fix — `push: false` + a separate `git push origin --tags` — is semantically broken for projects using `version_files`:
+
+- `push: false` causes commitizen to create the bump commit **only in the CI runner's workspace**
+- `git push origin --tags` pushes the tag — which points to the (unpushed) bump commit
+- Result: `main` branch still shows the **old version** in `pyproject.toml` and `docs/conf.py`; CHANGELOG on `main` is never updated
+- Future commitizen runs see mismatched signals (tag says 0.9.1, pyproject.toml says 0.9.0) and may produce duplicate or incorrect bumps
+
+**Choose an alternative approach:**
+
+| Option | Approach | Trade-offs |
+|--------|----------|------------|
+| A | Tag HEAD directly (`git tag <ver>`) without a bump commit | Version files never auto-updated; acceptable if version is managed manually |
+| B | Bot/GitHub App token exempt from branch protection | Most complete but requires setup |
+| C | `actions/github-script` to open a PR for the bump commit | Keeps version files in sync; adds PR noise |
+| D | Exempt `github-actions[bot]` from branch protection push rule | Easiest, slight security trade-off |
+
+**Template Action:** If the template uses commitizen-action, document the branch protection trade-off explicitly in the CI/CD setup guide. Default to **Option D** (Actions bot bypass) or **Option A** (tag-only) based on project needs.
+
+#### Option C (PR-based bump) — Tag-Before-Merge Gotcha ⭐ (Discovered Story 10.5 Code Review Round 2, 2026-03-13)
+
+If you implement Option C (open a PR for the bump commit), the version tag is pushed **before the PR is merged**. This creates a critical constraint:
+
+- **Regular merge (merge commit):** Tag is in `main`'s ancestry after merge — ✅ works correctly
+- **Squash merge:** The original bump commit is abandoned; tag permanently points outside `main`'s ancestry — ❌ commitizen breaks on next run
+- **Rebase merge:** Same problem as squash — new commit hash doesn't match the tag
+
+**Template Actions:**
+1. In the auto-generated PR body, include a `⚠️ Merge strategy` warning telling the merger to use "Create a merge commit"
+2. Add a comment in the workflow YAML mandating merge-commit strategy
+3. Add `&& !contains(github.event.head_commit.message, 'ci/bump-')` to the job `if:` guard — when the bump PR is merged with a regular merge commit, the merge message doesn't start with `bump:` and the job would fire again; the secondary guard suppresses it
+4. Use `--force-with-lease` on the branch push step — makes workflow re-runs idempotent if the branch was already pushed in a prior failed run
+
+#### Pre-commit Deprecated Stage Names: Use `pre-commit migrate-config` (Discovered Story 10.5, 2026-03-13)
+
+Pre-commit renamed stage identifiers. Old names cause deprecation warnings on every commit:
+
+| Deprecated | Current |
+|------------|---------|
+| `commit` | `pre-commit` |
+| `push` | `pre-push` |
+
+These appear in `default_stages`, per-hook `stages:` lists, and `default_install_hook_types`.
+
+**Fix:** Run `pre-commit migrate-config` from the repo root — it rewrites `.pre-commit-config.yaml` in place. Always inspect the diff before committing (only stage name strings should change).
+
+**Template Action:** Ensure the base `.pre-commit-config.yaml` template already uses current stage name syntax (`pre-commit`, `pre-push`) so new projects start clean.
+
 #### Ruff Rule Selection: Use Explicit Codes, Not Prefixes ⭐ (Discovered Story 1.4 Code Review Round 2)
 
 `extend-select = ["PLR09"]` in Ruff selects the ENTIRE PLR09xx family, including rules with Ruff defaults that were never configured or documented:
@@ -2858,6 +2907,20 @@ Standard `.gitignore` templates include `lib/` as a catch-all for C extension bu
 # Override: dashboard/lib/ is a source package, not a build artifact
 !dashboard/lib/
 ```
+
+### `.gitignore` Root-Level Directory Patterns Need a Leading Slash ⭐ (Discovered Story 10.5 Code Review, 2026-03-13)
+
+When ignoring a project-generated output directory that only exists at the repo root, always use a **leading slash** in `.gitignore`:
+
+```gitignore
+# ❌ Matches output/ at ANY depth — src/output/, tests/output/, etc.
+output/
+
+# ✅ Matches ONLY the root-level output/ directory
+/output/
+```
+
+Without the leading `/`, git treats the pattern as relative to any directory in the tree. This causes unintended exclusions if any subdirectory happens to be named `output` (or any other generic name like `build/`, `dist/`, `tmp/`). Use the leading slash whenever the intent is root-level-only.
 
 ### Config Factory Functions Must Raise ValueError, Not KeyError (Discovered Story 6.6 Code Review, 2026-02-24)
 

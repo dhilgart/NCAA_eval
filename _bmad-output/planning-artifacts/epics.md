@@ -1451,6 +1451,40 @@ So that **I can understand the ensemble UX end-to-end and use it as a template f
 **Source:** `specs/ensemble-architecture.md`; Story 7.9 (tutorial series); Story 9.1 (Kaggle export)
 **Prerequisite:** Story 10.3
 
+### Story 10.5: CI Bumpversion Fix, Output Gitignore & Pre-commit Deprecation Warnings
+
+As a **developer**,
+I want **the bumpversion CI job to succeed, pre-commit hooks to run without deprecation warnings, and the `output/` directory to be excluded from git**,
+so that **the toolchain is clean, version tags are automatically created, and generated outputs don't pollute git status**.
+
+**Acceptance Criteria:**
+
+1. `output/` is added to `.gitignore` — `git status` no longer shows it as untracked
+2. The `bump-version` job in `.github/workflows/main-updated.yaml` succeeds (root cause identified and fixed)
+3. No regression to the `publish-github-page` job in the same workflow
+4. Pre-commit deprecated stage name warnings resolved — `.pre-commit-config.yaml` migrated via `pre-commit migrate-config`
+
+**Source:** CI run https://github.com/dhilgart/NCAA_eval/actions/runs/23031452020/job/66890478889; `git status` showing `?? output/`
+**Prerequisite:** None (hotfix — independent of Epic 10 ensemble work)
+
+### Story 10.6: 2026 Season Data Support
+
+As a **data scientist**,
+I want **the pipeline to correctly sync, deduplicate, and serve 2026 NCAA season data end-to-end**,
+so that **I can train models and generate bracket predictions for the 2026 tournament**.
+
+**Acceptance Criteria:**
+
+1. **Kaggle competition slug updated** — `KaggleConnector` default `competition` parameter updated to `"march-machine-learning-mania-2026"` and sync successfully downloads 2026 CSVs.
+2. **Massey ordinals constant updated** — `_MASSEY_LAST_SEASON` updated to `2026` in `normalization.py`; docstrings updated from "2003–2025" to "2003–2026".
+3. **End-to-end pipeline validated** — `ncaa-eval sync`, feature serving, and model training all execute without error for a range including 2026.
+4. **ESPN deduplication verified for 2026** — If 2026 has the same Kaggle+ESPN overlap as 2025, `_deduplicate_espn_overlap()` handles it correctly (spot-check game counts vs. expected).
+5. **graph.py deduplication comment generalized** — Comment about 2025-specific duplication is updated to be season-agnostic.
+6. **Dashboard and CLI example text updated** — `--end-year` example updated to 2026 in `dashboard/pages/home.py` and relevant CLI help text.
+
+**Source:** Volty request 2026-03-13; codebase analysis findings
+**Prerequisite:** 2026 Kaggle competition must be live (check https://www.kaggle.com/competitions/march-machine-learning-mania-2026)
+
 ---
 
 ## Epic X: Cookiecutter Project Template
