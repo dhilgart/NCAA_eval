@@ -543,6 +543,11 @@ class StackedEnsemble:
             raise ValueError(msg)
 
         meta_X = meta_df[self.meta_column_order]
+        # Fill NaN contextual features (e.g. seed_diff for non-tournament
+        # games) with 0 so sklearn estimators that reject NaN work correctly.
+        ctx_cols = [c for c in self.contextual_features if c in meta_X.columns]
+        if ctx_cols:
+            meta_X[ctx_cols] = meta_X[ctx_cols].fillna(0)
         return self.meta_learner.predict_proba(meta_X)
 
     def predict_bracket(

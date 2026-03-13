@@ -223,6 +223,7 @@ Try training a Logistic Regression model as a simple baseline:
 
 ## Next Steps
 
+- **Build an ensemble** — See the [Ensemble Tutorial](../../notebooks/tutorials/03_ensemble_model.ipynb)
 - **Create a custom model** — See the [Custom Model Tutorial](custom-model.md)
 - **Add a custom metric** — See the [Custom Metric Tutorial](custom-metric.md)
 - **Deep dive into metrics** — See the [User Guide](../user-guide.md)

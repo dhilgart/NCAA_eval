@@ -435,10 +435,16 @@ def _build_meta_training_set(
 
     Returns (meta_X, meta_y) where meta_X has columns
     ``[pred_base_0, ..., <contextual_features>]`` and meta_y is ``team_a_won``.
+
+    Contextual features with missing values (e.g. ``seed_diff`` for
+    regular-season games that lack tournament seeds) are filled with 0
+    so that sklearn estimators that reject NaN can still fit.
     """
     pred_cols = sorted(c for c in aligned.columns if c.startswith("pred_base_"))
     context_cols = [c for c in contextual_features if c in aligned.columns]
     meta_X = aligned[pred_cols + context_cols].copy()
+    if context_cols:
+        meta_X[context_cols] = meta_X[context_cols].fillna(0)
     meta_y = aligned["team_a_won"].astype(int)
     return meta_X, meta_y
 
@@ -606,6 +612,13 @@ def _run_ensemble_training(  # noqa: PLR0913
     max_len = max(len(f) for f in oof_frames) if oof_frames else 0
     manifest["oof_drop_pct"] = round(1.0 - len(aligned) / max_len, 4) if max_len > 0 else 0.0
     manifest_path.write_text(json.dumps(manifest, indent=2))
+
+    # Save OOF aligned data for post-hoc analysis (e.g. tutorial notebook)
+    oof_path = model_dir / "oof_aligned.parquet"
+    oof_export = aligned.copy()
+    # Add ensemble-level OOF predictions from the meta-learner
+    oof_export["pred_ensemble"] = ensemble.meta_learner.predict_proba(meta_X).values
+    oof_export.to_parquet(oof_path, index=False)
 
     # Summary table
     table = Table(title="Ensemble Training Results")

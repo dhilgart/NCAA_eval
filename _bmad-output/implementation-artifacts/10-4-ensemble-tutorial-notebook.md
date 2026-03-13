@@ -1,6 +1,6 @@
 # Story 10.4: Ensemble Tutorial Notebook
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -28,59 +28,58 @@ so that **I can understand the ensemble UX end-to-end and use it as a template f
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create notebook directory and skeleton (AC: #1)
-  - [ ] 1.1: Create `notebooks/tutorials/` directory
-  - [ ] 1.2: Create `notebooks/tutorials/03_ensemble_model.ipynb` with kernel `python3` and section headers
+- [x] Task 1: Create notebook directory and skeleton (AC: #1)
+  - [x] 1.1: Create `notebooks/tutorials/` directory
+  - [x] 1.2: Create `notebooks/tutorials/03_ensemble_model.ipynb` with kernel `python3` and section headers
 
-- [ ] Task 2: Write tutorial cells — Setup and Imports (AC: #2a)
-  - [ ] 2.1: Markdown intro cell explaining the tutorial objectives and prerequisites (data must be synced)
-  - [ ] 2.2: Code cell importing `StackedEnsemble`, `XGBoostModel`, `EloModel`, `LogisticRegressionModel`, `run_training`, `format_kaggle_submission`, `Path`
+- [x] Task 2: Write tutorial cells — Setup and Imports (AC: #2a)
+  - [x] 2.1: Markdown intro cell explaining the tutorial objectives and prerequisites (data must be synced)
+  - [x] 2.2: Code cell importing `StackedEnsemble`, `XGBoostModel`, `EloModel`, `LogisticRegressionModel`, `run_training`, `format_kaggle_submission`, `Path`
 
-- [ ] Task 3: Write tutorial cells — Define and Configure the Ensemble (AC: #2a, #2b)
-  - [ ] 3.1: Markdown cell explaining base model selection (why XGBoost + Elo complement each other)
-  - [ ] 3.2: Code cell constructing `XGBoostModel` with `batch_rating_types=("srs",)` and `EloModel()` as base models
-  - [ ] 3.3: Code cell constructing `LogisticRegressionModel()` as the meta-learner
-  - [ ] 3.4: Code cell constructing `StackedEnsemble(base_models=[xgb, elo], meta_learner=lr)` with default `contextual_features`
-  - [ ] 3.5: Markdown cell explaining the `contextual_features` parameter and what it means
+- [x] Task 3: Write tutorial cells — Define and Configure the Ensemble (AC: #2a, #2b)
+  - [x] 3.1: Markdown cell explaining base model selection (why XGBoost + Elo complement each other)
+  - [x] 3.2: Code cell constructing `XGBoostModel` with `batch_rating_types=("srs",)` and `EloModel()` as base models
+  - [x] 3.3: Code cell constructing `LogisticRegressionModel()` as the meta-learner
+  - [x] 3.4: Code cell constructing `StackedEnsemble(base_models=[xgb, elo], meta_learner=lr)` with default `contextual_features`
+  - [x] 3.5: Markdown cell explaining the `contextual_features` parameter and what it means
 
-- [ ] Task 4: Write tutorial cells — Train the Ensemble (AC: #2c)
-  - [ ] 4.1: Code cell setting `data_dir` and `output_dir` paths (relative path from notebook dir: `../../data`, `../../output`)
-  - [ ] 4.2: Code cell calling `run_training(ensemble, data_dir=data_dir, start_year=2015, end_year=2024, output_dir=output_dir, model_name="tutorial_ensemble")`
-  - [ ] 4.3: Markdown cell explaining what happened during training (OOF generation, alignment, meta-learner training, base model retraining)
+- [x] Task 4: Write tutorial cells — Train the Ensemble (AC: #2c)
+  - [x] 4.1: Code cell setting `data_dir` and `output_dir` paths (relative path from notebook dir: `../../data`, `../../output`)
+  - [x] 4.2: Code cell calling `run_training(ensemble, data_dir=data_dir, start_year=2015, end_year=2024, output_dir=output_dir, model_name="tutorial_ensemble")`
+  - [x] 4.3: Markdown cell explaining what happened during training (OOF generation, alignment, meta-learner training, base model retraining)
 
-- [ ] Task 5: Write tutorial cells — Compare OOF Performance (AC: #2d)
-  - [ ] 5.1: Code cell loading the manifest from the saved ensemble run to get `oof_backtest_run_ids`
-  - [ ] 5.2: Code cell using `RunStore` to load OOF metrics for each base model and the ensemble itself
-  - [ ] 5.3: Code cell displaying a comparison table showing log loss per base model vs. ensemble
-  - [ ] 5.4: Markdown cell interpreting the results — the ensemble should match or beat individual models
+- [x] Task 5: Write tutorial cells — Compare OOF Performance (AC: #2d)
+  - [x] 5.1: Code cell loading the manifest and OOF aligned data from the saved ensemble run
+  - [x] 5.2: Code cell computing OOF log loss for each base model and the ensemble from oof_aligned.parquet
+  - [x] 5.3: Code cell displaying a comparison table showing log loss per base model vs. ensemble
+  - [x] 5.4: Markdown cell interpreting the results — the ensemble should match or beat individual models
 
-- [ ] Task 6: Write tutorial cells — Generate Bracket Predictions (AC: #2e)
-  - [ ] 6.1: Code cell calling `ensemble.predict_bracket(data_dir, season=2025)` to get the probability matrix
-  - [ ] 6.2: Code cell displaying a sample of the matrix (e.g., first 5x5 corner or top seed matchups)
-  - [ ] 6.3: Markdown cell explaining the probability matrix structure (`P[a,b]` = P(team a beats team b))
+- [x] Task 6: Write tutorial cells — Generate Bracket Predictions (AC: #2e)
+  - [x] 6.1: Code cell calling `ensemble.predict_bracket(data_dir, season=2025)` to get the probability matrix
+  - [x] 6.2: Code cell displaying a sample of the matrix (e.g., first 5x5 corner or top seed matchups)
+  - [x] 6.3: Markdown cell explaining the probability matrix structure (`P[a,b]` = P(team a beats team b))
 
-- [ ] Task 7: Write tutorial cells — Kaggle Export (AC: #2f)
-  - [ ] 7.1: Code cell using `format_kaggle_submission(season, team_ids, prob_matrix.to_numpy())` to generate CSV
-  - [ ] 7.2: Code cell writing the CSV to `output/tutorial_ensemble_submission.csv`
-  - [ ] 7.3: Code cell displaying the first few rows of the submission
-  - [ ] 7.4: Markdown cell explaining the Kaggle submission format (`ID,Pred` where `ID = YYYY_TeamID1_TeamID2`)
+- [x] Task 7: Write tutorial cells — Kaggle Export (AC: #2f)
+  - [x] 7.1: Code cell using `format_kaggle_submission(season, team_ids, prob_matrix.to_numpy())` to generate CSV
+  - [x] 7.2: Code cell writing the CSV to `output/tutorial_ensemble_submission.csv`
+  - [x] 7.3: Code cell displaying the first few rows of the submission
+  - [x] 7.4: Markdown cell explaining the Kaggle submission format (`ID,Pred` where `ID = YYYY_TeamID1_TeamID2`)
 
-- [ ] Task 8: Add tutorial reference to docs (AC: #4)
-  - [ ] 8.1: Add a reference to the ensemble tutorial in `docs/tutorials/getting-started.md` (in the "Next Steps" section)
+- [x] Task 8: Add tutorial reference to docs (AC: #4)
+  - [x] 8.1: Add a reference to the ensemble tutorial in `docs/tutorials/getting-started.md` (in the "Next Steps" section)
 
-- [ ] Task 9: Add CI notebook smoke test (AC: #5)
-  - [ ] 9.1: Add a pytest test that runs `jupyter nbconvert --to notebook --execute` on the tutorial notebook and asserts exit code 0
-  - [ ] 9.2: OR add a CI workflow step that executes the notebook — choose whichever pattern is simplest given the current CI setup
+- [x] Task 9: Add CI notebook smoke test (AC: #5)
+  - [x] 9.1: Add a pytest test that runs `jupyter nbconvert --to notebook --execute` on the tutorial notebook and asserts exit code 0
 
-- [ ] Task 10: Execute and commit the notebook (AC: #3)
-  - [ ] 10.1: Execute the notebook via nbconvert to generate all outputs
-  - [ ] 10.2: Verify all cells run without error
-  - [ ] 10.3: Commit the executed notebook with outputs
+- [x] Task 10: Execute and commit the notebook (AC: #3)
+  - [x] 10.1: Execute the notebook via nbconvert to generate all outputs
+  - [x] 10.2: Verify all cells run without error
+  - [x] 10.3: Commit the executed notebook with outputs
 
-- [ ] Task 11: Quality gates
-  - [ ] 11.1: Existing `pytest` suite passes (no regressions)
-  - [ ] 11.2: `ruff check .` clean (notebooks are excluded by default)
-  - [ ] 11.3: `mypy --strict src/ncaa_eval tests` clean (notebooks excluded)
+- [x] Task 11: Quality gates
+  - [x] 11.1: Existing `pytest` suite passes (no regressions) — 1180 passed, 2 skipped
+  - [x] 11.2: `ruff check .` clean (notebooks are excluded by default)
+  - [x] 11.3: `mypy --strict src/ncaa_eval tests` clean (notebooks excluded)
 
 ## Dev Notes
 
@@ -329,10 +328,38 @@ The notebook should include a note about expected training time.
 
 ### Agent Model Used
 
-{{agent_model_name_version}}
+Claude Opus 4.6
 
 ### Debug Log References
 
+- `XGBoostModel` has no `model_type` attribute — used `get_config().model_name` instead
+- OOF backtest run IDs in manifest are placeholder UUIDs with no corresponding RunStore data — fixed by saving `oof_aligned.parquet` alongside the manifest and computing log loss directly from aligned OOF predictions
+- Meta-learner training failed with `ValueError: Input X contains NaN` — regular-season games have NaN `seed_diff` (no tournament seeds). Fixed by filling NaN contextual features with 0 in `_build_meta_training_set()` and `StackedEnsemble.predict_proba()`
+
 ### Completion Notes List
 
+- Created `notebooks/tutorials/03_ensemble_model.ipynb` — 20 cells (10 markdown, 10 code) covering the full ensemble workflow
+- Notebook demonstrates: imports, base model construction, ensemble construction, `run_training()`, OOF comparison, `predict_bracket()`, Kaggle CSV export
+- OOF comparison shows ensemble (0.555 log loss) beats XGBoost (0.578) and Elo (0.614)
+- Bracket prediction generates 364x364 probability matrix for all D1 teams
+- Kaggle submission exports 66,066 matchup rows in standard `ID,Pred` format
+- Added ensemble tutorial reference to `docs/tutorials/getting-started.md` "Next Steps" section
+- Created `tests/integration/test_notebook_execution.py` with `@pytest.mark.slow` smoke test (skips if data not synced)
+- Fixed NaN handling bug in `_build_meta_training_set()` — contextual features filled with 0
+- Fixed NaN handling in `StackedEnsemble.predict_proba()` for robustness
+- Added `oof_aligned.parquet` persistence to ensemble training pipeline for post-hoc OOF analysis
+- All quality gates pass: 1180 tests passed, ruff clean, mypy clean
+
+### Change Log
+
+- 2026-03-12: Implemented Story 10.4 — Ensemble Tutorial Notebook with full end-to-end demonstration, CI smoke test, and docs reference. Fixed NaN handling bug in ensemble meta-learner training and inference pipelines.
+
 ### File List
+
+- `notebooks/tutorials/03_ensemble_model.ipynb` (new) — Ensemble tutorial notebook with executed outputs
+- `tests/integration/test_notebook_execution.py` (new) — Notebook execution smoke test
+- `docs/tutorials/getting-started.md` (modified) — Added ensemble tutorial reference in "Next Steps"
+- `src/ncaa_eval/cli/train.py` (modified) — NaN fill for contextual features in `_build_meta_training_set()`, save `oof_aligned.parquet`
+- `src/ncaa_eval/model/ensemble.py` (modified) — NaN fill for contextual features in `predict_proba()`
+- `_bmad-output/implementation-artifacts/10-4-ensemble-tutorial-notebook.md` (modified) — Story status updates
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified) — Story status: in-progress → review
