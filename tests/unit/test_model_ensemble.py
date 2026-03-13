@@ -458,6 +458,33 @@ class TestMetaTrainingSet:
         assert len(meta_y) == 2
         assert list(meta_y) == [1, 0]
 
+    def test_nan_contextual_features_are_filled_with_zero(self) -> None:
+        """NaN contextual features (e.g. seed_diff for regular-season games) are filled with 0.
+
+        Regression test for the bug where sklearn estimators raised
+        ``ValueError: Input X contains NaN`` when contextual features
+        contained NaN values for non-tournament games.
+        """
+        from ncaa_eval.cli.train import _build_meta_training_set
+
+        aligned = pd.DataFrame(
+            {
+                "game_id": ["g1", "g2", "g3"],
+                "pred_base_0": [0.5, 0.6, 0.7],
+                "pred_base_1": [0.4, 0.5, 0.3],
+                "seed_diff": [1.0, float("nan"), float("nan")],  # NaN for regular-season
+                "is_tournament": [True, False, False],
+                "team_a_won": [1, 0, 1],
+            }
+        )
+        meta_X, _ = _build_meta_training_set(
+            aligned,
+            contextual_features=["seed_diff", "is_tournament"],
+        )
+        # NaN seed_diff for g2, g3 must be replaced with 0
+        assert not meta_X["seed_diff"].isna().any(), "NaN seed_diff values must be filled"
+        assert meta_X["seed_diff"].tolist() == [1.0, 0.0, 0.0]
+
 
 # ── Test: run_training dispatches to ensemble ────────────────────────────────
 
@@ -723,6 +750,52 @@ class TestPredictProba:
         with pytest.raises(ValueError, match="meta_column_order is empty"):
             ensemble.predict_proba(X)
 
+    def test_predict_proba_nan_contextual_features_filled(self) -> None:
+        """NaN contextual features are filled with 0 before meta-learner call.
+
+        Regression test for the bug where regular-season games with NaN
+        ``seed_diff`` caused sklearn to raise ``ValueError: Input X contains NaN``.
+        """
+        import numpy as np
+
+        base0 = _make_mock_stateless(["feat_a"], [0.6, 0.5])
+        base1 = _make_mock_stateless(["feat_b"], [0.4, 0.45])
+
+        received_meta_X: list[pd.DataFrame] = []
+
+        class CaptureMeta:
+            """Mock meta-learner that records received X."""
+
+            feature_names_: list[str] = []
+
+            def predict_proba(self, X: pd.DataFrame) -> pd.Series:
+                received_meta_X.append(X.copy())
+                return pd.Series([0.55, 0.5], index=X.index)
+
+        meta = CaptureMeta()
+
+        ensemble = StackedEnsemble(
+            base_models=[base0, base1],
+            meta_learner=meta,  # type: ignore[arg-type]
+            contextual_features=["seed_diff"],
+            meta_column_order=["pred_base_0", "pred_base_1", "seed_diff"],
+        )
+
+        X = pd.DataFrame(
+            {
+                "feat_a": [1.0, 2.0],
+                "feat_b": [3.0, 4.0],
+                "seed_diff": [1.0, np.nan],  # second row is regular-season (no seed)
+            }
+        )
+
+        ensemble.predict_proba(X)
+
+        assert received_meta_X, "meta-learner must have been called"
+        sent = received_meta_X[0]
+        assert not sent["seed_diff"].isna().any(), "NaN seed_diff must be filled before meta-learner call"
+        assert sent["seed_diff"].tolist() == [1.0, 0.0]
+
 
 # ── Test: predict_bracket ────────────────────────────────────────────────────
 
@@ -823,3 +896,91 @@ class TestPredictBracket:
 
         with pytest.raises(ValueError, match="Missing meta-learner input columns.*missing_feat"):
             ensemble.predict_bracket(Path("/tmp/fake"), 2025)
+
+
+# ── Test: oof_aligned.parquet persistence ────────────────────────────────────
+
+
+class TestOofAlignedParquetPersistence:
+    """Regression: oof_aligned.parquet is written with pred_ensemble column.
+
+    Verifies that ``_run_ensemble_training`` saves ``oof_aligned.parquet``
+    alongside the ensemble manifest, and that the file contains a
+    ``pred_ensemble`` column usable for post-hoc OOF log-loss comparison.
+    """
+
+    @pytest.fixture
+    def synthetic_season_df(self) -> pd.DataFrame:
+        """Minimal synthetic feature DataFrame for two training seasons."""
+        import datetime
+
+        rng = np.random.default_rng(0)
+        rows = 30
+        return pd.DataFrame(
+            {
+                "game_id": [f"g{i}" for i in range(rows)],
+                "season": [2015] * 15 + [2016] * 15,
+                "day_num": list(range(rows)),
+                "date": [datetime.date(2015, 1, 1)] * rows,
+                "team_a_id": list(range(100, 100 + rows)),
+                "team_b_id": list(range(200, 200 + rows)),
+                "is_tournament": [False] * 25 + [True] * 5,
+                "loc_encoding": rng.choice([0, 1, -1], size=rows).tolist(),
+                "team_a_won": (rng.random(rows) > 0.5).astype(int).tolist(),
+                "w_score": (70 + rng.integers(0, 20, size=rows)).tolist(),
+                "l_score": (55 + rng.integers(0, 15, size=rows)).tolist(),
+                "num_ot": [0] * rows,
+                "feat_a": rng.standard_normal(rows).tolist(),
+                "feat_b": rng.standard_normal(rows).tolist(),
+            }
+        )
+
+    def test_oof_aligned_parquet_written_with_pred_ensemble(
+        self, tmp_path: Path, synthetic_season_df: pd.DataFrame
+    ) -> None:
+        """After run_training(ensemble), oof_aligned.parquet exists with pred_ensemble."""
+        from rich.console import Console
+
+        from ncaa_eval.cli.train import run_training
+        from ncaa_eval.model.logistic_regression import LogisticRegressionModel
+        from ncaa_eval.model.tracking import RunStore
+
+        def _mock_serve(self_: object, year: int, mode: str = "batch") -> pd.DataFrame:
+            return synthetic_season_df[synthetic_season_df["season"] == year].copy()
+
+        with patch(
+            "ncaa_eval.cli.train.StatefulFeatureServer.serve_season_features",
+            _mock_serve,
+        ):
+            # Use only contextual features present in the synthetic season data.
+            # seed_diff requires tournament seeds (not in synthetic data), so
+            # restrict to is_tournament and loc_encoding which are always present.
+            ensemble = StackedEnsemble(
+                base_models=[LogisticRegressionModel(), LogisticRegressionModel()],
+                meta_learner=LogisticRegressionModel(),
+                contextual_features=["is_tournament", "loc_encoding"],
+            )
+            run = run_training(
+                ensemble,
+                start_year=2015,
+                end_year=2016,
+                data_dir=tmp_path / "data",
+                output_dir=tmp_path / "output",
+                model_name="ensemble",
+                console=Console(quiet=True),
+            )
+
+        store = RunStore(base_path=tmp_path / "output")
+        model_path = store.model_dir(run.run_id)
+        oof_path = model_path / "oof_aligned.parquet"
+
+        assert oof_path.exists(), "oof_aligned.parquet must be written by _run_ensemble_training"
+
+        oof = pd.read_parquet(oof_path)
+        assert "pred_ensemble" in oof.columns, "oof_aligned.parquet must include pred_ensemble column"
+        assert not oof["pred_ensemble"].isna().any(), "pred_ensemble must have no NaN values"
+        assert len(oof) > 0, "oof_aligned.parquet must not be empty"
+        # Columns required for the tutorial notebook's OOF log-loss comparison
+        assert "pred_base_0" in oof.columns, "oof_aligned.parquet must include pred_base_0"
+        assert "pred_base_1" in oof.columns, "oof_aligned.parquet must include pred_base_1"
+        assert "team_a_won" in oof.columns, "oof_aligned.parquet must include team_a_won"

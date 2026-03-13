@@ -1780,7 +1780,41 @@ When multiple notebooks contribute numbered sections to the same findings file, 
 ```
 Or renumber sequentially when sections are dropped rather than leaving gaps.
 
-*Last Updated: 2026-02-20 (Story 3.1 Code Review — EDA notebook conventions, gitkeep pattern, nbconvert --output-dir, connector behavior verification)*
+### Tutorial Notebook Execution Verification ⭐ (Discovered Story 10.4 Code Review)
+
+When committing a Jupyter notebook with executed outputs, verify that **every code cell has a non-None `execution_count`**. A cell with `execution_count=None` was never executed in the final nbconvert run. This is invisible to a casual reviewer but means the cell's output (or lack of output) cannot be trusted.
+
+**Check command:**
+```bash
+python3 -c "
+import json
+nb = json.load(open('notebooks/tutorials/03_ensemble_model.ipynb'))
+bad = [(i, c['cell_type']) for i, c in enumerate(nb['cells'])
+       if c['cell_type'] == 'code' and c.get('execution_count') is None]
+print('Unexecuted cells:', bad or 'NONE')
+"
+```
+
+**Root cause (Story 10.4):** The notebook was executed interactively (not via nbconvert), then specific cells were re-executed in a live kernel. Cells that were skipped during the re-run (cell-1: imports already loaded; cell-12: OOF comparison) retained `execution_count=None` from when their count was cleared. The committed notebook was missing the core AC demonstration (OOF log-loss table) because cell-12 was never re-run.
+
+**Code review checklist for tutorial notebooks:**
+- [ ] ALL code cells must have `execution_count` set to a non-None integer
+- [ ] Execution counts should be sequential (1, 2, 3, ...) — gaps indicate skipped cells
+- [ ] The "primary demonstration" cell (the one that proves the core AC) must have actual output
+
+### Stacked Ensemble OOF Comparison: In-Sample vs. True OOF ⭐ (Discovered Story 10.4 Code Review)
+
+When comparing base model OOF performance against an ensemble in a tutorial:
+
+- **Base model predictions** in `oof_aligned.parquet` are **truly OOF** — each base model was trained on folds that excluded the prediction season.
+- **Ensemble predictions** (`pred_ensemble`) are the **meta-learner's in-sample** predictions on those OOF base model predictions. The meta-learner was trained on those exact rows.
+
+This is standard stacking practice (low-variance meta-learner ≈ no overfitting), but tutorials must explicitly document this distinction. Using in-sample ensemble predictions against truly-OOF base model predictions creates a methodologically unfair comparison that overstates the ensemble's benefit.
+
+**Template pattern for ensemble tutorials:** Add a note to the OOF comparison section:
+> `pred_ensemble` is the meta-learner's in-sample performance on held-out base model predictions, not a nested cross-validated OOF estimate. For simple meta-learners (logistic regression), in-sample ≈ out-of-sample, but this comparison is not strictly apples-to-apples.
+
+*Last Updated: 2026-03-12 (Story 10.4 Code Review — notebook execution verification, stacked ensemble OOF comparison methodology)*
 
 ### `datetime.date.today()` — Capture Once Before Branching ⭐ (Discovered Story 4.2 Code Review)
 
@@ -4241,3 +4275,56 @@ Update the lookup table whenever a new model type is registered.
 `__import__("pathlib").Path(...)` is an anti-pattern that bypasses Python's normal import machinery and makes code harder to read, test, and statically analyze. It was found in `_load_oof_log_losses` in dashboard code.
 
 **Correct pattern:** Always use top-level `from pathlib import Path` (or equivalent module-level imports). If a function needs an import that creates a circular dependency at module level, use a local `import X` (conventional Python pattern), but never `__import__("X")`.
+
+### NaN in Contextual Features During Ensemble Training (Discovered Story 10.4 Code Review, 2026-03-12)
+
+When a stacked ensemble uses contextual features (e.g., `seed_diff`, `is_tournament`), regular-season games will have `NaN` values for tournament-only features (e.g., `seed_diff` is undefined without a seed table). Sklearn estimators raise `ValueError: Input X contains NaN` if these are not handled.
+
+**Pattern:** Fill NaN contextual features with 0 before passing to the meta-learner, both at train-time (`_build_meta_training_set`) and at inference-time (`predict_proba`):
+
+```python
+# ✅ At train time
+ctx_cols = [c for c in contextual_features if c in aligned.columns]
+meta_X = aligned[pred_cols + ctx_cols].copy()
+if ctx_cols:
+    meta_X[ctx_cols] = meta_X[ctx_cols].fillna(0)
+
+# ✅ At inference time
+meta_X = meta_df[self.meta_column_order].copy()  # .copy() avoids pandas CoW issues
+ctx_cols = [c for c in self.contextual_features if c in meta_X.columns]
+if ctx_cols:
+    meta_X[ctx_cols] = meta_X[ctx_cols].fillna(0)
+```
+
+**CoW Note:** Always call `.copy()` when slicing a DataFrame for in-place modification, even when pandas 2.x currently allows it. With Copy-on-Write becoming the default in future pandas, failing to `.copy()` first will cause silent data loss or errors.
+
+**Test pattern:** Add a regression test with explicit NaN values in contextual feature columns to verify the fill behavior — these NaN paths are not exercised by normal test data.
+
+### Tutorial Notebooks Should Use the Same Metric Functions as Production Code (Discovered Story 10.4 Code Review, 2026-03-12)
+
+A tutorial notebook that defines a custom `log_loss` function will produce values that diverge from the dashboard leaderboard (which uses `sklearn.metrics.log_loss`). This creates user confusion: *"Why does my tutorial show 0.555 but the dashboard shows something different?"*
+
+**Pattern:** Import and reuse the exact same metric functions in tutorials as in the production evaluation pipeline:
+
+```python
+# ✅ In tutorial notebooks — use the same function as the dashboard leaderboard
+from sklearn.metrics import log_loss
+```
+
+**Corollary:** If the project has a custom metrics module (`ncaa_eval.evaluation.metrics`), tutorials should import from there — not inline a custom implementation — so metric definitions stay in sync.
+
+### Phantom Run IDs in Ensemble Manifests — Don't Generate IDs You Don't Save (Discovered Story 10.4 Code Review, 2026-03-12)
+
+`_run_ensemble_training` generates `oof_run_ids = [uuid.uuid4() for ...]` and stores them in the manifest as `oof_backtest_run_ids`, but never calls `store.save_run()` for those IDs. The manifest field implies users can load those runs via `RunStore`, but attempting to do so raises `FileNotFoundError`.
+
+**Pattern:** Either save the OOF backtest runs to `RunStore` (preferred — gives full traceability), or rename the manifest field to something clearly metadata-only (e.g., `oof_session_tokens`) with a docstring explaining it cannot be used for `RunStore` lookups.
+
+**Root cause:** The IDs were added as a forward-compatibility placeholder in Story 10.1, before the decision was made to use `oof_aligned.parquet` directly for post-hoc analysis. The parquet approach works, but the phantom IDs remain as dead metadata.
+
+### All Notebook Cell Imports Should Be Consolidated in the First Import Cell (Discovered Story 10.4 Code Review, 2026-03-12)
+
+Tutorial notebooks often accumulate re-imports across cells (e.g., `import numpy as np` appears again 12 cells after the initial import cell). Jupyter handles duplicate imports gracefully, but it's inconsistent style that makes the notebook harder to read and harder to adapt to script format.
+
+**Pattern:** All `import` statements belong in the first code cell of a tutorial notebook. Later cells should only call functions — never import. If a library is needed in multiple cells, import it once at the top.
+
+**Exception:** `from __future__ import annotations` is never needed in notebooks (Python 3.10+ implicit).
