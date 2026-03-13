@@ -378,7 +378,7 @@ class MasseyOrdinalsStore:
             return CoverageGateResult(
                 primary_systems=_PRIMARY_COMPOSITE,
                 fallback_used=True,
-                fallback_reason=f"{missing} missing for some seasons 2003–2026",
+                fallback_reason=f"{missing} missing for some seasons {_MASSEY_FIRST_SEASON}–{_MASSEY_LAST_SEASON}",
                 recommended_systems=_FALLBACK_SYSTEMS,
             )
         return CoverageGateResult(

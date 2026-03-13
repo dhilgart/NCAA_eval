@@ -187,7 +187,7 @@ Claude Opus 4.6
 - **Task 6**: Replaced 2025-specific graph.py comment with season-agnostic statement about ESPN+Kaggle overlap deduplication.
 - **Task 7**: Updated `dashboard/pages/home.py` example text `--end-year 2025` → `--end-year 2026`. Updated `(e.g. 2025)` docstring examples in `export.py` and `predict.py` to 2026. Confirmed `cli/main.py` `end_year=2025` default is intentional and NOT changed.
 
-### Senior Developer Review (AI)
+### Senior Developer Review (AI) — Round 1
 
 **Reviewer:** Claude Sonnet 4.6 | **Date:** 2026-03-13
 
@@ -209,21 +209,43 @@ Claude Opus 4.6
 **Action Items Created (1 MEDIUM):**
 - See "Review Follow-ups (AI)" in Tasks — live validation required once Kaggle 2026 competition is published
 
+### Senior Developer Review (AI) — Round 2
+
+**Reviewer:** Claude Sonnet 4.6 | **Date:** 2026-03-13
+
+**Verdict:** APPROVED with fixes applied
+
+**AC Validation:** Same as Round 1 — all implementable ACs confirmed; AC3/AC5 legitimately deferred on external dependency.
+
+**Issues Found:** 0 Critical, 2 Medium, 2 Low
+
+**Fixes Applied (2 MEDIUM, 1 LOW):**
+- **M1 FIXED** — `sync.py:178` `result.seasons_written = len(new_years)` — was `len(csv_seasons)` (e.g., 3), now correctly reports only newly-added seasons (e.g., 1). CLI output "seasons: 3" was misleading. Test assertion updated: `seasons_written == 1` [sync.py:178, test_sync.py:237]
+- **M2 FIXED** — `normalization.py:381` `fallback_reason` f-string now uses `{_MASSEY_FIRST_SEASON}–{_MASSEY_LAST_SEASON}` instead of hardcoded "2003–2026" literal. Will auto-update when constants change. [normalization.py:381]
+- **L1 FIXED** — Added `assert instance.fetch_games.call_count == 1` to `test_sync_kaggle_new_season_invalidates_cache` — `reset_mock()` was called but call count was never verified; now confirms only the new season (2025) triggered a fetch [test_sync.py:241]
+
+**Action Items (1 LOW):**
+- Docstrings at `normalization.py:79` and `:357` still hardcode "2003–2026" — static docstrings cannot reference Python constants; update manually each year and note the need in inline comment
+
+**Template Learnings:** Added "Audit ALL String Literals When Updating Year-Range Constants" to `template-requirements.md`
+
 ### Change Log
 
 - 2026-03-13: Story 10.6 implemented — 2026 season data support (slug, Massey constant, cache fix, comments, example text)
-- 2026-03-13: Code review — 2 test gaps fixed; live validation follow-up action item created
+- 2026-03-13: Code review Round 1 — 2 test gaps fixed; live validation follow-up action item created
+- 2026-03-13: Code review Round 2 — `seasons_written` telemetry fix, `fallback_reason` constant drift fix, fetch_games call-count assertion added
 
 ### File List
 
 - `src/ncaa_eval/ingest/connectors/kaggle.py` — competition slug 2025→2026
-- `src/ncaa_eval/transform/normalization.py` — `_MASSEY_LAST_SEASON` 2025→2026, docstrings updated
-- `src/ncaa_eval/ingest/sync.py` — seasons.parquet cache invalidation fix (new-season detection)
+- `src/ncaa_eval/transform/normalization.py` — `_MASSEY_LAST_SEASON` 2025→2026, docstrings updated; `fallback_reason` f-string uses constants (code review R2)
+- `src/ncaa_eval/ingest/sync.py` — seasons.parquet cache invalidation fix; `seasons_written` reports new seasons only (code review R2)
 - `src/ncaa_eval/transform/graph.py` — dedup comment generalized (season-agnostic)
 - `dashboard/pages/home.py` — example text `--end-year 2026`
 - `src/ncaa_eval/cli/export.py` — docstring examples 2025→2026
 - `src/ncaa_eval/cli/predict.py` — docstring examples 2025→2026
-- `tests/integration/test_sync.py` — new test `test_sync_kaggle_new_season_invalidates_cache`, updated cache-hit test; code review added fetch_seasons call count assertion and old-season integrity assertions
+- `tests/integration/test_sync.py` — new test `test_sync_kaggle_new_season_invalidates_cache`; cache-hit and new-season tests strengthened across two code review rounds
 - `tests/unit/test_normalization.py` — `_all_seasons_rows` uses module constants, docstring updated
 - `_bmad-output/implementation-artifacts/10-6-2026-season-data-support.md` — story file
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` — status update
+- `_bmad-output/planning-artifacts/template-requirements.md` — year-range constant drift learning added

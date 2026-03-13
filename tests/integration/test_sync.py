@@ -233,11 +233,13 @@ def test_sync_kaggle_new_season_invalidates_cache(mock_cls: MagicMock, tmp_path:
 
     result2 = engine.sync_kaggle(force_refresh=False)
 
-    # Seasons cache should be updated (3 seasons written)
-    assert result2.seasons_written == 3
+    # Seasons cache should be updated; only 1 new season (2025) was written
+    assert result2.seasons_written == 1
     # Old seasons should be cache hits; only 2025 should be fetched
     assert result2.seasons_cached == 2
     assert result2.games_written == len(_GAMES_2025)
+    # Verify only the new season triggered a fetch_games call
+    assert instance.fetch_games.call_count == 1
     # Verify 2025 games actually persisted
     games_2025 = repo.get_games(2025)
     assert len(games_2025) == 1

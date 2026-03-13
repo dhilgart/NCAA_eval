@@ -175,7 +175,7 @@ class SyncEngine:
                 )
                 self._repo.save_seasons(csv_seasons)
                 seasons = csv_seasons
-                result.seasons_written = len(csv_seasons)
+                result.seasons_written = len(new_years)
             else:
                 seasons = cached_seasons
                 logger.info("[kaggle] seasons: cache hit, skipped")

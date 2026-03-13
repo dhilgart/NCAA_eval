@@ -1606,6 +1606,26 @@ else:
 
 **Note:** The "fetch once to compare" approach requires the CSV to be already downloaded (`connector.download()` called first). This is a pure disk read, not a network call.
 
+### Audit ALL String Literals When Updating Year-Range Constants (Discovered Story 10.6 Code Review, 2026-03-13)
+
+When you update a module constant like `_MASSEY_LAST_SEASON = 2025 → 2026`, Python numeric references (`range(_MASSEY_FIRST_SEASON, _MASSEY_LAST_SEASON + 1)`) auto-update, but **hardcoded string literals do not**:
+
+```python
+# ❌ Drifts silently when _MASSEY_LAST_SEASON changes
+fallback_reason=f"{missing} missing for some seasons 2003–2026"
+
+# ✅ Auto-updates with the constant
+fallback_reason=f"{missing} missing for some seasons {_MASSEY_FIRST_SEASON}–{_MASSEY_LAST_SEASON}"
+```
+
+**Audit checklist when updating year-range constants:**
+1. Numeric usages (`range(X, Y+1)`, comparisons) — auto-update if they reference constants ✓
+2. Runtime f-strings / error messages — **must reference constants, not literals**
+3. Docstrings — cannot reference constants; update manually and add a `# noqa: keep in sync with _MASSEY_LAST_SEASON` comment nearby
+4. Log messages with inline ranges — same as #2
+
+**Pattern:** Grep for the old year literal after any constant update: `grep -rn "2025"` to catch stragglers.
+
 ### ESPN-style Multi-Source Caching Requires Full Cycle Tests (Discovered Story 2.4 Code Review)
 
 When a caching strategy involves marker files (or any lightweight sentinel), the following paths must each be tested:
