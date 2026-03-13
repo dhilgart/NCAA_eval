@@ -2894,6 +2894,20 @@ Standard `.gitignore` templates include `lib/` as a catch-all for C extension bu
 !dashboard/lib/
 ```
 
+### `.gitignore` Root-Level Directory Patterns Need a Leading Slash ⭐ (Discovered Story 10.5 Code Review, 2026-03-13)
+
+When ignoring a project-generated output directory that only exists at the repo root, always use a **leading slash** in `.gitignore`:
+
+```gitignore
+# ❌ Matches output/ at ANY depth — src/output/, tests/output/, etc.
+output/
+
+# ✅ Matches ONLY the root-level output/ directory
+/output/
+```
+
+Without the leading `/`, git treats the pattern as relative to any directory in the tree. This causes unintended exclusions if any subdirectory happens to be named `output` (or any other generic name like `build/`, `dist/`, `tmp/`). Use the leading slash whenever the intent is root-level-only.
+
 ### Config Factory Functions Must Raise ValueError, Not KeyError (Discovered Story 6.6 Code Review, 2026-02-24)
 
 Factory functions that dispatch on a config dict key (e.g., `config["type"]`) should **explicitly check** for missing required keys and raise `ValueError`, not let Python raise `KeyError` through dict indexing. Callers catching `ValueError` miss `KeyError`:

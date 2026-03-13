@@ -35,6 +35,8 @@ so that **the toolchain is clean, version tags are automatically created, and ge
 
 - [ ] [AI-Review][HIGH] `push: false` leaves `main` stale: bump commit (pyproject.toml version, docs/conf.py release, CHANGELOG) is created in CI runner but never pushed to main — only the tag is pushed. Future commitizen runs see version tag vs stale pyproject.toml. Choose a resolution: (A) tag HEAD directly without a bump commit, (B) open a PR for the bump commit via `actions/github-script`, or (C) use a GitHub App token exempt from branch protection. [`.github/workflows/main-updated.yaml:26-29`]
 - [ ] [AI-Review][MEDIUM] `commitizen-action` still pinned at `0.27.1` — Dev Notes mandated checking for latest stable release; decision was not documented and no upgrade was evaluated. [`.github/workflows/main-updated.yaml:22`]
+- [ ] [AI-Review][MEDIUM] AC #2 is empirically unverifiable pre-merge — workflow only triggers on `push: branches: [main]`; the fix has never run in the actual CI environment. The PR merge itself will be the first real test. [`.github/workflows/main-updated.yaml:3-6`]
+- [ ] [AI-Review][MEDIUM] `git push origin --tags` broadcasts all local tags — with `fetch-depth: 0` all remote tags are fetched locally; prefer `git push origin refs/tags/${{ steps.cz.outputs.version }}` with `if: steps.cz.outputs.version != ''` guard for precision. [`.github/workflows/main-updated.yaml:29`]
 
 ## Dev Notes
 
@@ -118,6 +120,6 @@ Claude Opus 4.6
 
 ### File List
 
-- `.gitignore` (modified — added `output/`)
+- `.gitignore` (modified — added `/output/`; corrected to root-level pattern during code review)
 - `.github/workflows/main-updated.yaml` (modified — `push: false` + separate tag push step)
 - `.pre-commit-config.yaml` (modified — migrated deprecated stage names)
