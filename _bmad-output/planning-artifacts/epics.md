@@ -1485,6 +1485,23 @@ so that **I can train models and generate bracket predictions for the 2026 tourn
 **Source:** Volty request 2026-03-13; codebase analysis findings
 **Prerequisite:** 2026 Kaggle competition must be live (check https://www.kaggle.com/competitions/march-machine-learning-mania-2026)
 
+### Story 10.7: End-to-End User-Facing Execution Audit
+
+As a **project maintainer**,
+I want to **execute every documented user-guide command and tutorial step verbatim and have CI permanently guard against execution-context failures**,
+so that **users never encounter a broken workflow in the introductory documentation, and the "passes tests but fails for users" class of bug is structurally impossible to merge undetected**.
+
+**Acceptance Criteria:**
+
+1. Every command in `docs/user-guide.md`, `docs/tutorials/getting-started.md`, `docs/tutorials/custom-model.md`, `docs/tutorials/custom-metric.md`, and `notebooks/tutorials/03_ensemble_model.ipynb` is executed verbatim from the repo root; all failures are documented and fixed
+2. `streamlit run dashboard/app.py` starts cleanly without `ModuleNotFoundError` (no reliance on pytest `sys.path` injection)
+3. `python sync.py` and all `python -m ncaa_eval.cli` commands import and start cleanly after a fresh `poetry install`
+4. `tests/e2e/test_user_facing_commands.py` added with subprocess-based startup checks for all user-facing entry points; CI step added to `python-check.yaml`
+5. `docs/TESTING_STRATEGY.md` and `docs/testing/execution.md` updated with the "Execution Context Principle": tests must mirror user invocation, not rely on harness path injection
+
+**Source:** Volty report 2026-03-13 — `streamlit run` ImportError and `sync.py` import error discovered post-Story 10.6 merge; root cause: import-context tests (pytest `sys.path`) cannot detect execution-context failures
+**Prerequisite:** Story 10.6 (done)
+
 ---
 
 ## Epic X: Cookiecutter Project Template
