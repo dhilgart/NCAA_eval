@@ -350,7 +350,7 @@
 <span class="c1"># ---------------------------------------------------------------------------</span>
 
 <span class="n">_MASSEY_FIRST_SEASON</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2003</span>
-<span class="n">_MASSEY_LAST_SEASON</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2025</span>
+<span class="n">_MASSEY_LAST_SEASON</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2026</span>
 <span class="n">_MASSEY_ALL_SEASONS</span><span class="p">:</span> <span class="nb">frozenset</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">_MASSEY_FIRST_SEASON</span><span class="p">,</span> <span class="n">_MASSEY_LAST_SEASON</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
 <span class="n">_GATE_SYSTEMS</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;SAG&quot;</span><span class="p">,</span> <span class="s2">&quot;WLK&quot;</span><span class="p">)</span>
 <span class="n">_FALLBACK_SYSTEMS</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;MOR&quot;</span><span class="p">,</span> <span class="s2">&quot;POM&quot;</span><span class="p">,</span> <span class="s2">&quot;DOL&quot;</span><span class="p">)</span>
@@ -398,7 +398,7 @@
 <span class="sd">        primary_systems: The four primary composite systems</span>
 <span class="sd">            (SAG, POM, MOR, WLK).</span>
 <span class="sd">        fallback_used: True when SAG or WLK are missing for one or more</span>
-<span class="sd">            seasons 2003–2025 and the fallback composite is recommended.</span>
+<span class="sd">            seasons 2003–2026 and the fallback composite is recommended.</span>
 <span class="sd">        fallback_reason: Human-readable description of why the fallback was</span>
 <span class="sd">            triggered (empty string when ``fallback_used=False``).</span>
 <span class="sd">        recommended_systems: The system names the caller should use for</span>
@@ -717,7 +717,7 @@
 <div class="viewcode-block" id="MasseyOrdinalsStore.run_coverage_gate">
 <a class="viewcode-back" href="../../../api/ncaa_eval.transform.normalization.html#ncaa_eval.transform.MasseyOrdinalsStore.run_coverage_gate">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">run_coverage_gate</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CoverageGateResult</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check whether SAG and WLK cover all seasons 2003–2025.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check whether SAG and WLK cover all seasons 2003–2026.</span>
 
 <span class="sd">        If either system has gaps the fallback composite (MOR, POM, DOL) is</span>
 <span class="sd">        recommended instead of the primary composite (SAG, POM, MOR, WLK).</span>
@@ -741,7 +741,7 @@
             <span class="k">return</span> <span class="n">CoverageGateResult</span><span class="p">(</span>
                 <span class="n">primary_systems</span><span class="o">=</span><span class="n">_PRIMARY_COMPOSITE</span><span class="p">,</span>
                 <span class="n">fallback_used</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                <span class="n">fallback_reason</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">missing</span><span class="si">}</span><span class="s2"> missing for some seasons 2003–2025&quot;</span><span class="p">,</span>
+                <span class="n">fallback_reason</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">missing</span><span class="si">}</span><span class="s2"> missing for some seasons </span><span class="si">{</span><span class="n">_MASSEY_FIRST_SEASON</span><span class="si">}</span><span class="s2">–</span><span class="si">{</span><span class="n">_MASSEY_LAST_SEASON</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
                 <span class="n">recommended_systems</span><span class="o">=</span><span class="n">_FALLBACK_SYSTEMS</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">return</span> <span class="n">CoverageGateResult</span><span class="p">(</span>

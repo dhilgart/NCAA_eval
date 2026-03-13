@@ -475,7 +475,11 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[kaggle] teams: cache hit, skipped&quot;</span><span class="p">)</span>
 
-        <span class="c1"># Seasons: Parquet-level cache</span>
+        <span class="c1"># Seasons: Parquet-level cache with new-season detection.</span>
+        <span class="c1"># After a Kaggle download, the CSV may contain seasons not yet in</span>
+        <span class="c1"># the cached parquet (e.g. 2026 added after a previous 2025 sync).</span>
+        <span class="c1"># Always compare CSV seasons against the cache to avoid silently</span>
+        <span class="c1"># missing new data.</span>
         <span class="n">seasons_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_data_dir</span> <span class="o">/</span> <span class="s2">&quot;seasons.parquet&quot;</span>
         <span class="k">if</span> <span class="n">force_refresh</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">seasons_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
             <span class="n">seasons</span> <span class="o">=</span> <span class="n">connector</span><span class="o">.</span><span class="n">fetch_seasons</span><span class="p">()</span>
@@ -483,8 +487,22 @@
             <span class="n">result</span><span class="o">.</span><span class="n">seasons_written</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">seasons</span><span class="p">)</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[kaggle] seasons: </span><span class="si">%d</span><span class="s2"> written&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">seasons</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">seasons</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_repo</span><span class="o">.</span><span class="n">get_seasons</span><span class="p">()</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[kaggle] seasons: cache hit, skipped&quot;</span><span class="p">)</span>
+            <span class="n">cached_seasons</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_repo</span><span class="o">.</span><span class="n">get_seasons</span><span class="p">()</span>
+            <span class="n">csv_seasons</span> <span class="o">=</span> <span class="n">connector</span><span class="o">.</span><span class="n">fetch_seasons</span><span class="p">()</span>
+            <span class="n">cached_years</span> <span class="o">=</span> <span class="p">{</span><span class="n">s</span><span class="o">.</span><span class="n">year</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">cached_seasons</span><span class="p">}</span>
+            <span class="n">csv_years</span> <span class="o">=</span> <span class="p">{</span><span class="n">s</span><span class="o">.</span><span class="n">year</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">csv_seasons</span><span class="p">}</span>
+            <span class="n">new_years</span> <span class="o">=</span> <span class="n">csv_years</span> <span class="o">-</span> <span class="n">cached_years</span>
+            <span class="k">if</span> <span class="n">new_years</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                    <span class="s2">&quot;[kaggle] seasons: new seasons detected in CSV: </span><span class="si">%s</span><span class="s2"> — updating cache&quot;</span><span class="p">,</span>
+                    <span class="nb">sorted</span><span class="p">(</span><span class="n">new_years</span><span class="p">),</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_repo</span><span class="o">.</span><span class="n">save_seasons</span><span class="p">(</span><span class="n">csv_seasons</span><span class="p">)</span>
+                <span class="n">seasons</span> <span class="o">=</span> <span class="n">csv_seasons</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">seasons_written</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_years</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">seasons</span> <span class="o">=</span> <span class="n">cached_seasons</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;[kaggle] seasons: cache hit, skipped&quot;</span><span class="p">)</span>
 
         <span class="c1"># Games: per-season Parquet-level cache</span>
         <span class="k">for</span> <span class="n">season</span> <span class="ow">in</span> <span class="n">seasons</span><span class="p">:</span>
