@@ -156,7 +156,7 @@ development_status:
   10-4-ensemble-tutorial-notebook: done
   10-5-ci-gitignore-hotfixes: done
   10-6-2026-season-data-support: done
-  10-7-end-to-end-user-guide-execution-audit: ready-for-dev
+  10-7-end-to-end-user-guide-execution-audit: review
   epic-10-retrospective: optional
 
   # Epic X: Cookiecutter Project Template (post-project; no numeric ID — uses prior story slug)

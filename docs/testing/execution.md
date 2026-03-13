@@ -312,6 +312,63 @@ Is this test fast (< 1 second)?
 
 ---
 
+## Execution-Context Tests (E2E Startup)
+
+### What They Test
+
+Execution-context tests verify that every user-facing entry point starts
+cleanly when invoked exactly as documented — from the repo root, via
+`subprocess.run()`, with no test-harness `sys.path` injection.
+
+### Why `subprocess.run()` Is Required
+
+Standard Python `import` statements and `importlib.import_module()` inherit
+the test harness's `sys.path`, which pytest populates with the project root
+and installed packages.  This masks real import failures that users encounter
+when they run `streamlit run dashboard/app.py` or `python sync.py` from the
+command line.  The only way to catch these failures is to spawn a fresh
+subprocess with `cwd=REPO_ROOT` — the same execution context as the user.
+
+### How They Differ from Import-Context Tests
+
+| Aspect | Import-Context Tests | Execution-Context Tests |
+|--------|---------------------|------------------------|
+| Mechanism | `importlib.import_module()` or `import` | `subprocess.run()` with `cwd=REPO_ROOT` |
+| `sys.path` | Inherited from pytest harness | Clean — only what Python populates by default |
+| Catches | Module existence, syntax errors | Real startup failures, missing `__init__.py`, path issues |
+| Speed | Fast (in-process) | Slower (new process per test) |
+| Location | `tests/unit/` or `tests/integration/` | `tests/e2e/` |
+
+### Historical Failure Mode
+
+The project's existing test suite used `importlib.import_module("dashboard.lib.filters")`
+to verify dashboard imports.  This passed under pytest because pytest's `rootdir`
+discovery adds the repo root to `sys.path`.  However, `streamlit run dashboard/app.py`
+spawns a subprocess where `sys.path` may not include the repo root — the dashboard
+passed all import tests but could crash for users.  Execution-context tests
+prevent this class of failure from recurring.
+
+### Example
+
+```python
+@pytest.mark.integration
+def test_sync_help() -> None:
+    """sync.py --help must exit 0 with no import errors."""
+    result = subprocess.run(
+        [sys.executable, "sync.py", "--help"],
+        capture_output=True,
+        text=True,
+        cwd=REPO_ROOT,
+    )
+    assert "ModuleNotFoundError" not in result.stderr
+    assert "ImportError" not in result.stderr
+    assert result.returncode == 0
+```
+
+All E2E tests are marked `@pytest.mark.integration` and live in `tests/e2e/`.
+
+---
+
 ## See Also
 
 - [Test Scope Guide](test-scope-guide.md) - Unit vs Integration tests
