@@ -1,6 +1,6 @@
 # Story 10.5: CI Bumpversion Fix, Output Gitignore & Pre-commit Deprecation Warnings
 
-Status: review
+Status: in-progress
 
 ## Story
 
@@ -30,6 +30,11 @@ so that **the toolchain is clean, version tags are automatically created, and ge
   - [x] 3.1: Run `pre-commit migrate-config` to automatically update `.pre-commit-config.yaml` stage names from deprecated (`commit`, `push`) to current (`pre-commit`, `pre-push`) syntax
   - [x] 3.2: Verify the migration is correct — `default_stages`, `commitizen-branch` hook, and `pytest-smoke` hook should all use updated stage names
   - [x] 3.3: Run a commit after migration to confirm no deprecation warnings appear in pre-commit output
+
+### Review Follow-ups (AI)
+
+- [ ] [AI-Review][HIGH] `push: false` leaves `main` stale: bump commit (pyproject.toml version, docs/conf.py release, CHANGELOG) is created in CI runner but never pushed to main — only the tag is pushed. Future commitizen runs see version tag vs stale pyproject.toml. Choose a resolution: (A) tag HEAD directly without a bump commit, (B) open a PR for the bump commit via `actions/github-script`, or (C) use a GitHub App token exempt from branch protection. [`.github/workflows/main-updated.yaml:26-29`]
+- [ ] [AI-Review][MEDIUM] `commitizen-action` still pinned at `0.27.1` — Dev Notes mandated checking for latest stable release; decision was not documented and no upgrade was evaluated. [`.github/workflows/main-updated.yaml:22`]
 
 ## Dev Notes
 

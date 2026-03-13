@@ -191,6 +191,41 @@ Using a mutable branch ref like `@master` for a GitHub Action is a **supply chai
 
 **Also: Add `if:` guards symmetrically.** If one job in a workflow file has an `if:` condition (e.g., skip on `bump:` commits), audit all other jobs in the same file for the same guard — they often need it too to avoid wasteful double-runs.
 
+#### commitizen-action + Branch Protection: `push: false` Is a Trap ⭐ (Discovered Story 10.5 Code Review, 2026-03-13)
+
+When `main` has branch protection requiring PRs, `commitizen-action` fails with **GH013** (push rejected). The naive fix — `push: false` + a separate `git push origin --tags` — is semantically broken for projects using `version_files`:
+
+- `push: false` causes commitizen to create the bump commit **only in the CI runner's workspace**
+- `git push origin --tags` pushes the tag — which points to the (unpushed) bump commit
+- Result: `main` branch still shows the **old version** in `pyproject.toml` and `docs/conf.py`; CHANGELOG on `main` is never updated
+- Future commitizen runs see mismatched signals (tag says 0.9.1, pyproject.toml says 0.9.0) and may produce duplicate or incorrect bumps
+
+**Choose an alternative approach:**
+
+| Option | Approach | Trade-offs |
+|--------|----------|------------|
+| A | Tag HEAD directly (`git tag <ver>`) without a bump commit | Version files never auto-updated; acceptable if version is managed manually |
+| B | Bot/GitHub App token exempt from branch protection | Most complete but requires setup |
+| C | `actions/github-script` to open a PR for the bump commit | Keeps version files in sync; adds PR noise |
+| D | Exempt `github-actions[bot]` from branch protection push rule | Easiest, slight security trade-off |
+
+**Template Action:** If the template uses commitizen-action, document the branch protection trade-off explicitly in the CI/CD setup guide. Default to **Option D** (Actions bot bypass) or **Option A** (tag-only) based on project needs.
+
+#### Pre-commit Deprecated Stage Names: Use `pre-commit migrate-config` (Discovered Story 10.5, 2026-03-13)
+
+Pre-commit renamed stage identifiers. Old names cause deprecation warnings on every commit:
+
+| Deprecated | Current |
+|------------|---------|
+| `commit` | `pre-commit` |
+| `push` | `pre-push` |
+
+These appear in `default_stages`, per-hook `stages:` lists, and `default_install_hook_types`.
+
+**Fix:** Run `pre-commit migrate-config` from the repo root — it rewrites `.pre-commit-config.yaml` in place. Always inspect the diff before committing (only stage name strings should change).
+
+**Template Action:** Ensure the base `.pre-commit-config.yaml` template already uses current stage name syntax (`pre-commit`, `pre-push`) so new projects start clean.
+
 #### Ruff Rule Selection: Use Explicit Codes, Not Prefixes ⭐ (Discovered Story 1.4 Code Review Round 2)
 
 `extend-select = ["PLR09"]` in Ruff selects the ENTIRE PLR09xx family, including rules with Ruff defaults that were never configured or documented:
