@@ -154,7 +154,7 @@ development_status:
   10-2-ensemble-inference-interface: done
   10-3-ensemble-dashboard-registry-integration: done
   10-4-ensemble-tutorial-notebook: done
-  10-5-ci-gitignore-hotfixes: ready-for-dev
+  10-5-ci-gitignore-hotfixes: review
   10-6-2026-season-data-support: ready-for-dev
   epic-10-retrospective: optional
 
