@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 project = "ncaa_eval"
 copyright = "2026, Dan Hilgart"
 author = "Dan Hilgart"
-release = "0.9.0"
+release = "0.10.0"
 
 extensions = [
     "sphinx.ext.autodoc",

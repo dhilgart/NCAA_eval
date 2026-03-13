@@ -1,5 +1,36 @@
 # Changelog
 
+## 0.10.0 (2026-03-13)
+
+### Feat
+
+- **tutorial**: Ensemble Tutorial Notebook — Story 10.4 (#81)
+- **dashboard**: ensemble models in dashboard leaderboard, deep dive, and bracket visualizer (Story 10.3) (#80)
+- **ensemble**: Ensemble Inference Interface — predict_proba, predict_bracket, EnsembleProvider (Story 10.2) (#79)
+- **model**: StackedEnsemble class and OOF training pipeline (Story 10.1) (#78)
+- **ingest**: add Pandera schema validation to KaggleConnector (Story 9.14) (#76)
+- **dashboard**: implement st.progress for Monte Carlo simulation (Story 9.12) (#74)
+- **evaluation**: add custom metric plugin registry (Story 9.10) (#71)
+- **cli**: add predict command for win-probability CSV generation (Story 9.9) (#70)
+- **dashboard**: Story 9.8 — User-Editable Bracket with Override Cascade (#69)
+- **evaluation**: add game-theory slider perturbation (Story 9.7) (#68)
+- **ingest**: add post-sync data validation (Story 9.5) (#66)
+- **model**: add feature importance for Elo and LogReg models (Story 9.3) (#64)
+- **model**: embed FeatureConfig as model-level concern (Story 9.2) (#63)
+- **evaluation**: add Kaggle submission export — CLI + dashboard (Story 9.1) (#62)
+
+### Fix
+
+- **dashboard**: Story 8.8 — Dashboard UX Quick Fixes (#56)
+- **type-safety**: Story 8.6 — Type Safety & Configuration Improvements (#54)
+- **ingest**: add ESPN retry logic, decouple SyncEngine from Typer, generalize dedup (Story 8.3) (#50)
+
+### Refactor
+
+- **tests**: consolidate duplicated test helpers into shared conftest (Story 9.13) (#75)
+- **dashboard**: replace undocumented Streamlit selection API (Story 9.11) (#73)
+- **api**: expose public APIs, eliminate private attribute access (Story 8.2) (#49)
+
 ## 0.9.0 (2026-02-25)
 
 ### Feat
