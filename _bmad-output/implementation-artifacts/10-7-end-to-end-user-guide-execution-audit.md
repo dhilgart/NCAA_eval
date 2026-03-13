@@ -1,6 +1,6 @@
 # Story 10.7: End-to-End User-Facing Execution Audit
 
-Status: review
+Status: done
 
 ## Story
 
@@ -197,10 +197,11 @@ Both issues described in the story are not reproducible in the current environme
 ### File List
 
 - `tests/e2e/__init__.py` (new)
-- `tests/e2e/test_user_facing_commands.py` (new)
+- `tests/e2e/test_user_facing_commands.py` (new — modified in code review: add @pytest.mark.slow and fix stderr check in Streamlit test success path)
 - `.github/workflows/python-check.yaml` (modified — added E2E step)
 - `docs/TESTING_STRATEGY.md` (modified — added Execution Context principle, e2e dir in Test Organization)
 - `docs/testing/execution.md` (modified — added Execution-Context Tests section)
 - `docs/tutorials/getting-started.md` (modified — updated list_models output to include ensemble)
+- `notebooks/tutorials/03_ensemble_model.ipynb` (modified — notebook executed for Task 1.6 audit; cell outputs updated)
 - `_bmad-output/implementation-artifacts/10-7-end-to-end-user-guide-execution-audit.md` (modified — story tracking)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified — status update)

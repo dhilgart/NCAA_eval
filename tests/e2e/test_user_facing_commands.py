@@ -140,12 +140,13 @@ def test_list_models() -> None:
 
 
 @pytest.mark.integration
+@pytest.mark.slow
 def test_streamlit_startup() -> None:
     """Streamlit run dashboard/app.py must start without import errors.
 
     Launches Streamlit in headless mode on a non-standard port, waits a
-    few seconds, then checks that the process has not exited with a
-    non-zero code and that stderr does not contain import errors.
+    few seconds, then checks that stderr contains no import errors — whether
+    the process exited early (crash) or is still running (successful startup).
     """
     proc = subprocess.Popen(
         [
@@ -165,21 +166,24 @@ def test_streamlit_startup() -> None:
         text=True,
         env=_clean_env(),
     )
+    poll_result: int | None = None
     try:
         # Give Streamlit time to start (or crash).
         time.sleep(8)
         poll_result = proc.poll()
-        # If process exited, capture output and check for errors.
-        if poll_result is not None:
-            stdout, stderr = proc.communicate(timeout=5)
-            assert "ModuleNotFoundError" not in stderr, f"ModuleNotFoundError on streamlit startup:\n{stderr}"
-            assert "ImportError" not in stderr, f"ImportError on streamlit startup:\n{stderr}"
-            assert poll_result == 0, f"Streamlit exited with code {poll_result}:\n{stderr}"
-        # Process is still running — startup succeeded.
     finally:
         proc.terminate()
-        try:
-            proc.wait(timeout=5)
-        except subprocess.TimeoutExpired:
-            proc.kill()
-            proc.wait(timeout=5)
+
+    try:
+        _, stderr = proc.communicate(timeout=5)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        proc.communicate()
+        return
+
+    # Check stderr regardless of whether the process exited or was terminated —
+    # a running process that logged import errors would otherwise pass silently.
+    assert "ModuleNotFoundError" not in stderr, f"ModuleNotFoundError on streamlit startup:\n{stderr}"
+    assert "ImportError" not in stderr, f"ImportError on streamlit startup:\n{stderr}"
+    if poll_result is not None:
+        assert poll_result == 0, f"Streamlit exited with code {poll_result}:\n{stderr}"
