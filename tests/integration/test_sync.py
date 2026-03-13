@@ -173,16 +173,80 @@ def test_sync_kaggle_cache_hit(mock_cls: MagicMock, tmp_path: Path) -> None:
     fetch_teams_count_after_first = instance.fetch_teams.call_count
     fetch_seasons_count_after_first = instance.fetch_seasons.call_count
 
-    # Second run: should hit cache for all seasons
+    # Second run: should hit cache for all seasons.
+    # fetch_seasons is called again to detect new seasons in the CSV, but
+    # since no new seasons exist the cache is preserved.
     result2 = engine.sync_kaggle(force_refresh=False)
 
     assert instance.fetch_games.call_count == fetch_games_count_after_first
     assert instance.fetch_teams.call_count == fetch_teams_count_after_first
-    assert instance.fetch_seasons.call_count == fetch_seasons_count_after_first
+    # fetch_seasons must be called once more on the cache-hit path to detect new seasons
+    assert instance.fetch_seasons.call_count == fetch_seasons_count_after_first + 1
     assert result2.seasons_cached == len(_SEASONS)
     assert result2.games_written == 0
     assert result2.teams_written == 0
     assert result2.seasons_written == 0
+
+
+# ---------------------------------------------------------------------------
+# Test 10.6: Stale seasons cache detects new season from CSV
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.integration
+@patch("ncaa_eval.ingest.sync.KaggleConnector")
+def test_sync_kaggle_new_season_invalidates_cache(mock_cls: MagicMock, tmp_path: Path) -> None:
+    """When CSV contains a new season not in cached parquet, cache is updated and new games fetched."""
+    instance = mock_cls.return_value
+    instance.download.return_value = None
+    instance.fetch_teams.return_value = _TEAMS
+
+    # First sync: seasons = [2023, 2024]
+    instance.fetch_seasons.return_value = _SEASONS
+    instance.fetch_games.side_effect = lambda year: _make_games(_GAMES_2024 if year == 2024 else _GAMES_2023)
+
+    repo = ParquetRepository(tmp_path)
+    engine = SyncEngine(repository=repo, data_dir=tmp_path)
+    result1 = engine.sync_kaggle()
+    assert result1.seasons_written == 2
+    assert result1.games_written == len(_GAMES_2024) + len(_GAMES_2023)
+
+    # Second sync: CSV now includes 2025 as a new season
+    _GAMES_2025 = [
+        {
+            "game_id": "2025_10_1101_1104",
+            "season": 2025,
+            "day_num": 10,
+            "w_team_id": 1101,
+            "l_team_id": 1104,
+            "w_score": 90,
+            "l_score": 80,
+            "loc": "H",
+        },
+    ]
+    seasons_with_2025 = [Season(year=2023), Season(year=2024), Season(year=2025)]
+    instance.fetch_seasons.return_value = seasons_with_2025
+    instance.fetch_games.side_effect = lambda year: _make_games(
+        _GAMES_2025 if year == 2025 else (_GAMES_2024 if year == 2024 else _GAMES_2023)
+    )
+    instance.fetch_games.reset_mock()
+
+    result2 = engine.sync_kaggle(force_refresh=False)
+
+    # Seasons cache should be updated; only 1 new season (2025) was written
+    assert result2.seasons_written == 1
+    # Old seasons should be cache hits; only 2025 should be fetched
+    assert result2.seasons_cached == 2
+    assert result2.games_written == len(_GAMES_2025)
+    # Verify only the new season triggered a fetch_games call
+    assert instance.fetch_games.call_count == 1
+    # Verify 2025 games actually persisted
+    games_2025 = repo.get_games(2025)
+    assert len(games_2025) == 1
+    assert games_2025[0].game_id == "2025_10_1101_1104"
+    # Verify old seasons are still intact after cache update
+    assert len(repo.get_games(2023)) == len(_GAMES_2023)
+    assert len(repo.get_games(2024)) == len(_GAMES_2024)
 
 
 # ---------------------------------------------------------------------------

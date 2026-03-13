@@ -101,7 +101,7 @@ class KaggleConnector(Connector):
     def __init__(
         self,
         extract_dir: Path,
-        competition: str = "march-machine-learning-mania-2025",
+        competition: str = "march-machine-learning-mania-2026",
     ) -> None:
         self._extract_dir = extract_dir
         self._competition = competition
