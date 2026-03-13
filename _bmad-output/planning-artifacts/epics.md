@@ -1466,6 +1466,24 @@ so that **version tags are automatically created and generated outputs don't pol
 **Source:** CI run https://github.com/dhilgart/NCAA_eval/actions/runs/23031452020/job/66890478889; `git status` showing `?? output/`
 **Prerequisite:** None (hotfix — independent of Epic 10 ensemble work)
 
+### Story 10.6: 2026 Season Data Support
+
+As a **data scientist**,
+I want **the pipeline to correctly sync, deduplicate, and serve 2026 NCAA season data end-to-end**,
+so that **I can train models and generate bracket predictions for the 2026 tournament**.
+
+**Acceptance Criteria:**
+
+1. **Kaggle competition slug updated** — `KaggleConnector` default `competition` parameter updated to `"march-machine-learning-mania-2026"` and sync successfully downloads 2026 CSVs.
+2. **Massey ordinals constant updated** — `_MASSEY_LAST_SEASON` updated to `2026` in `normalization.py`; docstrings updated from "2003–2025" to "2003–2026".
+3. **End-to-end pipeline validated** — `ncaa-eval sync`, feature serving, and model training all execute without error for a range including 2026.
+4. **ESPN deduplication verified for 2026** — If 2026 has the same Kaggle+ESPN overlap as 2025, `_deduplicate_espn_overlap()` handles it correctly (spot-check game counts vs. expected).
+5. **graph.py deduplication comment generalized** — Comment about 2025-specific duplication is updated to be season-agnostic.
+6. **Dashboard and CLI example text updated** — `--end-year` example updated to 2026 in `dashboard/pages/home.py` and relevant CLI help text.
+
+**Source:** Volty request 2026-03-13; codebase analysis findings
+**Prerequisite:** 2026 Kaggle competition must be live (check https://www.kaggle.com/competitions/march-machine-learning-mania-2026)
+
 ---
 
 ## Epic X: Cookiecutter Project Template
