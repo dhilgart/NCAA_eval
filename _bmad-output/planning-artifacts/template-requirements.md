@@ -211,6 +211,20 @@ When `main` has branch protection requiring PRs, `commitizen-action` fails with 
 
 **Template Action:** If the template uses commitizen-action, document the branch protection trade-off explicitly in the CI/CD setup guide. Default to **Option D** (Actions bot bypass) or **Option A** (tag-only) based on project needs.
 
+#### Option C (PR-based bump) — Tag-Before-Merge Gotcha ⭐ (Discovered Story 10.5 Code Review Round 2, 2026-03-13)
+
+If you implement Option C (open a PR for the bump commit), the version tag is pushed **before the PR is merged**. This creates a critical constraint:
+
+- **Regular merge (merge commit):** Tag is in `main`'s ancestry after merge — ✅ works correctly
+- **Squash merge:** The original bump commit is abandoned; tag permanently points outside `main`'s ancestry — ❌ commitizen breaks on next run
+- **Rebase merge:** Same problem as squash — new commit hash doesn't match the tag
+
+**Template Actions:**
+1. In the auto-generated PR body, include a `⚠️ Merge strategy` warning telling the merger to use "Create a merge commit"
+2. Add a comment in the workflow YAML mandating merge-commit strategy
+3. Add `&& !contains(github.event.head_commit.message, 'ci/bump-')` to the job `if:` guard — when the bump PR is merged with a regular merge commit, the merge message doesn't start with `bump:` and the job would fire again; the secondary guard suppresses it
+4. Use `--force-with-lease` on the branch push step — makes workflow re-runs idempotent if the branch was already pushed in a prior failed run
+
 #### Pre-commit Deprecated Stage Names: Use `pre-commit migrate-config` (Discovered Story 10.5, 2026-03-13)
 
 Pre-commit renamed stage identifiers. Old names cause deprecation warnings on every commit:

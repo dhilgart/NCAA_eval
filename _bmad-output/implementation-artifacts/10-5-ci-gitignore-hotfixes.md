@@ -1,6 +1,6 @@
 # Story 10.5: CI Bumpversion Fix, Output Gitignore & Pre-commit Deprecation Warnings
 
-Status: review
+Status: done
 
 ## Story
 
@@ -122,9 +122,36 @@ Claude Opus 4.6
 
 - 2026-03-13: Implemented all 3 tasks — .gitignore fix, CI bump-version fix, pre-commit migration
 - 2026-03-13: Addressed code review findings — 4 items resolved (1 High, 3 Medium)
+- 2026-03-13: Second code review — 3 additional fixes applied (1 High, 2 Medium): merge-strategy guard, idempotent branch push, PR body merge warning
 
 ### File List
 
 - `.gitignore` (modified — added `/output/`; corrected to root-level pattern during code review)
-- `.github/workflows/main-updated.yaml` (modified — `push: false` + PR-via-`actions/github-script` for bump commit + precise tag push with `if:` guard)
+- `.github/workflows/main-updated.yaml` (modified — `push: false` + PR-via-`actions/github-script` for bump commit + precise tag push with `if:` guard; second review: merge-strategy guard + idempotent branch push + PR body merge warning)
 - `.pre-commit-config.yaml` (modified — migrated deprecated stage names)
+
+### Senior Developer Review (AI) — 2026-03-13
+
+**Reviewer:** Claude Sonnet 4.6
+
+**Verdict:** Changes Requested → Fixed (3 issues resolved; 2 LOW items noted but not auto-fixed)
+
+#### Findings
+
+**[HIGH-1 — FIXED] Tag pushed before PR merge; squash/rebase breaks tag ancestry** (`.github/workflows/main-updated.yaml`)
+The version tag was pushed pointing to the `ci/bump-X.Y.Z` commit before the PR was merged. Squash/rebase merge would orphan the tag outside `main`'s ancestry, causing commitizen to misdetect the version anchor on future runs.
+- **Fix applied:** (1) Updated `if:` guard to also skip `bump-version` job when the merge commit message contains `"ci/bump-"` (regular merge of the bump PR). (2) Added `⚠️` merge-strategy warning to the auto-generated PR body. (3) Added inline comment in the workflow mandating "Create a merge commit".
+
+**[MEDIUM-1 — FIXED] Workflow re-run idempotency gap** (`.github/workflows/main-updated.yaml:42`)
+Failed re-run would fail at `git push origin ci/bump-X.Y.Z` because the remote branch already exists.
+- **Fix applied:** Changed to `git push origin ci/bump-X.Y.Z --force-with-lease` for safe idempotent re-runs.
+
+**[MEDIUM-2 — FIXED] Second `bump-version` run on bump PR merge** (`.github/workflows/main-updated.yaml:10`)
+When the CI bump PR was merged via a regular merge commit (`"Merge pull request #N from .../ci/bump-..."`), the message didn't start with `"bump:"`, so the job ran again unnecessarily.
+- **Fix applied:** Added `&& !contains(github.event.head_commit.message, 'ci/bump-')` to the job `if:` condition.
+
+**[LOW-1 — NOT FIXED] Inline `steps.cz.outputs.version` in github-script** (`.github/workflows/main-updated.yaml:50`)
+Direct string interpolation of CI output into JS. Semver values are safe in practice; best practice would be `${{ toJSON(...) }}`. Left for future cleanup.
+
+**[LOW-2 — NOT FIXED] `commitizen-branch` at `post-commit` stage** (`.pre-commit-config.yaml:37`)
+Pre-existing configuration (was `post-commit, push` before migration; correctly became `post-commit, pre-push`). Running branch-name validation at every commit is more aggressive than needed but not incorrect. Left as-is.
