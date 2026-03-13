@@ -1,6 +1,6 @@
 # Story 10.5: CI Bumpversion Fix, Output Gitignore & Pre-commit Deprecation Warnings
 
-Status: in-progress
+Status: review
 
 ## Story
 
@@ -33,10 +33,10 @@ so that **the toolchain is clean, version tags are automatically created, and ge
 
 ### Review Follow-ups (AI)
 
-- [ ] [AI-Review][HIGH] `push: false` leaves `main` stale: bump commit (pyproject.toml version, docs/conf.py release, CHANGELOG) is created in CI runner but never pushed to main — only the tag is pushed. Future commitizen runs see version tag vs stale pyproject.toml. Choose a resolution: (A) tag HEAD directly without a bump commit, (B) open a PR for the bump commit via `actions/github-script`, or (C) use a GitHub App token exempt from branch protection. [`.github/workflows/main-updated.yaml:26-29`]
-- [ ] [AI-Review][MEDIUM] `commitizen-action` still pinned at `0.27.1` — Dev Notes mandated checking for latest stable release; decision was not documented and no upgrade was evaluated. [`.github/workflows/main-updated.yaml:22`]
-- [ ] [AI-Review][MEDIUM] AC #2 is empirically unverifiable pre-merge — workflow only triggers on `push: branches: [main]`; the fix has never run in the actual CI environment. The PR merge itself will be the first real test. [`.github/workflows/main-updated.yaml:3-6`]
-- [ ] [AI-Review][MEDIUM] `git push origin --tags` broadcasts all local tags — with `fetch-depth: 0` all remote tags are fetched locally; prefer `git push origin refs/tags/${{ steps.cz.outputs.version }}` with `if: steps.cz.outputs.version != ''` guard for precision. [`.github/workflows/main-updated.yaml:29`]
+- [x] [AI-Review][HIGH] `push: false` leaves `main` stale: bump commit (pyproject.toml version, docs/conf.py release, CHANGELOG) is created in CI runner but never pushed to main — only the tag is pushed. Future commitizen runs see version tag vs stale pyproject.toml. Choose a resolution: (A) tag HEAD directly without a bump commit, (B) open a PR for the bump commit via `actions/github-script`, or (C) use a GitHub App token exempt from branch protection. [`.github/workflows/main-updated.yaml:26-29`]
+- [x] [AI-Review][MEDIUM] `commitizen-action` still pinned at `0.27.1` — Dev Notes mandated checking for latest stable release; decision was not documented and no upgrade was evaluated. [`.github/workflows/main-updated.yaml:22`]
+- [x] [AI-Review][MEDIUM] AC #2 is empirically unverifiable pre-merge — workflow only triggers on `push: branches: [main]`; the fix has never run in the actual CI environment. The PR merge itself will be the first real test. [`.github/workflows/main-updated.yaml:3-6`]
+- [x] [AI-Review][MEDIUM] `git push origin --tags` broadcasts all local tags — with `fetch-depth: 0` all remote tags are fetched locally; prefer `git push origin refs/tags/${{ steps.cz.outputs.version }}` with `if: steps.cz.outputs.version != ''` guard for precision. [`.github/workflows/main-updated.yaml:29`]
 
 ## Dev Notes
 
@@ -113,13 +113,18 @@ Claude Opus 4.6
 - **Task 2:** Root cause: branch protection rules on `main` require PRs, but `commitizen-action@0.27.1` pushes the bump commit directly. Fix: set `push: false` on the action and add a separate step to push only tags (which were already succeeding). The `publish-github-page` job has no `needs:` dependency on `bump-version` and is completely unaffected.
 - **Task 3:** Ran `pre-commit migrate-config` to replace deprecated stage names (`commit` → `pre-commit`, `push` → `pre-push`). Verified zero deprecation warnings on subsequent commit.
 - All 1183 tests pass, ruff and mypy clean.
+- ✅ Resolved review finding [HIGH]: Option B implemented — bump commit pushed to `ci/bump-{version}` branch; PR opened automatically via `actions/github-script@v7`; `pull-requests: write` permission added to job.
+- ✅ Resolved review finding [MEDIUM]: `commitizen-action@0.27.1` confirmed as latest stable release (verified via GitHub API 2026-03-13). No upgrade available; version is intentionally pinned to current stable.
+- ✅ Resolved review finding [MEDIUM]: AC #2 empirically unverifiable acknowledged — this is inherent to any workflow-only change gated on `push: [main]`. The PR merge will be the first live CI test. No code change warranted.
+- ✅ Resolved review finding [MEDIUM]: Replaced `git push origin --tags` with `git push origin refs/tags/${{ steps.cz.outputs.version }}` guarded by `if: steps.cz.outputs.version != ''` for precision tag pushing.
 
 ### Change Log
 
 - 2026-03-13: Implemented all 3 tasks — .gitignore fix, CI bump-version fix, pre-commit migration
+- 2026-03-13: Addressed code review findings — 4 items resolved (1 High, 3 Medium)
 
 ### File List
 
 - `.gitignore` (modified — added `/output/`; corrected to root-level pattern during code review)
-- `.github/workflows/main-updated.yaml` (modified — `push: false` + separate tag push step)
+- `.github/workflows/main-updated.yaml` (modified — `push: false` + PR-via-`actions/github-script` for bump commit + precise tag push with `if:` guard)
 - `.pre-commit-config.yaml` (modified — migrated deprecated stage names)
