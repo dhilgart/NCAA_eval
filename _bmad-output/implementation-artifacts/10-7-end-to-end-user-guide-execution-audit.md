@@ -190,17 +190,33 @@ Both issues described in the story are not reproducible in the current environme
 - Testing strategy docs updated: "Execution Context" principle added to TESTING_STRATEGY.md; full "Execution-Context Tests (E2E Startup)" section added to execution.md with comparison table, historical failure explanation, and example
 - All quality gates pass: ruff (0 errors), mypy --strict (0 errors), pytest (1172 passed)
 
+### Senior Developer Review (AI) — 2026-03-13
+
+**Reviewer:** Claude Sonnet 4.6 (code-review workflow)
+**Outcome:** APPROVED — 4 issues fixed, 2 LOW issues noted (not fixed)
+
+**Findings Fixed:**
+- H1 [HIGH] `_clean_env()` did not strip `PYTHONPATH` — subprocess could inherit path injection from CI/dev environment, defeating the purpose of execution-context isolation. Fixed: added `"PYTHONPATH"` to the exclusion set in `_clean_env()`.
+- M1 [MEDIUM] E2E tests ran twice in CI — `testpaths = ["tests"]` causes `pytest --cov` to collect `tests/e2e/`, and the explicit E2E step ran them again. Fixed: added `--ignore=tests/e2e/` to the main `pytest --cov` step.
+- M2 [MEDIUM] `test_streamlit_startup` had a silent `return` in the `except subprocess.TimeoutExpired` branch — assertions never executed on termination timeout. Fixed: replaced `return` with `pytest.fail()`.
+- M3 [MEDIUM] `execution.md` canonical example omitted `timeout=` and `env=_clean_env()` — future developers following the template would miss both. Fixed: updated example.
+
+**Findings Not Fixed (LOW):**
+- L1: `test_streamlit_startup` uses `python -m streamlit` instead of documented bare `streamlit run` — functionally equivalent.
+- L2: Port 18501 is hardcoded — low-probability CI port collision risk.
+
 ### Change Log
 
 - 2026-03-13: Story 10.7 implemented — E2E user-facing execution audit with subprocess startup tests, CI integration, testing strategy documentation
+- 2026-03-13: Code review fixes — PYTHONPATH stripping, CI double-run, silent return, doc example
 
 ### File List
 
 - `tests/e2e/__init__.py` (new)
-- `tests/e2e/test_user_facing_commands.py` (new — modified in code review: add @pytest.mark.slow and fix stderr check in Streamlit test success path)
-- `.github/workflows/python-check.yaml` (modified — added E2E step)
+- `tests/e2e/test_user_facing_commands.py` (new — code review: strip PYTHONPATH in _clean_env, pytest.fail on Streamlit termination timeout)
+- `.github/workflows/python-check.yaml` (modified — added E2E step; code review: added --ignore=tests/e2e/ to main pytest step)
 - `docs/TESTING_STRATEGY.md` (modified — added Execution Context principle, e2e dir in Test Organization)
-- `docs/testing/execution.md` (modified — added Execution-Context Tests section)
+- `docs/testing/execution.md` (modified — added Execution-Context Tests section; code review: updated example with timeout= and env=_clean_env())
 - `docs/tutorials/getting-started.md` (modified — updated list_models output to include ensemble)
 - `notebooks/tutorials/03_ensemble_model.ipynb` (modified — notebook executed for Task 1.6 audit; cell outputs updated)
 - `_bmad-output/implementation-artifacts/10-7-end-to-end-user-guide-execution-audit.md` (modified — story tracking)

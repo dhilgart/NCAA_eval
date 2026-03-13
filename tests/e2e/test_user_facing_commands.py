@@ -27,8 +27,8 @@ REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 
 
 def _clean_env() -> dict[str, str]:
-    """Build an environment dict without FORCE_COLOR to avoid ANSI noise."""
-    env = {k: v for k, v in os.environ.items() if k not in {"FORCE_COLOR", "FORCE_COLORS"}}
+    """Build an environment dict without FORCE_COLOR or PYTHONPATH to avoid ANSI noise and path injection."""
+    env = {k: v for k, v in os.environ.items() if k not in {"FORCE_COLOR", "FORCE_COLORS", "PYTHONPATH"}}
     env["NO_COLOR"] = "1"
     return env
 
@@ -179,7 +179,9 @@ def test_streamlit_startup() -> None:
     except subprocess.TimeoutExpired:
         proc.kill()
         proc.communicate()
-        return
+        pytest.fail(
+            "Streamlit process did not terminate cleanly within 5 s after SIGTERM — stderr unavailable"
+        )
 
     # Check stderr regardless of whether the process exited or was terminated —
     # a running process that logged import errors would otherwise pass silently.

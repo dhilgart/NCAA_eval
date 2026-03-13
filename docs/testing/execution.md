@@ -359,6 +359,8 @@ def test_sync_help() -> None:
         capture_output=True,
         text=True,
         cwd=REPO_ROOT,
+        timeout=30,          # prevent indefinite hang if subprocess deadlocks
+        env=_clean_env(),    # strip PYTHONPATH to avoid test-harness path injection
     )
     assert "ModuleNotFoundError" not in result.stderr
     assert "ImportError" not in result.stderr
