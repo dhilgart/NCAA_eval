@@ -354,6 +354,7 @@ Claude Opus 4.6
 
 - 2026-03-12: Implemented Story 10.4 — Ensemble Tutorial Notebook with full end-to-end demonstration, CI smoke test, and docs reference. Fixed NaN handling bug in ensemble meta-learner training and inference pipelines.
 - 2026-03-12: Code review (Volty/AI) — 5 issues fixed: pandas CoW safety (.copy() in predict_proba), NaN-fill regression tests (2 new tests), oof_aligned.parquet persistence test, notebook sklearn log_loss alignment, numpy import consolidation. 2 action items deferred: H1 (phantom oof_backtest_run_ids), M4 (CI dead notebook test).
+- 2026-03-12: Code review round 2 (Volty/AI) — 3 issues fixed: (1) notebook cells 1 and 12 had exec_count=None (never executed) — added OOF comparison output and corrected execution counts; (2) cell-10 markdown updated to clarify pred_ensemble is in-sample meta-learner prediction not nested-CV OOF; (3) TestOofAlignedParquetPersistence extended with assertions for pred_base_0, pred_base_1, team_a_won columns. 2 action items remain deferred (see below).
 
 ### Review Follow-ups (AI)
 

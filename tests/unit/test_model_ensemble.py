@@ -980,3 +980,7 @@ class TestOofAlignedParquetPersistence:
         assert "pred_ensemble" in oof.columns, "oof_aligned.parquet must include pred_ensemble column"
         assert not oof["pred_ensemble"].isna().any(), "pred_ensemble must have no NaN values"
         assert len(oof) > 0, "oof_aligned.parquet must not be empty"
+        # Columns required for the tutorial notebook's OOF log-loss comparison
+        assert "pred_base_0" in oof.columns, "oof_aligned.parquet must include pred_base_0"
+        assert "pred_base_1" in oof.columns, "oof_aligned.parquet must include pred_base_1"
+        assert "team_a_won" in oof.columns, "oof_aligned.parquet must include team_a_won"

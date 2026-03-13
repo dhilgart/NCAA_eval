@@ -1780,7 +1780,41 @@ When multiple notebooks contribute numbered sections to the same findings file, 
 ```
 Or renumber sequentially when sections are dropped rather than leaving gaps.
 
-*Last Updated: 2026-02-20 (Story 3.1 Code Review — EDA notebook conventions, gitkeep pattern, nbconvert --output-dir, connector behavior verification)*
+### Tutorial Notebook Execution Verification ⭐ (Discovered Story 10.4 Code Review)
+
+When committing a Jupyter notebook with executed outputs, verify that **every code cell has a non-None `execution_count`**. A cell with `execution_count=None` was never executed in the final nbconvert run. This is invisible to a casual reviewer but means the cell's output (or lack of output) cannot be trusted.
+
+**Check command:**
+```bash
+python3 -c "
+import json
+nb = json.load(open('notebooks/tutorials/03_ensemble_model.ipynb'))
+bad = [(i, c['cell_type']) for i, c in enumerate(nb['cells'])
+       if c['cell_type'] == 'code' and c.get('execution_count') is None]
+print('Unexecuted cells:', bad or 'NONE')
+"
+```
+
+**Root cause (Story 10.4):** The notebook was executed interactively (not via nbconvert), then specific cells were re-executed in a live kernel. Cells that were skipped during the re-run (cell-1: imports already loaded; cell-12: OOF comparison) retained `execution_count=None` from when their count was cleared. The committed notebook was missing the core AC demonstration (OOF log-loss table) because cell-12 was never re-run.
+
+**Code review checklist for tutorial notebooks:**
+- [ ] ALL code cells must have `execution_count` set to a non-None integer
+- [ ] Execution counts should be sequential (1, 2, 3, ...) — gaps indicate skipped cells
+- [ ] The "primary demonstration" cell (the one that proves the core AC) must have actual output
+
+### Stacked Ensemble OOF Comparison: In-Sample vs. True OOF ⭐ (Discovered Story 10.4 Code Review)
+
+When comparing base model OOF performance against an ensemble in a tutorial:
+
+- **Base model predictions** in `oof_aligned.parquet` are **truly OOF** — each base model was trained on folds that excluded the prediction season.
+- **Ensemble predictions** (`pred_ensemble`) are the **meta-learner's in-sample** predictions on those OOF base model predictions. The meta-learner was trained on those exact rows.
+
+This is standard stacking practice (low-variance meta-learner ≈ no overfitting), but tutorials must explicitly document this distinction. Using in-sample ensemble predictions against truly-OOF base model predictions creates a methodologically unfair comparison that overstates the ensemble's benefit.
+
+**Template pattern for ensemble tutorials:** Add a note to the OOF comparison section:
+> `pred_ensemble` is the meta-learner's in-sample performance on held-out base model predictions, not a nested cross-validated OOF estimate. For simple meta-learners (logistic regression), in-sample ≈ out-of-sample, but this comparison is not strictly apples-to-apples.
+
+*Last Updated: 2026-03-12 (Story 10.4 Code Review — notebook execution verification, stacked ensemble OOF comparison methodology)*
 
 ### `datetime.date.today()` — Capture Once Before Branching ⭐ (Discovered Story 4.2 Code Review)
 
