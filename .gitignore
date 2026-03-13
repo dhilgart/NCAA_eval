@@ -149,6 +149,7 @@ cython_debug/
 # Project-specific
 data/*
 !data/.gitkeep
+output/
 
 # edgetest — dependency boundary testing artifacts
 .edgetest/
