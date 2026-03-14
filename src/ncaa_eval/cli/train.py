@@ -404,6 +404,12 @@ def _align_oof_predictions(
     if not oof_frames:
         return pd.DataFrame()
 
+    # If any base model produced no OOF predictions (empty DataFrame with no
+    # columns), alignment is impossible — return empty to trigger the graceful
+    # abort path in _run_ensemble_training instead of crashing with KeyError.
+    if any(f.empty for f in oof_frames):
+        return pd.DataFrame()
+
     aligned = oof_frames[0]
     for frame in oof_frames[1:]:
         pred_cols = [c for c in frame.columns if c.startswith("pred_base_")]

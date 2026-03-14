@@ -172,6 +172,33 @@ class TestCLIExport:
 
     @patch("ncaa_eval.cli.export.ParquetRepository")
     @patch("ncaa_eval.cli.export.RunStore")
+    def test_export_missing_season_data_exits_with_error(
+        self,
+        mock_store_cls: MagicMock,
+        mock_repo_cls: MagicMock,
+    ) -> None:
+        """CLI export exits with error when no games exist for the season."""
+        mock_store = mock_store_cls.return_value
+        mock_store.load_model.return_value = _make_mock_stateful_model()
+
+        mock_repo = mock_repo_cls.return_value
+        mock_repo.get_games.return_value = []
+
+        result = runner.invoke(
+            app,
+            [
+                "export",
+                "--run-id",
+                "test-run-001",
+                "--season",
+                "1900",
+            ],
+        )
+        assert result.exit_code != 0
+        assert "Error" in result.output
+
+    @patch("ncaa_eval.cli.export.ParquetRepository")
+    @patch("ncaa_eval.cli.export.RunStore")
     def test_export_stdout_when_no_output(
         self,
         mock_store_cls: MagicMock,

@@ -177,6 +177,29 @@ class TestKaggleConnectorDateComputation:
 # ---------------------------------------------------------------------------
 
 
+class TestKaggleConnectorLoadDayZeros:
+    """Tests for load_day_zeros() — data retrieval and in-memory caching."""
+
+    def test_returns_season_mapping(self, connector: KaggleConnector) -> None:
+        """load_day_zeros() returns a {season: date} dict populated from MSeasons.csv."""
+        mapping = connector.load_day_zeros()
+        assert 2024 in mapping
+        assert isinstance(mapping[2024], datetime.date)
+
+    def test_cache_hit_skips_csv_read(self, connector: KaggleConnector) -> None:
+        """Second call returns cached result without re-reading MSeasons.csv.
+
+        Regression guard: if the cache check (``if self._day_zeros is not None``)
+        is accidentally removed, _read_csv will be called twice and this test
+        will fail.
+        """
+        first = connector.load_day_zeros()
+        with patch.object(connector, "_read_csv") as mock_read:
+            second = connector.load_day_zeros()
+        mock_read.assert_not_called()
+        assert second == first
+
+
 class TestKaggleConnectorSeasons:
     """Tests for fetch_seasons() parsing MSeasons.csv."""
 

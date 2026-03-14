@@ -337,3 +337,379 @@ def test_cli_train_logistic_regression(train_data_dir: Path, tmp_path: Path) -> 
         f"CLI train --model logistic_regression failed "
         f"(rc={result.returncode}):\n{result.stdout}\n{result.stderr}"
     )
+
+
+# ---------------------------------------------------------------------------
+# predict / export — shared fixtures and tests
+#
+# StackedEnsemble cannot be trained via ``cli train --model ensemble``
+# (the registry entry is a sentinel placeholder). All three model types are
+# trained programmatically so the same Parquet data directory doubles as the
+# RunStore root — which is what the documented ``cli predict / export``
+# workflow requires (``--data-dir`` serves both roles).
+# ---------------------------------------------------------------------------
+
+
+def _populate_data_dir(data_dir: Path) -> None:
+    """Write minimal Parquet data (4 teams × 2 seasons × 24 games) to *data_dir*."""
+    from ncaa_eval.ingest.repository import ParquetRepository
+    from ncaa_eval.ingest.schema import Game, Season, Team
+
+    repo = ParquetRepository(base_path=data_dir)
+    repo.save_teams(
+        [
+            Team(team_id=101, team_name="Team A", canonical_name="team_a"),
+            Team(team_id=102, team_name="Team B", canonical_name="team_b"),
+            Team(team_id=103, team_name="Team C", canonical_name="team_c"),
+            Team(team_id=104, team_name="Team D", canonical_name="team_d"),
+        ]
+    )
+    repo.save_seasons([Season(year=2023), Season(year=2024)])
+    team_ids = [101, 102, 103, 104]
+    pairs = [(w, l_id) for i, w in enumerate(team_ids) for l_id in team_ids[i + 1 :]]
+    all_games: list[Game] = []
+    for season_year in (2023, 2024):
+        for rnd, (w_id, l_id) in enumerate(pairs * 4):
+            day = 10 + rnd * 4
+            all_games.append(
+                Game(
+                    game_id=f"g{season_year}_{rnd + 1:03d}",
+                    season=season_year,
+                    day_num=day,
+                    date=datetime.date(season_year - 1, 11, 1) + datetime.timedelta(days=day),
+                    w_team_id=w_id,
+                    l_team_id=l_id,
+                    w_score=75,
+                    l_score=60,
+                    loc="N",
+                )
+            )
+    repo.save_games(all_games)
+
+
+@pytest.fixture(scope="module")
+def elo_run(tmp_path_factory: pytest.TempPathFactory) -> tuple[str, Path]:
+    """Train an Elo model once for all predict/export tests.
+
+    ``data_dir`` and ``output_dir`` are the same directory so that
+    ``cli predict/export --data-dir <dir>`` can locate both Parquet data
+    and RunStore artifacts — matching the documented user workflow.
+
+    Returns:
+        (run_id, data_dir)
+    """
+    from rich.console import Console
+
+    from ncaa_eval.cli.train import run_training
+    from ncaa_eval.model import get_model
+
+    data_dir = tmp_path_factory.mktemp("elo_run")
+    _populate_data_dir(data_dir)
+    model = get_model("elo")()
+    run = run_training(
+        model,
+        start_year=2023,
+        end_year=2024,
+        data_dir=data_dir,
+        output_dir=data_dir,
+        model_name="elo",
+        console=Console(quiet=True),
+    )
+    return run.run_id, data_dir
+
+
+@pytest.fixture(scope="module")
+def xgboost_run(tmp_path_factory: pytest.TempPathFactory) -> tuple[str, Path]:
+    """Train an XGBoost model once for all predict/export tests.
+
+    Returns:
+        (run_id, data_dir)
+    """
+    from rich.console import Console
+
+    from ncaa_eval.cli.train import run_training
+    from ncaa_eval.model import get_model
+
+    data_dir = tmp_path_factory.mktemp("xgboost_run")
+    _populate_data_dir(data_dir)
+    model = get_model("xgboost")()
+    run = run_training(
+        model,
+        start_year=2023,
+        end_year=2024,
+        data_dir=data_dir,
+        output_dir=data_dir,
+        model_name="xgboost",
+        console=Console(quiet=True),
+    )
+    return run.run_id, data_dir
+
+
+@pytest.fixture(scope="module")
+def ensemble_run(tmp_path_factory: pytest.TempPathFactory) -> tuple[str, Path]:
+    """Train a StackedEnsemble (Elo + LogisticRegression base, LR meta) once.
+
+    StackedEnsemble is not trainable via ``cli train --model ensemble``
+    because the registry entry is a sentinel.  Programmatic construction
+    is the documented path for ensemble training.
+
+    Returns:
+        (run_id, data_dir)
+    """
+    from rich.console import Console
+
+    from ncaa_eval.cli.train import run_training
+    from ncaa_eval.ingest.repository import ParquetRepository
+    from ncaa_eval.ingest.schema import Game
+    from ncaa_eval.model import get_model
+    from ncaa_eval.model.ensemble import StackedEnsemble
+
+    data_dir = tmp_path_factory.mktemp("ensemble_run")
+    _populate_data_dir(data_dir)
+
+    # Add tournament games to 2024 so walk_forward_splits produces a non-empty
+    # test fold — the splitter uses is_tournament=True as the test-fold filter,
+    # so without these games all OOF fold results would be empty and the
+    # ensemble training would abort before saving the model.
+    repo = ParquetRepository(base_path=data_dir)
+    existing = repo.get_games(2024)
+    tournament_games = [
+        Game(
+            game_id=f"t2024_{i:02d}",
+            season=2024,
+            day_num=134 + i,
+            w_team_id=101 + (i % 2),
+            l_team_id=103 + (i % 2),
+            w_score=75,
+            l_score=60,
+            loc="N",
+            is_tournament=True,
+        )
+        for i in range(4)
+    ]
+    repo.save_games(existing + tournament_games)
+
+    ensemble = StackedEnsemble(
+        base_models=[get_model("elo")(), get_model("elo")()],
+        meta_learner=get_model("logistic_regression")(),
+    )
+    run = run_training(
+        ensemble,
+        start_year=2023,
+        end_year=2024,
+        data_dir=data_dir,
+        output_dir=data_dir,
+        model_name="ensemble",
+        console=Console(quiet=True),
+    )
+    return run.run_id, data_dir
+
+
+# ---------------------------------------------------------------------------
+# CLI predict tests
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.integration
+@pytest.mark.no_mutation
+def test_cli_predict_elo(elo_run: tuple[str, Path], tmp_path: Path) -> None:
+    """``cli predict`` with a stateful Elo model produces a valid CSV."""
+    from typer.testing import CliRunner
+
+    from ncaa_eval.cli.main import app
+
+    run_id, data_dir = elo_run
+    output_csv = tmp_path / "predictions.csv"
+    result = CliRunner().invoke(
+        app,
+        [
+            "predict",
+            "--run-id",
+            run_id,
+            "--season",
+            "2024",
+            "--data-dir",
+            str(data_dir),
+            "--output",
+            str(output_csv),
+        ],
+    )
+    assert result.exit_code == 0, f"predict (elo) failed:\n{result.output}"
+    content = output_csv.read_text()
+    assert content.startswith("season,team_a_id,team_b_id,pred_win_prob"), content[:200]
+    assert len(content.strip().splitlines()) > 1, "expected data rows"
+
+
+@pytest.mark.integration
+@pytest.mark.no_mutation
+def test_cli_predict_xgboost(xgboost_run: tuple[str, Path], tmp_path: Path) -> None:
+    """``cli predict`` with a stateless XGBoost model produces a valid CSV."""
+    from typer.testing import CliRunner
+
+    from ncaa_eval.cli.main import app
+
+    run_id, data_dir = xgboost_run
+    output_csv = tmp_path / "predictions.csv"
+    result = CliRunner().invoke(
+        app,
+        [
+            "predict",
+            "--run-id",
+            run_id,
+            "--season",
+            "2024",
+            "--data-dir",
+            str(data_dir),
+            "--output",
+            str(output_csv),
+        ],
+    )
+    assert result.exit_code == 0, f"predict (xgboost) failed:\n{result.output}"
+    content = output_csv.read_text()
+    assert content.startswith("season,team_a_id,team_b_id,pred_win_prob"), content[:200]
+    assert len(content.strip().splitlines()) > 1, "expected data rows"
+
+
+@pytest.mark.integration
+@pytest.mark.no_mutation
+def test_cli_predict_ensemble(ensemble_run: tuple[str, Path], tmp_path: Path) -> None:
+    """``cli predict`` with a StackedEnsemble produces a valid CSV."""
+    from typer.testing import CliRunner
+
+    from ncaa_eval.cli.main import app
+
+    run_id, data_dir = ensemble_run
+    output_csv = tmp_path / "predictions.csv"
+    result = CliRunner().invoke(
+        app,
+        [
+            "predict",
+            "--run-id",
+            run_id,
+            "--season",
+            "2024",
+            "--data-dir",
+            str(data_dir),
+            "--output",
+            str(output_csv),
+        ],
+    )
+    assert result.exit_code == 0, f"predict (ensemble) failed:\n{result.output}"
+    content = output_csv.read_text()
+    assert content.startswith("season,team_a_id,team_b_id,pred_win_prob"), content[:200]
+    assert len(content.strip().splitlines()) > 1, "expected data rows"
+
+
+@pytest.mark.integration
+@pytest.mark.no_mutation
+def test_cli_predict_invalid_run_id(tmp_path: Path) -> None:
+    """``cli predict`` exits 1 when run_id cannot be found."""
+    from typer.testing import CliRunner
+
+    from ncaa_eval.cli.main import app
+
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    result = CliRunner().invoke(
+        app,
+        [
+            "predict",
+            "--run-id",
+            "nonexistent-run",
+            "--season",
+            "2024",
+            "--data-dir",
+            str(data_dir),
+            "--output",
+            str(tmp_path / "out.csv"),
+        ],
+    )
+    assert result.exit_code == 1
+
+
+# ---------------------------------------------------------------------------
+# CLI export tests
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.integration
+@pytest.mark.no_mutation
+def test_cli_export_elo(elo_run: tuple[str, Path], tmp_path: Path) -> None:
+    """``cli export`` with an Elo model produces a Kaggle submission CSV."""
+    from typer.testing import CliRunner
+
+    from ncaa_eval.cli.main import app
+
+    run_id, data_dir = elo_run
+    output_csv = tmp_path / "submission.csv"
+    result = CliRunner().invoke(
+        app,
+        [
+            "export",
+            "--run-id",
+            run_id,
+            "--season",
+            "2024",
+            "--data-dir",
+            str(data_dir),
+            "--output",
+            str(output_csv),
+        ],
+    )
+    assert result.exit_code == 0, f"export (elo) failed:\n{result.output}"
+    content = output_csv.read_text()
+    assert content.startswith("ID,Pred"), content[:200]
+    assert len(content.strip().splitlines()) > 1, "expected data rows"
+
+
+@pytest.mark.integration
+@pytest.mark.no_mutation
+def test_cli_export_stateless_rejected(xgboost_run: tuple[str, Path], tmp_path: Path) -> None:
+    """``cli export`` exits 1 for a stateless (XGBoost) model — unsupported."""
+    from typer.testing import CliRunner
+
+    from ncaa_eval.cli.main import app
+
+    run_id, data_dir = xgboost_run
+    result = CliRunner().invoke(
+        app,
+        [
+            "export",
+            "--run-id",
+            run_id,
+            "--season",
+            "2024",
+            "--data-dir",
+            str(data_dir),
+            "--output",
+            str(tmp_path / "out.csv"),
+        ],
+    )
+    assert result.exit_code == 1
+
+
+@pytest.mark.integration
+@pytest.mark.no_mutation
+def test_cli_export_invalid_run_id(tmp_path: Path) -> None:
+    """``cli export`` exits 1 when run_id cannot be found."""
+    from typer.testing import CliRunner
+
+    from ncaa_eval.cli.main import app
+
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    result = CliRunner().invoke(
+        app,
+        [
+            "export",
+            "--run-id",
+            "nonexistent-run",
+            "--season",
+            "2024",
+            "--data-dir",
+            str(data_dir),
+            "--output",
+            str(tmp_path / "out.csv"),
+        ],
+    )
+    assert result.exit_code == 1

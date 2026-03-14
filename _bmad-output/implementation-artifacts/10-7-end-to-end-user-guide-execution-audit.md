@@ -190,7 +190,7 @@ Both issues described in the story are not reproducible in the current environme
 - Testing strategy docs updated: "Execution Context" principle added to TESTING_STRATEGY.md; full "Execution-Context Tests (E2E Startup)" section added to execution.md with comparison table, historical failure explanation, and example
 - All quality gates pass: ruff (0 errors), mypy --strict (0 errors), pytest (1172 passed)
 
-### Senior Developer Review (AI) — 2026-03-13
+### Senior Developer Review (AI) — 2026-03-13 (Pass 1)
 
 **Reviewer:** Claude Sonnet 4.6 (code-review workflow)
 **Outcome:** APPROVED — 4 issues fixed, 2 LOW issues noted (not fixed)
@@ -205,19 +205,42 @@ Both issues described in the story are not reproducible in the current environme
 - L1: `test_streamlit_startup` uses `python -m streamlit` instead of documented bare `streamlit run` — functionally equivalent.
 - L2: Port 18501 is hardcoded — low-probability CI port collision risk.
 
+### Senior Developer Review (AI) — 2026-03-13 (Pass 2)
+
+**Reviewer:** Claude Sonnet 4.6 (code-review workflow)
+**Outcome:** APPROVED — 2 issues fixed, 2 LOW issues noted (not fixed)
+
+**Context:** Pass 2 reviewed additional tests added post-pass-1: integration tests for `cli predict`/`cli export`, unit tests for ESPN/Kaggle connectors, ensemble OOF empty-frame guard, and `train.py` bugfix for `_align_oof_predictions`.
+
+**Findings Fixed:**
+- H1 [HIGH] Ruff I001 import sorting failure in `ensemble_run` fixture (`test_documented_commands.py:459`) — blank line between `ncaa_eval.model.*` and `ncaa_eval.ingest.*` imports treated as two separate first-party blocks. Fixed: removed blank line and sorted all `ncaa_eval.*` imports alphabetically.
+- M2 [MEDIUM] `test_all_teams_fail_logs_warning_with_count` hardcoded `"4 failed"` — brittle against fixture team-map changes. Fixed: replaced with `f"{len(connector._team_name_to_id)} failed"`.
+
+**Findings Not Fixed (LOW):**
+- L1: `ensemble_run` fixture uses two identical `get_model("elo")()` base models — tests function correctly; diverse ensemble not required for this test fixture.
+- L2: Tournament games in `ensemble_run` produce duplicate team pairings (i=0 and i=2 share 101 vs 103) — unique game_ids prevent conflicts; cosmetic only.
+
 ### Change Log
 
 - 2026-03-13: Story 10.7 implemented — E2E user-facing execution audit with subprocess startup tests, CI integration, testing strategy documentation
-- 2026-03-13: Code review fixes — PYTHONPATH stripping, CI double-run, silent return, doc example
+- 2026-03-13: Code review pass 1 fixes — PYTHONPATH stripping, CI double-run, silent return, doc example
+- 2026-03-13: Code review pass 2 fixes — ruff import sort in ensemble_run fixture, brittle "4 failed" assertion
 
 ### File List
 
 - `tests/e2e/__init__.py` (new)
-- `tests/e2e/test_user_facing_commands.py` (new — code review: strip PYTHONPATH in _clean_env, pytest.fail on Streamlit termination timeout)
-- `.github/workflows/python-check.yaml` (modified — added E2E step; code review: added --ignore=tests/e2e/ to main pytest step)
+- `tests/e2e/test_user_facing_commands.py` (new — code review P1: strip PYTHONPATH in _clean_env, pytest.fail on Streamlit termination timeout)
+- `.github/workflows/python-check.yaml` (modified — added E2E step; code review P1: added --ignore=tests/e2e/ to main pytest step)
 - `docs/TESTING_STRATEGY.md` (modified — added Execution Context principle, e2e dir in Test Organization)
-- `docs/testing/execution.md` (modified — added Execution-Context Tests section; code review: updated example with timeout= and env=_clean_env())
+- `docs/testing/execution.md` (modified — added Execution-Context Tests section; code review P1: updated example with timeout= and env=_clean_env())
 - `docs/tutorials/getting-started.md` (modified — updated list_models output to include ensemble)
 - `notebooks/tutorials/03_ensemble_model.ipynb` (modified — notebook executed for Task 1.6 audit; cell outputs updated)
+- `src/ncaa_eval/cli/train.py` (modified — bugfix: _align_oof_predictions returns empty early when any base model OOF frame is empty/columnless)
+- `tests/integration/test_documented_commands.py` (modified — added integration tests for cli predict and cli export with Elo, XGBoost, and ensemble models; code review P2: fixed ruff import order in ensemble_run fixture)
+- `tests/unit/test_cli_export.py` (modified — added test for missing season data error path)
+- `tests/unit/test_cli_predict.py` (modified — added test for legacy run with no saved feature names)
+- `tests/unit/test_espn_connector.py` (modified — added tests: None/numeric input to _parse_game_result, TypeError retry, connector continues after TypeError, all-teams-fail log count; code review P2: fixed brittle "4 failed" assertion)
+- `tests/unit/test_kaggle_connector.py` (modified — added TestKaggleConnectorLoadDayZeros: load_day_zeros mapping and cache-hit tests)
+- `tests/unit/test_model_ensemble.py` (modified — added test_empty_frame_from_base_model_returns_empty for _align_oof_predictions guard)
 - `_bmad-output/implementation-artifacts/10-7-end-to-end-user-guide-execution-audit.md` (modified — story tracking)
 - `_bmad-output/implementation-artifacts/sprint-status.yaml` (modified — status update)
