@@ -109,6 +109,14 @@ class TestParseGameResult:
     def test_no_dash(self) -> None:
         assert _parse_game_result("W 85") is None
 
+    def test_none_input(self) -> None:
+        """Non-string None input returns None via isinstance guard (line 38)."""
+        assert _parse_game_result(None) is None  # type: ignore[arg-type]
+
+    def test_numeric_input(self) -> None:
+        """Non-string numeric input returns None via isinstance guard (line 38)."""
+        assert _parse_game_result(42) is None  # type: ignore[arg-type]
+
 
 # ---------------------------------------------------------------------------
 # TestResolveTeamId
@@ -415,6 +423,50 @@ class TestRetryBehavior:
                     _fetch_single_team_schedule("Duke", 2025)
         assert mock_ms.get_team_schedule.call_count == 3
 
+    def test_retry_exhausted_on_type_error(self) -> None:
+        """TypeError from cbbpy (e.g. unknown team, extractOne returns None) is retried then re-raised.
+
+        Regression test for: cbbpy _get_id_from_team raises TypeError when
+        process.extractOne() returns None for a team not in cbbpy's database
+        (e.g. Bellarmine after dropping from D-I).  The retry decorator wraps
+        all Exception subclasses, so this is retried 3× before re-raising.
+        """
+        with patch("time.sleep"):
+            with patch("ncaa_eval.ingest.connectors.espn.ms") as mock_ms:
+                mock_ms.get_team_schedule.side_effect = TypeError(
+                    "cannot unpack non-iterable NoneType object"
+                )
+                with pytest.raises(TypeError):
+                    _fetch_single_team_schedule("Bellarmine", 2026)
+        assert mock_ms.get_team_schedule.call_count == 3
+
+    def test_connector_continues_after_type_error(self, connector: EspnConnector) -> None:
+        """_fetch_per_team swallows TypeError from cbbpy and continues to next team.
+
+        When cbbpy raises TypeError for an unknown team (e.g. Bellarmine),
+        _fetch_per_team must log a warning and continue — not crash the sync.
+        """
+
+        def _side_effect(team: str, season: int) -> pd.DataFrame | None:
+            if team == "Duke":
+                raise TypeError("cannot unpack non-iterable NoneType object")
+            return _make_schedule_df(
+                [
+                    {
+                        "team": "North Carolina",
+                        "game_id": "401700099",
+                        "game_day": "2024-11-15",
+                        "opponent": "Kentucky",
+                        "game_result": "W 80-70",
+                    },
+                ]
+            )
+
+        with patch("ncaa_eval.ingest.connectors.espn._fetch_single_team_schedule") as mock_fetch:
+            mock_fetch.side_effect = _side_effect
+            games = connector.fetch_games(2025)
+        assert len(games) > 0
+
     def test_connector_continues_after_team_failure(self, connector: EspnConnector) -> None:
         """_fetch_per_team continues to next team when one fails all retries."""
 
@@ -482,6 +534,27 @@ class TestFetchSummaryLogging:
         summary_msgs = [r for r in caplog.records if "fetched" in r.message and "failed" in r.message]
         assert len(summary_msgs) >= 1
         assert summary_msgs[0].levelno == logging.WARNING
+
+    def test_all_teams_fail_logs_warning_with_count(
+        self, connector: EspnConnector, caplog: pytest.LogCaptureFixture
+    ) -> None:
+        """When all teams return None, _fetch_per_team logs WARNING with total failed count.
+
+        This differs from test_network_failure_returns_empty (which checks the
+        return value) — here we verify the summary log message is correct even
+        when every team fails silently (no exception, just empty schedule).
+        """
+        with patch("ncaa_eval.ingest.connectors.espn._fetch_single_team_schedule", return_value=None):
+            with caplog.at_level(logging.WARNING, logger="ncaa_eval.ingest.connectors.espn"):
+                result = connector._fetch_per_team(2025)
+
+        assert result is None
+        summary_msgs = [r for r in caplog.records if "fetched" in r.message and "failed" in r.message]
+        assert len(summary_msgs) >= 1
+        assert summary_msgs[0].levelno == logging.WARNING
+        # All teams in the fixture's _TEAM_MAP should appear in the failed count
+        expected_count = len(connector._team_name_to_id)
+        assert f"{expected_count} failed" in summary_msgs[0].message
 
     def test_none_return_counted_as_failed(
         self, connector: EspnConnector, caplog: pytest.LogCaptureFixture

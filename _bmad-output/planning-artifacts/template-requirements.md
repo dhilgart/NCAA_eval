@@ -4448,3 +4448,76 @@ Tutorial notebooks often accumulate re-imports across cells (e.g., `import numpy
 **Pattern:** All `import` statements belong in the first code cell of a tutorial notebook. Later cells should only call functions — never import. If a library is needed in multiple cells, import it once at the top.
 
 **Exception:** `from __future__ import annotations` is never needed in notebooks (Python 3.10+ implicit).
+
+## Story 10.7 Learnings (End-to-End Execution Audit, 2026-03-13)
+
+### Execution-Context Tests Must Use `subprocess.run()`, Never `importlib` (Discovered Story 10.7, 2026-03-13)
+
+**The core failure mode:** pytest's `rootdir` discovery adds the project root to `sys.path`. Any test using `importlib.import_module()` or Python `import` inherits this injected path — so modules that are not installed (e.g., `dashboard/`) appear to import cleanly under pytest but fail when users run `streamlit run dashboard/app.py` from the repo root (where `sys.path` does not include the project root automatically).
+
+**Template pattern:** All user-facing entry-point tests must live in `tests/e2e/` and use `subprocess.run()` with `cwd=REPO_ROOT`. Always strip `PYTHONPATH` from the subprocess env — otherwise the harness's path injection can still mask real failures through the inherited environment:
+
+```python
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+
+def _clean_env() -> dict[str, str]:
+    """Strip FORCE_COLOR and PYTHONPATH to avoid ANSI noise and path injection."""
+    env = {
+        k: v for k, v in os.environ.items()
+        if k not in {"FORCE_COLOR", "FORCE_COLORS", "PYTHONPATH"}
+    }
+    env["NO_COLOR"] = "1"
+    return env
+
+@pytest.mark.integration
+def test_sync_help() -> None:
+    result = subprocess.run(
+        [sys.executable, "sync.py", "--help"],
+        capture_output=True, text=True, cwd=REPO_ROOT,
+        timeout=30, env=_clean_env(),   # timeout + PYTHONPATH strip are BOTH required
+    )
+    assert "ModuleNotFoundError" not in result.stderr
+    assert result.returncode == 0
+```
+
+**Never use:** `importlib.import_module("dashboard.lib.filters")` — this inherits pytest's sys.path and masks real failures.
+
+**CI integration:** Add a dedicated step `poetry run pytest tests/e2e/ -v --tb=short` after the main test suite in python-check.yaml. **Critical:** Also add `--ignore=tests/e2e/` to the main `pytest --cov` step — otherwise `testpaths = ["tests"]` causes e2e tests to run twice (once in full suite, once in dedicated step), wasting 8+ seconds per CI run.
+
+### `subprocess.Popen` Startup Tests: Always Check stderr After Terminate (Discovered Story 10.7 Code Review, 2026-03-13)
+
+When a test starts a long-running process with `subprocess.Popen(...)` (e.g., Streamlit), waits N seconds, then terminates it, **stderr must be read and checked AFTER termination** — not only in the "process already exited" branch.
+
+**The bug pattern:** Original code only checked stderr if `proc.poll() is not None` (process already crashed). If Streamlit printed `ModuleNotFoundError` to stderr but kept running (unlikely but possible), the test would terminate it and silently pass.
+
+**Fixed pattern:**
+```python
+@pytest.mark.integration
+@pytest.mark.slow  # time.sleep(N) — must mark slow
+def test_streamlit_startup() -> None:
+    proc = subprocess.Popen(..., stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    poll_result: int | None = None
+    try:
+        time.sleep(8)
+        poll_result = proc.poll()
+    finally:
+        proc.terminate()
+
+    try:
+        _, stderr = proc.communicate(timeout=5)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        proc.communicate()
+        pytest.fail("Process did not terminate cleanly within 5 s after SIGTERM — stderr unavailable")
+
+    # Check stderr regardless of exit status
+    assert "ModuleNotFoundError" not in stderr
+    assert "ImportError" not in stderr
+    if poll_result is not None:
+        assert poll_result == 0
+```
+
+**Key rules:**
+1. Always move `proc.communicate()` outside the `try/finally` — call it after `proc.terminate()` so it reads ALL buffered output
+2. Mark any test with `time.sleep()` as `@pytest.mark.slow` — the project convention requires it for tests > 1 second
+3. If `TimeoutExpired` after kill, use `pytest.fail()` — never `return`. A silent return means assertions never execute and the test passes regardless of what happened.

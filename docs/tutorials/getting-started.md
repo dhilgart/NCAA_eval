@@ -75,7 +75,7 @@ python -c "from ncaa_eval.model import list_models; print(list_models())"
 ```
 
 ```text
-['elo', 'logistic_regression', 'xgboost']
+['elo', 'ensemble', 'logistic_regression', 'xgboost']
 ```
 
 ### Customize Hyperparameters

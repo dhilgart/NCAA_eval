@@ -28,4 +28,8 @@ jobs:
 
       - name: Run full test suite with coverage
         run: |
-          poetry run pytest --cov=src/ncaa_eval --cov-report=term-missing
+          poetry run pytest --cov=src/ncaa_eval --cov-report=term-missing --ignore=tests/e2e/
+
+      - name: Run E2E user-facing command startup checks
+        run: |
+          poetry run pytest tests/e2e/ -v --tb=short

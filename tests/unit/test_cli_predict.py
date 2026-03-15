@@ -224,6 +224,42 @@ class TestCLIPredict:
             prob = float(row["pred_win_prob"])
             assert 0.0 <= prob <= 1.0
 
+    @patch("ncaa_eval.cli.predict._setup_feature_server")
+    @patch("ncaa_eval.cli.predict.RunStore")
+    def test_stateless_predict_no_feature_names_exits_with_error(
+        self,
+        mock_store_cls: MagicMock,
+        mock_setup_server: MagicMock,
+        tmp_path: Path,
+    ) -> None:
+        """CLI predict exits 1 when stateless model has no saved feature names.
+
+        Regression: legacy runs trained before feature-name persistence was added
+        have load_feature_names() == None.  This should raise FileNotFoundError
+        at predict.py:78 and translate to exit code 1 via the CLI handler.
+        """
+        mock_model = MagicMock(spec=LogisticRegressionModel)
+        mock_model.feature_config = MagicMock()
+
+        mock_store = mock_store_cls.return_value
+        mock_store.load_model.return_value = mock_model
+        mock_store.load_feature_names.return_value = None  # ← the gap under test
+
+        result = runner.invoke(
+            app,
+            [
+                "predict",
+                "--run-id",
+                "legacy-run-no-feats",
+                "--season",
+                "2025",
+                "--data-dir",
+                str(tmp_path),
+            ],
+        )
+        assert result.exit_code != 0
+        assert "Error" in result.output
+
     @patch("ncaa_eval.cli.predict.ParquetRepository")
     @patch("ncaa_eval.cli.predict.RunStore")
     def test_nonexistent_run_exits_with_error(

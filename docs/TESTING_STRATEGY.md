@@ -43,6 +43,7 @@
 6. ✅ **Vectorization compliance** via performance testing (NFR1)
 7. ✅ **Temporal integrity** via data leakage testing (NFR4)
 8. ✅ **4-tier execution model** - Tier 1 (pre-commit) → Tier 2 (PR/CI) → Tier 3 (AI review) → Tier 4 (owner review)
+9. ✅ **Execution context** - E2E startup tests must mirror user invocation (subprocess with correct `cwd`, no harness `sys.path` injection)
 
 ### Four Orthogonal Dimensions
 
@@ -206,6 +207,9 @@ flowchart TD
 tests/
 ├── __init__.py
 ├── conftest.py                          # Shared fixtures
+├── e2e/
+│   ├── __init__.py
+│   └── test_user_facing_commands.py     # Subprocess startup checks (execution-context)
 ├── fixtures/
 │   ├── .gitkeep
 │   └── kaggle/

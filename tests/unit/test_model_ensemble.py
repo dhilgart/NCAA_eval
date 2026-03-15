@@ -328,6 +328,34 @@ class TestSaveLoadRoundTrip:
 class TestOofAlignment:
     """AC #3: OOF alignment inner join + >5% drop warning."""
 
+    def test_empty_frame_from_base_model_returns_empty(self) -> None:
+        """If any base model has empty OOF, alignment returns empty (no crash).
+
+        Regression test: _collect_oof_predictions returns pd.DataFrame() when a
+        base model's backtest produces no fold predictions (e.g. no tournament
+        games in the test season).  Previously this caused a KeyError when
+        _align_oof_predictions tried frame[["game_id", ...]] on the empty frame.
+        The correct behaviour is to return pd.DataFrame() so _run_ensemble_training
+        can abort gracefully via its aligned.empty guard.
+        """
+        from ncaa_eval.cli.train import _align_oof_predictions
+
+        good = pd.DataFrame(
+            {
+                "game_id": ["g1", "g2"],
+                "pred_base_0": [0.5, 0.6],
+                "team_a_won": [1, 0],
+            }
+        )
+        empty = pd.DataFrame()  # no columns — simulates a failed OOF collection
+
+        # first base good, second empty
+        assert _align_oof_predictions([good, empty]).empty
+        # first base empty, second good
+        assert _align_oof_predictions([empty, good]).empty
+        # both empty
+        assert _align_oof_predictions([empty, empty]).empty
+
     def test_inner_join_alignment(self) -> None:
         """Overlapping but not identical game_id sets produce correct join."""
         from ncaa_eval.cli.train import _align_oof_predictions

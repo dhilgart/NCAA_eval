@@ -7,9 +7,18 @@ Launch with::
 
 from __future__ import annotations
 
-import streamlit as st
+import sys
+from pathlib import Path
 
-from dashboard.lib.data_loaders import (
+# Streamlit adds the script's directory (dashboard/) to sys.path, not the
+# repo root.  Insert the repo root so that `from dashboard.lib...` resolves.
+_repo_root = str(Path(__file__).resolve().parent.parent)
+if _repo_root not in sys.path:
+    sys.path.insert(0, _repo_root)
+
+import streamlit as st  # noqa: E402
+
+from dashboard.lib.data_loaders import (  # noqa: E402
     get_data_dir,
     load_available_runs,
     load_available_scorings,
@@ -17,7 +26,7 @@ from dashboard.lib.data_loaders import (
     load_data_freshness,
     load_scoring_display_names,
 )
-from dashboard.lib.styles import MONOSPACE_CSS
+from dashboard.lib.styles import MONOSPACE_CSS  # noqa: E402
 
 # --- Page config (MUST be first Streamlit command) --------------------------
 
